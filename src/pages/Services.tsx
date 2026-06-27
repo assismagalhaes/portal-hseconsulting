@@ -11,7 +11,7 @@ import { Plus } from "lucide-react";
 import { brl } from "@/lib/format";
 import { toast } from "sonner";
 
-const empty = { nome:"", unidade_padrao:"serviço", descricao_comercial:"", escopo_tecnico:"", valor_referencia:0 };
+const empty = { nome:"", categoria:"", unidade_padrao:"serviço", descricao_comercial:"", escopo_tecnico:"", valor_referencia:0 };
 
 export default function Services() {
   const [list, setList] = useState<any[]>([]);
@@ -53,6 +53,8 @@ export default function Services() {
               <form onSubmit={save} className="space-y-3">
                 <div className="space-y-1.5"><Label>Nome *</Label>
                   <Input required value={form.nome} onChange={e=>setForm({...form, nome:e.target.value})} /></div>
+                <div className="space-y-1.5"><Label>Categoria</Label>
+                  <Input placeholder="Ex.: PGR, PCMSO, Laudo, Treinamento…" value={form.categoria||""} onChange={e=>setForm({...form, categoria:e.target.value})} /></div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5"><Label>Unidade padrão</Label>
                     <Input value={form.unidade_padrao} onChange={e=>setForm({...form, unidade_padrao:e.target.value})} /></div>
