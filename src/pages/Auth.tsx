@@ -5,7 +5,6 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import logo from "@/assets/hse-logo-navy.png";
 
@@ -14,7 +13,6 @@ export default function Auth() {
   const nav = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [nome, setNome] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => { document.title = "Entrar | Portal HSE Consulting"; }, []);
@@ -27,18 +25,6 @@ export default function Auth() {
     setLoading(false);
     if (error) return toast.error(error.message);
     nav("/");
-  }
-
-  async function handleSignup(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email, password,
-      options: { emailRedirectTo: `${window.location.origin}/`, data: { nome } },
-    });
-    setLoading(false);
-    if (error) return toast.error(error.message);
-    toast.success("Conta criada. Você já pode entrar.");
   }
 
   return (
@@ -63,33 +49,20 @@ export default function Auth() {
       </div>
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
-          <Tabs defaultValue="login">
-            <TabsList className="grid grid-cols-2 w-full">
-              <TabsTrigger value="login">Entrar</TabsTrigger>
-              <TabsTrigger value="signup">Criar conta</TabsTrigger>
-            </TabsList>
-            <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4 mt-4">
-                <div className="space-y-2"><Label>Email</Label>
-                  <Input type="email" required value={email} onChange={e=>setEmail(e.target.value)} /></div>
-                <div className="space-y-2"><Label>Senha</Label>
-                  <Input type="password" required value={password} onChange={e=>setPassword(e.target.value)} /></div>
-                <Button type="submit" className="w-full" disabled={loading}>Entrar</Button>
-              </form>
-            </TabsContent>
-            <TabsContent value="signup">
-              <form onSubmit={handleSignup} className="space-y-4 mt-4">
-                <div className="space-y-2"><Label>Nome</Label>
-                  <Input required value={nome} onChange={e=>setNome(e.target.value)} /></div>
-                <div className="space-y-2"><Label>Email</Label>
-                  <Input type="email" required value={email} onChange={e=>setEmail(e.target.value)} /></div>
-                <div className="space-y-2"><Label>Senha</Label>
-                  <Input type="password" required minLength={6} value={password} onChange={e=>setPassword(e.target.value)} /></div>
-                <Button type="submit" className="w-full" disabled={loading}>Criar conta</Button>
-                <p className="text-xs text-muted-foreground">O primeiro usuário cadastrado vira admin automaticamente.</p>
-              </form>
-            </TabsContent>
-          </Tabs>
+          <div className="space-y-2 mb-6">
+            <h2 className="font-display text-2xl font-bold">Acesso restrito</h2>
+            <p className="text-sm text-muted-foreground">Entre com sua conta de administrador.</p>
+          </div>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2"><Label>Email</Label>
+              <Input type="email" required value={email} onChange={e=>setEmail(e.target.value)} /></div>
+            <div className="space-y-2"><Label>Senha</Label>
+              <Input type="password" required value={password} onChange={e=>setPassword(e.target.value)} /></div>
+            <Button type="submit" className="w-full" disabled={loading}>Entrar</Button>
+            <p className="text-xs text-muted-foreground text-center">
+              Cadastro de novos usuários temporariamente desativado.
+            </p>
+          </form>
         </div>
       </div>
     </div>
