@@ -19,6 +19,18 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        surface: "hsl(var(--surface))",
+        success: "hsl(var(--success))",
+        warning: "hsl(var(--warning))",
+        danger: "hsl(var(--danger))",
+        hse: {
+          navy: "hsl(var(--hse-navy))",
+          "navy-deep": "hsl(var(--hse-navy-deep))",
+          "navy-soft": "hsl(var(--hse-navy-soft))",
+          green: "hsl(var(--hse-green))",
+          "green-glow": "hsl(var(--hse-green-glow))",
+          "green-soft": "hsl(var(--hse-green-soft))",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
