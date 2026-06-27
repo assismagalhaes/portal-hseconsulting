@@ -12,6 +12,9 @@ import Clients from "./pages/Clients";
 import Services from "./pages/Services";
 import Proposals from "./pages/Proposals";
 import ProposalEditor from "./pages/ProposalEditor";
+import Execucao from "./pages/Execucao";
+import ExecucaoEditor from "./pages/ExecucaoEditor";
+import Profissionais from "./pages/Profissionais";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -32,6 +35,9 @@ const App = () => (
               <Route path="/servicos" element={<Services />} />
               <Route path="/propostas" element={<Proposals />} />
               <Route path="/propostas/:id" element={<ProposalEditor />} />
+              <Route path="/execucao" element={<Execucao />} />
+              <Route path="/execucao/:id" element={<ExecucaoEditor />} />
+              <Route path="/profissionais" element={<Profissionais />} />
               <Route path="/configuracoes" element={<Settings />} />
             </Route>
             <Route path="*" element={<NotFound />} />
