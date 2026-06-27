@@ -19,6 +19,7 @@ const statusColor: Record<string, string> = {
   negociacao: "bg-warning/15 text-warning",
   aprovada: "bg-success/15 text-success",
   recusada: "bg-danger/15 text-danger",
+  cancelada: "bg-muted text-muted-foreground",
   expirada: "bg-muted text-muted-foreground",
 };
 
