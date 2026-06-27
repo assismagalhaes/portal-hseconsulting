@@ -1,7 +1,7 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Users, Briefcase, FileText, Settings as Cog, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import logo from "@/assets/hse-logo.png";
+import logo from "@/assets/hse-logo-green.png";
 import { Button } from "@/components/ui/button";
 
 const nav = [
@@ -19,7 +19,7 @@ export default function AppLayout() {
     <div className="flex min-h-screen bg-background">
       <aside className="hidden md:flex w-64 flex-col bg-sidebar text-sidebar-foreground">
         <Link to="/" className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
-          <img src={logo} alt="HSE Consulting" className="h-9 w-9 rounded-md object-contain bg-white/5 p-1" />
+          <img src={logo} alt="HSE Consulting" className="h-9 w-auto object-contain" />
           <div className="leading-tight">
             <div className="font-display font-bold">HSE Consulting</div>
             <div className="text-[11px] uppercase tracking-wider text-sidebar-foreground/60">Portal Interno</div>
