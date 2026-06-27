@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Briefcase, FileText, Settings as Cog, LogOut, HardHat, ClipboardList, CalendarDays, Activity, ListTodo, UserCircle, FileSignature, Target, KanbanSquare, PhoneCall, Bell, UserPlus, DollarSign, Receipt, Wallet, Building2 } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, FileText, Settings as Cog, LogOut, HardHat, ClipboardList, CalendarDays, Activity, ListTodo, UserCircle, FileSignature, Target, KanbanSquare, PhoneCall, Bell, UserPlus, DollarSign, Receipt, Wallet, Building2, Globe } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import logo from "@/assets/hse-logo-green.png";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ const nav = [
   { to: "/financeiro/alertas", label: "Alertas Financeiros", icon: Bell },
   { to: "/clientes", label: "Clientes", icon: Users },
   { to: "/servicos", label: "Serviços", icon: Briefcase },
+  { to: "/portal-cliente", label: "Portal do Cliente", icon: Globe },
   { to: "/configuracoes", label: "Configurações", icon: Cog },
 ];
 
