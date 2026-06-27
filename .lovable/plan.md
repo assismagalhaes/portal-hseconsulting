@@ -1,124 +1,82 @@
-## Contexto
+## Etapa 5 — Ordens de Serviço, Planejamento e Agenda
 
-Você mencionou "projeto já iniciado" e "arquivos enviados" (logos HSE verde/azul, proposta Word, planilha Excel de precificação), mas eu não encontrei nenhum desses anexos nesta sessão nem código além do placeholder padrão (`src/pages/Index.tsx` com a logo branca do template). Antes de executar uma reescrita grande, preciso alinhar alguns pontos.
+Esta etapa é grande. Vou implementá-la em **3 ondas** dentro desta mesma execução, mantendo a arquitetura modular e preparada para CRM/Financeiro/App futuros.
 
-## Pressupostos que vou assumir se você confirmar
+### Mudança de arquitetura (importante)
 
-- Construir o MVP **do zero** nesta sessão, já com a nova arquitetura centrada em proposta.
-- Habilitar **Lovable Cloud** (Postgres + Auth) para persistir clientes, serviços, propostas, itens, precificação, parâmetros e histórico.
-- Identidade visual: verde HSE neon (destaque/ação), azul-marinho profundo (institucional), branco/cinza claro (leitura), preto/cinza escuro (texto). Vou **gerar uma logo HSE** provisória (verde+azul) até você subir a oficial.
-- Tipografia: par institucional não-genérico (ex.: display geométrica + sans humanista) — sem Inter/Poppins padrão.
+Adotamos a hierarquia que você sugeriu:
 
-## Arquitetura de dados (Lovable Cloud)
-
-```text
-clients(id, razao_social, nome_fantasia, cnpj_cpf, qtd_funcionarios,
-        cidade, uf, solicitante, telefone, email, observacoes)
-services(id, nome, descricao_comercial, escopo_tecnico, unidade_padrao)
-pricing_params(id, custo_fixo_mensal, horas_produtivas_mes,
-        aliquota_imposto, margem_minima, custo_por_vida,
-        markup_minimo, regra_arredondamento)
-proposals(id, numero, client_id, status, validade,
-        condicoes_pagamento, outras_condicoes,
-        aceite_data, assinatura_prestador, assinatura_tomador,
-        valor_total, criado_em, atualizado_em)
-proposal_items(id, proposal_id, service_id, numero_item,
-        descricao_comercial, escopo_tecnico, quantidade, unidade,
-        valor_unitario, valor_total)
-proposal_item_pricing(id, proposal_item_id,
-        custos_diretos_json, horas_json, imposto, margem,
-        lucro_desejado, desconto, preco_sugerido,
-        preco_arredondado, preco_aprovado, indicadores_json)
-proposal_revisions(id, proposal_id, revisao, descricao, data, user_id)
-approved_services(id, proposal_item_id, responsavel_id,
-        prazo_previsto, status)
-profiles(id, nome, papel)  -- equipe HSE + RLS via user_roles
-user_roles(user_id, role)  -- admin | comercial | tecnico
+```
+Proposta
+ └─ Serviço em Execução (execucao_servicos)   ← contrato/serviço vendido
+     └─ Ordem de Serviço (ordens_servico)     ← atividade operacional (1:N)
+         ├─ Visitas técnicas (1:N)
+         ├─ Logística (1:1)
+         ├─ Documentos / Evidências (1:N)
+         └─ Checklist (1:N)
 ```
 
-RLS em todas as tabelas, grants explícitos para `authenticated`/`service_role`, `has_role()` security-definer.
+A tela atual de Execução continua existindo (visão do contrato) e passa a listar/abrir as OS filhas.
 
-## Estrutura de rotas
+---
 
-```text
-/login
-/                       -> Dashboard
-/clientes               -> consulta/edição
-/clientes/:id
-/servicos               -> consulta/edição
-/servicos/:id
-/propostas              -> lista + filtros + status comercial
-/propostas/nova         -> wizard
-/propostas/:id          -> wizard em edição
-/propostas/:id/cliente-view  -> "Modo Cliente" (sem custos)
-/aprovados              -> serviços em execução
-/equipe
-/configuracoes          -> parâmetros de precificação + condições padrão
-```
+### Onda 1 — Banco de dados (1 migração)
 
-## Wizard da Proposta (núcleo do MVP)
+Novas tabelas em `public`, todas com RLS para `authenticated` + GRANTs para `service_role`:
 
-Layout em abas/etapas com toggle **Modo Interno HSE ↔ Modo Cliente** sempre visível:
+- `ordens_servico` — número auto (`OS-YYYY-NNNNNN`), execucao_id, client_id, proposal_id, service_id, responsável comercial/técnico, datas (abertura/prevista/início/fim real), status (enum), prioridade, objetivo, descrição, escopo, observações técnicas, percentual_executado, qr_token (uuid).
+- `os_equipe` — OS × profissional (papel: apoio/líder).
+- `os_recursos` — itens livres (tipo: equipamento, veículo, documento, EPI, outro) + quantidade + observação.
+- `os_checklist` — itens do checklist da OS (ordem, descrição, obrigatório, concluído, concluído_por, concluído_em).
+- `os_visitas` — data, hora_inicio, hora_fim, local, responsável, objetivo, situação (planejada/realizada/cancelada), observações, registrado_em.
+- `os_visita_checklist` — checklist por visita.
+- `os_logistica` — cidade, endereço, distância_km, tempo_estimado_min, veículo, motorista, hospedagem, alimentação, pedágios, combustível, observações.
+- `os_documentos` — categoria (recebido/gerado/pendente), nome, descrição, status, anexo_path.
+- `os_evidencias` — visita_id (opc), tipo (foto/vídeo/pdf/áudio/doc), arquivo_path, legenda.
+- `os_eventos_agenda` — espelho da OS para a agenda (start_at, end_at, tipo: visita/execução/reunião) — permite mover sem alterar a OS-mãe.
+- Enum `os_status` com os 9 status pedidos; enum `os_prioridade` (baixa/media/alta/urgente).
+- Trigger de auditoria + trigger de numeração automática + trigger `updated_at`.
+- Buckets de storage: `os-evidencias` e `os-documentos` (privados) com policies por `authenticated`.
 
-1. **Cliente** — formulário com autocomplete por CNPJ/CPF ou razão social. Se existir, sugere reutilizar/atualizar; se não, marca para autocadastro no save.
-2. **Itens / Escopo** — tabela editável de itens. Cada linha: nº, descrição comercial, qtd, unidade, valor unitário, valor total, escopo técnico, vínculo a serviço existente ou autocadastro.
-3. **Precificação interna** (oculta no Modo Cliente) — drawer/painel por item com todos os campos de custo, horas, impostos, margem, desconto, preço sugerido/arredondado/aprovado, e os indicadores calculados (custo total, lucro, margem líquida, markup, preço mínimo, status colorido OK/Baixa/Atenção/Prejuízo).
-4. **Condições comerciais** — pagamento (default 50/50) + outras condições (texto editável com template inicial).
-5. **Visualização da proposta** — render fiel ao Word: capa, dados do cliente, tabela de itens, total, pagamento, condições, aceite, histórico de revisões, rodapé HSE. Botão "Exportar PDF" (impressão via `window.print` com CSS dedicado).
-6. **Envio / Status / Follow-up** — status (rascunho, enviada, em negociação, aprovada, recusada), data de envio, próximo follow-up, observações comerciais. Ao marcar **aprovada**, cria `approved_services` automaticamente para cada item.
+### Onda 2 — Frontend funcional (CRUD + planejamento)
 
-### Regras de autocadastro (no save da proposta)
+- `/ordens-servico` (lista global): filtros por status, prioridade, técnico, cidade, período; busca; criação rápida vinculando a um serviço em execução.
+- `/ordens-servico/:id` (editor) com abas:
+  1. **Visão geral** — dados, status, prioridade, percentual, cronograma.
+  2. **Planejamento** — objetivo, escopo, recursos, equipamentos, veículos, documentos necessários, EPIs, observações.
+  3. **Equipe** — responsável técnico (com registro/CREA, cargo, contato) + equipe de apoio (com aviso de conflito de agenda).
+  4. **Checklist** — itens obrigatórios/opcionais com progresso.
+  5. **Visitas** — lista + criação; cada visita abre drawer com dados, checklist próprio e evidências.
+  6. **Logística** — formulário completo (cidade, distância, veículo, hospedagem, etc.).
+  7. **Documentos** — recebidos / gerados / pendentes com upload.
+  8. **Evidências** — galeria (fotos/vídeos/pdf/áudio) agrupada por visita.
+  9. **Histórico** — timeline herdada da execução + eventos da OS.
+- Atualização do editor de **Execução** para listar as OS filhas e botão "+ Nova OS".
+- Atualização de `Profissionais` com agenda própria + cards (carga horária, qtd. serviços, disponibilidade).
 
-- Cliente sem `id` → procura por CNPJ/CPF; se achar, pergunta reutilizar/atualizar; senão, insere novo.
-- Item sem `service_id` → procura por nome/descrição; se achar, vincula; senão, cria em `services`.
-- Tudo dentro de uma transação RPC para consistência.
+### Onda 3 — Agenda, Dashboard, Impressão e QR
 
-### Regras de visibilidade
+- `/agenda` — calendário (dia/semana/mês) baseado em `os_eventos_agenda`, drag-and-drop para mover horário/dia (usando uma lib leve — `react-big-calendar` ou implementação custom com `date-fns`). Filtro por técnico/cliente/cidade. Conflito de horário destacado em vermelho.
+- `/planejamento` — Centro de Planejamento operacional: cards (hoje, amanhã, em campo, em elaboração, em atraso, aguardando cliente, finalizados na semana) + 4 gráficos (técnico, cidade, categoria, mês) com `recharts`.
+- `/meu-painel` — Dashboard do técnico logado: próximas visitas, OS em andamento, checklists pendentes, horas previstas/executadas.
+- **Impressão da OS** — `OSDocument.tsx` (A4, mesmo padrão visual da proposta) com logo HSE, dados, cliente, serviço, escopo, equipe, cronograma, checklist, assinaturas e QR Code (lib `qrcode`). Botão "Imprimir OS" usa o fluxo print-to-PDF existente.
+- **QR Code** — gerado a partir de `qr_token` apontando para rota pública futura `/os/qr/:token` (placeholder pronto para o app mobile ler).
+- Atualização da navegação lateral com novas rotas.
 
-Modo Cliente esconde: precificação, custos, margem, lucro, markup, impostos detalhados, observações internas. Mostra apenas: descrição, escopo comercial, valores, total, pagamento, condições, aceite, rodapé.
+### Detalhes técnicos
 
-## Configurações → Parâmetros de Precificação
+- Numeração `OS-YYYY-NNNNNN` via função SQL `gerar_numero_os()` + sequence anual.
+- `react-big-calendar` + `date-fns` para agenda (pequeno, já alinhado com Tailwind).
+- `qrcode` (geração SVG no client) para QR Code.
+- Toda mutação respeita RLS (`authenticated`); uploads vão para buckets privados com signed URLs.
+- Mobile-ready: schema desnormaliza dados úteis na OS (cliente_nome, cidade, etc.) para sincronização offline futura; campos `synced_at` e `device_id` reservados nas tabelas de visita/evidência.
 
-Form único editando `pricing_params`:
-custo fixo mensal, horas produtivas/mês, custo fixo/hora (auto = fixo / horas), alíquota imposto, margem mínima, custo por vida, markup mínimo, regra de arredondamento (múltiplo de R$ 10/50/100). Esses valores alimentam o cálculo de cada item.
+### Fora do escopo desta etapa (intencional)
 
-## Design system
+- Financeiro (custos de logística serão **somente armazenados**, sem cálculo).
+- CRM e Portal do Cliente.
+- App mobile real (apenas estrutura preparada).
 
-`index.css` + `tailwind.config.ts` com tokens HSL:
+---
 
-```text
---hse-green        (verde neon HSE, ação primária)
---hse-green-glow
---hse-navy         (azul-marinho institucional)
---hse-navy-deep
---background       branco
---surface          cinza claro de leitura
---foreground       cinza-escuro/preto
---success / --warning / --danger  (status de margem)
---gradient-hse     linear-gradient(135deg, navy → green)
---shadow-elegant
-```
-
-Variantes shadcn: `Button variant="hse"` (verde), `variant="navy"`, `variant="outline-navy"`; `Card variant="elevated"`; `Badge` para status de proposta e status de margem.
-
-## Entregáveis desta atualização
-
-1. Habilitar Lovable Cloud + migration completa (tabelas, RLS, grants, `user_roles`, `has_role`).
-2. Design system + logo provisória + layout com sidebar (logo, navegação).
-3. Auth (login/registro, primeiro usuário = admin).
-4. CRUD de consulta para Clientes, Serviços, Equipe, Configurações.
-5. Wizard de Proposta completo com autocadastro, precificação interna, indicadores, Modo Interno/Cliente.
-6. Visualização imprimível da proposta no padrão Word enviado.
-7. Lista de Propostas com status comercial e follow-up.
-8. Serviços Aprovados/Execução gerados na aprovação.
-9. Dashboard com KPIs (propostas por status, valor em pipeline, taxa de conversão, margem média).
-
-## O que preciso de você antes de codar
-
-1. **Pode subir novamente** as logos HSE (verde e azul), a proposta Word e a planilha Excel? Nada chegou nesta sessão. Sem isso, vou gerar logo provisória e usar o template de proposta que descrevi acima.
-2. Confirma habilitar **Lovable Cloud** agora? É necessário para persistência, auth e a regra de autocadastro transacional.
-3. Algum **número/sequência de proposta** específico (ex.: `HSE-2026-0001`)?
-4. Os **textos padrão** de "Dados de pagamento" e "Outras condições" que listei estão ok como default, ou prefere colar os textos exatos da proposta atual?
-5. Papéis de usuário: `admin`, `comercial`, `tecnico` cobrem ou quer outros?
-
-Assim que você responder (mesmo que só "pode seguir com os pressupostos"), começo a implementação.
+Posso seguir com a Onda 1 (migração) já? Após sua aprovação da migração, sigo direto para Ondas 2 e 3.

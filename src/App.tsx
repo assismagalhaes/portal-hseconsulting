@@ -17,6 +17,12 @@ import ExecucaoEditor from "./pages/ExecucaoEditor";
 import Profissionais from "./pages/Profissionais";
 import Settings from "./pages/Settings";
 import ProposalExample from "./pages/ProposalExample";
+import OrdensServico from "./pages/OrdensServico";
+import OrdemServicoEditor from "./pages/OrdemServicoEditor";
+import OrdemServicoPrint from "./pages/OrdemServicoPrint";
+import Agenda from "./pages/Agenda";
+import Planejamento from "./pages/Planejamento";
+import MeuPainel from "./pages/MeuPainel";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -39,6 +45,12 @@ const App = () => (
               <Route path="/propostas/:id" element={<ProposalEditor />} />
               <Route path="/execucao" element={<Execucao />} />
               <Route path="/execucao/:id" element={<ExecucaoEditor />} />
+              <Route path="/ordens-servico" element={<OrdensServico />} />
+              <Route path="/ordens-servico/:id" element={<OrdemServicoEditor />} />
+              <Route path="/ordens-servico/:id/imprimir" element={<OrdemServicoPrint />} />
+              <Route path="/agenda" element={<Agenda />} />
+              <Route path="/planejamento" element={<Planejamento />} />
+              <Route path="/meu-painel" element={<MeuPainel />} />
               <Route path="/profissionais" element={<Profissionais />} />
               <Route path="/configuracoes" element={<Settings />} />
             </Route>

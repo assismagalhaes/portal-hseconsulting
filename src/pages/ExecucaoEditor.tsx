@@ -21,7 +21,7 @@ import {
 } from "@/lib/format";
 import {
   ArrowLeft, Save, Plus, Trash2, FileText, UserCog, Users as UsersIcon,
-  ClipboardCheck, MessageSquare, Paperclip, History, ListTree, Upload, Download,
+  ClipboardCheck, MessageSquare, Paperclip, History, ListTree, Upload, Download, ClipboardList,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
@@ -87,6 +87,7 @@ export default function ExecucaoEditor() {
           <>
             <Button variant="outline" asChild><Link to="/execucao"><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Link></Button>
             <Button variant="outline" asChild><Link to={`/propostas/${exec.proposal_id}`}><FileText className="h-4 w-4 mr-2" />Proposta {exec.proposals?.numero}</Link></Button>
+            <Button asChild><Link to={`/ordens-servico?execucao=${exec.id}`}><ClipboardList className="h-4 w-4 mr-2" />Ordens de Serviço</Link></Button>
           </>
         }
       />
