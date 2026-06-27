@@ -1,9 +1,10 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Briefcase, FileText, Settings as Cog, LogOut, HardHat, ClipboardList, CalendarDays, Activity, ListTodo, UserCircle, FileSignature, Target, KanbanSquare, PhoneCall, Bell, UserPlus, DollarSign, Receipt, Wallet, Building2, Globe, Sparkles } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, FileText, Settings as Cog, LogOut, HardHat, ClipboardList, CalendarDays, Activity, ListTodo, UserCircle, FileSignature, Target, KanbanSquare, PhoneCall, Bell, UserPlus, DollarSign, Receipt, Wallet, Building2, Globe, Sparkles, Zap } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import logo from "@/assets/hse-logo-green.png";
 import { Button } from "@/components/ui/button";
 import GlobalAssistenteIa from "@/components/ia/GlobalAssistenteIa";
+import NotificacoesBell from "@/components/NotificacoesBell";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -37,6 +38,11 @@ const nav = [
   { to: "/ia/resumo-dia", label: "Resumo do Dia", icon: Sparkles },
   { to: "/ia/resumo-semanal", label: "Resumo Semanal", icon: Sparkles },
   { to: "/ia/prompts", label: "Prompts da IA", icon: FileText },
+  { to: "/automacoes", label: "Automações", icon: Zap, end: true },
+  { to: "/automacoes/dashboard", label: "Saúde Automações", icon: Activity },
+  { to: "/automacoes/execucoes", label: "Histórico Automações", icon: ListTodo },
+  { to: "/tarefas", label: "Tarefas", icon: ListTodo },
+  { to: "/notificacoes", label: "Notificações", icon: Bell },
   { to: "/configuracoes", label: "Configurações", icon: Cog },
 ];
 
@@ -79,6 +85,9 @@ export default function AppLayout() {
         </div>
       </aside>
       <main className="flex-1 min-w-0">
+        <div className="sticky top-0 z-30 flex items-center justify-end gap-2 px-4 py-2 border-b border-border bg-card/80 backdrop-blur">
+          <NotificacoesBell />
+        </div>
         <Outlet />
         <GlobalAssistenteIa />
       </main>
