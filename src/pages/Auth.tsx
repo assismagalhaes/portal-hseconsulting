@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import logo from "@/assets/hse-logo.png";
+import logo from "@/assets/hse-logo-navy.png";
 
 export default function Auth() {
   const { user } = useAuth();
