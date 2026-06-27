@@ -232,7 +232,7 @@ function RecursosCard({ osId, recursos, onChange }: any) {
   const [qtd, setQtd] = useState("1");
   const add = async () => {
     if (!desc) return;
-    const { error } = await supabase.from("os_recursos").insert({ os_id: osId, tipo, descricao: desc, quantidade: Number(qtd) || 1 });
+    const { error } = await supabase.from("os_recursos").insert({ os_id: osId, tipo: tipo as any, descricao: desc, quantidade: Number(qtd) || 1 });
     if (error) return toast.error(error.message);
     setDesc(""); setQtd("1"); onChange();
   };
