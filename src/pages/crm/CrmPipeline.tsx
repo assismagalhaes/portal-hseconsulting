@@ -34,7 +34,7 @@ export default function CrmPipeline() {
       setMotivo(""); setObs("");
       return;
     }
-    const { error } = await supabase.from("crm_oportunidades").update({ etapa: novaEtapa }).eq("id", op.id);
+    const { error } = await supabase.from("crm_oportunidades").update({ etapa: novaEtapa as any }).eq("id", op.id);
     if (error) toast.error(error.message);
     else { toast.success("Movido"); reload(); }
   }
