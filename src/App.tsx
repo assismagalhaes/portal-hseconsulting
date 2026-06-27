@@ -36,6 +36,13 @@ import CrmPipeline from "./pages/crm/CrmPipeline";
 import CrmFollowups from "./pages/crm/CrmFollowups";
 import CrmAgenda from "./pages/crm/CrmAgenda";
 import CrmAlertas from "./pages/crm/CrmAlertas";
+import FinanceiroDashboard from "./pages/financeiro/FinanceiroDashboard";
+import FinContratos from "./pages/financeiro/Contratos";
+import FinContratoEditor from "./pages/financeiro/ContratoEditor";
+import FinContasReceber from "./pages/financeiro/ContasReceber";
+import FinCustos from "./pages/financeiro/Custos";
+import FinAlertas from "./pages/financeiro/Alertas";
+import FinCentrosCusto from "./pages/financeiro/CentrosCusto";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -78,6 +85,13 @@ const App = () => (
               <Route path="/crm/followups" element={<CrmFollowups />} />
               <Route path="/crm/agenda" element={<CrmAgenda />} />
               <Route path="/crm/alertas" element={<CrmAlertas />} />
+              <Route path="/financeiro" element={<FinanceiroDashboard />} />
+              <Route path="/financeiro/contratos" element={<FinContratos />} />
+              <Route path="/financeiro/contratos/:id" element={<FinContratoEditor />} />
+              <Route path="/financeiro/contas-receber" element={<FinContasReceber />} />
+              <Route path="/financeiro/custos" element={<FinCustos />} />
+              <Route path="/financeiro/alertas" element={<FinAlertas />} />
+              <Route path="/financeiro/centros-custo" element={<FinCentrosCusto />} />
               <Route path="/configuracoes" element={<Settings />} />
             </Route>
             <Route path="*" element={<NotFound />} />
