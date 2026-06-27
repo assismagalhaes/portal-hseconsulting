@@ -110,8 +110,14 @@ export async function aplicarAcao(acao: AcaoSugerida, payloadOverride?: Record<s
 
   switch (acao.tipo) {
     case "criar_followup": {
+      const tipoIn = (pick<string>(payload, "tipo") ?? "ligacao").toLowerCase();
+      const tipoMap: Record<string, "ligacao" | "email" | "whatsapp" | "reuniao_online" | "reuniao_presencial" | "visita_comercial" | "outro"> = {
+        ligacao: "ligacao", email: "email", whatsapp: "whatsapp",
+        reuniao: "reuniao_online", reuniao_online: "reuniao_online", reuniao_presencial: "reuniao_presencial",
+        visita: "visita_comercial", visita_comercial: "visita_comercial", outro: "outro",
+      };
       const { error } = await supabase.from("crm_followups").insert({
-        tipo: (pick<string>(payload, "tipo") as "ligacao" | "email" | "whatsapp" | "reuniao" | "visita" | "outro") ?? "ligacao",
+        tipo: tipoMap[tipoIn] ?? "ligacao",
         data: (pick<string>(payload, "data") as string) ?? new Date().toISOString().slice(0, 10),
         resumo: (pick<string>(payload, "resumo") as string) ?? acao.titulo,
         proxima_acao: pick<string>(payload, "proxima_acao") ?? null,
