@@ -54,6 +54,11 @@ import IaPrompts from "./pages/ia/IaPrompts";
 import IaInteracoes from "./pages/ia/IaInteracoes";
 import IaResumoDia from "./pages/ia/IaResumoDia";
 import IaResumoSemanal from "./pages/ia/IaResumoSemanal";
+import Automacoes from "./pages/automacoes/Automacoes";
+import AutomacoesDashboard from "./pages/automacoes/AutomacoesDashboard";
+import AutomacoesExecucoes from "./pages/automacoes/AutomacoesExecucoes";
+import Notificacoes from "./pages/Notificacoes";
+import Tarefas from "./pages/Tarefas";
 import ClienteLogin from "./pages/cliente/ClienteLogin";
 import ClienteDashboard from "./pages/cliente/ClienteDashboard";
 import ClientePropostas from "./pages/cliente/ClientePropostas";
@@ -133,6 +138,11 @@ const App = () => (
               <Route path="/ia/interacoes" element={<IaInteracoes />} />
               <Route path="/ia/resumo-dia" element={<IaResumoDia />} />
               <Route path="/ia/resumo-semanal" element={<IaResumoSemanal />} />
+              <Route path="/automacoes" element={<Automacoes />} />
+              <Route path="/automacoes/dashboard" element={<AutomacoesDashboard />} />
+              <Route path="/automacoes/execucoes" element={<AutomacoesExecucoes />} />
+              <Route path="/notificacoes" element={<Notificacoes />} />
+              <Route path="/tarefas" element={<Tarefas />} />
               <Route path="/configuracoes" element={<Settings />} />
             </Route>
             <Route path="*" element={<NotFound />} />
