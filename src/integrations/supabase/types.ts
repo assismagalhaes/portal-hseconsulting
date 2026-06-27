@@ -575,6 +575,652 @@ export type Database = {
           },
         ]
       }
+      ordens_servico: {
+        Row: {
+          cidade: string | null
+          client_id: string | null
+          cliente_nome: string | null
+          created_at: string
+          created_by: string | null
+          data_abertura: string
+          data_prevista_conclusao: string | null
+          data_prevista_inicio: string | null
+          data_real_conclusao: string | null
+          data_real_inicio: string | null
+          descricao: string | null
+          device_id: string | null
+          endereco: string | null
+          escopo_contratado: string | null
+          execucao_id: string
+          id: string
+          numero: string
+          objetivo: string | null
+          observacoes_tecnicas: string | null
+          percentual_executado: number
+          prioridade: Database["public"]["Enums"]["os_prioridade"]
+          proposal_id: string | null
+          qr_token: string
+          responsavel_comercial: string | null
+          responsavel_tecnico_id: string | null
+          service_id: string | null
+          servico_nome: string | null
+          status: Database["public"]["Enums"]["os_status"]
+          synced_at: string | null
+          titulo: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          cidade?: string | null
+          client_id?: string | null
+          cliente_nome?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_abertura?: string
+          data_prevista_conclusao?: string | null
+          data_prevista_inicio?: string | null
+          data_real_conclusao?: string | null
+          data_real_inicio?: string | null
+          descricao?: string | null
+          device_id?: string | null
+          endereco?: string | null
+          escopo_contratado?: string | null
+          execucao_id: string
+          id?: string
+          numero?: string
+          objetivo?: string | null
+          observacoes_tecnicas?: string | null
+          percentual_executado?: number
+          prioridade?: Database["public"]["Enums"]["os_prioridade"]
+          proposal_id?: string | null
+          qr_token?: string
+          responsavel_comercial?: string | null
+          responsavel_tecnico_id?: string | null
+          service_id?: string | null
+          servico_nome?: string | null
+          status?: Database["public"]["Enums"]["os_status"]
+          synced_at?: string | null
+          titulo: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          cidade?: string | null
+          client_id?: string | null
+          cliente_nome?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_abertura?: string
+          data_prevista_conclusao?: string | null
+          data_prevista_inicio?: string | null
+          data_real_conclusao?: string | null
+          data_real_inicio?: string | null
+          descricao?: string | null
+          device_id?: string | null
+          endereco?: string | null
+          escopo_contratado?: string | null
+          execucao_id?: string
+          id?: string
+          numero?: string
+          objetivo?: string | null
+          observacoes_tecnicas?: string | null
+          percentual_executado?: number
+          prioridade?: Database["public"]["Enums"]["os_prioridade"]
+          proposal_id?: string | null
+          qr_token?: string
+          responsavel_comercial?: string | null
+          responsavel_tecnico_id?: string | null
+          service_id?: string | null
+          servico_nome?: string | null
+          status?: Database["public"]["Enums"]["os_status"]
+          synced_at?: string | null
+          titulo?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordens_servico_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordens_servico_execucao_id_fkey"
+            columns: ["execucao_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_servicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordens_servico_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordens_servico_responsavel_tecnico_id_fkey"
+            columns: ["responsavel_tecnico_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordens_servico_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_checklist: {
+        Row: {
+          concluido: boolean
+          concluido_em: string | null
+          concluido_por: string | null
+          created_at: string
+          descricao: string
+          id: string
+          obrigatorio: boolean
+          observacao: string | null
+          ordem: number
+          os_id: string
+        }
+        Insert: {
+          concluido?: boolean
+          concluido_em?: string | null
+          concluido_por?: string | null
+          created_at?: string
+          descricao: string
+          id?: string
+          obrigatorio?: boolean
+          observacao?: string | null
+          ordem?: number
+          os_id: string
+        }
+        Update: {
+          concluido?: boolean
+          concluido_em?: string | null
+          concluido_por?: string | null
+          created_at?: string
+          descricao?: string
+          id?: string
+          obrigatorio?: boolean
+          observacao?: string | null
+          ordem?: number
+          os_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_checklist_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_documentos: {
+        Row: {
+          anexo_path: string | null
+          categoria: Database["public"]["Enums"]["os_documento_categoria"]
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          os_id: string
+          status: string | null
+        }
+        Insert: {
+          anexo_path?: string | null
+          categoria: Database["public"]["Enums"]["os_documento_categoria"]
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          os_id: string
+          status?: string | null
+        }
+        Update: {
+          anexo_path?: string | null
+          categoria?: Database["public"]["Enums"]["os_documento_categoria"]
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          os_id?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_documentos_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_equipe: {
+        Row: {
+          created_at: string
+          id: string
+          observacoes: string | null
+          os_id: string
+          papel: string
+          profissional_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          os_id: string
+          papel?: string
+          profissional_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          os_id?: string
+          papel?: string
+          profissional_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_equipe_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_equipe_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_eventos_agenda: {
+        Row: {
+          cidade: string | null
+          created_at: string
+          end_at: string
+          id: string
+          observacoes: string | null
+          os_id: string
+          profissional_id: string | null
+          start_at: string
+          tipo: string
+          titulo: string
+          updated_at: string
+          visita_id: string | null
+        }
+        Insert: {
+          cidade?: string | null
+          created_at?: string
+          end_at: string
+          id?: string
+          observacoes?: string | null
+          os_id: string
+          profissional_id?: string | null
+          start_at: string
+          tipo?: string
+          titulo: string
+          updated_at?: string
+          visita_id?: string | null
+        }
+        Update: {
+          cidade?: string | null
+          created_at?: string
+          end_at?: string
+          id?: string
+          observacoes?: string | null
+          os_id?: string
+          profissional_id?: string | null
+          start_at?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+          visita_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_eventos_agenda_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_eventos_agenda_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_eventos_agenda_visita_id_fkey"
+            columns: ["visita_id"]
+            isOneToOne: false
+            referencedRelation: "os_visitas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_evidencias: {
+        Row: {
+          arquivo_path: string
+          created_at: string
+          created_by: string | null
+          device_id: string | null
+          id: string
+          legenda: string | null
+          os_id: string
+          synced_at: string | null
+          tamanho_bytes: number | null
+          tipo: Database["public"]["Enums"]["os_evidencia_tipo"]
+          visita_id: string | null
+        }
+        Insert: {
+          arquivo_path: string
+          created_at?: string
+          created_by?: string | null
+          device_id?: string | null
+          id?: string
+          legenda?: string | null
+          os_id: string
+          synced_at?: string | null
+          tamanho_bytes?: number | null
+          tipo?: Database["public"]["Enums"]["os_evidencia_tipo"]
+          visita_id?: string | null
+        }
+        Update: {
+          arquivo_path?: string
+          created_at?: string
+          created_by?: string | null
+          device_id?: string | null
+          id?: string
+          legenda?: string | null
+          os_id?: string
+          synced_at?: string | null
+          tamanho_bytes?: number | null
+          tipo?: Database["public"]["Enums"]["os_evidencia_tipo"]
+          visita_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_evidencias_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_evidencias_visita_id_fkey"
+            columns: ["visita_id"]
+            isOneToOne: false
+            referencedRelation: "os_visitas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_logistica: {
+        Row: {
+          alimentacao: string | null
+          cidade: string | null
+          combustivel: number | null
+          created_at: string
+          distancia_km: number | null
+          endereco: string | null
+          hospedagem: string | null
+          id: string
+          motorista: string | null
+          observacoes: string | null
+          os_id: string
+          pedagios: number | null
+          tempo_estimado_min: number | null
+          updated_at: string
+          veiculo: string | null
+        }
+        Insert: {
+          alimentacao?: string | null
+          cidade?: string | null
+          combustivel?: number | null
+          created_at?: string
+          distancia_km?: number | null
+          endereco?: string | null
+          hospedagem?: string | null
+          id?: string
+          motorista?: string | null
+          observacoes?: string | null
+          os_id: string
+          pedagios?: number | null
+          tempo_estimado_min?: number | null
+          updated_at?: string
+          veiculo?: string | null
+        }
+        Update: {
+          alimentacao?: string | null
+          cidade?: string | null
+          combustivel?: number | null
+          created_at?: string
+          distancia_km?: number | null
+          endereco?: string | null
+          hospedagem?: string | null
+          id?: string
+          motorista?: string | null
+          observacoes?: string | null
+          os_id?: string
+          pedagios?: number | null
+          tempo_estimado_min?: number | null
+          updated_at?: string
+          veiculo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_logistica_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: true
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_recursos: {
+        Row: {
+          created_at: string
+          descricao: string
+          id: string
+          observacao: string | null
+          os_id: string
+          quantidade: number | null
+          tipo: Database["public"]["Enums"]["os_recurso_tipo"]
+        }
+        Insert: {
+          created_at?: string
+          descricao: string
+          id?: string
+          observacao?: string | null
+          os_id: string
+          quantidade?: number | null
+          tipo: Database["public"]["Enums"]["os_recurso_tipo"]
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          id?: string
+          observacao?: string | null
+          os_id?: string
+          quantidade?: number | null
+          tipo?: Database["public"]["Enums"]["os_recurso_tipo"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_recursos_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_timeline: {
+        Row: {
+          created_at: string
+          detalhe: string | null
+          evento: string
+          id: string
+          os_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detalhe?: string | null
+          evento: string
+          id?: string
+          os_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detalhe?: string | null
+          evento?: string
+          id?: string
+          os_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_timeline_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_visita_checklist: {
+        Row: {
+          concluido: boolean
+          created_at: string
+          descricao: string
+          id: string
+          observacao: string | null
+          ordem: number
+          visita_id: string
+        }
+        Insert: {
+          concluido?: boolean
+          created_at?: string
+          descricao: string
+          id?: string
+          observacao?: string | null
+          ordem?: number
+          visita_id: string
+        }
+        Update: {
+          concluido?: boolean
+          created_at?: string
+          descricao?: string
+          id?: string
+          observacao?: string | null
+          ordem?: number
+          visita_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_visita_checklist_visita_id_fkey"
+            columns: ["visita_id"]
+            isOneToOne: false
+            referencedRelation: "os_visitas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_visitas: {
+        Row: {
+          cliente_acompanhou: boolean | null
+          concluida_em: string | null
+          concluida_por: string | null
+          created_at: string
+          data: string
+          device_id: string | null
+          hora_fim: string | null
+          hora_inicio: string | null
+          id: string
+          local: string | null
+          objetivo: string | null
+          observacoes: string | null
+          os_id: string
+          responsavel_id: string | null
+          situacao: Database["public"]["Enums"]["os_visita_situacao"]
+          synced_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          cliente_acompanhou?: boolean | null
+          concluida_em?: string | null
+          concluida_por?: string | null
+          created_at?: string
+          data: string
+          device_id?: string | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
+          id?: string
+          local?: string | null
+          objetivo?: string | null
+          observacoes?: string | null
+          os_id: string
+          responsavel_id?: string | null
+          situacao?: Database["public"]["Enums"]["os_visita_situacao"]
+          synced_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cliente_acompanhou?: boolean | null
+          concluida_em?: string | null
+          concluida_por?: string | null
+          created_at?: string
+          data?: string
+          device_id?: string | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
+          id?: string
+          local?: string | null
+          objetivo?: string | null
+          observacoes?: string | null
+          os_id?: string
+          responsavel_id?: string | null
+          situacao?: Database["public"]["Enums"]["os_visita_situacao"]
+          synced_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_visitas_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_visitas_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pricing_params: {
         Row: {
           aliquota_imposto: number
@@ -1045,6 +1691,7 @@ export type Database = {
         Args: { _proposal_id: string }
         Returns: number
       }
+      gerar_numero_os: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1069,6 +1716,32 @@ export type Database = {
         | "concluido"
         | "suspenso"
         | "cancelado"
+      os_documento_categoria: "recebido" | "gerado" | "pendente"
+      os_evidencia_tipo:
+        | "foto"
+        | "video"
+        | "pdf"
+        | "audio"
+        | "documento"
+        | "outro"
+      os_prioridade: "baixa" | "media" | "alta" | "urgente"
+      os_recurso_tipo: "equipamento" | "veiculo" | "documento" | "epi" | "outro"
+      os_status:
+        | "aberta"
+        | "planejamento"
+        | "agendada"
+        | "em_campo"
+        | "em_elaboracao"
+        | "em_revisao"
+        | "aguardando_cliente"
+        | "finalizada"
+        | "cancelada"
+      os_visita_situacao:
+        | "planejada"
+        | "em_andamento"
+        | "realizada"
+        | "cancelada"
+        | "remarcada"
       profissional_situacao: "ativo" | "inativo" | "ferias" | "afastado"
       proposal_status:
         | "rascunho"
@@ -1220,6 +1893,35 @@ export const Constants = {
         "concluido",
         "suspenso",
         "cancelado",
+      ],
+      os_documento_categoria: ["recebido", "gerado", "pendente"],
+      os_evidencia_tipo: [
+        "foto",
+        "video",
+        "pdf",
+        "audio",
+        "documento",
+        "outro",
+      ],
+      os_prioridade: ["baixa", "media", "alta", "urgente"],
+      os_recurso_tipo: ["equipamento", "veiculo", "documento", "epi", "outro"],
+      os_status: [
+        "aberta",
+        "planejamento",
+        "agendada",
+        "em_campo",
+        "em_elaboracao",
+        "em_revisao",
+        "aguardando_cliente",
+        "finalizada",
+        "cancelada",
+      ],
+      os_visita_situacao: [
+        "planejada",
+        "em_andamento",
+        "realizada",
+        "cancelada",
+        "remarcada",
       ],
       profissional_situacao: ["ativo", "inativo", "ferias", "afastado"],
       proposal_status: [
