@@ -74,7 +74,7 @@ export default function ContratoEditor() {
   };
 
   const updateStatusContrato = async (status: string) => {
-    await supabase.from("financeiro_contratos").update({ status }).eq("id", id);
+    await supabase.from("financeiro_contratos").update({ status: status as any }).eq("id", id);
     load();
   };
 
