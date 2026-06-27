@@ -11,7 +11,7 @@ import { Plus } from "lucide-react";
 import { formatCnpjCpf } from "@/lib/format";
 import { toast } from "sonner";
 
-const empty = { razao_social:"", nome_fantasia:"", cnpj_cpf:"", email:"", telefone:"", cidade:"", uf:"", solicitante:"", qtd_funcionarios:0, observacoes:"" };
+const empty = { razao_social:"", nome_fantasia:"", cnpj_cpf:"", email:"", telefone:"", whatsapp:"", endereco:"", cidade:"", uf:"", solicitante:"", cargo:"", qtd_funcionarios:0, observacoes:"" };
 
 export default function Clients() {
   const [list, setList] = useState<any[]>([]);
@@ -59,9 +59,12 @@ export default function Clients() {
                 <Field label="CNPJ / CPF" value={form.cnpj_cpf} onChange={v=>setForm({...form,cnpj_cpf:formatCnpjCpf(v)})} />
                 <Field label="Email" type="email" value={form.email} onChange={v=>setForm({...form,email:v})} />
                 <Field label="Telefone" value={form.telefone} onChange={v=>setForm({...form,telefone:v})} />
+                <Field label="WhatsApp" value={form.whatsapp} onChange={v=>setForm({...form,whatsapp:v})} />
+                <Field label="Endereço" className="sm:col-span-2" value={form.endereco} onChange={v=>setForm({...form,endereco:v})} />
                 <Field label="Cidade" value={form.cidade} onChange={v=>setForm({...form,cidade:v})} />
                 <Field label="UF" value={form.uf} onChange={v=>setForm({...form,uf:v.toUpperCase().slice(0,2)})} />
                 <Field label="Solicitante" value={form.solicitante} onChange={v=>setForm({...form,solicitante:v})} />
+                <Field label="Cargo" value={form.cargo} onChange={v=>setForm({...form,cargo:v})} />
                 <Field label="Qtd. funcionários" type="number" value={String(form.qtd_funcionarios)} onChange={v=>setForm({...form,qtd_funcionarios:v})} />
                 <div className="sm:col-span-2 space-y-1.5">
                   <Label>Observações</Label>

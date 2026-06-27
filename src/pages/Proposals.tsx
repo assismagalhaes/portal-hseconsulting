@@ -19,6 +19,7 @@ const statusColor: Record<string, string> = {
   negociacao: "bg-warning/15 text-warning",
   aprovada: "bg-success/15 text-success",
   recusada: "bg-danger/15 text-danger",
+  cancelada: "bg-muted text-muted-foreground",
   expirada: "bg-muted text-muted-foreground",
 };
 
@@ -43,11 +44,10 @@ export default function Proposals() {
   }
 
   async function createProposal() {
-    if (!newClientId) return toast.error("Selecione um cliente");
     setCreating(true);
     const numero = `P-${new Date().getFullYear()}-${String(Date.now()).slice(-5)}`;
     const { data, error } = await supabase.from("proposals").insert({
-      numero, client_id: newClientId, status: "rascunho",
+      numero, client_id: newClientId || null, status: "rascunho",
     }).select("id").single();
     setCreating(false);
     if (error) return toast.error(error.message);
@@ -72,22 +72,20 @@ export default function Proposals() {
               <DialogHeader><DialogTitle>Nova proposta</DialogTitle></DialogHeader>
               <div className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label>Cliente</Label>
+                  <Label>Cliente (opcional — pode cadastrar depois)</Label>
                   <Select value={newClientId} onValueChange={setNewClientId}>
-                    <SelectTrigger><SelectValue placeholder="Selecione um cliente" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Selecionar cliente existente…" /></SelectTrigger>
                     <SelectContent>
                       {clients.map(c => (
                         <SelectItem key={c.id} value={c.id}>{c.nome_fantasia || c.razao_social}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  {clients.length === 0 && (
-                    <p className="text-xs text-muted-foreground">Nenhum cliente cadastrado. <Link to="/clientes" className="text-primary underline">Cadastrar agora</Link>.</p>
-                  )}
+                  <p className="text-xs text-muted-foreground">Ou clique em criar e cadastre os dados do cliente direto no editor.</p>
                 </div>
                 <div className="flex justify-end gap-2 pt-2">
                   <Button variant="outline" onClick={()=>setOpen(false)}>Cancelar</Button>
-                  <Button onClick={createProposal} disabled={creating || !newClientId}>Criar e abrir</Button>
+                  <Button onClick={createProposal} disabled={creating}>Criar e abrir</Button>
                 </div>
               </div>
             </DialogContent>
