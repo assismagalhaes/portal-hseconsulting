@@ -65,6 +65,234 @@ export type Database = {
           },
         ]
       }
+      automacoes: {
+        Row: {
+          agendamento_cron: string | null
+          ativa: boolean
+          config: Json
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          dias_antes: number | null
+          dias_inatividade: number | null
+          id: string
+          mensagem_padrao: string | null
+          modulos_afetados: string[]
+          nome: string
+          prioridade_padrao: Database["public"]["Enums"]["notif_prioridade"]
+          proxima_execucao: string | null
+          responsavel_padrao: string | null
+          tipo: Database["public"]["Enums"]["automacao_tipo"]
+          ultima_execucao: string | null
+          updated_at: string
+        }
+        Insert: {
+          agendamento_cron?: string | null
+          ativa?: boolean
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          dias_antes?: number | null
+          dias_inatividade?: number | null
+          id?: string
+          mensagem_padrao?: string | null
+          modulos_afetados?: string[]
+          nome: string
+          prioridade_padrao?: Database["public"]["Enums"]["notif_prioridade"]
+          proxima_execucao?: string | null
+          responsavel_padrao?: string | null
+          tipo?: Database["public"]["Enums"]["automacao_tipo"]
+          ultima_execucao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agendamento_cron?: string | null
+          ativa?: boolean
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          dias_antes?: number | null
+          dias_inatividade?: number | null
+          id?: string
+          mensagem_padrao?: string | null
+          modulos_afetados?: string[]
+          nome?: string
+          prioridade_padrao?: Database["public"]["Enums"]["notif_prioridade"]
+          proxima_execucao?: string | null
+          responsavel_padrao?: string | null
+          tipo?: Database["public"]["Enums"]["automacao_tipo"]
+          ultima_execucao?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      automacoes_acoes: {
+        Row: {
+          automacao_id: string
+          created_at: string
+          id: string
+          ordem: number
+          parametros: Json
+          template: string | null
+          tipo: Database["public"]["Enums"]["automacao_acao_tipo"]
+          titulo: string | null
+        }
+        Insert: {
+          automacao_id: string
+          created_at?: string
+          id?: string
+          ordem?: number
+          parametros?: Json
+          template?: string | null
+          tipo: Database["public"]["Enums"]["automacao_acao_tipo"]
+          titulo?: string | null
+        }
+        Update: {
+          automacao_id?: string
+          created_at?: string
+          id?: string
+          ordem?: number
+          parametros?: Json
+          template?: string | null
+          tipo?: Database["public"]["Enums"]["automacao_acao_tipo"]
+          titulo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automacoes_acoes_automacao_id_fkey"
+            columns: ["automacao_id"]
+            isOneToOne: false
+            referencedRelation: "automacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automacoes_configuracoes: {
+        Row: {
+          chave: string
+          created_at: string
+          descricao: string | null
+          id: string
+          updated_at: string
+          valor: Json
+        }
+        Insert: {
+          chave: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          updated_at?: string
+          valor?: Json
+        }
+        Update: {
+          chave?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          updated_at?: string
+          valor?: Json
+        }
+        Relationships: []
+      }
+      automacoes_execucoes: {
+        Row: {
+          alertas_criados: number
+          automacao_id: string
+          detalhe: string | null
+          duracao_ms: number | null
+          erros: Json | null
+          executado_por: string | null
+          finalizado_em: string | null
+          id: string
+          iniciado_em: string
+          notificacoes_criadas: number
+          origem: string
+          registros_afetados: number
+          status: Database["public"]["Enums"]["automacao_status_execucao"]
+          tarefas_criadas: number
+        }
+        Insert: {
+          alertas_criados?: number
+          automacao_id: string
+          detalhe?: string | null
+          duracao_ms?: number | null
+          erros?: Json | null
+          executado_por?: string | null
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string
+          notificacoes_criadas?: number
+          origem?: string
+          registros_afetados?: number
+          status?: Database["public"]["Enums"]["automacao_status_execucao"]
+          tarefas_criadas?: number
+        }
+        Update: {
+          alertas_criados?: number
+          automacao_id?: string
+          detalhe?: string | null
+          duracao_ms?: number | null
+          erros?: Json | null
+          executado_por?: string | null
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string
+          notificacoes_criadas?: number
+          origem?: string
+          registros_afetados?: number
+          status?: Database["public"]["Enums"]["automacao_status_execucao"]
+          tarefas_criadas?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automacoes_execucoes_automacao_id_fkey"
+            columns: ["automacao_id"]
+            isOneToOne: false
+            referencedRelation: "automacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automacoes_gatilhos: {
+        Row: {
+          automacao_id: string
+          condicao: Json
+          created_at: string
+          evento: string | null
+          id: string
+          ordem: number
+          tipo: Database["public"]["Enums"]["automacao_gatilho_tipo"]
+        }
+        Insert: {
+          automacao_id: string
+          condicao?: Json
+          created_at?: string
+          evento?: string | null
+          id?: string
+          ordem?: number
+          tipo: Database["public"]["Enums"]["automacao_gatilho_tipo"]
+        }
+        Update: {
+          automacao_id?: string
+          condicao?: Json
+          created_at?: string
+          evento?: string | null
+          id?: string
+          ordem?: number
+          tipo?: Database["public"]["Enums"]["automacao_gatilho_tipo"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automacoes_gatilhos_automacao_id_fkey"
+            columns: ["automacao_id"]
+            isOneToOne: false
+            referencedRelation: "automacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cliente_comunicacoes: {
         Row: {
           anexo_nome: string | null
@@ -3165,6 +3393,84 @@ export type Database = {
         }
         Relationships: []
       }
+      notificacoes: {
+        Row: {
+          automacao_id: string | null
+          client_id: string | null
+          created_at: string
+          entidade_id: string | null
+          entidade_tipo: string | null
+          id: string
+          lida_em: string | null
+          link: string | null
+          mensagem: string | null
+          metadata: Json
+          modulo: string
+          origem: string
+          prioridade: Database["public"]["Enums"]["notif_prioridade"]
+          resolvida_em: string | null
+          status: Database["public"]["Enums"]["notif_status"]
+          tipo: string
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          automacao_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          id?: string
+          lida_em?: string | null
+          link?: string | null
+          mensagem?: string | null
+          metadata?: Json
+          modulo?: string
+          origem?: string
+          prioridade?: Database["public"]["Enums"]["notif_prioridade"]
+          resolvida_em?: string | null
+          status?: Database["public"]["Enums"]["notif_status"]
+          tipo?: string
+          titulo: string
+          user_id: string
+        }
+        Update: {
+          automacao_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          id?: string
+          lida_em?: string | null
+          link?: string | null
+          mensagem?: string | null
+          metadata?: Json
+          modulo?: string
+          origem?: string
+          prioridade?: Database["public"]["Enums"]["notif_prioridade"]
+          resolvida_em?: string | null
+          status?: Database["public"]["Enums"]["notif_status"]
+          tipo?: string
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_automacao_id_fkey"
+            columns: ["automacao_id"]
+            isOneToOne: false
+            referencedRelation: "automacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notificacoes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ordens_servico: {
         Row: {
           cidade: string | null
@@ -4252,6 +4558,154 @@ export type Database = {
         }
         Relationships: []
       }
+      tarefas: {
+        Row: {
+          automacao_id: string | null
+          client_id: string | null
+          concluida_em: string | null
+          created_at: string
+          created_by: string | null
+          data_prevista: string | null
+          descricao: string | null
+          entidade_id: string | null
+          entidade_tipo: string | null
+          id: string
+          modulo_origem: string
+          observacoes: string | null
+          prioridade: Database["public"]["Enums"]["tarefa_prioridade"]
+          responsavel_id: string | null
+          status: Database["public"]["Enums"]["tarefa_status"]
+          titulo: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          automacao_id?: string | null
+          client_id?: string | null
+          concluida_em?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_prevista?: string | null
+          descricao?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          id?: string
+          modulo_origem?: string
+          observacoes?: string | null
+          prioridade?: Database["public"]["Enums"]["tarefa_prioridade"]
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["tarefa_status"]
+          titulo: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          automacao_id?: string | null
+          client_id?: string | null
+          concluida_em?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_prevista?: string | null
+          descricao?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          id?: string
+          modulo_origem?: string
+          observacoes?: string | null
+          prioridade?: Database["public"]["Enums"]["tarefa_prioridade"]
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["tarefa_status"]
+          titulo?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefas_automacao_id_fkey"
+            columns: ["automacao_id"]
+            isOneToOne: false
+            referencedRelation: "automacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tarefas_checklist: {
+        Row: {
+          concluido: boolean
+          created_at: string
+          descricao: string
+          id: string
+          ordem: number
+          tarefa_id: string
+        }
+        Insert: {
+          concluido?: boolean
+          created_at?: string
+          descricao: string
+          id?: string
+          ordem?: number
+          tarefa_id: string
+        }
+        Update: {
+          concluido?: boolean
+          created_at?: string
+          descricao?: string
+          id?: string
+          ordem?: number
+          tarefa_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefas_checklist_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "tarefas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tarefas_historico: {
+        Row: {
+          created_at: string
+          detalhe: string | null
+          evento: string
+          id: string
+          tarefa_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detalhe?: string | null
+          evento: string
+          id?: string
+          tarefa_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detalhe?: string | null
+          evento?: string
+          id?: string
+          tarefa_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefas_historico_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "tarefas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -4327,6 +4781,37 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "comercial" | "tecnico"
+      automacao_acao_tipo:
+        | "criar_notificacao"
+        | "criar_alerta"
+        | "criar_tarefa"
+        | "criar_followup"
+        | "criar_pendencia_documental"
+        | "gerar_resumo_ia"
+        | "atualizar_status_alerta"
+        | "registrar_timeline"
+        | "registrar_log"
+        | "sugerir_mensagem"
+        | "sugerir_email"
+        | "sugerir_cobranca"
+      automacao_gatilho_tipo:
+        | "por_data"
+        | "por_vencimento"
+        | "mudanca_status"
+        | "criacao_registro"
+        | "inatividade"
+        | "atraso"
+        | "evento_sistema"
+        | "manual"
+      automacao_status_execucao: "sucesso" | "parcial" | "erro" | "ignorada"
+      automacao_tipo:
+        | "comercial"
+        | "operacional"
+        | "documental"
+        | "financeira"
+        | "portal_cliente"
+        | "ia_gestao"
+        | "sistema"
       checklist_situacao: "pendente" | "em_andamento" | "concluido"
       cliente_com_status: "aberta" | "respondida" | "encerrada"
       cliente_perfil:
@@ -4525,6 +5010,8 @@ export type Database = {
         | "crm"
         | "financeiro"
         | "alertas"
+      notif_prioridade: "baixa" | "normal" | "alta" | "critica"
+      notif_status: "nao_lida" | "lida" | "resolvida" | "ignorada"
       os_documento_categoria: "recebido" | "gerado" | "pendente"
       os_evidencia_tipo:
         | "foto"
@@ -4560,6 +5047,13 @@ export type Database = {
         | "recusada"
         | "expirada"
         | "cancelada"
+      tarefa_prioridade: "baixa" | "normal" | "alta" | "critica"
+      tarefa_status:
+        | "pendente"
+        | "em_andamento"
+        | "concluida"
+        | "cancelada"
+        | "atrasada"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4688,6 +5182,40 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "comercial", "tecnico"],
+      automacao_acao_tipo: [
+        "criar_notificacao",
+        "criar_alerta",
+        "criar_tarefa",
+        "criar_followup",
+        "criar_pendencia_documental",
+        "gerar_resumo_ia",
+        "atualizar_status_alerta",
+        "registrar_timeline",
+        "registrar_log",
+        "sugerir_mensagem",
+        "sugerir_email",
+        "sugerir_cobranca",
+      ],
+      automacao_gatilho_tipo: [
+        "por_data",
+        "por_vencimento",
+        "mudanca_status",
+        "criacao_registro",
+        "inatividade",
+        "atraso",
+        "evento_sistema",
+        "manual",
+      ],
+      automacao_status_execucao: ["sucesso", "parcial", "erro", "ignorada"],
+      automacao_tipo: [
+        "comercial",
+        "operacional",
+        "documental",
+        "financeira",
+        "portal_cliente",
+        "ia_gestao",
+        "sistema",
+      ],
       checklist_situacao: ["pendente", "em_andamento", "concluido"],
       cliente_com_status: ["aberta", "respondida", "encerrada"],
       cliente_perfil: [
@@ -4908,6 +5436,8 @@ export const Constants = {
         "financeiro",
         "alertas",
       ],
+      notif_prioridade: ["baixa", "normal", "alta", "critica"],
+      notif_status: ["nao_lida", "lida", "resolvida", "ignorada"],
       os_documento_categoria: ["recebido", "gerado", "pendente"],
       os_evidencia_tipo: [
         "foto",
@@ -4946,6 +5476,14 @@ export const Constants = {
         "recusada",
         "expirada",
         "cancelada",
+      ],
+      tarefa_prioridade: ["baixa", "normal", "alta", "critica"],
+      tarefa_status: [
+        "pendente",
+        "em_andamento",
+        "concluida",
+        "cancelada",
+        "atrasada",
       ],
     },
   },
