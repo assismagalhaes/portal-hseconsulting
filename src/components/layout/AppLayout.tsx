@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Briefcase, FileText, Settings as Cog, LogOut, HardHat, ClipboardList, CalendarDays, Activity, ListTodo, UserCircle, FileSignature, Target, KanbanSquare, PhoneCall, Bell, UserPlus } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, FileText, Settings as Cog, LogOut, HardHat, ClipboardList, CalendarDays, Activity, ListTodo, UserCircle, FileSignature, Target, KanbanSquare, PhoneCall, Bell, UserPlus, DollarSign, Receipt, Wallet, Building2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import logo from "@/assets/hse-logo-green.png";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,12 @@ const nav = [
   { to: "/meu-painel", label: "Meu Painel", icon: UserCircle },
   { to: "/profissionais", label: "Profissionais", icon: HardHat },
   { to: "/documentos", label: "Documentos Técnicos", icon: FileSignature },
+  { to: "/financeiro", label: "Financeiro", icon: DollarSign, end: true },
+  { to: "/financeiro/contratos", label: "Contratos", icon: FileText },
+  { to: "/financeiro/contas-receber", label: "Contas a Receber", icon: Receipt },
+  { to: "/financeiro/custos", label: "Custos", icon: Wallet },
+  { to: "/financeiro/centros-custo", label: "Centros de Custo", icon: Building2 },
+  { to: "/financeiro/alertas", label: "Alertas Financeiros", icon: Bell },
   { to: "/clientes", label: "Clientes", icon: Users },
   { to: "/servicos", label: "Serviços", icon: Briefcase },
   { to: "/configuracoes", label: "Configurações", icon: Cog },
