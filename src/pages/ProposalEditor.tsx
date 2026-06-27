@@ -12,12 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ArrowLeft, Plus, Trash2, Calculator, Printer, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Calculator, Printer, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown } from "lucide-react";
 import { brl, pct, proposalStatusLabel, formatCnpjCpf } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
 import { computePricing, statusMargemMeta, type PricingInput } from "@/lib/pricing";
 import { toast } from "sonner";
 import logo from "@/assets/hse-logo-navy.png";
+import ProposalDocument from "@/components/proposal/ProposalDocument";
 
 const emptyCustos = { deslocamento:0, alimentacao_hospedagem:0, terceiros:0, exames_laboratorio:0, taxas_art:0, equipamentos:0, materiais_epi:0, taxa_por_funcionario:0, outros:0 };
 const emptyHoras = { atendimento:0, analise_documental:0, deslocamento:0, visita_tecnica:0, elaboracao:0, revisao:0, pos_entrega:0, outras:0 };
@@ -303,7 +304,10 @@ export default function ProposalEditor() {
           <>
             <Button variant="ghost" size="sm" asChild><Link to="/propostas"><ArrowLeft className="h-4 w-4 mr-1" /> Voltar</Link></Button>
             {saving && <span className="text-xs text-muted-foreground flex items-center gap-1"><Save className="h-3 w-3 animate-pulse" /> salvando…</span>}
-            <Button variant="outline" size="sm" onClick={()=>window.print()}><Printer className="h-4 w-4 mr-1" /> Imprimir</Button>
+            <Button variant="outline" size="sm" onClick={()=>{ setClientView(true); setTimeout(()=>window.print(), 150); }}>
+              <FileDown className="h-4 w-4 mr-1" /> Gerar PDF
+            </Button>
+            <Button variant="ghost" size="sm" onClick={()=>window.print()}><Printer className="h-4 w-4 mr-1" /> Imprimir</Button>
             <Select value={proposal.status} onValueChange={changeStatus}>
               <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
               <SelectContent>{Object.entries(proposalStatusLabel).map(([k,v])=><SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
@@ -320,7 +324,7 @@ export default function ProposalEditor() {
       <div className="p-6 grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {clientView ? (
-            <ClientPreview proposal={proposal} client={client} items={items} />
+            <ProposalDocument proposal={proposal} client={client} items={items} revisions={revisions} />
           ) : (
             <Tabs defaultValue="cliente">
               <TabsList>
