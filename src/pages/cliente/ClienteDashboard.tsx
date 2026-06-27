@@ -23,12 +23,12 @@ export default function ClienteDashboard() {
     const [p, s, o, d, pend, dv, dve, vis, ent] = await Promise.all([
       supabase.from("proposals").select("id", { count: "exact", head: true }),
       supabase.from("execucao_servicos").select("id", { count: "exact", head: true }).in("status", ["em_execucao", "aguardando_aprovacao_cliente", "agendado", "aguardando_inicio"]),
-      supabase.from("ordens_servico").select("id", { count: "exact", head: true }).gte("data_agendada", hoje),
+      supabase.from("ordens_servico").select("id", { count: "exact", head: true }).gte("data_prevista_inicio", hoje),
       supabase.from("documentos_tecnicos").select("id", { count: "exact", head: true }),
       supabase.from("documentos_pendentes").select("id", { count: "exact", head: true }).neq("status", "recebido"),
       supabase.from("documentos_tecnicos").select("id", { count: "exact", head: true }).gte("data_vencimento", hoje).lte("data_vencimento", em30),
       supabase.from("documentos_tecnicos").select("id", { count: "exact", head: true }).lt("data_vencimento", hoje),
-      supabase.from("ordens_servico").select("id, numero, titulo, data_agendada, hora_inicio").gte("data_agendada", hoje).order("data_agendada").limit(5),
+      supabase.from("ordens_servico").select("id, numero, titulo, data_prevista_inicio").gte("data_prevista_inicio", hoje).order("data_prevista_inicio").limit(5),
       supabase.from("documentos_tecnicos").select("id, numero, titulo, data_emissao").order("data_emissao", { ascending: false }).limit(5),
     ]);
     setKpis({
@@ -37,7 +37,7 @@ export default function ClienteDashboard() {
     });
     setProxVisitas(vis.data || []);
     setUltimasEntregas(ent.data || []);
-    const { data: pp } = await supabase.from("documentos_pendentes").select("id, titulo, prazo, status").neq("status", "recebido").order("prazo").limit(5);
+    const { data: pp } = await supabase.from("documentos_pendentes").select("id, documento_solicitado, prazo, status").neq("status", "recebido").order("prazo").limit(5);
     setPendencias(pp || []);
   }
 
@@ -78,7 +78,7 @@ export default function ClienteDashboard() {
                 <div key={v.id} className="border-b pb-1">
                   <div className="font-medium">{v.numero}</div>
                   <div className="text-xs text-muted-foreground">{v.titulo}</div>
-                  <div className="text-xs">{v.data_agendada} {v.hora_inicio || ""}</div>
+                  <div className="text-xs">{v.data_prevista_inicio || "—"}</div>
                 </div>
               ))}
             </CardContent></Card>
@@ -98,7 +98,7 @@ export default function ClienteDashboard() {
               {pendencias.length === 0 && <div className="text-muted-foreground text-xs">Sem pendências em aberto.</div>}
               {pendencias.map(p => (
                 <Link key={p.id} to="/cliente/pendencias" className="block border-b pb-1 hover:bg-muted/50">
-                  <div className="font-medium">{p.titulo}</div>
+                  <div className="font-medium">{p.documento_solicitado}</div>
                   <div className="text-xs text-muted-foreground">Prazo: {p.prazo || "—"}</div>
                 </Link>
               ))}
