@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import PageHeader from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { Calendar, MapPin, Hammer, ClipboardCheck, AlertTriangle, UserClock, CheckCircle2 } from "lucide-react";
+import { Calendar, MapPin, Hammer, ClipboardCheck, AlertTriangle, Clock, CheckCircle2 } from "lucide-react";
 import { osStatusLabel } from "@/lib/os";
 
 function isSameDay(a: Date, b: Date) { return a.toDateString() === b.toDateString(); }
@@ -64,7 +64,7 @@ export default function Planejamento() {
           <Kpi icon={<Hammer className="h-5 w-5 text-emerald-600" />} label="Em campo" value={k.emCampo} />
           <Kpi icon={<ClipboardCheck className="h-5 w-5 text-violet-600" />} label="Em elaboração" value={k.emElab} />
           <Kpi icon={<AlertTriangle className="h-5 w-5 text-rose-600" />} label="Em atraso" value={k.atraso} highlight={k.atraso > 0} />
-          <Kpi icon={<UserClock className="h-5 w-5 text-cyan-600" />} label="Aguardando cliente" value={k.aguard} />
+          <Kpi icon={<Clock className="h-5 w-5 text-cyan-600" />} label="Aguardando cliente" value={k.aguard} />
           <Kpi icon={<CheckCircle2 className="h-5 w-5 text-green-700" />} label="Finalizados (7d)" value={k.finalSemana} />
         </div>
 
