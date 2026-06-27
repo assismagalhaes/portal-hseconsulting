@@ -84,8 +84,13 @@
 }
 
 @media print {
-  @page { size: A4; margin: 14mm; }
-  body { background: #fff !important; }
+  @page { size: A4; margin: 0; }
+  html, body { background: #fff !important; }
+  body * { visibility: hidden !important; }
+  .proposal-doc, .proposal-doc * { visibility: visible !important; }
+  .proposal-doc { position: absolute; inset: 0; margin: 0; padding: 0; }
   .no-print { display: none !important; }
-  .print-page { box-shadow: none !important; border: none !important; }
+  .pdf-page { box-shadow: none !important; margin: 0 !important; page-break-after: always; break-after: page; }
+  .pdf-page:last-child { page-break-after: auto; break-after: auto; }
+  .avoid-break { break-inside: avoid; page-break-inside: avoid; }
 }
