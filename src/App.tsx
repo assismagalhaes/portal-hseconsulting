@@ -29,6 +29,13 @@ import DocumentoPDF from "./pages/DocumentoPDF";
 import DocumentosModelos from "./pages/DocumentosModelos";
 import DocumentosRecebidos from "./pages/DocumentosRecebidos";
 import DocumentosPendentes from "./pages/DocumentosPendentes";
+import CrmDashboard from "./pages/crm/CrmDashboard";
+import CrmLeads from "./pages/crm/CrmLeads";
+import CrmOportunidades from "./pages/crm/CrmOportunidades";
+import CrmPipeline from "./pages/crm/CrmPipeline";
+import CrmFollowups from "./pages/crm/CrmFollowups";
+import CrmAgenda from "./pages/crm/CrmAgenda";
+import CrmAlertas from "./pages/crm/CrmAlertas";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -64,6 +71,13 @@ const App = () => (
               <Route path="/documentos/pendentes" element={<DocumentosPendentes />} />
               <Route path="/documentos/:id" element={<DocumentoEditor />} />
               <Route path="/documentos/:id/pdf" element={<DocumentoPDF />} />
+              <Route path="/crm" element={<CrmDashboard />} />
+              <Route path="/crm/leads" element={<CrmLeads />} />
+              <Route path="/crm/oportunidades" element={<CrmOportunidades />} />
+              <Route path="/crm/pipeline" element={<CrmPipeline />} />
+              <Route path="/crm/followups" element={<CrmFollowups />} />
+              <Route path="/crm/agenda" element={<CrmAgenda />} />
+              <Route path="/crm/alertas" element={<CrmAlertas />} />
               <Route path="/configuracoes" element={<Settings />} />
             </Route>
             <Route path="*" element={<NotFound />} />
