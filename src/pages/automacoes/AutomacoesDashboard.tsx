@@ -67,12 +67,18 @@ export default function AutomacoesDashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <PageHeader title="Saúde das Automações" description="Painel de monitoramento e execução de rotinas internas">
-        <Button onClick={runAll} disabled={running}>
-          <Play className="h-4 w-4 mr-2" /> {running ? "Executando..." : "Executar agora"}
-        </Button>
-        <Button asChild variant="outline"><Link to="/automacoes">Ver automações</Link></Button>
-      </PageHeader>
+      <PageHeader
+        title="Saúde das Automações"
+        subtitle="Painel de monitoramento e execução de rotinas internas"
+        actions={(
+          <>
+            <Button onClick={runAll} disabled={running}>
+              <Play className="h-4 w-4 mr-2" /> {running ? "Executando..." : "Executar agora"}
+            </Button>
+            <Button asChild variant="outline"><Link to="/automacoes">Ver automações</Link></Button>
+          </>
+        )}
+      />
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {cards.map((c) => (
           <Card key={c.label}>
