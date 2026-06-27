@@ -551,8 +551,8 @@ function EvidenciasCard({ osId, evidencias, visitas, onChange }: any) {
       <div className="flex flex-wrap gap-2">
         <Select value={tipo} onValueChange={setTipo}><SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
           <SelectContent>{Object.entries(osEvidenciaTipoLabel).map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}</SelectContent></Select>
-        <Select value={visitaId} onValueChange={setVisitaId}><SelectTrigger className="w-56"><SelectValue placeholder="Visita (opcional)" /></SelectTrigger>
-          <SelectContent><SelectItem value="">Sem visita</SelectItem>{visitas.map((v: any) => <SelectItem key={v.id} value={v.id}>{formatDate(v.data)} — {v.objetivo || "Visita"}</SelectItem>)}</SelectContent></Select>
+        <Select value={visitaId || "_none"} onValueChange={v => setVisitaId(v === "_none" ? "" : v)}><SelectTrigger className="w-56"><SelectValue placeholder="Visita (opcional)" /></SelectTrigger>
+          <SelectContent><SelectItem value="_none">Sem visita</SelectItem>{visitas.map((v: any) => <SelectItem key={v.id} value={v.id}>{formatDate(v.data)} — {v.objetivo || "Visita"}</SelectItem>)}</SelectContent></Select>
         <Input placeholder="Legenda" value={legenda} onChange={e => setLegenda(e.target.value)} className="flex-1 min-w-[200px]" />
         <Input type="file" onChange={e => setFile(e.target.files?.[0] || null)} className="w-auto" />
         <Button onClick={add}><Upload className="h-4 w-4 mr-1" />Enviar</Button>
