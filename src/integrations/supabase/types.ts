@@ -4505,7 +4505,14 @@ export type Database = {
         | "taxas"
         | "mao_de_obra"
         | "outros"
-      ia_acao_status: "sugerida" | "aplicada" | "recusada" | "expirada"
+      ia_acao_status:
+        | "sugerida"
+        | "aplicada"
+        | "recusada"
+        | "expirada"
+        | "ignorada"
+        | "editada_aplicada"
+        | "erro"
       ia_alerta_gravidade: "baixa" | "media" | "alta" | "critica"
       ia_alerta_status: "novo" | "em_analise" | "resolvido" | "ignorado"
       ia_modulo:
@@ -4879,7 +4886,15 @@ export const Constants = {
         "mao_de_obra",
         "outros",
       ],
-      ia_acao_status: ["sugerida", "aplicada", "recusada", "expirada"],
+      ia_acao_status: [
+        "sugerida",
+        "aplicada",
+        "recusada",
+        "expirada",
+        "ignorada",
+        "editada_aplicada",
+        "erro",
+      ],
       ia_alerta_gravidade: ["baixa", "media", "alta", "critica"],
       ia_alerta_status: ["novo", "em_analise", "resolvido", "ignorado"],
       ia_modulo: [
