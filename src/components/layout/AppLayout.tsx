@@ -1,11 +1,18 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Briefcase, FileText, Settings as Cog, LogOut, HardHat, ClipboardList, CalendarDays, Activity, ListTodo, UserCircle, FileSignature } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, FileText, Settings as Cog, LogOut, HardHat, ClipboardList, CalendarDays, Activity, ListTodo, UserCircle, FileSignature, Target, KanbanSquare, PhoneCall, Bell, UserPlus } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import logo from "@/assets/hse-logo-green.png";
 import { Button } from "@/components/ui/button";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/crm", label: "CRM Comercial", icon: Target, end: true },
+  { to: "/crm/pipeline", label: "Pipeline", icon: KanbanSquare },
+  { to: "/crm/leads", label: "Leads", icon: UserPlus },
+  { to: "/crm/oportunidades", label: "Oportunidades", icon: Target },
+  { to: "/crm/followups", label: "Follow-ups", icon: PhoneCall },
+  { to: "/crm/agenda", label: "Agenda Comercial", icon: CalendarDays },
+  { to: "/crm/alertas", label: "Alertas", icon: Bell },
   { to: "/propostas", label: "Propostas", icon: FileText },
   { to: "/execucao", label: "Execução", icon: ClipboardList },
   { to: "/ordens-servico", label: "Ordens de Serviço", icon: ListTodo },

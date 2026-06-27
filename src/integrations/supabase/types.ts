@@ -125,6 +125,571 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_agenda: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          end_at: string | null
+          followup_id: string | null
+          id: string
+          lead_id: string | null
+          link: string | null
+          local: string | null
+          observacoes: string | null
+          oportunidade_id: string | null
+          proposal_id: string | null
+          responsavel_id: string | null
+          start_at: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_at?: string | null
+          followup_id?: string | null
+          id?: string
+          lead_id?: string | null
+          link?: string | null
+          local?: string | null
+          observacoes?: string | null
+          oportunidade_id?: string | null
+          proposal_id?: string | null
+          responsavel_id?: string | null
+          start_at: string
+          tipo?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_at?: string | null
+          followup_id?: string | null
+          id?: string
+          lead_id?: string | null
+          link?: string | null
+          local?: string | null
+          observacoes?: string | null
+          oportunidade_id?: string | null
+          proposal_id?: string | null
+          responsavel_id?: string | null
+          start_at?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_agenda_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_agenda_followup_id_fkey"
+            columns: ["followup_id"]
+            isOneToOne: false
+            referencedRelation: "crm_followups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_agenda_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_agenda_oportunidade_id_fkey"
+            columns: ["oportunidade_id"]
+            isOneToOne: false
+            referencedRelation: "crm_oportunidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_agenda_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_alertas: {
+        Row: {
+          created_at: string
+          followup_id: string | null
+          id: string
+          lead_id: string | null
+          lido: boolean
+          mensagem: string | null
+          oportunidade_id: string | null
+          proposal_id: string | null
+          resolvido: boolean
+          responsavel_id: string | null
+          tipo: Database["public"]["Enums"]["crm_alerta_tipo"]
+          titulo: string
+        }
+        Insert: {
+          created_at?: string
+          followup_id?: string | null
+          id?: string
+          lead_id?: string | null
+          lido?: boolean
+          mensagem?: string | null
+          oportunidade_id?: string | null
+          proposal_id?: string | null
+          resolvido?: boolean
+          responsavel_id?: string | null
+          tipo: Database["public"]["Enums"]["crm_alerta_tipo"]
+          titulo: string
+        }
+        Update: {
+          created_at?: string
+          followup_id?: string | null
+          id?: string
+          lead_id?: string | null
+          lido?: boolean
+          mensagem?: string | null
+          oportunidade_id?: string | null
+          proposal_id?: string | null
+          resolvido?: boolean
+          responsavel_id?: string | null
+          tipo?: Database["public"]["Enums"]["crm_alerta_tipo"]
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_alertas_followup_id_fkey"
+            columns: ["followup_id"]
+            isOneToOne: false
+            referencedRelation: "crm_followups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_alertas_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_alertas_oportunidade_id_fkey"
+            columns: ["oportunidade_id"]
+            isOneToOne: false
+            referencedRelation: "crm_oportunidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_alertas_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_followups: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          data: string
+          hora: string | null
+          id: string
+          lead_id: string | null
+          oportunidade_id: string | null
+          proposal_id: string | null
+          proxima_acao: string | null
+          proximo_followup_data: string | null
+          proximo_followup_hora: string | null
+          responsavel_id: string | null
+          resumo: string | null
+          status: Database["public"]["Enums"]["crm_followup_status"]
+          tipo: Database["public"]["Enums"]["crm_followup_tipo"]
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data?: string
+          hora?: string | null
+          id?: string
+          lead_id?: string | null
+          oportunidade_id?: string | null
+          proposal_id?: string | null
+          proxima_acao?: string | null
+          proximo_followup_data?: string | null
+          proximo_followup_hora?: string | null
+          responsavel_id?: string | null
+          resumo?: string | null
+          status?: Database["public"]["Enums"]["crm_followup_status"]
+          tipo: Database["public"]["Enums"]["crm_followup_tipo"]
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data?: string
+          hora?: string | null
+          id?: string
+          lead_id?: string | null
+          oportunidade_id?: string | null
+          proposal_id?: string | null
+          proxima_acao?: string | null
+          proximo_followup_data?: string | null
+          proximo_followup_hora?: string | null
+          responsavel_id?: string | null
+          resumo?: string | null
+          status?: Database["public"]["Enums"]["crm_followup_status"]
+          tipo?: Database["public"]["Enums"]["crm_followup_tipo"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_followups_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_followups_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_followups_oportunidade_id_fkey"
+            columns: ["oportunidade_id"]
+            isOneToOne: false
+            referencedRelation: "crm_oportunidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_followups_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_historico: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          detalhe: string | null
+          id: string
+          lead_id: string | null
+          oportunidade_id: string | null
+          proposal_id: string | null
+          tipo: string
+          titulo: string
+          user_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          detalhe?: string | null
+          id?: string
+          lead_id?: string | null
+          oportunidade_id?: string | null
+          proposal_id?: string | null
+          tipo: string
+          titulo: string
+          user_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          detalhe?: string | null
+          id?: string
+          lead_id?: string | null
+          oportunidade_id?: string | null
+          proposal_id?: string | null
+          tipo?: string
+          titulo?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_historico_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_historico_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_historico_oportunidade_id_fkey"
+            columns: ["oportunidade_id"]
+            isOneToOne: false
+            referencedRelation: "crm_oportunidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_historico_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_leads: {
+        Row: {
+          autoridade_decisao: string | null
+          cidade: string | null
+          cliente_id: string | null
+          cnpj_cpf: string | null
+          concorrentes: string | null
+          contato_cargo: string | null
+          contato_nome: string | null
+          convertido_em: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          empresa: string
+          estado: string | null
+          id: string
+          necessidade: string | null
+          observacoes: string | null
+          orcamento_disponivel: string | null
+          origem: Database["public"]["Enums"]["crm_lead_origem"] | null
+          prazo_contratacao: string | null
+          qtd_funcionarios: number | null
+          responsavel_id: string | null
+          score: Database["public"]["Enums"]["crm_score"] | null
+          segmento: string | null
+          servicos_interesse: string[] | null
+          status: Database["public"]["Enums"]["crm_lead_status"]
+          telefone: string | null
+          updated_at: string
+          updated_by: string | null
+          urgencia: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          autoridade_decisao?: string | null
+          cidade?: string | null
+          cliente_id?: string | null
+          cnpj_cpf?: string | null
+          concorrentes?: string | null
+          contato_cargo?: string | null
+          contato_nome?: string | null
+          convertido_em?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          empresa: string
+          estado?: string | null
+          id?: string
+          necessidade?: string | null
+          observacoes?: string | null
+          orcamento_disponivel?: string | null
+          origem?: Database["public"]["Enums"]["crm_lead_origem"] | null
+          prazo_contratacao?: string | null
+          qtd_funcionarios?: number | null
+          responsavel_id?: string | null
+          score?: Database["public"]["Enums"]["crm_score"] | null
+          segmento?: string | null
+          servicos_interesse?: string[] | null
+          status?: Database["public"]["Enums"]["crm_lead_status"]
+          telefone?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          urgencia?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          autoridade_decisao?: string | null
+          cidade?: string | null
+          cliente_id?: string | null
+          cnpj_cpf?: string | null
+          concorrentes?: string | null
+          contato_cargo?: string | null
+          contato_nome?: string | null
+          convertido_em?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          empresa?: string
+          estado?: string | null
+          id?: string
+          necessidade?: string | null
+          observacoes?: string | null
+          orcamento_disponivel?: string | null
+          origem?: Database["public"]["Enums"]["crm_lead_origem"] | null
+          prazo_contratacao?: string | null
+          qtd_funcionarios?: number | null
+          responsavel_id?: string | null
+          score?: Database["public"]["Enums"]["crm_score"] | null
+          segmento?: string | null
+          servicos_interesse?: string[] | null
+          status?: Database["public"]["Enums"]["crm_lead_status"]
+          telefone?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          urgencia?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_leads_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_motivos_perda: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+          ordem: number
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+          ordem?: number
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+          ordem?: number
+        }
+        Relationships: []
+      }
+      crm_oportunidades: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          data_ganho: string | null
+          data_perda: string | null
+          data_prevista_fechamento: string | null
+          etapa: Database["public"]["Enums"]["crm_etapa"]
+          id: string
+          lead_id: string | null
+          motivo_perda: string | null
+          motivo_perda_obs: string | null
+          observacoes: string | null
+          prioridade: Database["public"]["Enums"]["crm_prioridade"]
+          probabilidade: number
+          proposal_id: string | null
+          responsavel_id: string | null
+          service_id: string | null
+          servico_interesse: string | null
+          temperatura: Database["public"]["Enums"]["crm_temperatura"]
+          titulo: string
+          updated_at: string
+          updated_by: string | null
+          valor_estimado: number
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_ganho?: string | null
+          data_perda?: string | null
+          data_prevista_fechamento?: string | null
+          etapa?: Database["public"]["Enums"]["crm_etapa"]
+          id?: string
+          lead_id?: string | null
+          motivo_perda?: string | null
+          motivo_perda_obs?: string | null
+          observacoes?: string | null
+          prioridade?: Database["public"]["Enums"]["crm_prioridade"]
+          probabilidade?: number
+          proposal_id?: string | null
+          responsavel_id?: string | null
+          service_id?: string | null
+          servico_interesse?: string | null
+          temperatura?: Database["public"]["Enums"]["crm_temperatura"]
+          titulo: string
+          updated_at?: string
+          updated_by?: string | null
+          valor_estimado?: number
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_ganho?: string | null
+          data_perda?: string | null
+          data_prevista_fechamento?: string | null
+          etapa?: Database["public"]["Enums"]["crm_etapa"]
+          id?: string
+          lead_id?: string | null
+          motivo_perda?: string | null
+          motivo_perda_obs?: string | null
+          observacoes?: string | null
+          prioridade?: Database["public"]["Enums"]["crm_prioridade"]
+          probabilidade?: number
+          proposal_id?: string | null
+          responsavel_id?: string | null
+          service_id?: string | null
+          servico_interesse?: string | null
+          temperatura?: Database["public"]["Enums"]["crm_temperatura"]
+          titulo?: string
+          updated_at?: string
+          updated_by?: string | null
+          valor_estimado?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_oportunidades_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_oportunidades_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_oportunidades_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_oportunidades_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documentos_anexos: {
         Row: {
           arquivo_path: string
@@ -2345,6 +2910,7 @@ export type Database = {
         Args: { _descricao: string; _doc_id: string }
         Returns: string
       }
+      crm_converter_lead: { Args: { _lead_id: string }; Returns: string }
       gerar_numero_documento: { Args: never; Returns: string }
       gerar_numero_os: { Args: never; Returns: string }
       has_role: {
@@ -2358,6 +2924,61 @@ export type Database = {
     Enums: {
       app_role: "admin" | "comercial" | "tecnico"
       checklist_situacao: "pendente" | "em_andamento" | "concluido"
+      crm_alerta_tipo:
+        | "followup_vencido"
+        | "proposta_sem_retorno"
+        | "oportunidade_parada"
+        | "proposta_vencendo"
+        | "lead_sem_responsavel"
+        | "quente_sem_acao"
+      crm_etapa:
+        | "novo_lead"
+        | "qualificacao"
+        | "diagnostico"
+        | "proposta_elaborar"
+        | "proposta_enviada"
+        | "followup"
+        | "negociacao"
+        | "fechamento_provavel"
+        | "ganho"
+        | "perdido"
+      crm_followup_status:
+        | "pendente"
+        | "realizado"
+        | "reagendado"
+        | "cancelado"
+        | "sem_resposta"
+      crm_followup_tipo:
+        | "whatsapp"
+        | "ligacao"
+        | "email"
+        | "reuniao_presencial"
+        | "reuniao_online"
+        | "visita_comercial"
+        | "outro"
+      crm_lead_origem:
+        | "indicacao"
+        | "cliente_antigo"
+        | "google"
+        | "instagram"
+        | "linkedin"
+        | "whatsapp"
+        | "ligacao_ativa"
+        | "email"
+        | "evento"
+        | "parceiro"
+        | "site"
+        | "outro"
+      crm_lead_status:
+        | "novo"
+        | "em_qualificacao"
+        | "qualificado"
+        | "nao_qualificado"
+        | "convertido"
+        | "perdido"
+      crm_prioridade: "baixa" | "normal" | "alta" | "urgente"
+      crm_score: "baixo" | "medio" | "alto"
+      crm_temperatura: "frio" | "morno" | "quente"
       documento_notificacao_tipo:
         | "revisao_atrasada"
         | "proximo_vencimento"
@@ -2587,6 +3208,67 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "comercial", "tecnico"],
       checklist_situacao: ["pendente", "em_andamento", "concluido"],
+      crm_alerta_tipo: [
+        "followup_vencido",
+        "proposta_sem_retorno",
+        "oportunidade_parada",
+        "proposta_vencendo",
+        "lead_sem_responsavel",
+        "quente_sem_acao",
+      ],
+      crm_etapa: [
+        "novo_lead",
+        "qualificacao",
+        "diagnostico",
+        "proposta_elaborar",
+        "proposta_enviada",
+        "followup",
+        "negociacao",
+        "fechamento_provavel",
+        "ganho",
+        "perdido",
+      ],
+      crm_followup_status: [
+        "pendente",
+        "realizado",
+        "reagendado",
+        "cancelado",
+        "sem_resposta",
+      ],
+      crm_followup_tipo: [
+        "whatsapp",
+        "ligacao",
+        "email",
+        "reuniao_presencial",
+        "reuniao_online",
+        "visita_comercial",
+        "outro",
+      ],
+      crm_lead_origem: [
+        "indicacao",
+        "cliente_antigo",
+        "google",
+        "instagram",
+        "linkedin",
+        "whatsapp",
+        "ligacao_ativa",
+        "email",
+        "evento",
+        "parceiro",
+        "site",
+        "outro",
+      ],
+      crm_lead_status: [
+        "novo",
+        "em_qualificacao",
+        "qualificado",
+        "nao_qualificado",
+        "convertido",
+        "perdido",
+      ],
+      crm_prioridade: ["baixa", "normal", "alta", "urgente"],
+      crm_score: ["baixo", "medio", "alto"],
+      crm_temperatura: ["frio", "morno", "quente"],
       documento_notificacao_tipo: [
         "revisao_atrasada",
         "proximo_vencimento",
