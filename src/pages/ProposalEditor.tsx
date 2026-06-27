@@ -394,7 +394,7 @@ function PricingPanel({ item, existing, params, clientFuncionarios, onSave }: an
         <Card className="bg-secondary text-secondary-foreground">
           <CardContent className="p-4 space-y-2 text-sm">
             <Row label="Custo direto"><span className="font-mono">{brl(c.custo_direto_total)}</span></Row>
-            <Row label="Custo horas ({input.horas} total)"><span className="font-mono">{brl(c.custo_horas)} ({c.horas_total}h)</span></Row>
+            <Row label={`Custo horas (${c.horas_total}h)`}><span className="font-mono">{brl(c.custo_horas)}</span></Row>
             <Row label="Custo vidas"><span className="font-mono">{brl(c.custo_vidas)}</span></Row>
             <Row label="Custo total"><span className="font-mono">{brl(c.custo_total)}</span></Row>
             <hr className="border-white/20" />
