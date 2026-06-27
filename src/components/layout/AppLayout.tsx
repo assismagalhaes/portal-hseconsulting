@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Briefcase, FileText, Settings as Cog, LogOut, HardHat, ClipboardList, CalendarDays, Activity, ListTodo, UserCircle } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, FileText, Settings as Cog, LogOut, HardHat, ClipboardList, CalendarDays, Activity, ListTodo, UserCircle, FileSignature } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import logo from "@/assets/hse-logo-green.png";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ const nav = [
   { to: "/planejamento", label: "Planejamento", icon: Activity },
   { to: "/meu-painel", label: "Meu Painel", icon: UserCircle },
   { to: "/profissionais", label: "Profissionais", icon: HardHat },
+  { to: "/documentos", label: "Documentos Técnicos", icon: FileSignature },
   { to: "/clientes", label: "Clientes", icon: Users },
   { to: "/servicos", label: "Serviços", icon: Briefcase },
   { to: "/configuracoes", label: "Configurações", icon: Cog },
