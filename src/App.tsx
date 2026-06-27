@@ -4,8 +4,11 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth";
+import { ClienteAuthProvider } from "@/lib/clienteAuth";
 import AppLayout from "./components/layout/AppLayout";
 import RequireAuth from "./components/layout/RequireAuth";
+import ClienteLayout from "./components/layout/ClienteLayout";
+import RequireCliente from "./components/layout/RequireCliente";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
@@ -43,6 +46,16 @@ import FinContasReceber from "./pages/financeiro/ContasReceber";
 import FinCustos from "./pages/financeiro/Custos";
 import FinAlertas from "./pages/financeiro/Alertas";
 import FinCentrosCusto from "./pages/financeiro/CentrosCusto";
+import PortalClienteConfig from "./pages/PortalClienteConfig";
+import ClienteLogin from "./pages/cliente/ClienteLogin";
+import ClienteDashboard from "./pages/cliente/ClienteDashboard";
+import ClientePropostas from "./pages/cliente/ClientePropostas";
+import ClienteServicos from "./pages/cliente/ClienteServicos";
+import ClienteOS from "./pages/cliente/ClienteOS";
+import ClienteDocumentos from "./pages/cliente/ClienteDocumentos";
+import ClientePendencias from "./pages/cliente/ClientePendencias";
+import ClienteComunicacoes from "./pages/cliente/ClienteComunicacoes";
+import ClientePerfil from "./pages/cliente/ClientePerfil";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -54,9 +67,22 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <ClienteAuthProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/proposta-exemplo" element={<ProposalExample />} />
+            <Route path="/cliente/login" element={<ClienteLogin />} />
+            <Route element={<RequireCliente><ClienteLayout /></RequireCliente>}>
+              <Route path="/cliente" element={<ClienteDashboard />} />
+              <Route path="/cliente/dashboard" element={<ClienteDashboard />} />
+              <Route path="/cliente/propostas" element={<ClientePropostas />} />
+              <Route path="/cliente/servicos" element={<ClienteServicos />} />
+              <Route path="/cliente/ordens-servico" element={<ClienteOS />} />
+              <Route path="/cliente/documentos" element={<ClienteDocumentos />} />
+              <Route path="/cliente/pendencias" element={<ClientePendencias />} />
+              <Route path="/cliente/comunicacoes" element={<ClienteComunicacoes />} />
+              <Route path="/cliente/perfil" element={<ClientePerfil />} />
+            </Route>
             <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/clientes" element={<Clients />} />
@@ -92,10 +118,12 @@ const App = () => (
               <Route path="/financeiro/custos" element={<FinCustos />} />
               <Route path="/financeiro/alertas" element={<FinAlertas />} />
               <Route path="/financeiro/centros-custo" element={<FinCentrosCusto />} />
+              <Route path="/portal-cliente" element={<PortalClienteConfig />} />
               <Route path="/configuracoes" element={<Settings />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </ClienteAuthProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
