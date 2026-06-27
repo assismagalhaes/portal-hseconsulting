@@ -2833,6 +2833,338 @@ export type Database = {
           },
         ]
       }
+      ia_acoes_sugeridas: {
+        Row: {
+          applied_at: string | null
+          applied_by: string | null
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          entidade_id: string | null
+          entidade_tipo: string | null
+          id: string
+          interacao_id: string | null
+          modulo: Database["public"]["Enums"]["ia_modulo"]
+          payload: Json | null
+          status: Database["public"]["Enums"]["ia_acao_status"]
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          applied_at?: string | null
+          applied_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          id?: string
+          interacao_id?: string | null
+          modulo: Database["public"]["Enums"]["ia_modulo"]
+          payload?: Json | null
+          status?: Database["public"]["Enums"]["ia_acao_status"]
+          tipo: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          applied_at?: string | null
+          applied_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          id?: string
+          interacao_id?: string | null
+          modulo?: Database["public"]["Enums"]["ia_modulo"]
+          payload?: Json | null
+          status?: Database["public"]["Enums"]["ia_acao_status"]
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ia_acoes_sugeridas_interacao_id_fkey"
+            columns: ["interacao_id"]
+            isOneToOne: false
+            referencedRelation: "ia_interacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ia_alertas: {
+        Row: {
+          acao_sugerida: string | null
+          client_id: string | null
+          created_at: string
+          descricao: string | null
+          entidade_id: string | null
+          entidade_tipo: string | null
+          gravidade: Database["public"]["Enums"]["ia_alerta_gravidade"]
+          id: string
+          meta: Json | null
+          modulo: Database["public"]["Enums"]["ia_modulo"]
+          resolved_at: string | null
+          resolved_by: string | null
+          responsavel_id: string | null
+          status: Database["public"]["Enums"]["ia_alerta_status"]
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          acao_sugerida?: string | null
+          client_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          gravidade?: Database["public"]["Enums"]["ia_alerta_gravidade"]
+          id?: string
+          meta?: Json | null
+          modulo?: Database["public"]["Enums"]["ia_modulo"]
+          resolved_at?: string | null
+          resolved_by?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["ia_alerta_status"]
+          tipo: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          acao_sugerida?: string | null
+          client_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          gravidade?: Database["public"]["Enums"]["ia_alerta_gravidade"]
+          id?: string
+          meta?: Json | null
+          modulo?: Database["public"]["Enums"]["ia_modulo"]
+          resolved_at?: string | null
+          resolved_by?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["ia_alerta_status"]
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ia_alertas_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ia_contextos: {
+        Row: {
+          conteudo: Json
+          created_at: string
+          fonte: string
+          id: string
+          interacao_id: string | null
+        }
+        Insert: {
+          conteudo?: Json
+          created_at?: string
+          fonte: string
+          id?: string
+          interacao_id?: string | null
+        }
+        Update: {
+          conteudo?: Json
+          created_at?: string
+          fonte?: string
+          id?: string
+          interacao_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ia_contextos_interacao_id_fkey"
+            columns: ["interacao_id"]
+            isOneToOne: false
+            referencedRelation: "ia_interacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ia_feedbacks: {
+        Row: {
+          comentario: string | null
+          created_at: string
+          id: string
+          interacao_id: string | null
+          nota: number | null
+          user_id: string | null
+          util: boolean | null
+        }
+        Insert: {
+          comentario?: string | null
+          created_at?: string
+          id?: string
+          interacao_id?: string | null
+          nota?: number | null
+          user_id?: string | null
+          util?: boolean | null
+        }
+        Update: {
+          comentario?: string | null
+          created_at?: string
+          id?: string
+          interacao_id?: string | null
+          nota?: number | null
+          user_id?: string | null
+          util?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ia_feedbacks_interacao_id_fkey"
+            columns: ["interacao_id"]
+            isOneToOne: false
+            referencedRelation: "ia_interacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ia_interacoes: {
+        Row: {
+          acao_aceita: boolean | null
+          acao_sugerida: string | null
+          avaliacao: number | null
+          contexto: Json | null
+          created_at: string
+          entidade_id: string | null
+          entidade_tipo: string | null
+          erro: string | null
+          id: string
+          model: string | null
+          modulo: Database["public"]["Enums"]["ia_modulo"]
+          pergunta: string
+          resposta: string | null
+          tokens_input: number | null
+          tokens_output: number | null
+          user_id: string | null
+        }
+        Insert: {
+          acao_aceita?: boolean | null
+          acao_sugerida?: string | null
+          avaliacao?: number | null
+          contexto?: Json | null
+          created_at?: string
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          erro?: string | null
+          id?: string
+          model?: string | null
+          modulo?: Database["public"]["Enums"]["ia_modulo"]
+          pergunta: string
+          resposta?: string | null
+          tokens_input?: number | null
+          tokens_output?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          acao_aceita?: boolean | null
+          acao_sugerida?: string | null
+          avaliacao?: number | null
+          contexto?: Json | null
+          created_at?: string
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          erro?: string | null
+          id?: string
+          model?: string | null
+          modulo?: Database["public"]["Enums"]["ia_modulo"]
+          pergunta?: string
+          resposta?: string | null
+          tokens_input?: number | null
+          tokens_output?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      ia_prompts: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          modulo: Database["public"]["Enums"]["ia_modulo"]
+          nome: string
+          objetivo: string | null
+          prompt_base: string
+          updated_at: string
+          versao: number
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          modulo: Database["public"]["Enums"]["ia_modulo"]
+          nome: string
+          objetivo?: string | null
+          prompt_base: string
+          updated_at?: string
+          versao?: number
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          modulo?: Database["public"]["Enums"]["ia_modulo"]
+          nome?: string
+          objetivo?: string | null
+          prompt_base?: string
+          updated_at?: string
+          versao?: number
+        }
+        Relationships: []
+      }
+      ia_resumos: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          entidade_id: string | null
+          entidade_tipo: string
+          id: string
+          meta: Json | null
+          modulo: Database["public"]["Enums"]["ia_modulo"]
+          resumo: string
+          titulo: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          entidade_id?: string | null
+          entidade_tipo: string
+          id?: string
+          meta?: Json | null
+          modulo?: Database["public"]["Enums"]["ia_modulo"]
+          resumo: string
+          titulo?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string
+          id?: string
+          meta?: Json | null
+          modulo?: Database["public"]["Enums"]["ia_modulo"]
+          resumo?: string
+          titulo?: string | null
+        }
+        Relationships: []
+      }
       ordens_servico: {
         Row: {
           cidade: string | null
@@ -4173,6 +4505,19 @@ export type Database = {
         | "taxas"
         | "mao_de_obra"
         | "outros"
+      ia_acao_status: "sugerida" | "aplicada" | "recusada" | "expirada"
+      ia_alerta_gravidade: "baixa" | "media" | "alta" | "critica"
+      ia_alerta_status: "novo" | "em_analise" | "resolvido" | "ignorado"
+      ia_modulo:
+        | "geral"
+        | "proposta"
+        | "precificacao"
+        | "documento"
+        | "os"
+        | "execucao"
+        | "crm"
+        | "financeiro"
+        | "alertas"
       os_documento_categoria: "recebido" | "gerado" | "pendente"
       os_evidencia_tipo:
         | "foto"
@@ -4533,6 +4878,20 @@ export const Constants = {
         "taxas",
         "mao_de_obra",
         "outros",
+      ],
+      ia_acao_status: ["sugerida", "aplicada", "recusada", "expirada"],
+      ia_alerta_gravidade: ["baixa", "media", "alta", "critica"],
+      ia_alerta_status: ["novo", "em_analise", "resolvido", "ignorado"],
+      ia_modulo: [
+        "geral",
+        "proposta",
+        "precificacao",
+        "documento",
+        "os",
+        "execucao",
+        "crm",
+        "financeiro",
+        "alertas",
       ],
       os_documento_categoria: ["recebido", "gerado", "pendente"],
       os_evidencia_tipo: [

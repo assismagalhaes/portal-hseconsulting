@@ -1,1 +1,7 @@
 project_id = "ujctjiugstfrlaasgrop"
+
+[functions.ia-chat]
+verify_jwt = true
+
+[functions.ia-gerar-alertas]
+verify_jwt = true
