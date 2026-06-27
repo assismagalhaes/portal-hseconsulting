@@ -125,6 +125,656 @@ export type Database = {
         }
         Relationships: []
       }
+      documentos_anexos: {
+        Row: {
+          arquivo_path: string
+          created_at: string
+          descricao: string | null
+          documento_id: string
+          id: string
+          nome: string
+          origem: Database["public"]["Enums"]["documento_origem_anexo"]
+          origem_id: string | null
+          tipo: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          arquivo_path: string
+          created_at?: string
+          descricao?: string | null
+          documento_id: string
+          id?: string
+          nome: string
+          origem?: Database["public"]["Enums"]["documento_origem_anexo"]
+          origem_id?: string | null
+          tipo?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          arquivo_path?: string
+          created_at?: string
+          descricao?: string | null
+          documento_id?: string
+          id?: string
+          nome?: string
+          origem?: Database["public"]["Enums"]["documento_origem_anexo"]
+          origem_id?: string | null
+          tipo?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_anexos_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "documentos_tecnicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documentos_aprovacoes: {
+        Row: {
+          aprovado_em: string
+          aprovado_por: string | null
+          documento_id: string
+          id: string
+          observacoes: string | null
+          revisao_id: string | null
+        }
+        Insert: {
+          aprovado_em?: string
+          aprovado_por?: string | null
+          documento_id: string
+          id?: string
+          observacoes?: string | null
+          revisao_id?: string | null
+        }
+        Update: {
+          aprovado_em?: string
+          aprovado_por?: string | null
+          documento_id?: string
+          id?: string
+          observacoes?: string | null
+          revisao_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_aprovacoes_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "documentos_tecnicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_aprovacoes_revisao_id_fkey"
+            columns: ["revisao_id"]
+            isOneToOne: false
+            referencedRelation: "documentos_revisoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documentos_campos_variaveis: {
+        Row: {
+          ativo: boolean
+          campo_origem: string
+          chave: string
+          created_at: string
+          descricao: string | null
+          id: string
+          label: string
+          origem: string
+        }
+        Insert: {
+          ativo?: boolean
+          campo_origem: string
+          chave: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          label: string
+          origem: string
+        }
+        Update: {
+          ativo?: boolean
+          campo_origem?: string
+          chave?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          label?: string
+          origem?: string
+        }
+        Relationships: []
+      }
+      documentos_modelos: {
+        Row: {
+          ativo: boolean
+          campos_variaveis_json: Json | null
+          categoria: string | null
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          responsavel_padrao_id: string | null
+          secoes_json: Json | null
+          texto_padrao: string | null
+          tipo: Database["public"]["Enums"]["documento_tipo"]
+          updated_at: string
+          validade_padrao_dias: number | null
+        }
+        Insert: {
+          ativo?: boolean
+          campos_variaveis_json?: Json | null
+          categoria?: string | null
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          responsavel_padrao_id?: string | null
+          secoes_json?: Json | null
+          texto_padrao?: string | null
+          tipo: Database["public"]["Enums"]["documento_tipo"]
+          updated_at?: string
+          validade_padrao_dias?: number | null
+        }
+        Update: {
+          ativo?: boolean
+          campos_variaveis_json?: Json | null
+          categoria?: string | null
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          responsavel_padrao_id?: string | null
+          secoes_json?: Json | null
+          texto_padrao?: string | null
+          tipo?: Database["public"]["Enums"]["documento_tipo"]
+          updated_at?: string
+          validade_padrao_dias?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_modelos_responsavel_padrao_id_fkey"
+            columns: ["responsavel_padrao_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documentos_notificacoes: {
+        Row: {
+          created_at: string
+          documento_id: string | null
+          id: string
+          lida: boolean
+          mensagem: string
+          tipo: Database["public"]["Enums"]["documento_notificacao_tipo"]
+          user_id_destino: string | null
+        }
+        Insert: {
+          created_at?: string
+          documento_id?: string | null
+          id?: string
+          lida?: boolean
+          mensagem: string
+          tipo: Database["public"]["Enums"]["documento_notificacao_tipo"]
+          user_id_destino?: string | null
+        }
+        Update: {
+          created_at?: string
+          documento_id?: string | null
+          id?: string
+          lida?: boolean
+          mensagem?: string
+          tipo?: Database["public"]["Enums"]["documento_notificacao_tipo"]
+          user_id_destino?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_notificacoes_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "documentos_tecnicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documentos_pendentes: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          data_solicitacao: string
+          documento_solicitado: string
+          execucao_id: string | null
+          id: string
+          observacao: string | null
+          prazo: string | null
+          responsavel_envio: string | null
+          status: Database["public"]["Enums"]["documento_pendente_status"]
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_solicitacao?: string
+          documento_solicitado: string
+          execucao_id?: string | null
+          id?: string
+          observacao?: string | null
+          prazo?: string | null
+          responsavel_envio?: string | null
+          status?: Database["public"]["Enums"]["documento_pendente_status"]
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_solicitacao?: string
+          documento_solicitado?: string
+          execucao_id?: string | null
+          id?: string
+          observacao?: string | null
+          prazo?: string | null
+          responsavel_envio?: string | null
+          status?: Database["public"]["Enums"]["documento_pendente_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_pendentes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_pendentes_execucao_id_fkey"
+            columns: ["execucao_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documentos_permissoes: {
+        Row: {
+          id: string
+          pode_aprovar: boolean
+          pode_cancelar: boolean
+          pode_criar: boolean
+          pode_editar: boolean
+          pode_emitir: boolean
+          pode_revisar: boolean
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          pode_aprovar?: boolean
+          pode_cancelar?: boolean
+          pode_criar?: boolean
+          pode_editar?: boolean
+          pode_emitir?: boolean
+          pode_revisar?: boolean
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          pode_aprovar?: boolean
+          pode_cancelar?: boolean
+          pode_criar?: boolean
+          pode_editar?: boolean
+          pode_emitir?: boolean
+          pode_revisar?: boolean
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      documentos_recebidos: {
+        Row: {
+          arquivo_path: string | null
+          client_id: string | null
+          created_at: string
+          data_recebimento: string
+          execucao_id: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          recebido_por: string | null
+          status: Database["public"]["Enums"]["documento_recebido_status"]
+          updated_at: string
+        }
+        Insert: {
+          arquivo_path?: string | null
+          client_id?: string | null
+          created_at?: string
+          data_recebimento?: string
+          execucao_id?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          recebido_por?: string | null
+          status?: Database["public"]["Enums"]["documento_recebido_status"]
+          updated_at?: string
+        }
+        Update: {
+          arquivo_path?: string | null
+          client_id?: string | null
+          created_at?: string
+          data_recebimento?: string
+          execucao_id?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          recebido_por?: string | null
+          status?: Database["public"]["Enums"]["documento_recebido_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_recebidos_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_recebidos_execucao_id_fkey"
+            columns: ["execucao_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documentos_revisoes: {
+        Row: {
+          arquivo_path: string | null
+          conteudo_snapshot: Json | null
+          created_at: string
+          descricao: string | null
+          documento_id: string
+          id: string
+          numero_revisao: number
+          status: Database["public"]["Enums"]["documento_status"] | null
+          user_id: string | null
+        }
+        Insert: {
+          arquivo_path?: string | null
+          conteudo_snapshot?: Json | null
+          created_at?: string
+          descricao?: string | null
+          documento_id: string
+          id?: string
+          numero_revisao: number
+          status?: Database["public"]["Enums"]["documento_status"] | null
+          user_id?: string | null
+        }
+        Update: {
+          arquivo_path?: string | null
+          conteudo_snapshot?: Json | null
+          created_at?: string
+          descricao?: string | null
+          documento_id?: string
+          id?: string
+          numero_revisao?: number
+          status?: Database["public"]["Enums"]["documento_status"] | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_revisoes_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "documentos_tecnicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documentos_secoes: {
+        Row: {
+          conteudo_padrao: string | null
+          created_at: string
+          id: string
+          modelo_id: string
+          obrigatoria: boolean
+          ordem: number
+          titulo: string
+        }
+        Insert: {
+          conteudo_padrao?: string | null
+          created_at?: string
+          id?: string
+          modelo_id: string
+          obrigatoria?: boolean
+          ordem?: number
+          titulo: string
+        }
+        Update: {
+          conteudo_padrao?: string | null
+          created_at?: string
+          id?: string
+          modelo_id?: string
+          obrigatoria?: boolean
+          ordem?: number
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_secoes_modelo_id_fkey"
+            columns: ["modelo_id"]
+            isOneToOne: false
+            referencedRelation: "documentos_modelos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documentos_tecnicos: {
+        Row: {
+          aprovacao_obs: string | null
+          aprovado_em: string | null
+          aprovado_por: string | null
+          arquivo_final_path: string | null
+          assinatura_art: string | null
+          assinatura_cargo: string | null
+          assinatura_path: string | null
+          assinatura_registro: string | null
+          client_id: string | null
+          cliente_nome: string | null
+          conteudo_json: Json
+          created_at: string
+          created_by: string | null
+          data_aprovacao: string | null
+          data_emissao: string | null
+          data_vencimento: string | null
+          execucao_id: string | null
+          id: string
+          modelo_id: string | null
+          numero: string
+          observacoes_internas: string | null
+          os_id: string | null
+          proposal_id: string | null
+          responsavel_revisao_id: string | null
+          responsavel_tecnico_id: string | null
+          revisao: number
+          status: Database["public"]["Enums"]["documento_status"]
+          tipo: Database["public"]["Enums"]["documento_tipo"]
+          tipo_label: string | null
+          titulo: string
+          updated_at: string
+          updated_by: string | null
+          versao: number
+          visivel_para_cliente: boolean
+        }
+        Insert: {
+          aprovacao_obs?: string | null
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          arquivo_final_path?: string | null
+          assinatura_art?: string | null
+          assinatura_cargo?: string | null
+          assinatura_path?: string | null
+          assinatura_registro?: string | null
+          client_id?: string | null
+          cliente_nome?: string | null
+          conteudo_json?: Json
+          created_at?: string
+          created_by?: string | null
+          data_aprovacao?: string | null
+          data_emissao?: string | null
+          data_vencimento?: string | null
+          execucao_id?: string | null
+          id?: string
+          modelo_id?: string | null
+          numero?: string
+          observacoes_internas?: string | null
+          os_id?: string | null
+          proposal_id?: string | null
+          responsavel_revisao_id?: string | null
+          responsavel_tecnico_id?: string | null
+          revisao?: number
+          status?: Database["public"]["Enums"]["documento_status"]
+          tipo: Database["public"]["Enums"]["documento_tipo"]
+          tipo_label?: string | null
+          titulo: string
+          updated_at?: string
+          updated_by?: string | null
+          versao?: number
+          visivel_para_cliente?: boolean
+        }
+        Update: {
+          aprovacao_obs?: string | null
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          arquivo_final_path?: string | null
+          assinatura_art?: string | null
+          assinatura_cargo?: string | null
+          assinatura_path?: string | null
+          assinatura_registro?: string | null
+          client_id?: string | null
+          cliente_nome?: string | null
+          conteudo_json?: Json
+          created_at?: string
+          created_by?: string | null
+          data_aprovacao?: string | null
+          data_emissao?: string | null
+          data_vencimento?: string | null
+          execucao_id?: string | null
+          id?: string
+          modelo_id?: string | null
+          numero?: string
+          observacoes_internas?: string | null
+          os_id?: string | null
+          proposal_id?: string | null
+          responsavel_revisao_id?: string | null
+          responsavel_tecnico_id?: string | null
+          revisao?: number
+          status?: Database["public"]["Enums"]["documento_status"]
+          tipo?: Database["public"]["Enums"]["documento_tipo"]
+          tipo_label?: string | null
+          titulo?: string
+          updated_at?: string
+          updated_by?: string | null
+          versao?: number
+          visivel_para_cliente?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_tecnicos_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_tecnicos_execucao_id_fkey"
+            columns: ["execucao_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_servicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_tecnicos_modelo_id_fkey"
+            columns: ["modelo_id"]
+            isOneToOne: false
+            referencedRelation: "documentos_modelos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_tecnicos_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_tecnicos_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_tecnicos_responsavel_revisao_id_fkey"
+            columns: ["responsavel_revisao_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_tecnicos_responsavel_tecnico_id_fkey"
+            columns: ["responsavel_tecnico_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documentos_timeline: {
+        Row: {
+          created_at: string
+          detalhe: string | null
+          documento_id: string
+          evento: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detalhe?: string | null
+          documento_id: string
+          evento: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detalhe?: string | null
+          documento_id?: string
+          evento?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_timeline_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "documentos_tecnicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       execucao_anexos: {
         Row: {
           bucket: string
@@ -1691,6 +2341,11 @@ export type Database = {
         Args: { _proposal_id: string }
         Returns: number
       }
+      criar_revisao_documento: {
+        Args: { _descricao: string; _doc_id: string }
+        Returns: string
+      }
+      gerar_numero_documento: { Args: never; Returns: string }
       gerar_numero_os: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -1703,6 +2358,58 @@ export type Database = {
     Enums: {
       app_role: "admin" | "comercial" | "tecnico"
       checklist_situacao: "pendente" | "em_andamento" | "concluido"
+      documento_notificacao_tipo:
+        | "revisao_atrasada"
+        | "proximo_vencimento"
+        | "vencido"
+        | "aguardando_cliente"
+        | "pendencia"
+      documento_origem_anexo:
+        | "os"
+        | "visita"
+        | "cliente"
+        | "upload"
+        | "evidencia"
+      documento_pendente_status:
+        | "solicitado"
+        | "recebido"
+        | "parcial"
+        | "pendente"
+        | "dispensado"
+      documento_recebido_status:
+        | "recebido"
+        | "parcial"
+        | "pendente"
+        | "dispensado"
+      documento_status:
+        | "rascunho"
+        | "em_elaboracao"
+        | "em_revisao"
+        | "aguardando_cliente"
+        | "aguardando_assinatura"
+        | "aprovado"
+        | "emitido"
+        | "entregue"
+        | "revisado"
+        | "cancelado"
+        | "vencido"
+      documento_tipo:
+        | "PGR"
+        | "PCMSO"
+        | "LTCAT"
+        | "Laudo_Insalubridade"
+        | "Laudo_Periculosidade"
+        | "Avaliacao_Ergonomica"
+        | "Avaliacao_Psicossocial"
+        | "Parecer_Tecnico"
+        | "Relatorio_Tecnico"
+        | "Relatorio_Visita"
+        | "Relatorio_Medicao"
+        | "Certificado_Treinamento"
+        | "Lista_Presenca"
+        | "OS_SST"
+        | "PPP"
+        | "Outros"
       exec_status: "pendente" | "em_andamento" | "concluido" | "cancelado"
       execucao_prioridade: "baixa" | "normal" | "alta" | "urgente"
       execucao_status:
@@ -1880,6 +2587,64 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "comercial", "tecnico"],
       checklist_situacao: ["pendente", "em_andamento", "concluido"],
+      documento_notificacao_tipo: [
+        "revisao_atrasada",
+        "proximo_vencimento",
+        "vencido",
+        "aguardando_cliente",
+        "pendencia",
+      ],
+      documento_origem_anexo: [
+        "os",
+        "visita",
+        "cliente",
+        "upload",
+        "evidencia",
+      ],
+      documento_pendente_status: [
+        "solicitado",
+        "recebido",
+        "parcial",
+        "pendente",
+        "dispensado",
+      ],
+      documento_recebido_status: [
+        "recebido",
+        "parcial",
+        "pendente",
+        "dispensado",
+      ],
+      documento_status: [
+        "rascunho",
+        "em_elaboracao",
+        "em_revisao",
+        "aguardando_cliente",
+        "aguardando_assinatura",
+        "aprovado",
+        "emitido",
+        "entregue",
+        "revisado",
+        "cancelado",
+        "vencido",
+      ],
+      documento_tipo: [
+        "PGR",
+        "PCMSO",
+        "LTCAT",
+        "Laudo_Insalubridade",
+        "Laudo_Periculosidade",
+        "Avaliacao_Ergonomica",
+        "Avaliacao_Psicossocial",
+        "Parecer_Tecnico",
+        "Relatorio_Tecnico",
+        "Relatorio_Visita",
+        "Relatorio_Medicao",
+        "Certificado_Treinamento",
+        "Lista_Presenca",
+        "OS_SST",
+        "PPP",
+        "Outros",
+      ],
       exec_status: ["pendente", "em_andamento", "concluido", "cancelado"],
       execucao_prioridade: ["baixa", "normal", "alta", "urgente"],
       execucao_status: [
