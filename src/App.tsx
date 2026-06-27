@@ -16,6 +16,7 @@ import Execucao from "./pages/Execucao";
 import ExecucaoEditor from "./pages/ExecucaoEditor";
 import Profissionais from "./pages/Profissionais";
 import Settings from "./pages/Settings";
+import ProposalExample from "./pages/ProposalExample";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/proposta-exemplo" element={<ProposalExample />} />
             <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/clientes" element={<Clients />} />
