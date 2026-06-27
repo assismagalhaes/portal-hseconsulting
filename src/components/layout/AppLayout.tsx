@@ -34,6 +34,8 @@ const nav = [
   { to: "/ia", label: "IA HSE", icon: Sparkles, end: true },
   { to: "/ia/chat", label: "Assistente IA", icon: Sparkles },
   { to: "/ia/alertas", label: "Alertas Inteligentes", icon: Bell },
+  { to: "/ia/resumo-dia", label: "Resumo do Dia", icon: Sparkles },
+  { to: "/ia/resumo-semanal", label: "Resumo Semanal", icon: Sparkles },
   { to: "/ia/prompts", label: "Prompts da IA", icon: FileText },
   { to: "/configuracoes", label: "Configurações", icon: Cog },
 ];
