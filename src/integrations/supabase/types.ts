@@ -67,11 +67,13 @@ export type Database = {
       }
       clients: {
         Row: {
+          cargo: string | null
           cidade: string | null
           cnpj_cpf: string | null
           created_at: string
           created_by: string | null
           email: string | null
+          endereco: string | null
           id: string
           nome_fantasia: string | null
           observacoes: string | null
@@ -81,13 +83,16 @@ export type Database = {
           telefone: string | null
           uf: string | null
           updated_at: string
+          whatsapp: string | null
         }
         Insert: {
+          cargo?: string | null
           cidade?: string | null
           cnpj_cpf?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
+          endereco?: string | null
           id?: string
           nome_fantasia?: string | null
           observacoes?: string | null
@@ -97,13 +102,16 @@ export type Database = {
           telefone?: string | null
           uf?: string | null
           updated_at?: string
+          whatsapp?: string | null
         }
         Update: {
+          cargo?: string | null
           cidade?: string | null
           cnpj_cpf?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
+          endereco?: string | null
           id?: string
           nome_fantasia?: string | null
           observacoes?: string | null
@@ -113,6 +121,7 @@ export type Database = {
           telefone?: string | null
           uf?: string | null
           updated_at?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
@@ -252,6 +261,7 @@ export type Database = {
       }
       proposal_items: {
         Row: {
+          categoria: string | null
           created_at: string
           descricao_comercial: string
           escopo_tecnico: string | null
@@ -266,6 +276,7 @@ export type Database = {
           valor_unitario: number
         }
         Insert: {
+          categoria?: string | null
           created_at?: string
           descricao_comercial: string
           escopo_tecnico?: string | null
@@ -280,6 +291,7 @@ export type Database = {
           valor_unitario?: number
         }
         Update: {
+          categoria?: string | null
           created_at?: string
           descricao_comercial?: string
           escopo_tecnico?: string | null
@@ -317,6 +329,8 @@ export type Database = {
           id: string
           proposal_id: string
           revisao: number
+          snapshot: Json | null
+          titulo: string | null
           user_id: string | null
         }
         Insert: {
@@ -325,6 +339,8 @@ export type Database = {
           id?: string
           proposal_id: string
           revisao?: number
+          snapshot?: Json | null
+          titulo?: string | null
           user_id?: string | null
         }
         Update: {
@@ -333,6 +349,8 @@ export type Database = {
           id?: string
           proposal_id?: string
           revisao?: number
+          snapshot?: Json | null
+          titulo?: string | null
           user_id?: string | null
         }
         Relationships: [
@@ -355,6 +373,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           data_envio: string | null
+          escopo_geral: string | null
           id: string
           numero: string
           observacoes_comerciais: string | null
@@ -375,6 +394,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           data_envio?: string | null
+          escopo_geral?: string | null
           id?: string
           numero?: string
           observacoes_comerciais?: string | null
@@ -395,6 +415,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           data_envio?: string | null
+          escopo_geral?: string | null
           id?: string
           numero?: string
           observacoes_comerciais?: string | null
@@ -418,6 +439,7 @@ export type Database = {
       }
       services: {
         Row: {
+          categoria: string | null
           created_at: string
           created_by: string | null
           descricao_comercial: string | null
@@ -429,6 +451,7 @@ export type Database = {
           valor_referencia: number | null
         }
         Insert: {
+          categoria?: string | null
           created_at?: string
           created_by?: string | null
           descricao_comercial?: string | null
@@ -440,6 +463,7 @@ export type Database = {
           valor_referencia?: number | null
         }
         Update: {
+          categoria?: string | null
           created_at?: string
           created_by?: string | null
           descricao_comercial?: string | null
@@ -478,6 +502,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_proposal_revision: {
+        Args: { _descricao: string; _proposal_id: string; _titulo: string }
+        Returns: string
+      }
       can_see_internal: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
