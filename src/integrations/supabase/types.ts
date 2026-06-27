@@ -813,6 +813,90 @@ export type Database = {
           },
         ]
       }
+      proposal_template: {
+        Row: {
+          capa_imagem_url: string | null
+          contracapa_imagem_url: string | null
+          cor_neutra: string
+          cor_primaria: string
+          cor_secundaria: string
+          created_at: string
+          diferenciais: Json
+          email: string
+          endereco: string
+          font_corpo: string
+          font_titulo: string
+          id: string
+          logo_url: string | null
+          mensagem_contracapa: string
+          missao: string
+          quem_somos: string
+          rodape_versao: string
+          site: string
+          slogan: string
+          telefone: string
+          texto_aceite: string
+          updated_at: string
+          valores: string
+          visao: string
+          whatsapp: string
+        }
+        Insert: {
+          capa_imagem_url?: string | null
+          contracapa_imagem_url?: string | null
+          cor_neutra?: string
+          cor_primaria?: string
+          cor_secundaria?: string
+          created_at?: string
+          diferenciais?: Json
+          email?: string
+          endereco?: string
+          font_corpo?: string
+          font_titulo?: string
+          id?: string
+          logo_url?: string | null
+          mensagem_contracapa?: string
+          missao?: string
+          quem_somos?: string
+          rodape_versao?: string
+          site?: string
+          slogan?: string
+          telefone?: string
+          texto_aceite?: string
+          updated_at?: string
+          valores?: string
+          visao?: string
+          whatsapp?: string
+        }
+        Update: {
+          capa_imagem_url?: string | null
+          contracapa_imagem_url?: string | null
+          cor_neutra?: string
+          cor_primaria?: string
+          cor_secundaria?: string
+          created_at?: string
+          diferenciais?: Json
+          email?: string
+          endereco?: string
+          font_corpo?: string
+          font_titulo?: string
+          id?: string
+          logo_url?: string | null
+          mensagem_contracapa?: string
+          missao?: string
+          quem_somos?: string
+          rodape_versao?: string
+          site?: string
+          slogan?: string
+          telefone?: string
+          texto_aceite?: string
+          updated_at?: string
+          valores?: string
+          visao?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
       proposals: {
         Row: {
           aceite_data: string | null
