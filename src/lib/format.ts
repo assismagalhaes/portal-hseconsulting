@@ -23,6 +23,7 @@ export const proposalStatusLabel: Record<string, string> = {
   negociacao: "Em negociação",
   aprovada: "Aprovada",
   recusada: "Recusada",
+  cancelada: "Cancelada",
   expirada: "Expirada",
 };
 
