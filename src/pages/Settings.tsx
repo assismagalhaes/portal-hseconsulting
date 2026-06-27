@@ -6,21 +6,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 
 export default function Settings() {
   const { isInternal } = useAuth();
   const [p, setP] = useState<any>(null);
+  const [tpl, setTpl] = useState<any>(null);
 
   useEffect(() => { document.title = "Configurações | Portal HSE Consulting"; load(); }, []);
   async function load() {
-    const { data } = await supabase.from("pricing_params").select("*").limit(1).maybeSingle();
-    setP(data || {
+    const [pp, tt] = await Promise.all([
+      supabase.from("pricing_params").select("*").limit(1).maybeSingle(),
+      supabase.from("proposal_template").select("*").limit(1).maybeSingle(),
+    ]);
+    setP(pp.data || {
       custo_fixo_mensal: 0, horas_produtivas_mes: 160, custo_por_vida: 0,
       aliquota_imposto: 0.06, margem_minima: 0.25, markup_minimo: 1.5,
       arredondamento: 10, condicoes_pagamento_default: "", outras_condicoes_default: "",
     });
+    setTpl(tt.data || {});
   }
 
   async function save() {
@@ -39,11 +45,33 @@ export default function Settings() {
   if (!p) return null;
   const custoHora = p.horas_produtivas_mes > 0 ? Number(p.custo_fixo_mensal) / Number(p.horas_produtivas_mes) : 0;
 
+  async function saveTpl() {
+    if (!tpl) return;
+    const payload: any = { ...tpl };
+    if (typeof payload.diferenciais === "string") {
+      payload.diferenciais = payload.diferenciais.split("\n").map((s:string)=>s.trim()).filter(Boolean);
+    }
+    const { error } = tpl.id
+      ? await supabase.from("proposal_template").update(payload).eq("id", tpl.id)
+      : await supabase.from("proposal_template").insert(payload);
+    if (error) return toast.error(error.message);
+    toast.success("Modelo da proposta salvo");
+    load();
+  }
+  const setT = (patch:any) => setTpl({ ...tpl, ...patch });
+  const difString = Array.isArray(tpl?.diferenciais) ? tpl.diferenciais.join("\n") : (tpl?.diferenciais || "");
+
   return (
     <div>
-      <PageHeader title="Configurações de Precificação" subtitle="Parâmetros usados em todos os cálculos internos" />
-      <div className="p-6 max-w-3xl space-y-4">
+      <PageHeader title="Configurações" subtitle="Precificação e modelo da proposta comercial" />
+      <div className="p-6 max-w-4xl">
         {!isInternal && <p className="text-sm text-warning">Apenas admin/comercial pode salvar.</p>}
+        <Tabs defaultValue="precos">
+          <TabsList>
+            <TabsTrigger value="precos">Precificação</TabsTrigger>
+            <TabsTrigger value="modelo">Modelo da Proposta</TabsTrigger>
+          </TabsList>
+          <TabsContent value="precos" className="space-y-4 mt-4">
         <Card className="shadow-elegant">
           <CardHeader><CardTitle className="font-display">Custos internos</CardTitle></CardHeader>
           <CardContent className="grid sm:grid-cols-2 gap-3">
@@ -72,6 +100,77 @@ export default function Settings() {
           </CardContent>
         </Card>
         <div className="flex justify-end"><Button onClick={save} disabled={!isInternal}>Salvar parâmetros</Button></div>
+          </TabsContent>
+
+          <TabsContent value="modelo" className="space-y-4 mt-4">
+            {tpl && (
+              <>
+                <Card className="shadow-elegant">
+                  <CardHeader><CardTitle className="font-display">Identidade visual</CardTitle></CardHeader>
+                  <CardContent className="grid sm:grid-cols-3 gap-3">
+                    <ColorField label="Cor primária (azul HSE)" v={tpl.cor_primaria} set={v=>setT({cor_primaria:v})} />
+                    <ColorField label="Cor secundária (verde HSE)" v={tpl.cor_secundaria} set={v=>setT({cor_secundaria:v})} />
+                    <ColorField label="Cor neutra (fundo)" v={tpl.cor_neutra} set={v=>setT({cor_neutra:v})} />
+                    <div className="space-y-1.5"><Label>Fonte títulos</Label>
+                      <Input value={tpl.font_titulo||""} onChange={e=>setT({font_titulo:e.target.value})} /></div>
+                    <div className="space-y-1.5"><Label>Fonte corpo</Label>
+                      <Input value={tpl.font_corpo||""} onChange={e=>setT({font_corpo:e.target.value})} /></div>
+                    <div className="space-y-1.5"><Label>Versão (rodapé)</Label>
+                      <Input value={tpl.rodape_versao||""} onChange={e=>setT({rodape_versao:e.target.value})} /></div>
+                    <div className="space-y-1.5 sm:col-span-3"><Label>URL do logo (opcional)</Label>
+                      <Input value={tpl.logo_url||""} onChange={e=>setT({logo_url:e.target.value})} placeholder="Deixe vazio para usar o logo padrão" /></div>
+                    <div className="space-y-1.5 sm:col-span-3"><Label>URL imagem da capa (opcional)</Label>
+                      <Input value={tpl.capa_imagem_url||""} onChange={e=>setT({capa_imagem_url:e.target.value})} /></div>
+                    <div className="space-y-1.5 sm:col-span-3"><Label>URL imagem da contracapa (opcional)</Label>
+                      <Input value={tpl.contracapa_imagem_url||""} onChange={e=>setT({contracapa_imagem_url:e.target.value})} /></div>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-elegant">
+                  <CardHeader><CardTitle className="font-display">Slogan e textos institucionais</CardTitle></CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="space-y-1.5"><Label>Slogan</Label>
+                      <Input value={tpl.slogan||""} onChange={e=>setT({slogan:e.target.value})} /></div>
+                    <div className="space-y-1.5"><Label>Quem somos</Label>
+                      <Textarea rows={3} value={tpl.quem_somos||""} onChange={e=>setT({quem_somos:e.target.value})} /></div>
+                    <div className="grid sm:grid-cols-3 gap-3">
+                      <div className="space-y-1.5"><Label>Missão</Label>
+                        <Textarea rows={4} value={tpl.missao||""} onChange={e=>setT({missao:e.target.value})} /></div>
+                      <div className="space-y-1.5"><Label>Visão</Label>
+                        <Textarea rows={4} value={tpl.visao||""} onChange={e=>setT({visao:e.target.value})} /></div>
+                      <div className="space-y-1.5"><Label>Valores</Label>
+                        <Textarea rows={4} value={tpl.valores||""} onChange={e=>setT({valores:e.target.value})} /></div>
+                    </div>
+                    <div className="space-y-1.5"><Label>Diferenciais (um por linha)</Label>
+                      <Textarea rows={6} value={difString} onChange={e=>setT({diferenciais:e.target.value})} /></div>
+                    <div className="space-y-1.5"><Label>Texto de aceite</Label>
+                      <Textarea rows={3} value={tpl.texto_aceite||""} onChange={e=>setT({texto_aceite:e.target.value})} /></div>
+                    <div className="space-y-1.5"><Label>Mensagem da contracapa</Label>
+                      <Textarea rows={2} value={tpl.mensagem_contracapa||""} onChange={e=>setT({mensagem_contracapa:e.target.value})} /></div>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-elegant">
+                  <CardHeader><CardTitle className="font-display">Contato</CardTitle></CardHeader>
+                  <CardContent className="grid sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5"><Label>Telefone</Label>
+                      <Input value={tpl.telefone||""} onChange={e=>setT({telefone:e.target.value})} /></div>
+                    <div className="space-y-1.5"><Label>WhatsApp</Label>
+                      <Input value={tpl.whatsapp||""} onChange={e=>setT({whatsapp:e.target.value})} /></div>
+                    <div className="space-y-1.5"><Label>E-mail</Label>
+                      <Input value={tpl.email||""} onChange={e=>setT({email:e.target.value})} /></div>
+                    <div className="space-y-1.5"><Label>Site</Label>
+                      <Input value={tpl.site||""} onChange={e=>setT({site:e.target.value})} /></div>
+                    <div className="space-y-1.5 sm:col-span-2"><Label>Endereço</Label>
+                      <Input value={tpl.endereco||""} onChange={e=>setT({endereco:e.target.value})} /></div>
+                  </CardContent>
+                </Card>
+
+                <div className="flex justify-end"><Button onClick={saveTpl} disabled={!isInternal}>Salvar modelo da proposta</Button></div>
+              </>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
@@ -82,6 +181,18 @@ function NumField({ label, v, set, step="1" }: any) {
     <div className="space-y-1.5">
       <Label>{label}</Label>
       <Input type="number" step={step} value={v ?? 0} onChange={e=>set(e.target.value)} />
+    </div>
+  );
+}
+
+function ColorField({ label, v, set }: any) {
+  return (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      <div className="flex gap-2">
+        <input type="color" value={v || "#000000"} onChange={e=>set(e.target.value)} className="h-10 w-12 rounded border border-input cursor-pointer" />
+        <Input value={v || ""} onChange={e=>set(e.target.value)} className="font-mono" />
+      </div>
     </div>
   );
 }
