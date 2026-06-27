@@ -23,6 +23,12 @@ import OrdemServicoPrint from "./pages/OrdemServicoPrint";
 import Agenda from "./pages/Agenda";
 import Planejamento from "./pages/Planejamento";
 import MeuPainel from "./pages/MeuPainel";
+import Documentos from "./pages/Documentos";
+import DocumentoEditor from "./pages/DocumentoEditor";
+import DocumentoPDF from "./pages/DocumentoPDF";
+import DocumentosModelos from "./pages/DocumentosModelos";
+import DocumentosRecebidos from "./pages/DocumentosRecebidos";
+import DocumentosPendentes from "./pages/DocumentosPendentes";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -52,6 +58,12 @@ const App = () => (
               <Route path="/planejamento" element={<Planejamento />} />
               <Route path="/meu-painel" element={<MeuPainel />} />
               <Route path="/profissionais" element={<Profissionais />} />
+              <Route path="/documentos" element={<Documentos />} />
+              <Route path="/documentos/modelos" element={<DocumentosModelos />} />
+              <Route path="/documentos/recebidos" element={<DocumentosRecebidos />} />
+              <Route path="/documentos/pendentes" element={<DocumentosPendentes />} />
+              <Route path="/documentos/:id" element={<DocumentoEditor />} />
+              <Route path="/documentos/:id/pdf" element={<DocumentoPDF />} />
               <Route path="/configuracoes" element={<Settings />} />
             </Route>
             <Route path="*" element={<NotFound />} />
