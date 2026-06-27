@@ -47,7 +47,7 @@ export default function IaAlertas() {
   }
 
   async function setStatus(id: string, status: "novo" | "em_analise" | "resolvido" | "ignorado") {
-    const patch: Record<string, unknown> = { status };
+    const patch: { status: typeof status; resolved_at?: string } = { status };
     if (status === "resolvido" || status === "ignorado") patch.resolved_at = new Date().toISOString();
     await supabase.from("ia_alertas").update(patch).eq("id", id);
     load();
