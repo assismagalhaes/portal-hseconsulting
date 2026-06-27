@@ -30,7 +30,7 @@ export default function Notificacoes() {
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user?.id]);
 
   async function marcar(id: string, novoStatus: "lida" | "resolvida" | "ignorada") {
-    const patch: Record<string, string> = { status: novoStatus };
+    const patch: { status: typeof novoStatus; lida_em?: string; resolvida_em?: string } = { status: novoStatus };
     if (novoStatus === "lida") patch.lida_em = new Date().toISOString();
     if (novoStatus === "resolvida") patch.resolvida_em = new Date().toISOString();
     await supabase.from("notificacoes").update(patch).eq("id", id);
