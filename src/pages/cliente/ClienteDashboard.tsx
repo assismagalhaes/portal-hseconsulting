@@ -22,10 +22,10 @@ export default function ClienteDashboard() {
     const em30 = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
     const [p, s, o, d, pend, dv, dve, vis, ent] = await Promise.all([
       supabase.from("proposals").select("id", { count: "exact", head: true }),
-      supabase.from("execucao_servicos").select("id", { count: "exact", head: true }).in("status", ["em_execucao", "aguardando_cliente", "planejado"]),
+      supabase.from("execucao_servicos").select("id", { count: "exact", head: true }).in("status", ["em_execucao", "aguardando_aprovacao_cliente", "agendado", "aguardando_inicio"]),
       supabase.from("ordens_servico").select("id", { count: "exact", head: true }).gte("data_agendada", hoje),
       supabase.from("documentos_tecnicos").select("id", { count: "exact", head: true }),
-      supabase.from("documentos_pendentes").select("id", { count: "exact", head: true }).neq("status", "concluido"),
+      supabase.from("documentos_pendentes").select("id", { count: "exact", head: true }).neq("status", "recebido"),
       supabase.from("documentos_tecnicos").select("id", { count: "exact", head: true }).gte("data_vencimento", hoje).lte("data_vencimento", em30),
       supabase.from("documentos_tecnicos").select("id", { count: "exact", head: true }).lt("data_vencimento", hoje),
       supabase.from("ordens_servico").select("id, numero, titulo, data_agendada, hora_inicio").gte("data_agendada", hoje).order("data_agendada").limit(5),
@@ -37,7 +37,7 @@ export default function ClienteDashboard() {
     });
     setProxVisitas(vis.data || []);
     setUltimasEntregas(ent.data || []);
-    const { data: pp } = await supabase.from("documentos_pendentes").select("id, titulo, prazo, status").neq("status", "concluido").order("prazo").limit(5);
+    const { data: pp } = await supabase.from("documentos_pendentes").select("id, titulo, prazo, status").neq("status", "recebido").order("prazo").limit(5);
     setPendencias(pp || []);
   }
 
