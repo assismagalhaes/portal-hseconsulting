@@ -52,6 +52,8 @@ import IaChatPage from "./pages/ia/IaChatPage";
 import IaAlertas from "./pages/ia/IaAlertas";
 import IaPrompts from "./pages/ia/IaPrompts";
 import IaInteracoes from "./pages/ia/IaInteracoes";
+import IaResumoDia from "./pages/ia/IaResumoDia";
+import IaResumoSemanal from "./pages/ia/IaResumoSemanal";
 import ClienteLogin from "./pages/cliente/ClienteLogin";
 import ClienteDashboard from "./pages/cliente/ClienteDashboard";
 import ClientePropostas from "./pages/cliente/ClientePropostas";
@@ -129,6 +131,8 @@ const App = () => (
               <Route path="/ia/alertas" element={<IaAlertas />} />
               <Route path="/ia/prompts" element={<IaPrompts />} />
               <Route path="/ia/interacoes" element={<IaInteracoes />} />
+              <Route path="/ia/resumo-dia" element={<IaResumoDia />} />
+              <Route path="/ia/resumo-semanal" element={<IaResumoSemanal />} />
               <Route path="/configuracoes" element={<Settings />} />
             </Route>
             <Route path="*" element={<NotFound />} />
