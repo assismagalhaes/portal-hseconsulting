@@ -3,6 +3,7 @@ import { LayoutDashboard, Users, Briefcase, FileText, Settings as Cog, LogOut, H
 import { useAuth } from "@/lib/auth";
 import logo from "@/assets/hse-logo-green.png";
 import { Button } from "@/components/ui/button";
+import GlobalAssistenteIa from "@/components/ia/GlobalAssistenteIa";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -77,6 +78,7 @@ export default function AppLayout() {
       </aside>
       <main className="flex-1 min-w-0">
         <Outlet />
+        <GlobalAssistenteIa />
       </main>
     </div>
   );
