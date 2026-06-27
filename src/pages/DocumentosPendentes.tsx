@@ -52,7 +52,7 @@ export default function DocumentosPendentes() {
   };
 
   const atualizarStatus = async (p: any, s: string) => {
-    await supabase.from("documentos_pendentes").update({ status: s }).eq("id", p.id);
+    await supabase.from("documentos_pendentes").update({ status: s as any }).eq("id", p.id);
     load();
   };
 
