@@ -125,6 +125,456 @@ export type Database = {
         }
         Relationships: []
       }
+      execucao_anexos: {
+        Row: {
+          bucket: string
+          created_at: string
+          descricao: string | null
+          execucao_id: string
+          id: string
+          mime_type: string | null
+          nome_arquivo: string
+          storage_path: string
+          tamanho_bytes: number | null
+          user_id: string | null
+        }
+        Insert: {
+          bucket?: string
+          created_at?: string
+          descricao?: string | null
+          execucao_id: string
+          id?: string
+          mime_type?: string | null
+          nome_arquivo: string
+          storage_path: string
+          tamanho_bytes?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          bucket?: string
+          created_at?: string
+          descricao?: string | null
+          execucao_id?: string
+          id?: string
+          mime_type?: string | null
+          nome_arquivo?: string
+          storage_path?: string
+          tamanho_bytes?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "execucao_anexos_execucao_id_fkey"
+            columns: ["execucao_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      execucao_checklists: {
+        Row: {
+          created_at: string
+          data_prevista: string | null
+          data_realizada: string | null
+          descricao: string
+          execucao_id: string
+          id: string
+          observacao: string | null
+          ordem: number
+          responsavel_id: string | null
+          situacao: Database["public"]["Enums"]["checklist_situacao"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_prevista?: string | null
+          data_realizada?: string | null
+          descricao: string
+          execucao_id: string
+          id?: string
+          observacao?: string | null
+          ordem?: number
+          responsavel_id?: string | null
+          situacao?: Database["public"]["Enums"]["checklist_situacao"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_prevista?: string | null
+          data_realizada?: string | null
+          descricao?: string
+          execucao_id?: string
+          id?: string
+          observacao?: string | null
+          ordem?: number
+          responsavel_id?: string | null
+          situacao?: Database["public"]["Enums"]["checklist_situacao"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "execucao_checklists_execucao_id_fkey"
+            columns: ["execucao_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_servicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "execucao_checklists_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      execucao_historico: {
+        Row: {
+          acao: string
+          campo: string | null
+          created_at: string
+          execucao_id: string
+          id: string
+          user_id: string | null
+          valor_anterior: string | null
+          valor_novo: string | null
+        }
+        Insert: {
+          acao: string
+          campo?: string | null
+          created_at?: string
+          execucao_id: string
+          id?: string
+          user_id?: string | null
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Update: {
+          acao?: string
+          campo?: string | null
+          created_at?: string
+          execucao_id?: string
+          id?: string
+          user_id?: string | null
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "execucao_historico_execucao_id_fkey"
+            columns: ["execucao_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      execucao_observacoes: {
+        Row: {
+          created_at: string
+          execucao_id: string
+          id: string
+          texto: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          execucao_id: string
+          id?: string
+          texto: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          execucao_id?: string
+          id?: string
+          texto?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "execucao_observacoes_execucao_id_fkey"
+            columns: ["execucao_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      execucao_profissionais: {
+        Row: {
+          area: string | null
+          cargo: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          especialidade: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          registro_profissional: string | null
+          situacao: Database["public"]["Enums"]["profissional_situacao"]
+          telefone: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          area?: string | null
+          cargo?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          especialidade?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          registro_profissional?: string | null
+          situacao?: Database["public"]["Enums"]["profissional_situacao"]
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          area?: string | null
+          cargo?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          especialidade?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          registro_profissional?: string | null
+          situacao?: Database["public"]["Enums"]["profissional_situacao"]
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      execucao_servico_equipe: {
+        Row: {
+          created_at: string
+          execucao_id: string
+          id: string
+          papel: string | null
+          profissional_id: string
+        }
+        Insert: {
+          created_at?: string
+          execucao_id: string
+          id?: string
+          papel?: string | null
+          profissional_id: string
+        }
+        Update: {
+          created_at?: string
+          execucao_id?: string
+          id?: string
+          papel?: string | null
+          profissional_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "execucao_servico_equipe_execucao_id_fkey"
+            columns: ["execucao_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_servicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "execucao_servico_equipe_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      execucao_servicos: {
+        Row: {
+          categoria: string | null
+          cidade: string | null
+          client_id: string
+          created_at: string
+          created_by: string | null
+          data_aprovacao: string | null
+          data_prevista_conclusao: string | null
+          data_prevista_inicio: string | null
+          data_real_conclusao: string | null
+          data_real_inicio: string | null
+          descricao: string | null
+          escopo_tecnico: string | null
+          id: string
+          numero_interno: string
+          observacoes_internas: string | null
+          prioridade: Database["public"]["Enums"]["execucao_prioridade"]
+          proposal_id: string
+          proposal_item_id: string
+          proposal_revision_id: string | null
+          quantidade: number
+          responsavel_comercial: string | null
+          responsavel_tecnico_id: string | null
+          resumo_cliente: string | null
+          service_id: string | null
+          status: Database["public"]["Enums"]["execucao_status"]
+          titulo: string
+          unidade: string | null
+          updated_at: string
+          updated_by: string | null
+          valor_contratado: number
+          visivel_cliente: boolean
+        }
+        Insert: {
+          categoria?: string | null
+          cidade?: string | null
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          data_aprovacao?: string | null
+          data_prevista_conclusao?: string | null
+          data_prevista_inicio?: string | null
+          data_real_conclusao?: string | null
+          data_real_inicio?: string | null
+          descricao?: string | null
+          escopo_tecnico?: string | null
+          id?: string
+          numero_interno?: string
+          observacoes_internas?: string | null
+          prioridade?: Database["public"]["Enums"]["execucao_prioridade"]
+          proposal_id: string
+          proposal_item_id: string
+          proposal_revision_id?: string | null
+          quantidade?: number
+          responsavel_comercial?: string | null
+          responsavel_tecnico_id?: string | null
+          resumo_cliente?: string | null
+          service_id?: string | null
+          status?: Database["public"]["Enums"]["execucao_status"]
+          titulo: string
+          unidade?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          valor_contratado?: number
+          visivel_cliente?: boolean
+        }
+        Update: {
+          categoria?: string | null
+          cidade?: string | null
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          data_aprovacao?: string | null
+          data_prevista_conclusao?: string | null
+          data_prevista_inicio?: string | null
+          data_real_conclusao?: string | null
+          data_real_inicio?: string | null
+          descricao?: string | null
+          escopo_tecnico?: string | null
+          id?: string
+          numero_interno?: string
+          observacoes_internas?: string | null
+          prioridade?: Database["public"]["Enums"]["execucao_prioridade"]
+          proposal_id?: string
+          proposal_item_id?: string
+          proposal_revision_id?: string | null
+          quantidade?: number
+          responsavel_comercial?: string | null
+          responsavel_tecnico_id?: string | null
+          resumo_cliente?: string | null
+          service_id?: string | null
+          status?: Database["public"]["Enums"]["execucao_status"]
+          titulo?: string
+          unidade?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          valor_contratado?: number
+          visivel_cliente?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "execucao_servicos_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "execucao_servicos_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "execucao_servicos_proposal_item_id_fkey"
+            columns: ["proposal_item_id"]
+            isOneToOne: true
+            referencedRelation: "proposal_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "execucao_servicos_proposal_revision_id_fkey"
+            columns: ["proposal_revision_id"]
+            isOneToOne: false
+            referencedRelation: "proposal_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "execucao_servicos_responsavel_tecnico_id_fkey"
+            columns: ["responsavel_tecnico_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "execucao_servicos_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      execucao_timeline: {
+        Row: {
+          created_at: string
+          detalhe: string | null
+          evento: string
+          execucao_id: string
+          id: string
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detalhe?: string | null
+          evento: string
+          execucao_id: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detalhe?: string | null
+          evento?: string
+          execucao_id?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "execucao_timeline_execucao_id_fkey"
+            columns: ["execucao_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pricing_params: {
         Row: {
           aliquota_imposto: number
@@ -507,6 +957,10 @@ export type Database = {
         Returns: string
       }
       can_see_internal: { Args: { _user_id: string }; Returns: boolean }
+      criar_execucoes_da_proposta: {
+        Args: { _proposal_id: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -517,7 +971,21 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "comercial" | "tecnico"
+      checklist_situacao: "pendente" | "em_andamento" | "concluido"
       exec_status: "pendente" | "em_andamento" | "concluido" | "cancelado"
+      execucao_prioridade: "baixa" | "normal" | "alta" | "urgente"
+      execucao_status:
+        | "aguardando_inicio"
+        | "planejamento"
+        | "aguardando_documentacao"
+        | "agendado"
+        | "em_execucao"
+        | "em_revisao_tecnica"
+        | "aguardando_aprovacao_cliente"
+        | "concluido"
+        | "suspenso"
+        | "cancelado"
+      profissional_situacao: "ativo" | "inativo" | "ferias" | "afastado"
       proposal_status:
         | "rascunho"
         | "enviada"
@@ -654,7 +1122,22 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "comercial", "tecnico"],
+      checklist_situacao: ["pendente", "em_andamento", "concluido"],
       exec_status: ["pendente", "em_andamento", "concluido", "cancelado"],
+      execucao_prioridade: ["baixa", "normal", "alta", "urgente"],
+      execucao_status: [
+        "aguardando_inicio",
+        "planejamento",
+        "aguardando_documentacao",
+        "agendado",
+        "em_execucao",
+        "em_revisao_tecnica",
+        "aguardando_aprovacao_cliente",
+        "concluido",
+        "suspenso",
+        "cancelado",
+      ],
+      profissional_situacao: ["ativo", "inativo", "ferias", "afastado"],
       proposal_status: [
         "rascunho",
         "enviada",
