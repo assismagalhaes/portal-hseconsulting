@@ -1790,6 +1790,614 @@ export type Database = {
           },
         ]
       }
+      financeiro_alertas: {
+        Row: {
+          client_id: string | null
+          contrato_id: string | null
+          created_at: string
+          custo_id: string | null
+          id: string
+          lido: boolean
+          mensagem: string | null
+          parcela_id: string | null
+          proposal_id: string | null
+          resolvido: boolean
+          tipo: Database["public"]["Enums"]["fin_alerta_tipo"]
+          titulo: string
+        }
+        Insert: {
+          client_id?: string | null
+          contrato_id?: string | null
+          created_at?: string
+          custo_id?: string | null
+          id?: string
+          lido?: boolean
+          mensagem?: string | null
+          parcela_id?: string | null
+          proposal_id?: string | null
+          resolvido?: boolean
+          tipo: Database["public"]["Enums"]["fin_alerta_tipo"]
+          titulo: string
+        }
+        Update: {
+          client_id?: string | null
+          contrato_id?: string | null
+          created_at?: string
+          custo_id?: string | null
+          id?: string
+          lido?: boolean
+          mensagem?: string | null
+          parcela_id?: string | null
+          proposal_id?: string | null
+          resolvido?: boolean
+          tipo?: Database["public"]["Enums"]["fin_alerta_tipo"]
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financeiro_alertas_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_alertas_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "financeiro_contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_alertas_custo_id_fkey"
+            columns: ["custo_id"]
+            isOneToOne: false
+            referencedRelation: "financeiro_custos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_alertas_parcela_id_fkey"
+            columns: ["parcela_id"]
+            isOneToOne: false
+            referencedRelation: "financeiro_parcelas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_alertas_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financeiro_centros_custo: {
+        Row: {
+          ativo: boolean
+          codigo: string | null
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          codigo?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      financeiro_comprovantes: {
+        Row: {
+          contrato_id: string | null
+          created_at: string
+          custo_id: string | null
+          id: string
+          mime_type: string | null
+          nome_arquivo: string
+          parcela_id: string | null
+          recebimento_id: string | null
+          storage_path: string
+          tamanho: number | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          contrato_id?: string | null
+          created_at?: string
+          custo_id?: string | null
+          id?: string
+          mime_type?: string | null
+          nome_arquivo: string
+          parcela_id?: string | null
+          recebimento_id?: string | null
+          storage_path: string
+          tamanho?: number | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          contrato_id?: string | null
+          created_at?: string
+          custo_id?: string | null
+          id?: string
+          mime_type?: string | null
+          nome_arquivo?: string
+          parcela_id?: string | null
+          recebimento_id?: string | null
+          storage_path?: string
+          tamanho?: number | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financeiro_comprovantes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "financeiro_contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_comprovantes_custo_id_fkey"
+            columns: ["custo_id"]
+            isOneToOne: false
+            referencedRelation: "financeiro_custos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_comprovantes_parcela_id_fkey"
+            columns: ["parcela_id"]
+            isOneToOne: false
+            referencedRelation: "financeiro_parcelas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_comprovantes_recebimento_id_fkey"
+            columns: ["recebimento_id"]
+            isOneToOne: false
+            referencedRelation: "financeiro_recebimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financeiro_configuracoes: {
+        Row: {
+          conta_padrao: string | null
+          created_at: string
+          dias_alerta_vencimento: number
+          id: string
+          margem_minima_alerta: number
+          observacoes: string | null
+          parcelas_padrao: Json
+          updated_at: string
+        }
+        Insert: {
+          conta_padrao?: string | null
+          created_at?: string
+          dias_alerta_vencimento?: number
+          id?: string
+          margem_minima_alerta?: number
+          observacoes?: string | null
+          parcelas_padrao?: Json
+          updated_at?: string
+        }
+        Update: {
+          conta_padrao?: string | null
+          created_at?: string
+          dias_alerta_vencimento?: number
+          id?: string
+          margem_minima_alerta?: number
+          observacoes?: string | null
+          parcelas_padrao?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      financeiro_contratos: {
+        Row: {
+          client_id: string | null
+          condicao_pagamento: string | null
+          created_at: string
+          created_by: string | null
+          data_aprovacao: string
+          id: string
+          numero: string | null
+          observacoes: string | null
+          proposal_id: string
+          responsavel_comercial: string | null
+          status: Database["public"]["Enums"]["fin_status_contrato"]
+          titulo: string | null
+          updated_at: string
+          updated_by: string | null
+          valor_aprovado: number
+          valor_faturado: number
+          valor_recebido: number
+        }
+        Insert: {
+          client_id?: string | null
+          condicao_pagamento?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_aprovacao?: string
+          id?: string
+          numero?: string | null
+          observacoes?: string | null
+          proposal_id: string
+          responsavel_comercial?: string | null
+          status?: Database["public"]["Enums"]["fin_status_contrato"]
+          titulo?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          valor_aprovado?: number
+          valor_faturado?: number
+          valor_recebido?: number
+        }
+        Update: {
+          client_id?: string | null
+          condicao_pagamento?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_aprovacao?: string
+          id?: string
+          numero?: string | null
+          observacoes?: string | null
+          proposal_id?: string
+          responsavel_comercial?: string | null
+          status?: Database["public"]["Enums"]["fin_status_contrato"]
+          titulo?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          valor_aprovado?: number
+          valor_faturado?: number
+          valor_recebido?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financeiro_contratos_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_contratos_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: true
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financeiro_custos: {
+        Row: {
+          centro_custo_id: string | null
+          client_id: string | null
+          comprovante_url: string | null
+          created_at: string
+          created_by: string | null
+          data: string
+          descricao: string
+          documento_id: string | null
+          execucao_id: string | null
+          id: string
+          observacoes: string | null
+          os_id: string | null
+          proposal_id: string | null
+          responsavel_id: string | null
+          tipo: Database["public"]["Enums"]["fin_tipo_custo"]
+          updated_at: string
+          updated_by: string | null
+          valor: number
+        }
+        Insert: {
+          centro_custo_id?: string | null
+          client_id?: string | null
+          comprovante_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          data?: string
+          descricao: string
+          documento_id?: string | null
+          execucao_id?: string | null
+          id?: string
+          observacoes?: string | null
+          os_id?: string | null
+          proposal_id?: string | null
+          responsavel_id?: string | null
+          tipo?: Database["public"]["Enums"]["fin_tipo_custo"]
+          updated_at?: string
+          updated_by?: string | null
+          valor?: number
+        }
+        Update: {
+          centro_custo_id?: string | null
+          client_id?: string | null
+          comprovante_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          data?: string
+          descricao?: string
+          documento_id?: string | null
+          execucao_id?: string | null
+          id?: string
+          observacoes?: string | null
+          os_id?: string | null
+          proposal_id?: string | null
+          responsavel_id?: string | null
+          tipo?: Database["public"]["Enums"]["fin_tipo_custo"]
+          updated_at?: string
+          updated_by?: string | null
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financeiro_custos_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "financeiro_centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_custos_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_custos_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "documentos_tecnicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_custos_execucao_id_fkey"
+            columns: ["execucao_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_servicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_custos_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_custos_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financeiro_parcelas: {
+        Row: {
+          client_id: string | null
+          contrato_id: string
+          created_at: string
+          created_by: string | null
+          data_recebimento: string | null
+          data_vencimento: string
+          descricao: string | null
+          forma_pagamento:
+            | Database["public"]["Enums"]["fin_forma_pagamento"]
+            | null
+          id: string
+          numero: number
+          observacoes: string | null
+          proposal_id: string | null
+          status: Database["public"]["Enums"]["fin_status_parcela"]
+          updated_at: string
+          updated_by: string | null
+          valor: number
+          valor_recebido: number
+        }
+        Insert: {
+          client_id?: string | null
+          contrato_id: string
+          created_at?: string
+          created_by?: string | null
+          data_recebimento?: string | null
+          data_vencimento: string
+          descricao?: string | null
+          forma_pagamento?:
+            | Database["public"]["Enums"]["fin_forma_pagamento"]
+            | null
+          id?: string
+          numero: number
+          observacoes?: string | null
+          proposal_id?: string | null
+          status?: Database["public"]["Enums"]["fin_status_parcela"]
+          updated_at?: string
+          updated_by?: string | null
+          valor?: number
+          valor_recebido?: number
+        }
+        Update: {
+          client_id?: string | null
+          contrato_id?: string
+          created_at?: string
+          created_by?: string | null
+          data_recebimento?: string | null
+          data_vencimento?: string
+          descricao?: string | null
+          forma_pagamento?:
+            | Database["public"]["Enums"]["fin_forma_pagamento"]
+            | null
+          id?: string
+          numero?: number
+          observacoes?: string | null
+          proposal_id?: string | null
+          status?: Database["public"]["Enums"]["fin_status_parcela"]
+          updated_at?: string
+          updated_by?: string | null
+          valor?: number
+          valor_recebido?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financeiro_parcelas_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_parcelas_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "financeiro_contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_parcelas_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financeiro_rateios: {
+        Row: {
+          contrato_id: string
+          created_at: string
+          execucao_id: string | null
+          id: string
+          observacoes: string | null
+          percentual: number
+          proposal_item_id: string | null
+          tipo: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          contrato_id: string
+          created_at?: string
+          execucao_id?: string | null
+          id?: string
+          observacoes?: string | null
+          percentual?: number
+          proposal_item_id?: string | null
+          tipo?: string
+          updated_at?: string
+          valor?: number
+        }
+        Update: {
+          contrato_id?: string
+          created_at?: string
+          execucao_id?: string | null
+          id?: string
+          observacoes?: string | null
+          percentual?: number
+          proposal_item_id?: string | null
+          tipo?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financeiro_rateios_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "financeiro_contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_rateios_execucao_id_fkey"
+            columns: ["execucao_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_servicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_rateios_proposal_item_id_fkey"
+            columns: ["proposal_item_id"]
+            isOneToOne: false
+            referencedRelation: "proposal_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financeiro_recebimentos: {
+        Row: {
+          comprovante_url: string | null
+          conta_recebimento: string | null
+          contrato_id: string | null
+          created_at: string
+          created_by: string | null
+          data_recebimento: string
+          forma_pagamento:
+            | Database["public"]["Enums"]["fin_forma_pagamento"]
+            | null
+          id: string
+          observacoes: string | null
+          parcela_id: string
+          valor: number
+        }
+        Insert: {
+          comprovante_url?: string | null
+          conta_recebimento?: string | null
+          contrato_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_recebimento?: string
+          forma_pagamento?:
+            | Database["public"]["Enums"]["fin_forma_pagamento"]
+            | null
+          id?: string
+          observacoes?: string | null
+          parcela_id: string
+          valor: number
+        }
+        Update: {
+          comprovante_url?: string | null
+          conta_recebimento?: string | null
+          contrato_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_recebimento?: string
+          forma_pagamento?:
+            | Database["public"]["Enums"]["fin_forma_pagamento"]
+            | null
+          id?: string
+          observacoes?: string | null
+          parcela_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financeiro_recebimentos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "financeiro_contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_recebimentos_parcela_id_fkey"
+            columns: ["parcela_id"]
+            isOneToOne: false
+            referencedRelation: "financeiro_parcelas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ordens_servico: {
         Row: {
           cidade: string | null
@@ -2911,6 +3519,23 @@ export type Database = {
         Returns: string
       }
       crm_converter_lead: { Args: { _lead_id: string }; Returns: string }
+      financeiro_atualizar_vencidas: { Args: never; Returns: number }
+      financeiro_gerar_contrato: {
+        Args: { _proposal_id: string }
+        Returns: string
+      }
+      financeiro_registrar_recebimento: {
+        Args: {
+          _comprovante: string
+          _conta: string
+          _data: string
+          _forma: Database["public"]["Enums"]["fin_forma_pagamento"]
+          _obs: string
+          _parcela_id: string
+          _valor: number
+        }
+        Returns: string
+      }
       gerar_numero_documento: { Args: never; Returns: string }
       gerar_numero_os: { Args: never; Returns: string }
       has_role: {
@@ -3044,6 +3669,50 @@ export type Database = {
         | "concluido"
         | "suspenso"
         | "cancelado"
+      fin_alerta_tipo:
+        | "parcela_vencendo"
+        | "parcela_vencida"
+        | "pagamento_parcial"
+        | "sem_parcelas"
+        | "custo_acima_previsto"
+        | "margem_baixa"
+        | "servico_sem_recebimento"
+      fin_forma_pagamento:
+        | "pix"
+        | "boleto"
+        | "transferencia"
+        | "cartao"
+        | "dinheiro"
+        | "outro"
+      fin_status_contrato:
+        | "aguardando_faturamento"
+        | "parcialmente_faturado"
+        | "faturado"
+        | "parcialmente_recebido"
+        | "recebido"
+        | "em_atraso"
+        | "cancelado"
+      fin_status_parcela:
+        | "a_vencer"
+        | "vencida"
+        | "recebida"
+        | "recebida_parcial"
+        | "cancelada"
+      fin_tipo_custo:
+        | "deslocamento"
+        | "combustivel"
+        | "pedagio"
+        | "alimentacao"
+        | "hospedagem"
+        | "terceiros"
+        | "laboratorio"
+        | "equipamentos"
+        | "materiais"
+        | "impressoes"
+        | "art"
+        | "taxas"
+        | "mao_de_obra"
+        | "outros"
       os_documento_categoria: "recebido" | "gerado" | "pendente"
       os_evidencia_tipo:
         | "foto"
@@ -3340,6 +4009,55 @@ export const Constants = {
         "concluido",
         "suspenso",
         "cancelado",
+      ],
+      fin_alerta_tipo: [
+        "parcela_vencendo",
+        "parcela_vencida",
+        "pagamento_parcial",
+        "sem_parcelas",
+        "custo_acima_previsto",
+        "margem_baixa",
+        "servico_sem_recebimento",
+      ],
+      fin_forma_pagamento: [
+        "pix",
+        "boleto",
+        "transferencia",
+        "cartao",
+        "dinheiro",
+        "outro",
+      ],
+      fin_status_contrato: [
+        "aguardando_faturamento",
+        "parcialmente_faturado",
+        "faturado",
+        "parcialmente_recebido",
+        "recebido",
+        "em_atraso",
+        "cancelado",
+      ],
+      fin_status_parcela: [
+        "a_vencer",
+        "vencida",
+        "recebida",
+        "recebida_parcial",
+        "cancelada",
+      ],
+      fin_tipo_custo: [
+        "deslocamento",
+        "combustivel",
+        "pedagio",
+        "alimentacao",
+        "hospedagem",
+        "terceiros",
+        "laboratorio",
+        "equipamentos",
+        "materiais",
+        "impressoes",
+        "art",
+        "taxas",
+        "mao_de_obra",
+        "outros",
       ],
       os_documento_categoria: ["recebido", "gerado", "pendente"],
       os_evidencia_tipo: [
