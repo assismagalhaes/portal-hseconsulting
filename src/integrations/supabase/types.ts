@@ -14,16 +14,489 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      approved_services: {
+        Row: {
+          created_at: string
+          id: string
+          observacoes: string | null
+          prazo_previsto: string | null
+          proposal_id: string
+          proposal_item_id: string
+          responsavel_id: string | null
+          status: Database["public"]["Enums"]["exec_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          prazo_previsto?: string | null
+          proposal_id: string
+          proposal_item_id: string
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["exec_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          prazo_previsto?: string | null
+          proposal_id?: string
+          proposal_item_id?: string
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["exec_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approved_services_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approved_services_proposal_item_id_fkey"
+            columns: ["proposal_item_id"]
+            isOneToOne: false
+            referencedRelation: "proposal_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          cidade: string | null
+          cnpj_cpf: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          nome_fantasia: string | null
+          observacoes: string | null
+          qtd_funcionarios: number | null
+          razao_social: string
+          solicitante: string | null
+          telefone: string | null
+          uf: string | null
+          updated_at: string
+        }
+        Insert: {
+          cidade?: string | null
+          cnpj_cpf?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          nome_fantasia?: string | null
+          observacoes?: string | null
+          qtd_funcionarios?: number | null
+          razao_social: string
+          solicitante?: string | null
+          telefone?: string | null
+          uf?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cidade?: string | null
+          cnpj_cpf?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          nome_fantasia?: string | null
+          observacoes?: string | null
+          qtd_funcionarios?: number | null
+          razao_social?: string
+          solicitante?: string | null
+          telefone?: string | null
+          uf?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pricing_params: {
+        Row: {
+          aliquota_imposto: number
+          arredondamento: number
+          condicoes_pagamento_default: string
+          custo_fixo_mensal: number
+          custo_por_vida: number
+          horas_produtivas_mes: number
+          id: string
+          margem_minima: number
+          markup_minimo: number
+          outras_condicoes_default: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          aliquota_imposto?: number
+          arredondamento?: number
+          condicoes_pagamento_default?: string
+          custo_fixo_mensal?: number
+          custo_por_vida?: number
+          horas_produtivas_mes?: number
+          id?: string
+          margem_minima?: number
+          markup_minimo?: number
+          outras_condicoes_default?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          aliquota_imposto?: number
+          arredondamento?: number
+          condicoes_pagamento_default?: string
+          custo_fixo_mensal?: number
+          custo_por_vida?: number
+          horas_produtivas_mes?: number
+          id?: string
+          margem_minima?: number
+          markup_minimo?: number
+          outras_condicoes_default?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          cargo: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          cargo?: string | null
+          created_at?: string
+          email?: string | null
+          id: string
+          nome?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cargo?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      proposal_item_pricing: {
+        Row: {
+          aliquota_imposto: number
+          created_at: string
+          custos: Json
+          desconto_comercial: number
+          horas: Json
+          id: string
+          indicadores: Json
+          lucro_desejado: number
+          margem_desejada: number
+          preco_aprovado: number
+          preco_arredondado: number
+          preco_sugerido: number
+          proposal_item_id: string
+          updated_at: string
+        }
+        Insert: {
+          aliquota_imposto?: number
+          created_at?: string
+          custos?: Json
+          desconto_comercial?: number
+          horas?: Json
+          id?: string
+          indicadores?: Json
+          lucro_desejado?: number
+          margem_desejada?: number
+          preco_aprovado?: number
+          preco_arredondado?: number
+          preco_sugerido?: number
+          proposal_item_id: string
+          updated_at?: string
+        }
+        Update: {
+          aliquota_imposto?: number
+          created_at?: string
+          custos?: Json
+          desconto_comercial?: number
+          horas?: Json
+          id?: string
+          indicadores?: Json
+          lucro_desejado?: number
+          margem_desejada?: number
+          preco_aprovado?: number
+          preco_arredondado?: number
+          preco_sugerido?: number
+          proposal_item_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_item_pricing_proposal_item_id_fkey"
+            columns: ["proposal_item_id"]
+            isOneToOne: true
+            referencedRelation: "proposal_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposal_items: {
+        Row: {
+          created_at: string
+          descricao_comercial: string
+          escopo_tecnico: string | null
+          id: string
+          numero_item: number
+          proposal_id: string
+          quantidade: number
+          service_id: string | null
+          unidade: string
+          updated_at: string
+          valor_total: number
+          valor_unitario: number
+        }
+        Insert: {
+          created_at?: string
+          descricao_comercial: string
+          escopo_tecnico?: string | null
+          id?: string
+          numero_item?: number
+          proposal_id: string
+          quantidade?: number
+          service_id?: string | null
+          unidade?: string
+          updated_at?: string
+          valor_total?: number
+          valor_unitario?: number
+        }
+        Update: {
+          created_at?: string
+          descricao_comercial?: string
+          escopo_tecnico?: string | null
+          id?: string
+          numero_item?: number
+          proposal_id?: string
+          quantidade?: number
+          service_id?: string | null
+          unidade?: string
+          updated_at?: string
+          valor_total?: number
+          valor_unitario?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_items_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposal_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposal_revisions: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          proposal_id: string
+          revisao: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          proposal_id: string
+          revisao?: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          proposal_id?: string
+          revisao?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_revisions_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposals: {
+        Row: {
+          aceite_data: string | null
+          assinatura_prestador: string | null
+          assinatura_tomador: string | null
+          client_id: string | null
+          condicoes_pagamento: string | null
+          created_at: string
+          created_by: string | null
+          data_envio: string | null
+          id: string
+          numero: string
+          observacoes_comerciais: string | null
+          observacoes_internas: string | null
+          outras_condicoes: string | null
+          proximo_followup: string | null
+          status: Database["public"]["Enums"]["proposal_status"]
+          updated_at: string
+          validade: string | null
+          valor_total: number
+        }
+        Insert: {
+          aceite_data?: string | null
+          assinatura_prestador?: string | null
+          assinatura_tomador?: string | null
+          client_id?: string | null
+          condicoes_pagamento?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_envio?: string | null
+          id?: string
+          numero?: string
+          observacoes_comerciais?: string | null
+          observacoes_internas?: string | null
+          outras_condicoes?: string | null
+          proximo_followup?: string | null
+          status?: Database["public"]["Enums"]["proposal_status"]
+          updated_at?: string
+          validade?: string | null
+          valor_total?: number
+        }
+        Update: {
+          aceite_data?: string | null
+          assinatura_prestador?: string | null
+          assinatura_tomador?: string | null
+          client_id?: string | null
+          condicoes_pagamento?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_envio?: string | null
+          id?: string
+          numero?: string
+          observacoes_comerciais?: string | null
+          observacoes_internas?: string | null
+          outras_condicoes?: string | null
+          proximo_followup?: string | null
+          status?: Database["public"]["Enums"]["proposal_status"]
+          updated_at?: string
+          validade?: string | null
+          valor_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposals_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          descricao_comercial: string | null
+          escopo_tecnico: string | null
+          id: string
+          nome: string
+          unidade_padrao: string | null
+          updated_at: string
+          valor_referencia: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          descricao_comercial?: string | null
+          escopo_tecnico?: string | null
+          id?: string
+          nome: string
+          unidade_padrao?: string | null
+          updated_at?: string
+          valor_referencia?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          descricao_comercial?: string | null
+          escopo_tecnico?: string | null
+          id?: string
+          nome?: string
+          unidade_padrao?: string | null
+          updated_at?: string
+          valor_referencia?: number | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_see_internal: { Args: { _user_id: string }; Returns: boolean }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "comercial" | "tecnico"
+      exec_status: "pendente" | "em_andamento" | "concluido" | "cancelado"
+      proposal_status:
+        | "rascunho"
+        | "enviada"
+        | "negociacao"
+        | "aprovada"
+        | "recusada"
+        | "expirada"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +623,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "comercial", "tecnico"],
+      exec_status: ["pendente", "em_andamento", "concluido", "cancelado"],
+      proposal_status: [
+        "rascunho",
+        "enviada",
+        "negociacao",
+        "aprovada",
+        "recusada",
+        "expirada",
+      ],
+    },
   },
 } as const
