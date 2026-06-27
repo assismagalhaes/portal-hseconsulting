@@ -21,7 +21,7 @@ import {
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import GlobalAssistenteIa from "@/components/ia/GlobalAssistenteIa";
 import NotificacoesBell from "@/components/NotificacoesBell";
 import { cn } from "@/lib/utils";
@@ -430,14 +430,12 @@ export default function AppLayout() {
       <main className="flex-1 min-w-0 flex flex-col">
         {/* Top bar */}
         <header className="sticky top-0 z-30 h-14 flex items-center gap-2 px-3 md:px-4 border-b border-border bg-card/85 backdrop-blur">
-          <SheetTrigger asChild>
-            <Button
-              variant="ghost" size="icon" className="md:hidden"
-              onClick={() => setMobileOpen(true)} aria-label="Abrir menu"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
+          <Button
+            variant="ghost" size="icon" className="md:hidden"
+            onClick={() => setMobileOpen(true)} aria-label="Abrir menu"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
 
           <Button
             variant="ghost" size="icon" className="hidden md:inline-flex"
