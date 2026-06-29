@@ -775,7 +775,8 @@ function RevisionsCard({ revisions, onAdd }: any) {
 
 /* ---------------- Pricing Panel (Drawer) ---------------- */
 function PricingPanel({ item, existing, params, clientFuncionarios, onSave }: any) {
-  const custoHora = params.horas_produtivas_mes > 0 ? Number(params.custo_fixo_mensal||0) / Number(params.horas_produtivas_mes) : 0;
+  const custoHoraLegado = params.horas_produtivas_mes > 0 ? Number(params.custo_fixo_mensal||0) / Number(params.horas_produtivas_mes) : 0;
+  const custoHora = Number(params.valor_hora_tecnica || 0) > 0 ? Number(params.valor_hora_tecnica) : custoHoraLegado;
   const [draft, setDraft] = useState<any>(() => existing ? {
     custos: { ...emptyCustos, ...(existing.custos||{}) },
     horas: { ...emptyHoras, ...(existing.horas||{}) },
@@ -792,6 +793,7 @@ function PricingPanel({ item, existing, params, clientFuncionarios, onSave }: an
     custos: draft.custos, horas: draft.horas,
     qtd_funcionarios: clientFuncionarios,
     custo_hora_interno: custoHora,
+    valor_hora_tecnica: Number(params.valor_hora_tecnica || 0),
     custo_por_vida: Number(params.custo_por_vida||0),
     aliquota_imposto: Number(draft.aliquota_imposto||0),
     margem_desejada: Number(draft.margem_desejada||0),
