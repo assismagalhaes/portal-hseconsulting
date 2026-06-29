@@ -110,13 +110,14 @@ export default function ProposalEditor() {
   const totalItens = items.reduce((a,b)=>a+Number(b.quantidade||0), 0);
 
   /* ---------------- Autosave helpers ---------------- */
-  async function saveProposalField(patch: any) {
-    if (!proposal) return;
+  async function saveProposalField(patch: any): Promise<boolean> {
+    if (!proposal) return false;
     setSaving(true);
     const { error } = await supabase.from("proposals").update(patch).eq("id", proposal.id);
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return false; }
     setProposal({ ...proposal, ...patch });
+    return true;
   }
 
   function scheduleProposalSave(patch: any) {
@@ -327,7 +328,8 @@ export default function ProposalEditor() {
     if (novo === "enviada" && !proposal.data_envio) patch.data_envio = new Date().toISOString().slice(0,10);
     if (novo === "aprovada" && !proposal.data_aprovacao) patch.data_aprovacao = new Date().toISOString().slice(0,10);
     if ((novo === "recusada" || novo === "cancelada") && !proposal.data_recusa) patch.data_recusa = new Date().toISOString().slice(0,10);
-    await saveProposalField(patch);
+    const ok = await saveProposalField(patch);
+    if (!ok) return;
     // Recarrega revisões pois o trigger gravou uma nova
     const rv = await supabase.from("proposal_revisions").select("*").eq("proposal_id", proposal.id).order("revisao",{ascending:false});
     setRevisions(rv.data || []);
