@@ -24,7 +24,8 @@ export default function Settings() {
     setP(pp.data || {
       custo_fixo_mensal: 0, horas_produtivas_mes: 160, custo_por_vida: 0,
       aliquota_imposto: 0.06, margem_minima: 0.25, markup_minimo: 1.5,
-      arredondamento: 10, condicoes_pagamento_default: "", outras_condicoes_default: "",
+      arredondamento: 10, valor_hora_tecnica: 35,
+      condicoes_pagamento_default: "", outras_condicoes_default: "",
     });
     setTpl(tt.data || {});
   }
@@ -33,11 +34,23 @@ export default function Settings() {
     const payload = { ...p,
       custo_fixo_mensal:+p.custo_fixo_mensal, horas_produtivas_mes:+p.horas_produtivas_mes,
       custo_por_vida:+p.custo_por_vida, aliquota_imposto:+p.aliquota_imposto,
-      margem_minima:+p.margem_minima, markup_minimo:+p.markup_minimo, arredondamento:+p.arredondamento };
+      margem_minima:+p.margem_minima, markup_minimo:+p.markup_minimo, arredondamento:+p.arredondamento,
+      valor_hora_tecnica:+p.valor_hora_tecnica };
+    // Detecta mudança no valor da hora técnica e registra no histórico
+    const valorAntes = p.id ? (await supabase.from("pricing_params").select("valor_hora_tecnica").eq("id", p.id).maybeSingle()).data?.valor_hora_tecnica : null;
     const { error } = p.id
       ? await supabase.from("pricing_params").update(payload).eq("id", p.id)
       : await supabase.from("pricing_params").insert(payload);
     if (error) return toast.error(error.message);
+    if (valorAntes != null && Number(valorAntes) !== Number(payload.valor_hora_tecnica)) {
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.from("valor_hora_tecnica_historico").insert({
+        valor: payload.valor_hora_tecnica,
+        vigencia_inicio: new Date().toISOString().slice(0,10),
+        observacao: `Alterado de R$ ${valorAntes} para R$ ${payload.valor_hora_tecnica}`,
+        user_id: user?.id,
+      });
+    }
     toast.success("Parâmetros salvos");
     load();
   }
@@ -79,6 +92,12 @@ export default function Settings() {
             <NumField label="Horas produtivas / mês" v={p.horas_produtivas_mes} set={v=>setP({...p, horas_produtivas_mes:v})} />
             <div className="sm:col-span-2 text-xs text-muted-foreground">Custo-hora interno calculado: <span className="font-mono">R$ {custoHora.toFixed(2)}</span></div>
             <NumField label="Custo por vida (R$)" v={p.custo_por_vida} set={v=>setP({...p, custo_por_vida:v})} />
+            <div className="sm:col-span-2 border-t border-border pt-3 mt-2">
+              <NumField label="Valor da Hora Técnica HSE (R$/h) ★" step="0.01" v={p.valor_hora_tecnica} set={v=>setP({...p, valor_hora_tecnica:v})} />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Usado para converter automaticamente horas técnicas em custo nas calculadoras individual e em grupo. Alterações são registradas no histórico — simulações antigas mantêm o valor vigente na época.
+              </p>
+            </div>
           </CardContent>
         </Card>
         <Card className="shadow-elegant">

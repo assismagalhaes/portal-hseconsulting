@@ -42,6 +42,10 @@ export default function HistoricoPrecificacao({ proposalId }: { proposalId: stri
                 </p>
               )}
               {s.observacoes && <p className="mt-1">{s.observacoes}</p>}
+              {s.motivo && <p className="mt-1"><span className="text-muted-foreground">Motivo:</span> {s.motivo}</p>}
+              {s.valor_hora_tecnica_aplicado != null && (
+                <p className="mt-1 text-muted-foreground">Hora técnica aplicada: {brl(s.valor_hora_tecnica_aplicado)}/h</p>
+              )}
             </li>
           ))}
         </ul>
@@ -53,7 +57,11 @@ export default function HistoricoPrecificacao({ proposalId }: { proposalId: stri
         <ul className="space-y-1.5 text-xs">
           {hist.map((h) => (
             <li key={h.id} className="flex items-center justify-between border-b border-border/50 py-1">
-              <span><Badge variant="outline" className="mr-2">{h.acao}</Badge>{h.detalhes?.regra && <span className="text-muted-foreground">{h.detalhes.regra}</span>}</span>
+              <span>
+                <Badge variant="outline" className="mr-2">{h.acao}</Badge>
+                {h.detalhes?.regra && <span className="text-muted-foreground">{h.detalhes.regra}</span>}
+                {h.motivo && <span className="text-muted-foreground ml-2">· {h.motivo}</span>}
+              </span>
               <span className="font-mono">{brl(h.valor_anterior || 0)} → {brl(h.valor_novo || 0)}</span>
               <span className="text-muted-foreground">{new Date(h.created_at).toLocaleString("pt-BR")}</span>
             </li>
