@@ -38,12 +38,9 @@ const PAGE_STYLE: React.CSSProperties = {
 export default function ProposalDocument({ proposal, client, items, revisions = [], onReady }: Props) {
   const [tpl, setTpl] = useState<any>(null);
   const [serviceNames, setServiceNames] = useState<Record<string, string>>({});
-  const [aliquotaPadrao, setAliquotaPadrao] = useState<number>(0);
   useEffect(() => {
     supabase.from("proposal_template").select("*").limit(1).maybeSingle()
       .then(({ data }) => setTpl(data || {}));
-    supabase.from("pricing_params").select("aliquota_imposto").limit(1).maybeSingle()
-      .then(({ data }) => setAliquotaPadrao(Number(data?.aliquota_imposto || 0)));
   }, []);
   useEffect(() => {
     const ids = Array.from(new Set(items.map((i: any) => i.service_id).filter(Boolean)));
