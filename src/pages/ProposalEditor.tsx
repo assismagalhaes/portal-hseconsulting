@@ -663,7 +663,7 @@ function DatesCard({ proposal, onSave }: any) {
 }
 
 /* ---------------- Item Editor ---------------- */
-function ItemEditor({ item, pricing, onChange, onRemove, onOpenPricing, onSaveToCatalog, isInternal }: any) {
+function ItemEditor({ item, pricing, onChange, onRemove, onOpenPricing, onSaveToCatalog, isInternal, selected, onSelect }: any) {
   const [local, setLocal] = useState(item);
   useEffect(()=>setLocal(item), [item.id, item.valor_unitario, item.valor_total]);
   const margem = pricing?.indicadores?.status_margem;
@@ -672,13 +672,20 @@ function ItemEditor({ item, pricing, onChange, onRemove, onOpenPricing, onSaveTo
     <Card className="shadow-elegant">
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 space-y-2">
+          <div className="flex items-start gap-3 flex-1">
+            {isInternal && (
+              <div className="pt-2">
+                <Checkbox checked={!!selected} onCheckedChange={(v)=>onSelect?.(!!v)} aria-label="Selecionar para cálculo em grupo" />
+              </div>
+            )}
+            <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="outline" className="font-mono">#{item.numero_item}</Badge>
               {item.categoria && <Badge variant="secondary">{item.categoria}</Badge>}
               {meta && <Badge className={`border ${meta.color}`}>{meta.label}</Badge>}
             </div>
             <Input value={local.descricao_comercial} onChange={e=>setLocal({...local, descricao_comercial:e.target.value})} onBlur={()=>onChange({ descricao_comercial: local.descricao_comercial })} className="font-display font-semibold text-base" placeholder="Nome / descrição comercial" />
+            </div>
           </div>
           <Button variant="ghost" size="icon" onClick={onRemove}><Trash2 className="h-4 w-4 text-danger" /></Button>
         </div>
