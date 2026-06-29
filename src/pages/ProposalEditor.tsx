@@ -945,12 +945,13 @@ function PricingPanel({ item, existing, params, clientFuncionarios, onSave }: an
   const custoHoraLegado = params.horas_produtivas_mes > 0 ? Number(params.custo_fixo_mensal||0) / Number(params.horas_produtivas_mes) : 0;
   const custoHora = Number(params.valor_hora_tecnica || 0) > 0 ? Number(params.valor_hora_tecnica) : custoHoraLegado;
   const [draft, setDraft] = useState<any>(() => existing ? {
-    custos: { ...emptyCustos, ...(existing.custos||{}) },
-    horas: { ...emptyHoras, ...(existing.horas||{}) },
+    custos: normalizarCustosDiretos(existing.custos),
+    horas: normalizarHorasTecnicas(existing.horas, custoHora),
     aliquota_imposto: existing.aliquota_imposto, margem_desejada: existing.margem_desejada,
     lucro_desejado: existing.lucro_desejado, desconto_comercial: existing.desconto_comercial,
   } : {
-    custos: {...emptyCustos}, horas: {...emptyHoras},
+    custos: [] as CustoDiretoRow[],
+    horas: [] as HoraTecnicaRow[],
     aliquota_imposto: Number(params.aliquota_imposto||0.10),
     margem_desejada: Number(params.margem_minima||0.20),
     lucro_desejado: 0, desconto_comercial: 0,
@@ -973,67 +974,151 @@ function PricingPanel({ item, existing, params, clientFuncionarios, onSave }: an
   const c = computePricing(input);
   const meta = statusMargemMeta[c.status_margem];
 
-  const setC = (k:string, v:any) => setDraft({...draft, custos:{...draft.custos, [k]: Number(v)||0 }});
-  const setH = (k:string, v:any) => setDraft({...draft, horas:{...draft.horas, [k]: Number(v)||0 }});
+  // ----- Custos diretos (linhas dinâmicas) -----
+  const addCusto = () => setDraft({ ...draft, custos: [...draft.custos, { id: newId(), categoria: "", descricao: "", valor: 0 }] });
+  const updCusto = (id: string, patch: Partial<CustoDiretoRow>) =>
+    setDraft({ ...draft, custos: draft.custos.map((r: CustoDiretoRow) => r.id === id ? { ...r, ...patch } : r) });
+  const delCusto = (id: string) => setDraft({ ...draft, custos: draft.custos.filter((r: CustoDiretoRow) => r.id !== id) });
+
+  // ----- Horas técnicas (linhas dinâmicas) -----
+  const addHora = () => setDraft({ ...draft, horas: [...draft.horas, { id: newId(), atividade: "", horas: 0, valor_hora: custoHora }] });
+  const updHora = (id: string, patch: Partial<HoraTecnicaRow>) =>
+    setDraft({ ...draft, horas: draft.horas.map((r: HoraTecnicaRow) => r.id === id ? { ...r, ...patch } : r) });
+  const delHora = (id: string) => setDraft({ ...draft, horas: draft.horas.filter((r: HoraTecnicaRow) => r.id !== id) });
 
   return (
     <div className="space-y-5">
       {/* Custos diretos */}
-      <section>
-        <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Custos diretos</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {Object.keys(custoLabels).map(k => (
-            <div key={k} className="space-y-1">
-              <Label className="text-[11px]">{custoLabels[k]}</Label>
-              <Input className="h-8" type="number" step="0.01" value={(draft.custos as any)[k] ?? 0} onChange={e=>setC(k, e.target.value)} />
-            </div>
-          ))}
-        </div>
-        <div className="text-right text-xs text-muted-foreground mt-1">Subtotal: <span className="font-mono">{brl(c.custo_direto_total)}</span></div>
-      </section>
-
-      {/* Horas */}
-      <section>
-        <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Horas técnicas HSE</h3>
-        <div className="text-xs text-muted-foreground mb-2">
-          Valor da Hora Técnica HSE (Configurações → Precificação):
-          <span className="font-mono font-semibold ml-1">{brl(custoHora)}/h</span>
-        </div>
-        <div className="border border-border rounded-md overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/60 text-xs uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="text-left px-3 py-2">Atividade</th>
-                <th className="text-right px-3 py-2 w-24">Horas</th>
-                <th className="text-right px-3 py-2 w-28">Custo/h</th>
-                <th className="text-right px-3 py-2 w-32">Custo</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.keys(horaLabels).map(k => {
-                const horas = Number((draft.horas as any)[k] || 0);
-                const custo = horas * custoHora;
-                return (
-                  <tr key={k} className="border-t border-border">
-                    <td className="px-3 py-1.5">{horaLabels[k]}</td>
-                    <td className="px-2 py-1.5"><Input className="h-8 text-right" type="number" step="0.5" value={horas} onChange={e=>setH(k, e.target.value)} /></td>
-                    <td className="px-3 py-1.5 text-right font-mono text-xs text-muted-foreground">{brl(custoHora)}</td>
-                    <td className="px-3 py-1.5 text-right font-mono">{brl(custo)}</td>
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Custos diretos</h3>
+            <Button size="sm" variant="outline" onClick={addCusto}>
+              <Plus className="h-4 w-4 mr-1" /> Adicionar custo direto
+            </Button>
+          </div>
+          {draft.custos.length === 0 ? (
+            <p className="text-xs text-muted-foreground italic py-2">Nenhum custo direto adicionado.</p>
+          ) : (
+            <div className="border border-border rounded-md overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/60 text-xs uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="text-left px-3 py-2 w-56">Categoria</th>
+                    <th className="text-left px-3 py-2">Descrição</th>
+                    <th className="text-right px-3 py-2 w-32">Valor</th>
+                    <th className="px-2 py-2 w-10"></th>
                   </tr>
-                );
-              })}
-            </tbody>
-            <tfoot className="bg-muted/40 font-semibold">
-              <tr className="border-t border-border">
-                <td className="px-3 py-2 text-right">Totais</td>
-                <td className="px-3 py-2 text-right font-mono">{c.horas_total}h</td>
-                <td className="px-3 py-2"></td>
-                <td className="px-3 py-2 text-right font-mono">{brl(c.custo_horas)}</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </section>
+                </thead>
+                <tbody>
+                  {draft.custos.map((row: CustoDiretoRow) => (
+                    <tr key={row.id} className="border-t border-border">
+                      <td className="px-2 py-1.5">
+                        <Select value={row.categoria || ""} onValueChange={(v)=>updCusto(row.id!, { categoria: v })}>
+                          <SelectTrigger className="h-8"><SelectValue placeholder="Selecione…" /></SelectTrigger>
+                          <SelectContent>
+                            {CUSTO_CATEGORIAS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="px-2 py-1.5">
+                        <Input className="h-8" placeholder="Ex.: Combustível, ART…" value={row.descricao} onChange={(e)=>updCusto(row.id!, { descricao: e.target.value })} />
+                      </td>
+                      <td className="px-2 py-1.5">
+                        <Input className="h-8 text-right" type="number" min="0" step="0.01" value={row.valor} onChange={(e)=>updCusto(row.id!, { valor: Math.max(0, Number(e.target.value)||0) })} />
+                      </td>
+                      <td className="px-2 py-1.5 text-center">
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={()=>delCusto(row.id!)}>
+                          <Trash2 className="h-3.5 w-3.5 text-danger" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-muted/40 font-semibold">
+                  <tr className="border-t border-border">
+                    <td colSpan={2} className="px-3 py-2 text-right">Subtotal dos custos diretos</td>
+                    <td className="px-3 py-2 text-right font-mono">{brl(c.custo_direto_total)}</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Horas técnicas HSE */}
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <h3 className="text-sm font-semibold">Horas técnicas HSE</h3>
+              <p className="text-xs text-muted-foreground">
+                Valor da hora técnica HSE: <span className="font-mono font-semibold">{brl(custoHora)}/h</span>
+              </p>
+            </div>
+            <Button size="sm" variant="outline" onClick={addHora}>
+              <Plus className="h-4 w-4 mr-1" /> Adicionar atividade técnica
+            </Button>
+          </div>
+          {draft.horas.length === 0 ? (
+            <p className="text-xs text-muted-foreground italic py-2">Nenhuma atividade técnica adicionada.</p>
+          ) : (
+            <div className="border border-border rounded-md overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/60 text-xs uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="text-left px-3 py-2">Atividade</th>
+                    <th className="text-right px-3 py-2 w-24">Horas</th>
+                    <th className="text-right px-3 py-2 w-28">Valor/h</th>
+                    <th className="text-right px-3 py-2 w-32">Custo</th>
+                    <th className="px-2 py-2 w-10"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {draft.horas.map((row: HoraTecnicaRow) => {
+                    const custoLinha = (Number(row.horas)||0) * (Number(row.valor_hora)||0);
+                    return (
+                      <tr key={row.id} className="border-t border-border">
+                        <td className="px-2 py-1.5">
+                          <Select value={row.atividade || ""} onValueChange={(v)=>updHora(row.id!, { atividade: v })}>
+                            <SelectTrigger className="h-8"><SelectValue placeholder="Selecione…" /></SelectTrigger>
+                            <SelectContent>
+                              {ATIVIDADE_CATEGORIAS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <Input className="h-8 text-right" type="number" min="0" step="0.5" value={row.horas} onChange={(e)=>updHora(row.id!, { horas: Math.max(0, Number(e.target.value)||0) })} />
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <Input className="h-8 text-right" type="number" min="0" step="0.01" value={row.valor_hora} onChange={(e)=>updHora(row.id!, { valor_hora: Math.max(0, Number(e.target.value)||0) })} />
+                        </td>
+                        <td className="px-3 py-1.5 text-right font-mono">{brl(custoLinha)}</td>
+                        <td className="px-2 py-1.5 text-center">
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={()=>delHora(row.id!)}>
+                            <Trash2 className="h-3.5 w-3.5 text-danger" />
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot className="bg-muted/40 font-semibold">
+                  <tr className="border-t border-border">
+                    <td className="px-3 py-2 text-right">Totais</td>
+                    <td className="px-3 py-2 text-right font-mono">{c.horas_total}h</td>
+                    <td></td>
+                    <td className="px-3 py-2 text-right font-mono">{brl(c.custo_horas)}</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Formação do preço */}
       <section className="grid md:grid-cols-2 gap-4">
