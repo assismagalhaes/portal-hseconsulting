@@ -797,6 +797,20 @@ function ItemEditor({ item, pricing, onChange, onRemove, onOpenPricing, onSaveTo
           <Label className="text-xs">Escopo técnico (interno)</Label>
           <Textarea rows={2} value={local.escopo_tecnico||""} onChange={e=>setLocal({...local, escopo_tecnico:e.target.value})} onBlur={()=>onChange({ escopo_tecnico: local.escopo_tecnico })} />
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Entregáveis (um por linha)</Label>
+            <Textarea rows={3} value={local.entregaveis||""} onChange={e=>setLocal({...local, entregaveis:e.target.value})} onBlur={()=>onChange({ entregaveis: local.entregaveis })} placeholder={"Relatório técnico\nRegistro dos resultados"} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Observações de escopo (cliente)</Label>
+            <Textarea rows={3} value={local.observacoes_escopo||""} onChange={e=>setLocal({...local, observacoes_escopo:e.target.value})} onBlur={()=>onChange({ observacoes_escopo: local.observacoes_escopo })} placeholder="Observações específicas deste serviço" />
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Quantidade técnica (texto livre, opcional)</Label>
+          <Input value={local.quantidade_tecnica||""} onChange={e=>setLocal({...local, quantidade_tecnica:e.target.value})} onBlur={()=>onChange({ quantidade_tecnica: local.quantidade_tecnica })} placeholder="Ex: 8 dosimetrias, 1 unidade avaliada" />
+        </div>
         <div className="grid grid-cols-3 gap-2">
           <div className="space-y-1"><Label className="text-xs">Qtd</Label>
             <Input type="number" step="0.01" value={local.quantidade} onChange={e=>setLocal({...local, quantidade:e.target.value})} onBlur={()=>onChange({ quantidade: Number(local.quantidade) })} /></div>
