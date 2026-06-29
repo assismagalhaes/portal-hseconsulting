@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus } from "lucide-react";
 import { brl } from "@/lib/format";
 import { toast } from "sonner";
+import CategoryCombobox from "@/components/CategoryCombobox";
 
 const empty = { nome:"", categoria:"", descricao_comercial:"", escopo_tecnico:"", valor_referencia:0 };
 
@@ -54,7 +55,7 @@ export default function Services() {
                 <div className="space-y-1.5"><Label>Nome *</Label>
                   <Input required value={form.nome} onChange={e=>setForm({...form, nome:e.target.value})} /></div>
                 <div className="space-y-1.5"><Label>Categoria</Label>
-                  <Input placeholder="Ex.: PGR, PCMSO, Laudo, Treinamento…" value={form.categoria||""} onChange={e=>setForm({...form, categoria:e.target.value})} /></div>
+                  <CategoryCombobox value={form.categoria||""} onChange={(v)=>setForm({...form, categoria:v})} /></div>
                 <div className="space-y-1.5"><Label>Valor de referência</Label>
                   <Input type="number" step="0.01" value={form.valor_referencia} onChange={e=>setForm({...form, valor_referencia:e.target.value})} /></div>
                 <div className="space-y-1.5"><Label>Descrição comercial (vai para o cliente)</Label>

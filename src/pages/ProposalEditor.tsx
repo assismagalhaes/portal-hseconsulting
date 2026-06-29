@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import logo from "@/assets/hse-logo-navy.png";
 import ProposalDocument from "@/components/proposal/ProposalDocument";
 import CnpjLookupField from "@/components/CnpjLookupField";
+import CategoryCombobox from "@/components/CategoryCombobox";
 import GroupPricingDrawer from "@/components/proposal/GroupPricingDrawer";
 import HistoricoPrecificacao from "@/components/proposal/HistoricoPrecificacao";
 
@@ -792,7 +793,7 @@ function ItemEditor({ item, pricing, onChange, onRemove, onOpenPricing, onSaveTo
           <Button variant="ghost" size="icon" onClick={onRemove}><Trash2 className="h-4 w-4 text-danger" /></Button>
         </div>
         <div className="space-y-1"><Label className="text-xs">Categoria</Label>
-          <Input value={local.categoria||""} onChange={e=>setLocal({...local, categoria:e.target.value})} onBlur={()=>onChange({ categoria: local.categoria })} placeholder="PGR, PCMSO, Laudo…" /></div>
+          <CategoryCombobox value={local.categoria||""} onChange={(v)=>{ setLocal({...local, categoria:v}); onChange({ categoria: v }); }} /></div>
         <div className="space-y-1.5">
           <Label className="text-xs">Escopo técnico (interno)</Label>
           <Textarea rows={2} value={local.escopo_tecnico||""} onChange={e=>setLocal({...local, escopo_tecnico:e.target.value})} onBlur={()=>onChange({ escopo_tecnico: local.escopo_tecnico })} />
