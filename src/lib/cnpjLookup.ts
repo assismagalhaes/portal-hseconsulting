@@ -54,6 +54,24 @@ export function formatCnpj(v: string): string {
   return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
 }
 
+/** Normaliza cidade vinda em CAIXA ALTA / sem acento para Title Case ("Fortaleza"). */
+export function normalizeCidade(v: string | null): string | null {
+  if (!v) return v;
+  const s = String(v).trim().toLowerCase();
+  if (!s) return null;
+  const lower = new Set(["de", "da", "do", "das", "dos", "e"]);
+  return s
+    .split(/\s+/)
+    .map((w, i) => (i > 0 && lower.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)))
+    .join(" ");
+}
+
+/** True quando a situação cadastral está ativa. */
+export function isSituacaoAtiva(s: string | null | undefined): boolean {
+  if (!s) return true; // sem info — não bloqueia
+  return /ativa/i.test(String(s));
+}
+
 /** Valida CNPJ pelos dígitos verificadores. */
 export function isValidCnpj(value: string): boolean {
   const c = onlyDigits(value);
@@ -120,7 +138,7 @@ async function fetchBrasilApi(cnpj: string): Promise<CnpjLookupResult> {
     numero,
     complemento,
     bairro: raw.bairro || null,
-    cidade: raw.municipio || raw.cidade || null,
+    cidade: normalizeCidade(raw.municipio || raw.cidade || null),
     uf: raw.uf || null,
     email: raw.email || null,
     telefone: raw.ddd_telefone_1
@@ -148,13 +166,30 @@ export async function consultarCnpj(cnpj: string): Promise<CnpjLookupResult> {
   // log interno (best-effort, não interfere no fluxo)
   try {
     const { data: { user } } = await supabase.auth.getUser();
+    // Payload sanitizado — apenas dados cadastrais da empresa.
+    // Nunca persistimos sócios, representantes, e-mail/telefone pessoais ou
+    // qualquer outro dado pessoal que a API porventura traga.
+    const sanitizedPayload = result.status === "sucesso"
+      ? {
+          cnpj: result.data.cnpj,
+          razao_social: result.data.razao_social,
+          nome_fantasia: result.data.nome_fantasia,
+          situacao_cadastral: result.data.situacao_cadastral,
+          data_abertura: result.data.data_abertura,
+          cnae_principal: result.data.cnae_principal,
+          natureza_juridica: result.data.natureza_juridica,
+          porte: result.data.porte,
+          cidade: result.data.cidade,
+          uf: result.data.uf,
+        }
+      : null;
     await supabase.from("cnpj_consultas_log").insert({
       cnpj: clean,
       fonte: "brasilapi",
       resultado: result.status,
       mensagem: result.status === "sucesso" ? null : result.message,
       user_id: user?.id ?? null,
-      payload: result.status === "sucesso" ? (result.data as any) : null,
+      payload: sanitizedPayload as any,
     } as any);
   } catch { /* noop */ }
 
