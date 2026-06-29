@@ -346,20 +346,47 @@ export default function ProposalEditor() {
   const errs = validate();
 
   async function handlePrint() {
-    // Garante que o documento esteja montado e o template carregado
+    // Wait for the proposal document (with template) to be mounted
     const t0 = Date.now();
     while (!document.querySelector(".proposal-doc .pdf-page")) {
       if (Date.now() - t0 > 5000) { toast.error("Não foi possível preparar o documento para impressão."); return; }
       await new Promise(r => setTimeout(r, 100));
     }
-    const prevTitle = document.title;
+    const docNode = document.querySelector(".proposal-doc") as HTMLElement | null;
+    if (!docNode) { toast.error("Documento não está pronto."); return; }
+
     const clienteNome = client?.nome_fantasia || client?.razao_social || "Cliente";
     const safe = (s: string) => (s || "").replace(/[\\/:*?"<>|]/g, "").trim();
-    document.title = `Proposta ${proposal.numero} - ${safe(clienteNome)}`;
+    const title = `Proposta ${proposal.numero} - ${safe(clienteNome)}`;
+
+    // Clone all stylesheets so the printed window matches the on-screen client view exactly
+    const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+      .map(n => (n as HTMLElement).outerHTML).join("\n");
+
+    const w = window.open("", "_blank", "width=960,height=1200");
+    if (!w) { toast.error("Habilite pop-ups para gerar o PDF."); return; }
+    w.document.open();
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title>${styles}
+      <style>
+        @page { size: A4; margin: 0; }
+        html, body { margin: 0; padding: 0; background: #fff; }
+        .pdf-page { box-shadow: none !important; margin: 0 !important; page-break-after: always; break-after: page; }
+        .pdf-page:last-child { page-break-after: auto; break-after: auto; }
+        .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+      </style></head><body>${docNode.outerHTML}</body></html>`);
+    w.document.close();
+
+    // Wait for images (logo, capa) to load before printing
+    const waitImgs = async () => {
+      const imgs = Array.from(w.document.images);
+      await Promise.all(imgs.map(img => img.complete ? null : new Promise(res => {
+        img.onload = img.onerror = () => res(null);
+      })));
+    };
+    try { await waitImgs(); } catch {}
     setTimeout(() => {
-      window.print();
-      setTimeout(() => { document.title = prevTitle; }, 500);
-    }, 200);
+      try { w.focus(); w.print(); } catch {}
+    }, 400);
   }
 
   return (
