@@ -778,13 +778,17 @@ function ItemEditor({ item, pricing, onChange, onRemove, onOpenPricing, onSaveTo
               {item.categoria && <Badge variant="secondary">{item.categoria}</Badge>}
               {meta && <Badge className={`border ${meta.color}`}>{meta.label}</Badge>}
             </div>
-            <Input value={local.descricao_comercial} onChange={e=>setLocal({...local, descricao_comercial:e.target.value})} onBlur={()=>onChange({ descricao_comercial: local.descricao_comercial })} className="font-display font-semibold text-base" placeholder="Nome / descrição comercial" />
+            <Input value={local.nome || ""} onChange={e=>setLocal({...local, nome:e.target.value})} onBlur={()=>onChange({ nome: local.nome })} className="font-display font-semibold text-base" placeholder="Nome do serviço (ex.: Visita Técnica)" />
             </div>
           </div>
           <Button variant="ghost" size="icon" onClick={onRemove}><Trash2 className="h-4 w-4 text-danger" /></Button>
         </div>
         <div className="space-y-1"><Label className="text-xs">Categoria</Label>
           <CategoryCombobox value={local.categoria||""} onChange={(v)=>{ setLocal({...local, categoria:v}); onChange({ categoria: v }); }} /></div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Descrição comercial (aparece na proposta)</Label>
+          <Textarea rows={3} value={local.descricao_comercial||""} onChange={e=>setLocal({...local, descricao_comercial:e.target.value})} onBlur={()=>onChange({ descricao_comercial: local.descricao_comercial })} placeholder="Descrição detalhada do serviço para o cliente" />
+        </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Escopo técnico (interno)</Label>
           <Textarea rows={2} value={local.escopo_tecnico||""} onChange={e=>setLocal({...local, escopo_tecnico:e.target.value})} onBlur={()=>onChange({ escopo_tecnico: local.escopo_tecnico })} />
