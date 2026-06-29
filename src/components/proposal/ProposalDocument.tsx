@@ -482,7 +482,6 @@ function ScopeCard({ item, title, primary, accent, neutral, fontTitulo }: any) {
   const descricao = (item.descricao_comercial || "").trim();
   // Evita duplicar a descrição quando ela é igual ao nome do serviço
   const descricaoDistinta = descricao && descricao !== headerTitle ? descricao : "";
-  const escopo = (item.escopo_tecnico || "").trim();
 
   const Block = ({ icon, title, children }: any) => (
     <div style={{ marginTop: 10 }}>
@@ -516,12 +515,6 @@ function ScopeCard({ item, title, primary, accent, neutral, fontTitulo }: any) {
       {descricaoDistinta && (
         <Block icon={<ClipboardList size={12} />} title="Descrição">
           <p style={{ whiteSpace: "pre-line", margin: 0 }}>{descricaoDistinta}</p>
-        </Block>
-      )}
-
-      {escopo && (
-        <Block icon={<ClipboardList size={12} />} title="Escopo técnico">
-          <p style={{ whiteSpace: "pre-line", margin: 0 }}>{escopo}</p>
         </Block>
       )}
 
