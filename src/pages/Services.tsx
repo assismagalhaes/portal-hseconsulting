@@ -11,7 +11,7 @@ import { Plus } from "lucide-react";
 import { brl } from "@/lib/format";
 import { toast } from "sonner";
 
-const empty = { nome:"", categoria:"", unidade_padrao:"serviço", descricao_comercial:"", escopo_tecnico:"", valor_referencia:0 };
+const empty = { nome:"", categoria:"", descricao_comercial:"", escopo_tecnico:"", valor_referencia:0 };
 
 export default function Services() {
   const [list, setList] = useState<any[]>([]);
@@ -55,12 +55,8 @@ export default function Services() {
                   <Input required value={form.nome} onChange={e=>setForm({...form, nome:e.target.value})} /></div>
                 <div className="space-y-1.5"><Label>Categoria</Label>
                   <Input placeholder="Ex.: PGR, PCMSO, Laudo, Treinamento…" value={form.categoria||""} onChange={e=>setForm({...form, categoria:e.target.value})} /></div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5"><Label>Unidade padrão</Label>
-                    <Input value={form.unidade_padrao} onChange={e=>setForm({...form, unidade_padrao:e.target.value})} /></div>
-                  <div className="space-y-1.5"><Label>Valor de referência</Label>
-                    <Input type="number" step="0.01" value={form.valor_referencia} onChange={e=>setForm({...form, valor_referencia:e.target.value})} /></div>
-                </div>
+                <div className="space-y-1.5"><Label>Valor de referência</Label>
+                  <Input type="number" step="0.01" value={form.valor_referencia} onChange={e=>setForm({...form, valor_referencia:e.target.value})} /></div>
                 <div className="space-y-1.5"><Label>Descrição comercial (vai para o cliente)</Label>
                   <Textarea rows={3} value={form.descricao_comercial||""} onChange={e=>setForm({...form, descricao_comercial:e.target.value})} /></div>
                 <div className="space-y-1.5"><Label>Escopo técnico (uso interno)</Label>
@@ -78,10 +74,7 @@ export default function Services() {
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map(s => (
             <Card key={s.id} className="p-4 shadow-elegant hover:shadow-glow transition-shadow cursor-pointer" onClick={()=>openEdit(s)}>
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="font-display font-semibold">{s.nome}</h3>
-                <span className="text-xs text-muted-foreground">{s.unidade_padrao || "—"}</span>
-              </div>
+              <h3 className="font-display font-semibold">{s.nome}</h3>
               <p className="text-sm text-muted-foreground mt-2 line-clamp-3">{s.descricao_comercial || "Sem descrição comercial."}</p>
               <div className="mt-3 text-sm font-mono text-primary">{brl(s.valor_referencia)}</div>
             </Card>
