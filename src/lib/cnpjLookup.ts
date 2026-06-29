@@ -149,6 +149,76 @@ async function fetchBrasilApi(cnpj: string): Promise<CnpjLookupResult> {
   return { status: "sucesso", data };
 }
 
+async function fetchPublicaCnpjWs(cnpj: string): Promise<CnpjLookupResult> {
+  const c = onlyDigits(cnpj);
+  let resp: Response;
+  try {
+    resp = await fetch(`https://publica.cnpj.ws/cnpj/${c}`, { method: "GET" });
+  } catch {
+    return { status: "api_indisponivel", message: "Não foi possível conectar à API pública (publica.cnpj.ws)." };
+  }
+  if (resp.status === 404) {
+    return { status: "nao_encontrado", message: "CNPJ não encontrado na base pública." };
+  }
+  if (resp.status === 429) {
+    return { status: "api_indisponivel", message: "Limite de consultas excedido na fonte secundária. Tente novamente em instantes." };
+  }
+  if (!resp.ok) {
+    return { status: "api_indisponivel", message: `Falha na consulta secundária (HTTP ${resp.status}).` };
+  }
+  const raw: any = await resp.json().catch(() => null);
+  if (!raw) return { status: "erro", message: "Resposta inválida da API secundária." };
+
+  const est = raw.estabelecimento || {};
+  const logradouro = [est.tipo_logradouro, est.logradouro].filter(Boolean).join(" ").trim() || null;
+  const numero = est.numero ? String(est.numero) : null;
+  const complemento = est.complemento || null;
+  const endereco = [logradouro, numero, complemento].filter(Boolean).join(", ").trim() || null;
+
+  const ap = est.atividade_principal;
+  const cnaePrincipal = ap?.subclasse
+    ? `${String(ap.subclasse).replace(/\D/g, "")} — ${ap.descricao || ""}`.trim()
+    : (ap?.descricao || null);
+
+  const cnaesSec = Array.isArray(est.atividades_secundarias)
+    ? est.atividades_secundarias
+        .filter((x: any) => x?.subclasse || x?.descricao)
+        .map((x: any) => ({
+          codigo: String(x.subclasse || "").replace(/\D/g, ""),
+          descricao: x.descricao || "",
+        }))
+    : [];
+
+  const telRaw = est.ddd1 && est.telefone1 ? `${est.ddd1}${est.telefone1}` : null;
+  const telefone = telRaw
+    ? telRaw.replace(/^(\d{2})(\d{4,5})(\d{4})$/, "($1) $2-$3")
+    : null;
+
+  const data: CnpjLookupData = {
+    cnpj: formatCnpj(c),
+    razao_social: raw.razao_social || "",
+    nome_fantasia: est.nome_fantasia || "",
+    situacao_cadastral: est.situacao_cadastral || null,
+    data_abertura: est.data_inicio_atividade || null,
+    cnae_principal: cnaePrincipal,
+    cnaes_secundarios: cnaesSec,
+    natureza_juridica: raw.natureza_juridica?.descricao || null,
+    porte: raw.porte?.descricao || null,
+    cep: est.cep ? onlyDigits(est.cep).replace(/^(\d{5})(\d{3})$/, "$1-$2") : null,
+    endereco,
+    logradouro,
+    numero,
+    complemento,
+    bairro: est.bairro || null,
+    cidade: normalizeCidade(est.cidade?.nome || null),
+    uf: est.estado?.sigla || null,
+    email: est.email || null,
+    telefone,
+    fonte: "publica.cnpj.ws",
+  };
+  return { status: "sucesso", data };
+}
+
 /* ------------ public api ------------ */
 
 /**
@@ -161,7 +231,22 @@ export async function consultarCnpj(cnpj: string): Promise<CnpjLookupResult> {
     return { status: "invalido", message: "CNPJ inválido. Confira os 14 dígitos." };
   }
 
-  const result = await fetchBrasilApi(clean);
+  let result = await fetchBrasilApi(clean);
+  let fonteUsada = "brasilapi";
+
+  // Fallback automático: se a BrasilAPI não tiver o CNPJ ou estiver indisponível,
+  // tenta a fonte secundária (publica.cnpj.ws) antes de declarar não encontrado.
+  if (result.status === "nao_encontrado" || result.status === "api_indisponivel" || result.status === "erro") {
+    const fallback = await fetchPublicaCnpjWs(clean);
+    if (fallback.status === "sucesso") {
+      result = fallback;
+      fonteUsada = "publica.cnpj.ws";
+    } else if (result.status !== "nao_encontrado" && fallback.status === "nao_encontrado") {
+      // BrasilAPI estava indisponível e o fallback confirmou que não existe → reportar não encontrado.
+      result = fallback;
+      fonteUsada = "publica.cnpj.ws";
+    }
+  }
 
   // log interno (best-effort, não interfere no fluxo)
   try {
@@ -185,7 +270,7 @@ export async function consultarCnpj(cnpj: string): Promise<CnpjLookupResult> {
       : null;
     await supabase.from("cnpj_consultas_log").insert({
       cnpj: clean,
-      fonte: "brasilapi",
+      fonte: fonteUsada,
       resultado: result.status,
       mensagem: result.status === "sucesso" ? null : result.message,
       user_id: user?.id ?? null,
