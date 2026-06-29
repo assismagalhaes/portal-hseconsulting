@@ -37,12 +37,24 @@ const PAGE_STYLE: React.CSSProperties = {
 
 export default function ProposalDocument({ proposal, client, items, revisions = [], onReady }: Props) {
   const [tpl, setTpl] = useState<any>(null);
+  const [serviceNames, setServiceNames] = useState<Record<string, string>>({});
   useEffect(() => {
     supabase.from("proposal_template").select("*").limit(1).maybeSingle()
       .then(({ data }) => setTpl(data || {}));
   }, []);
+  useEffect(() => {
+    const ids = Array.from(new Set(items.map((i: any) => i.service_id).filter(Boolean)));
+    if (ids.length === 0) { setServiceNames({}); return; }
+    supabase.from("services").select("id,nome").in("id", ids).then(({ data }) => {
+      const map: Record<string, string> = {};
+      (data || []).forEach((s: any) => { map[s.id] = s.nome; });
+      setServiceNames(map);
+    });
+  }, [items]);
   useEffect(() => { if (tpl && onReady) onReady(); }, [tpl, onReady]);
   if (!tpl) return <div className="p-8 text-sm text-muted-foreground">Carregando modelo…</div>;
+
+  const titleOf = (it: any) => serviceNames[it.service_id] || it.descricao_comercial || "Serviço";
 
   const primary = tpl.cor_primaria || "#0b1f4d";
   const accent = tpl.cor_secundaria || "#16a34a";
@@ -191,7 +203,7 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
           {page.length === 0 && <p style={{ color: "#64748b", fontSize: 12 }}>Nenhum serviço adicionado.</p>}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {page.map((it: any) => (
-              <ScopeCard key={it.id} item={it} primary={primary} accent={accent} neutral={neutral} fontTitulo={tpl.font_titulo || "Sora"} />
+              <ScopeCard key={it.id} item={it} title={titleOf(it)} primary={primary} accent={accent} neutral={neutral} fontTitulo={tpl.font_titulo || "Sora"} />
             ))}
           </div>
         </DocPage>
@@ -213,11 +225,16 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
             </thead>
             <tbody>
               {page.map((it: any, i: number) => (
-                <tr key={it.id} style={{ background: i % 2 ? neutral : "#fff" }}>
+                <tr key={it.id} style={{ background: i % 2 ? neutral : "#fff", verticalAlign: "top" }}>
                   <td style={{ padding: "10px 12px", fontFamily: "monospace", color: "#64748b" }}>{String(it.numero_item).padStart(2, "0")}</td>
                   <td style={{ padding: "10px 12px" }}>
-                    <div style={{ fontWeight: 600, color: "#0f172a" }}>{it.descricao_comercial}</div>
+                    <div style={{ fontWeight: 600, color: "#0f172a" }}>{titleOf(it)}</div>
                     {it.categoria && <div style={{ fontSize: 10, color: "#64748b" }}>{it.categoria}</div>}
+                    {it.observacoes_escopo && (
+                      <div style={{ marginTop: 4, fontSize: 10.5, color: "#64748b", fontStyle: "italic", whiteSpace: "pre-line" }}>
+                        Obs.: {it.observacoes_escopo}
+                      </div>
+                    )}
                   </td>
                   <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace" }}>{it.quantidade}</td>
                   <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace" }}>{brl(it.valor_unitario)}</td>
