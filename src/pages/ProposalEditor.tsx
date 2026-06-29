@@ -372,6 +372,14 @@ export default function ProposalEditor() {
 
       <div className="p-6 grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
+          {proposal.bloqueada_edicao && (
+            <div className="rounded-md border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900 flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4" />
+              <span>
+                Proposta com revisão <strong>Rev. {String(proposal.revisao_atual ?? 0).padStart(2,"0")}</strong> aprovada — edições comerciais estão bloqueadas. Para alterar valores, crie uma nova revisão na aba <em>Revisões</em>.
+              </span>
+            </div>
+          )}
           {clientView ? (
             <ProposalDocument proposal={proposal} client={client} items={items} revisions={revisions} />
           ) : (
