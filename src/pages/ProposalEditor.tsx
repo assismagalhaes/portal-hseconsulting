@@ -181,7 +181,6 @@ export default function ProposalEditor() {
       categoria: fromService?.categoria || null,
       descricao_comercial: fromService?.descricao_comercial || fromService?.nome || "Novo item",
       escopo_tecnico: fromService?.escopo_tecnico || "",
-      unidade: fromService?.unidade_padrao || "serviço",
       quantidade: 1,
       valor_unitario: Number(fromService?.valor_referencia || 0),
       valor_total: Number(fromService?.valor_referencia || 0),
@@ -199,7 +198,6 @@ export default function ProposalEditor() {
       categoria: merged.categoria || null,
       descricao_comercial: merged.descricao_comercial,
       escopo_tecnico: merged.escopo_tecnico,
-      unidade: merged.unidade,
       quantidade: merged.quantidade,
       valor_unitario: merged.valor_unitario,
       valor_total: merged.valor_total,
@@ -227,7 +225,6 @@ export default function ProposalEditor() {
       categoria: it.categoria,
       descricao_comercial: it.descricao_comercial,
       escopo_tecnico: it.escopo_tecnico,
-      unidade_padrao: it.unidade,
       valor_referencia: it.valor_unitario,
     }).select("*").single();
     if (error) return toast.error(error.message);
@@ -717,12 +714,8 @@ function ItemEditor({ item, pricing, onChange, onRemove, onOpenPricing, onSaveTo
           </div>
           <Button variant="ghost" size="icon" onClick={onRemove}><Trash2 className="h-4 w-4 text-danger" /></Button>
         </div>
-        <div className="grid sm:grid-cols-2 gap-2">
-          <div className="space-y-1"><Label className="text-xs">Categoria</Label>
-            <Input value={local.categoria||""} onChange={e=>setLocal({...local, categoria:e.target.value})} onBlur={()=>onChange({ categoria: local.categoria })} placeholder="PGR, PCMSO, Laudo…" /></div>
-          <div className="space-y-1"><Label className="text-xs">Unidade</Label>
-            <Input value={local.unidade} onChange={e=>setLocal({...local, unidade:e.target.value})} onBlur={()=>onChange({ unidade: local.unidade })} /></div>
-        </div>
+        <div className="space-y-1"><Label className="text-xs">Categoria</Label>
+          <Input value={local.categoria||""} onChange={e=>setLocal({...local, categoria:e.target.value})} onBlur={()=>onChange({ categoria: local.categoria })} placeholder="PGR, PCMSO, Laudo…" /></div>
         <div className="space-y-1.5">
           <Label className="text-xs">Escopo técnico (interno)</Label>
           <Textarea rows={2} value={local.escopo_tecnico||""} onChange={e=>setLocal({...local, escopo_tecnico:e.target.value})} onBlur={()=>onChange({ escopo_tecnico: local.escopo_tecnico })} />
@@ -1059,7 +1052,7 @@ function ClientPreview({ proposal, client, items }: any) {
                   <div>
                     <div className="font-semibold">{it.numero_item}. {it.descricao_comercial}</div>
                     {it.categoria && <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{it.categoria}</div>}
-                    <div className="text-xs text-muted-foreground">{it.quantidade} {it.unidade}</div>
+                    <div className="text-xs text-muted-foreground">Qtd: {it.quantidade}</div>
                   </div>
                   <div className="font-mono text-right">
                     <div className="text-sm">{brl(it.valor_unitario)}</div>
