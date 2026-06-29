@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PercentInput } from "@/components/ui/percent-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
@@ -105,8 +106,8 @@ export default function OrdemServicoEditor() {
             <Label className="text-xs uppercase">Progresso: {os.percentual_executado}%</Label>
             <div className="flex gap-2 items-center">
               <Progress value={os.percentual_executado} className="flex-1" />
-              <Input type="number" min={0} max={100} className="w-20" defaultValue={os.percentual_executado}
-                onBlur={e => save({ percentual_executado: Math.max(0, Math.min(100, Number(e.target.value || 0))) })} />
+              <PercentInput decimal={false} className="w-24" value={os.percentual_executado}
+                onChange={(n) => save({ percentual_executado: Math.max(0, Math.min(100, Number(n) || 0)) })} />
             </div>
           </div>
         </CardContent></Card>

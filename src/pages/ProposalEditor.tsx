@@ -5,6 +5,7 @@ import PageHeader from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PercentInput } from "@/components/ui/percent-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -965,8 +966,8 @@ function PricingPanel({ item, existing, params, clientFuncionarios, onSave }: an
         <div>
           <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Formação do preço</h3>
           <div className="grid grid-cols-2 gap-2">
-            <Mini label="Imposto (0-1)" v={draft.aliquota_imposto} onChange={v=>setDraft({...draft, aliquota_imposto:Number(v)||0})} />
-            <Mini label="Margem desejada (0-1)" v={draft.margem_desejada} onChange={v=>setDraft({...draft, margem_desejada:Number(v)||0})} />
+            <MiniPct label="Imposto (%)" v={draft.aliquota_imposto} onChange={v=>setDraft({...draft, aliquota_imposto:Number(v)||0})} />
+            <MiniPct label="Margem desejada (%)" v={draft.margem_desejada} onChange={v=>setDraft({...draft, margem_desejada:Number(v)||0})} />
             <Mini label="Lucro adicional (R$)" v={draft.lucro_desejado} onChange={v=>setDraft({...draft, lucro_desejado:Number(v)||0})} />
             <Mini label="Desconto (R$)" v={draft.desconto_comercial} onChange={v=>setDraft({...draft, desconto_comercial:Number(v)||0})} />
           </div>
@@ -999,6 +1000,15 @@ function Mini({ label, v, onChange }: any) {
     <div className="space-y-1">
       <Label className="text-[11px]">{label}</Label>
       <Input className="h-8" type="number" step="0.01" value={v ?? 0} onChange={e=>onChange(e.target.value)} />
+    </div>
+  );
+}
+
+function MiniPct({ label, v, onChange }: any) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-[11px]">{label}</Label>
+      <PercentInput className="h-8" value={Number(v ?? 0)} onChange={(n)=>onChange(n)} />
     </div>
   );
 }

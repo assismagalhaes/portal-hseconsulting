@@ -4,6 +4,7 @@ import PageHeader from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PercentInput } from "@/components/ui/percent-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -103,8 +104,8 @@ export default function Settings() {
         <Card className="shadow-elegant">
           <CardHeader><CardTitle className="font-display">Regras comerciais</CardTitle></CardHeader>
           <CardContent className="grid sm:grid-cols-2 gap-3">
-            <NumField label="Alíquota de imposto (0-1)" step="0.01" v={p.aliquota_imposto} set={v=>setP({...p, aliquota_imposto:v})} />
-            <NumField label="Margem mínima (0-1)" step="0.01" v={p.margem_minima} set={v=>setP({...p, margem_minima:v})} />
+            <PctField label="Imposto (%)" v={p.aliquota_imposto} set={v=>setP({...p, aliquota_imposto:v})} />
+            <PctField label="Margem mínima (%)" v={p.margem_minima} set={v=>setP({...p, margem_minima:v})} />
             <NumField label="Markup mínimo" step="0.1" v={p.markup_minimo} set={v=>setP({...p, markup_minimo:v})} />
             <NumField label="Arredondamento (R$)" v={p.arredondamento} set={v=>setP({...p, arredondamento:v})} />
           </CardContent>
@@ -200,6 +201,15 @@ function NumField({ label, v, set, step="1" }: any) {
     <div className="space-y-1.5">
       <Label>{label}</Label>
       <Input type="number" step={step} value={v ?? 0} onChange={e=>set(e.target.value)} />
+    </div>
+  );
+}
+
+function PctField({ label, v, set }: any) {
+  return (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      <PercentInput value={Number(v ?? 0)} onChange={(n)=>set(n)} />
     </div>
   );
 }

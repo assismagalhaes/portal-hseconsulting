@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { PercentInput } from "@/components/ui/percent-input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -371,8 +372,8 @@ export default function GroupPricingDrawer({
           {/* Imposto padrão */}
           <section className="grid sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs">Imposto padrão</Label>
-              <Input type="number" step="0.01" value={aliquotaPadrao} onChange={(e) => setAliquotaPadrao(Number(e.target.value) || 0)} />
+              <Label className="text-xs">Imposto padrão (%)</Label>
+              <PercentInput value={aliquotaPadrao} onChange={(n) => setAliquotaPadrao(n)} />
             </div>
             <div className="space-y-1.5 sm:col-span-2">
               <Label className="text-xs">Motivo / referência desta simulação</Label>
@@ -419,13 +420,13 @@ export default function GroupPricingDrawer({
                             onChange={(e) => setItem(it.id, { horas: { total: Number(e.target.value) || 0 } })} />
                         </td>
                         <td className="px-2 py-1.5">
-                          <Input className="h-7 text-right" type="number" step="0.01" value={d.margem_desejada}
-                            onChange={(e) => setItem(it.id, { margem_desejada: Number(e.target.value) || 0 })} />
+                          <PercentInput className="h-7" value={d.margem_desejada}
+                            onChange={(n) => setItem(it.id, { margem_desejada: n })} />
                         </td>
                         {(regra === "manual" || regraHoras === "manual") && (
                           <td className="px-2 py-1.5">
-                            <Input className="h-7 text-right" type="number" step="0.1" value={d.peso_manual}
-                              onChange={(e) => setItem(it.id, { peso_manual: Number(e.target.value) || 0 })} />
+                            <PercentInput className="h-7" decimal={false} precision={1} value={d.peso_manual}
+                              onChange={(n) => setItem(it.id, { peso_manual: n })} />
                           </td>
                         )}
                         <td className="px-2 py-1.5 text-right font-mono">{brl(r?.custo_compartilhado_rateado || 0)}</td>
