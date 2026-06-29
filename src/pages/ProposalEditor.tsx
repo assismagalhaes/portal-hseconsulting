@@ -87,7 +87,7 @@ export default function ProposalEditor() {
     setProposal(proposalData);
     setClient(proposalData.clients || null);
     setServices(sv.data || []);
-    setParams(pp.data || { custo_fixo_mensal:0, horas_produtivas_mes:160, custo_por_vida:0, aliquota_imposto:0.10, margem_minima:0.20, markup_minimo:1.5, arredondamento:10 });
+    setParams(pp.data || { custo_fixo_mensal:0, horas_produtivas_mes:160, custo_por_vida:0, aliquota_imposto:0.10, margem_minima:0.20, markup_minimo:1.5, arredondamento:10, valor_hora_tecnica: 35 });
     document.title = `${proposalData.numero} | Portal HSE Consulting`;
     const [it, rv] = await Promise.all([
       supabase.from("proposal_items").select("*").eq("proposal_id", id).order("numero_item"),
