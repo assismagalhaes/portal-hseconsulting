@@ -1,6 +1,21 @@
 export const brl = (n: number | null | undefined) =>
   (Number(n ?? 0)).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+/** Converte entrada em padrão BR ("R$ 1.234,56", "1234,56", "1234.56", "110") em number. */
+export const parseBrl = (input: string | number | null | undefined): number => {
+  if (typeof input === "number") return isFinite(input) ? input : 0;
+  if (!input) return 0;
+  let s = String(input).trim();
+  if (!s) return 0;
+  s = s.replace(/R\$\s?/gi, "").replace(/\s/g, "");
+  // Se tem vírgula, vírgula é decimal e ponto é milhar
+  if (s.includes(",")) {
+    s = s.replace(/\./g, "").replace(",", ".");
+  }
+  const n = Number(s);
+  return isFinite(n) ? n : 0;
+};
+
 export const pct = (n: number | null | undefined, digits = 1) =>
   `${(Number(n ?? 0) * 100).toFixed(digits)}%`;
 
