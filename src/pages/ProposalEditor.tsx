@@ -1144,6 +1144,11 @@ function PricingPanel({ item, existing, params, clientFuncionarios, onSave }: an
             <Row label="Preço mínimo"><span className="font-mono">{brl(c.preco_minimo)}</span></Row>
             <Row label="Preço sugerido"><span className="font-mono">{brl(c.preco_sugerido)}</span></Row>
             <Row label="Preço comercial"><span className="font-mono text-primary text-lg font-bold">{brl(c.preco_arredondado)}</span></Row>
+            {Number(item?.quantidade||1) > 1 && (
+              <Row label={`Valor unitário (× ${item.quantidade})`}>
+                <span className="font-mono">{brl(c.preco_arredondado / Number(item.quantidade))}</span>
+              </Row>
+            )}
             <hr className="border-white/20" />
             <Row label="Imposto"><span className="font-mono">{brl(c.imposto_estimado)}</span></Row>
             <Row label="Lucro"><span className="font-mono">{brl(c.lucro_estimado)}</span></Row>
