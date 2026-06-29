@@ -1003,6 +1003,15 @@ function Mini({ label, v, onChange }: any) {
   );
 }
 
+function MiniPct({ label, v, onChange }: any) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-[11px]">{label}</Label>
+      <PercentInput className="h-8" value={Number(v ?? 0)} onChange={(n)=>onChange(n)} />
+    </div>
+  );
+}
+
 /* ---------------- Visão do cliente ---------------- */
 function ClientPreview({ proposal, client, items }: any) {
   const total = items.reduce((a:number,b:any)=>a+Number(b.valor_total||0),0);
