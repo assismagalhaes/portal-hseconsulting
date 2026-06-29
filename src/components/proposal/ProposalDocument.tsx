@@ -8,6 +8,7 @@ import contracapaImg from "@/assets/proposta-contracapa.jpg";
 import {
   Phone, Mail, Globe, MapPin, MessageCircle, ShieldCheck, Target, Eye, Heart,
   Award, Users, Zap, Scale, UserCheck, Sparkles, CheckCircle2, Building2, FileSignature,
+  ClipboardList, ListChecks, Package, Hash, Info,
 } from "lucide-react";
 
 /**
@@ -59,8 +60,9 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   const diferenciais: string[] = Array.isArray(tpl.diferenciais) ? tpl.diferenciais : [];
   const diffIcons = [Award, Users, Zap, Scale, UserCheck, Sparkles];
 
-  // ITEMS pagination — 6 cards per page in scope, 12 rows per page in investment table
-  const SCOPE_PER_PAGE = 4;
+  // ITEMS pagination — 3 cards per page in scope (cards são mais ricos agora),
+  // 12 rows per page in investment table
+  const SCOPE_PER_PAGE = 3;
   const scopePages: any[][] = [];
   for (let i = 0; i < items.length; i += SCOPE_PER_PAGE)
     scopePages.push(items.slice(i, i + SCOPE_PER_PAGE));
@@ -189,31 +191,7 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
           {page.length === 0 && <p style={{ color: "#64748b", fontSize: 12 }}>Nenhum serviço adicionado.</p>}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {page.map((it: any) => (
-              <div key={it.id} className="avoid-break" style={{ border: `1px solid ${neutral}`, borderRadius: 12, padding: 16, position: "relative" }}>
-                <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 4, background: accent, borderRadius: "12px 0 0 12px" }} />
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 16, marginBottom: 8 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ width: 32, height: 32, borderRadius: 8, background: primary, color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13 }}>
-                      {String(it.numero_item).padStart(2, "0")}
-                    </span>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: primary }}>{it.descricao_comercial}</div>
-                      {it.categoria && <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: 1, color: "#64748b" }}>{it.categoria}</div>}
-                    </div>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: 1 }}>Valor</div>
-                    <div style={{ fontFamily: "ui-monospace, monospace", fontWeight: 700, fontSize: 16, color: primary }}>{brl(it.valor_total)}</div>
-                  </div>
-                </div>
-                {it.escopo_tecnico && (
-                  <p style={{ fontSize: 11.5, lineHeight: 1.55, color: "#475569", whiteSpace: "pre-line", marginTop: 6, marginBottom: 8 }}>{it.escopo_tecnico}</p>
-                )}
-                <div style={{ display: "flex", gap: 16, fontSize: 11, color: "#64748b", borderTop: `1px dashed ${neutral}`, paddingTop: 8 }}>
-                  <span><strong style={{ color: "#0f172a" }}>Qtd:</strong> {it.quantidade}</span>
-                  <span><strong style={{ color: "#0f172a" }}>Unitário:</strong> {brl(it.valor_unitario)}</span>
-                </div>
-              </div>
+              <ScopeCard key={it.id} item={it} primary={primary} accent={accent} neutral={neutral} fontTitulo={tpl.font_titulo || "Sora"} />
             ))}
           </div>
         </DocPage>
@@ -466,6 +444,81 @@ function Stat({ label, value, accent }: any) {
     <div>
       <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: 2, color: accent, fontWeight: 700, marginBottom: 2 }}>{label}</div>
       <div style={{ fontSize: 15, fontWeight: 700 }}>{value}</div>
+    </div>
+  );
+}
+
+/* ---------- Scope card (technical/commercial, no financials) ---------- */
+function ScopeCard({ item, primary, accent, neutral, fontTitulo }: any) {
+  const toList = (s?: string): string[] =>
+    (s || "")
+      .split(/\r?\n|;|•/)
+      .map((x) => x.trim().replace(/^[-*]\s*/, ""))
+      .filter(Boolean);
+
+  const entregaveis = toList(item.entregaveis);
+  const observacoes = (item.observacoes_escopo || "").trim();
+  const qtdTec =
+    (item.quantidade_tecnica || "").trim() ||
+    (Number(item.quantidade) > 1 ? `${item.quantidade} ${item.quantidade > 1 ? "unidades" : "unidade"}` : "");
+  const escopo = (item.escopo_tecnico || item.descricao_comercial || "").trim();
+
+  const Block = ({ icon, title, children }: any) => (
+    <div style={{ marginTop: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+        <span style={{ color: accent, display: "inline-flex" }}>{icon}</span>
+        <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: 1.2, color: primary, fontWeight: 700 }}>{title}</span>
+      </div>
+      <div style={{ fontSize: 11.5, lineHeight: 1.55, color: "#334155" }}>{children}</div>
+    </div>
+  );
+
+  return (
+    <div className="avoid-break" style={{ border: `1px solid ${neutral}`, borderRadius: 12, padding: 18, position: "relative", background: "#fff" }}>
+      <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 4, background: accent, borderRadius: "12px 0 0 12px" }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+        <span style={{ width: 32, height: 32, borderRadius: 8, background: primary, color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13 }}>
+          {String(item.numero_item).padStart(2, "0")}
+        </span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: `${fontTitulo}, sans-serif`, fontWeight: 700, fontSize: 15, color: primary, lineHeight: 1.2 }}>
+            {item.descricao_comercial}
+          </div>
+          {item.categoria && (
+            <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: 1.4, color: "#64748b", marginTop: 2 }}>
+              {item.categoria}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {escopo && (
+        <Block icon={<ClipboardList size={12} />} title="Descrição">
+          <p style={{ whiteSpace: "pre-line", margin: 0 }}>{escopo}</p>
+        </Block>
+      )}
+
+      {entregaveis.length > 0 && (
+        <Block icon={<Package size={12} />} title="Entregáveis">
+          <ul style={{ margin: 0, paddingLeft: 16 }}>
+            {entregaveis.map((e, i) => (
+              <li key={i} style={{ marginBottom: 2 }}>{e}</li>
+            ))}
+          </ul>
+        </Block>
+      )}
+
+      {observacoes && (
+        <Block icon={<Info size={12} />} title="Observações">
+          <p style={{ whiteSpace: "pre-line", margin: 0 }}>{observacoes}</p>
+        </Block>
+      )}
+
+      {qtdTec && (
+        <Block icon={<Hash size={12} />} title="Quantidade técnica">
+          <span style={{ fontWeight: 600, color: "#0f172a" }}>{qtdTec}</span>
+        </Block>
+      )}
     </div>
   );
 }

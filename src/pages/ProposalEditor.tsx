@@ -184,6 +184,9 @@ export default function ProposalEditor() {
       categoria: fromService?.categoria || null,
       descricao_comercial: fromService?.descricao_comercial || fromService?.nome || "Novo item",
       escopo_tecnico: fromService?.escopo_tecnico || "",
+      entregaveis: fromService?.entregaveis || "",
+      observacoes_escopo: fromService?.observacoes_escopo || "",
+      quantidade_tecnica: fromService?.quantidade_tecnica || "",
       quantidade: 1,
       valor_unitario: Number(fromService?.valor_referencia || 0),
       valor_total: Number(fromService?.valor_referencia || 0),
@@ -201,6 +204,9 @@ export default function ProposalEditor() {
       categoria: merged.categoria || null,
       descricao_comercial: merged.descricao_comercial,
       escopo_tecnico: merged.escopo_tecnico,
+      entregaveis: merged.entregaveis ?? null,
+      observacoes_escopo: merged.observacoes_escopo ?? null,
+      quantidade_tecnica: merged.quantidade_tecnica ?? null,
       quantidade: merged.quantidade,
       valor_unitario: merged.valor_unitario,
       valor_total: merged.valor_total,
@@ -228,6 +234,9 @@ export default function ProposalEditor() {
       categoria: it.categoria,
       descricao_comercial: it.descricao_comercial,
       escopo_tecnico: it.escopo_tecnico,
+      entregaveis: it.entregaveis,
+      observacoes_escopo: it.observacoes_escopo,
+      quantidade_tecnica: it.quantidade_tecnica,
       valor_referencia: it.valor_unitario,
     }).select("*").single();
     if (error) return toast.error(error.message);
@@ -787,6 +796,20 @@ function ItemEditor({ item, pricing, onChange, onRemove, onOpenPricing, onSaveTo
         <div className="space-y-1.5">
           <Label className="text-xs">Escopo técnico (interno)</Label>
           <Textarea rows={2} value={local.escopo_tecnico||""} onChange={e=>setLocal({...local, escopo_tecnico:e.target.value})} onBlur={()=>onChange({ escopo_tecnico: local.escopo_tecnico })} />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Entregáveis (um por linha)</Label>
+            <Textarea rows={3} value={local.entregaveis||""} onChange={e=>setLocal({...local, entregaveis:e.target.value})} onBlur={()=>onChange({ entregaveis: local.entregaveis })} placeholder={"Relatório técnico\nRegistro dos resultados"} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Observações de escopo (cliente)</Label>
+            <Textarea rows={3} value={local.observacoes_escopo||""} onChange={e=>setLocal({...local, observacoes_escopo:e.target.value})} onBlur={()=>onChange({ observacoes_escopo: local.observacoes_escopo })} placeholder="Observações específicas deste serviço" />
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Quantidade técnica (texto livre, opcional)</Label>
+          <Input value={local.quantidade_tecnica||""} onChange={e=>setLocal({...local, quantidade_tecnica:e.target.value})} onBlur={()=>onChange({ quantidade_tecnica: local.quantidade_tecnica })} placeholder="Ex: 8 dosimetrias, 1 unidade avaliada" />
         </div>
         <div className="grid grid-cols-3 gap-2">
           <div className="space-y-1"><Label className="text-xs">Qtd</Label>
