@@ -268,9 +268,6 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
               <div style={{ minWidth: 320 }}>
                 <Line label="Subtotal" value={brl(subtotal)} />
                 {desconto > 0 && <Line label="Descontos" value={"- " + brl(desconto)} />}
-                {impostoEstimado > 0 && (
-                  <Line label="Impostos estimados (inclusos)" value={brl(impostoEstimado)} />
-                )}
                 <div style={{ marginTop: 10, background: primary, color: "#fff", borderRadius: 12, padding: "18px 22px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: `0 12px 30px -10px ${primary}66` }}>
                   <div>
                     <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 2, opacity: 0.85 }}>Investimento total</div>
