@@ -609,19 +609,21 @@ function Row({ label, children }: any) {
 }
 
 function InternalSummary({ items, pricings }: any) {
-  let custoTotal = 0, lucroTotal = 0, receita = 0;
+  let custoTotal = 0, lucroTotal = 0, receita = 0, imposto = 0;
   items.forEach((it:any) => {
     const p = pricings[it.id];
     if (p?.indicadores) {
       custoTotal += Number(p.indicadores.custo_total||0);
       lucroTotal += Number(p.indicadores.lucro_estimado||0);
       receita += Number(p.indicadores.receita_liquida||0);
+      imposto += Number(p.indicadores.imposto_estimado||0);
     }
   });
   const margem = receita > 0 ? lucroTotal / receita : 0;
   return (
     <div className="space-y-2">
       <Row label="Custo total interno"><span className="font-mono">{brl(custoTotal)}</span></Row>
+      <Row label="Impostos estimados"><span className="font-mono">{brl(imposto)}</span></Row>
       <Row label="Receita líquida"><span className="font-mono">{brl(receita)}</span></Row>
       <Row label="Lucro estimado"><span className="font-mono">{brl(lucroTotal)}</span></Row>
       <Row label="Margem média"><span className="font-mono">{pct(margem)}</span></Row>

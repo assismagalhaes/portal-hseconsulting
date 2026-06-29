@@ -38,12 +38,9 @@ const PAGE_STYLE: React.CSSProperties = {
 export default function ProposalDocument({ proposal, client, items, revisions = [], onReady }: Props) {
   const [tpl, setTpl] = useState<any>(null);
   const [serviceNames, setServiceNames] = useState<Record<string, string>>({});
-  const [aliquotaPadrao, setAliquotaPadrao] = useState<number>(0);
   useEffect(() => {
     supabase.from("proposal_template").select("*").limit(1).maybeSingle()
       .then(({ data }) => setTpl(data || {}));
-    supabase.from("pricing_params").select("aliquota_imposto").limit(1).maybeSingle()
-      .then(({ data }) => setAliquotaPadrao(Number(data?.aliquota_imposto || 0)));
   }, []);
   useEffect(() => {
     const ids = Array.from(new Set(items.map((i: any) => i.service_id).filter(Boolean)));
@@ -71,13 +68,6 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   const desconto = Number(proposal.desconto || 0);
   const subtotal = total;
   const valorFinal = subtotal - desconto;
-  const impostoEstimado = items.reduce(
-    (a, b) =>
-      a +
-      Number(b.valor_total || 0) *
-        (Number(b.aliquota_imposto) > 0 ? Number(b.aliquota_imposto) : aliquotaPadrao),
-    0,
-  );
 
   const diferenciais: string[] = Array.isArray(tpl.diferenciais) ? tpl.diferenciais : [];
   const diffIcons = [Award, Users, Zap, Scale, UserCheck, Sparkles];
@@ -278,9 +268,6 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
               <div style={{ minWidth: 320 }}>
                 <Line label="Subtotal" value={brl(subtotal)} />
                 {desconto > 0 && <Line label="Descontos" value={"- " + brl(desconto)} />}
-                {impostoEstimado > 0 && (
-                  <Line label="Impostos estimados (inclusos)" value={brl(impostoEstimado)} />
-                )}
                 <div style={{ marginTop: 10, background: primary, color: "#fff", borderRadius: 12, padding: "18px 22px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: `0 12px 30px -10px ${primary}66` }}>
                   <div>
                     <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 2, opacity: 0.85 }}>Investimento total</div>
