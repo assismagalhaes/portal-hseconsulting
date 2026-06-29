@@ -3067,6 +3067,7 @@ export type Database = {
           created_at: string
           detalhes: Json
           id: string
+          motivo: string | null
           proposal_id: string
           proposal_item_id: string | null
           simulacao_id: string | null
@@ -3079,6 +3080,7 @@ export type Database = {
           created_at?: string
           detalhes?: Json
           id?: string
+          motivo?: string | null
           proposal_id: string
           proposal_item_id?: string | null
           simulacao_id?: string | null
@@ -3091,6 +3093,7 @@ export type Database = {
           created_at?: string
           detalhes?: Json
           id?: string
+          motivo?: string | null
           proposal_id?: string
           proposal_item_id?: string | null
           simulacao_id?: string | null
@@ -4195,6 +4198,7 @@ export type Database = {
           outras_condicoes_default: string
           updated_at: string
           updated_by: string | null
+          valor_hora_tecnica: number
         }
         Insert: {
           aliquota_imposto?: number
@@ -4209,6 +4213,7 @@ export type Database = {
           outras_condicoes_default?: string
           updated_at?: string
           updated_by?: string | null
+          valor_hora_tecnica?: number
         }
         Update: {
           aliquota_imposto?: number
@@ -4223,6 +4228,7 @@ export type Database = {
           outras_condicoes_default?: string
           updated_at?: string
           updated_by?: string | null
+          valor_hora_tecnica?: number
         }
         Relationships: []
       }
@@ -4380,34 +4386,61 @@ export type Database = {
       }
       proposal_revisions: {
         Row: {
+          aprovada_em: string | null
+          aprovada_por: string | null
           created_at: string
           descricao: string | null
+          diferenca_percentual: number | null
+          diferenca_valor: number | null
           id: string
+          motivo: string | null
+          observacoes_internas: string | null
           proposal_id: string
           revisao: number
           snapshot: Json | null
+          status: string
           titulo: string | null
           user_id: string | null
+          valor_anterior: number | null
+          valor_novo: number | null
         }
         Insert: {
+          aprovada_em?: string | null
+          aprovada_por?: string | null
           created_at?: string
           descricao?: string | null
+          diferenca_percentual?: number | null
+          diferenca_valor?: number | null
           id?: string
+          motivo?: string | null
+          observacoes_internas?: string | null
           proposal_id: string
           revisao?: number
           snapshot?: Json | null
+          status?: string
           titulo?: string | null
           user_id?: string | null
+          valor_anterior?: number | null
+          valor_novo?: number | null
         }
         Update: {
+          aprovada_em?: string | null
+          aprovada_por?: string | null
           created_at?: string
           descricao?: string | null
+          diferenca_percentual?: number | null
+          diferenca_valor?: number | null
           id?: string
+          motivo?: string | null
+          observacoes_internas?: string | null
           proposal_id?: string
           revisao?: number
           snapshot?: Json | null
+          status?: string
           titulo?: string | null
           user_id?: string | null
+          valor_anterior?: number | null
+          valor_novo?: number | null
         }
         Relationships: [
           {
@@ -4508,6 +4541,7 @@ export type Database = {
           aceite_data: string | null
           assinatura_prestador: string | null
           assinatura_tomador: string | null
+          bloqueada_edicao: boolean
           client_id: string | null
           condicoes_pagamento: string | null
           created_at: string
@@ -4525,6 +4559,7 @@ export type Database = {
           origem_cadastro: Database["public"]["Enums"]["proposal_origem"]
           outras_condicoes: string | null
           proximo_followup: string | null
+          revisao_atual: number
           status: Database["public"]["Enums"]["proposal_status"]
           updated_at: string
           validade: string | null
@@ -4535,6 +4570,7 @@ export type Database = {
           aceite_data?: string | null
           assinatura_prestador?: string | null
           assinatura_tomador?: string | null
+          bloqueada_edicao?: boolean
           client_id?: string | null
           condicoes_pagamento?: string | null
           created_at?: string
@@ -4552,6 +4588,7 @@ export type Database = {
           origem_cadastro?: Database["public"]["Enums"]["proposal_origem"]
           outras_condicoes?: string | null
           proximo_followup?: string | null
+          revisao_atual?: number
           status?: Database["public"]["Enums"]["proposal_status"]
           updated_at?: string
           validade?: string | null
@@ -4562,6 +4599,7 @@ export type Database = {
           aceite_data?: string | null
           assinatura_prestador?: string | null
           assinatura_tomador?: string | null
+          bloqueada_edicao?: boolean
           client_id?: string | null
           condicoes_pagamento?: string | null
           created_at?: string
@@ -4579,6 +4617,7 @@ export type Database = {
           origem_cadastro?: Database["public"]["Enums"]["proposal_origem"]
           outras_condicoes?: string | null
           proximo_followup?: string | null
+          revisao_atual?: number
           status?: Database["public"]["Enums"]["proposal_status"]
           updated_at?: string
           validade?: string | null
@@ -4639,25 +4678,37 @@ export type Database = {
           categoria: string
           created_at: string
           descricao: string | null
+          horas: number | null
           id: string
+          observacao: string | null
           simulacao_id: string
+          tipo_custo: string
           valor: number
+          valor_hora: number | null
         }
         Insert: {
           categoria: string
           created_at?: string
           descricao?: string | null
+          horas?: number | null
           id?: string
+          observacao?: string | null
           simulacao_id: string
+          tipo_custo?: string
           valor?: number
+          valor_hora?: number | null
         }
         Update: {
           categoria?: string
           created_at?: string
           descricao?: string | null
+          horas?: number | null
           id?: string
+          observacao?: string | null
           simulacao_id?: string
+          tipo_custo?: string
           valor?: number
+          valor_hora?: number | null
         }
         Relationships: [
           {
@@ -4766,14 +4817,17 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          motivo: string | null
           nome: string | null
           observacoes: string | null
           parametros: Json
           proposal_id: string
           regra_rateio: Database["public"]["Enums"]["rateio_regra"]
+          regra_rateio_horas: string | null
           tipo: Database["public"]["Enums"]["simulacao_tipo"]
           totais: Json
           updated_at: string
+          valor_hora_tecnica_aplicado: number | null
         }
         Insert: {
           aplicada?: boolean
@@ -4781,14 +4835,17 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          motivo?: string | null
           nome?: string | null
           observacoes?: string | null
           parametros?: Json
           proposal_id: string
           regra_rateio?: Database["public"]["Enums"]["rateio_regra"]
+          regra_rateio_horas?: string | null
           tipo?: Database["public"]["Enums"]["simulacao_tipo"]
           totais?: Json
           updated_at?: string
+          valor_hora_tecnica_aplicado?: number | null
         }
         Update: {
           aplicada?: boolean
@@ -4796,14 +4853,17 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          motivo?: string | null
           nome?: string | null
           observacoes?: string | null
           parametros?: Json
           proposal_id?: string
           regra_rateio?: Database["public"]["Enums"]["rateio_regra"]
+          regra_rateio_horas?: string | null
           tipo?: Database["public"]["Enums"]["simulacao_tipo"]
           totais?: Json
           updated_at?: string
+          valor_hora_tecnica_aplicado?: number | null
         }
         Relationships: [
           {
@@ -4984,6 +5044,33 @@ export type Database = {
         }
         Relationships: []
       }
+      valor_hora_tecnica_historico: {
+        Row: {
+          created_at: string
+          id: string
+          observacao: string | null
+          user_id: string | null
+          valor: number
+          vigencia_inicio: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          user_id?: string | null
+          valor: number
+          vigencia_inicio?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          user_id?: string | null
+          valor?: number
+          vigencia_inicio?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -5004,6 +5091,15 @@ export type Database = {
       }
       criar_revisao_documento: {
         Args: { _descricao: string; _doc_id: string }
+        Returns: string
+      }
+      criar_revisao_proposta: {
+        Args: {
+          _motivo: string
+          _observacoes: string
+          _proposal_id: string
+          _valor_novo: number
+        }
         Returns: string
       }
       crm_converter_lead: { Args: { _lead_id: string }; Returns: string }
