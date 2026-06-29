@@ -827,8 +827,11 @@ function PricingPanel({ item, existing, params, clientFuncionarios, onSave }: an
 
       {/* Horas */}
       <section>
-        <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Horas do serviço / custo hora</h3>
-        <div className="text-xs text-muted-foreground mb-2">Custo/hora vindo das configurações: <span className="font-mono font-semibold">{brl(custoHora)}</span></div>
+        <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Horas técnicas HSE</h3>
+        <div className="text-xs text-muted-foreground mb-2">
+          Valor da Hora Técnica HSE (Configurações → Precificação):
+          <span className="font-mono font-semibold ml-1">{brl(custoHora)}/h</span>
+        </div>
         <div className="border border-border rounded-md overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-muted/60 text-xs uppercase tracking-wider text-muted-foreground">
