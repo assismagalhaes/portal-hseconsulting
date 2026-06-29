@@ -191,31 +191,7 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
           {page.length === 0 && <p style={{ color: "#64748b", fontSize: 12 }}>Nenhum serviço adicionado.</p>}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {page.map((it: any) => (
-              <div key={it.id} className="avoid-break" style={{ border: `1px solid ${neutral}`, borderRadius: 12, padding: 16, position: "relative" }}>
-                <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 4, background: accent, borderRadius: "12px 0 0 12px" }} />
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 16, marginBottom: 8 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ width: 32, height: 32, borderRadius: 8, background: primary, color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13 }}>
-                      {String(it.numero_item).padStart(2, "0")}
-                    </span>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: primary }}>{it.descricao_comercial}</div>
-                      {it.categoria && <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: 1, color: "#64748b" }}>{it.categoria}</div>}
-                    </div>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: 1 }}>Valor</div>
-                    <div style={{ fontFamily: "ui-monospace, monospace", fontWeight: 700, fontSize: 16, color: primary }}>{brl(it.valor_total)}</div>
-                  </div>
-                </div>
-                {it.escopo_tecnico && (
-                  <p style={{ fontSize: 11.5, lineHeight: 1.55, color: "#475569", whiteSpace: "pre-line", marginTop: 6, marginBottom: 8 }}>{it.escopo_tecnico}</p>
-                )}
-                <div style={{ display: "flex", gap: 16, fontSize: 11, color: "#64748b", borderTop: `1px dashed ${neutral}`, paddingTop: 8 }}>
-                  <span><strong style={{ color: "#0f172a" }}>Qtd:</strong> {it.quantidade}</span>
-                  <span><strong style={{ color: "#0f172a" }}>Unitário:</strong> {brl(it.valor_unitario)}</span>
-                </div>
-              </div>
+              <ScopeCard key={it.id} item={it} primary={primary} accent={accent} neutral={neutral} fontTitulo={tpl.font_titulo || "Sora"} />
             ))}
           </div>
         </DocPage>
