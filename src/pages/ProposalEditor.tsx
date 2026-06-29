@@ -369,10 +369,14 @@ export default function ProposalEditor() {
     w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title>${styles}
       <style>
         @page { size: A4; margin: 0; }
-        html, body { margin: 0; padding: 0; background: #fff; }
+        html, body { margin: 0; padding: 0; background: #fff; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         .pdf-page { box-shadow: none !important; margin: 0 !important; page-break-after: always; break-after: page; }
         .pdf-page:last-child { page-break-after: auto; break-after: auto; }
         .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+        @media print {
+          html, body { background: #fff !important; }
+        }
       </style></head><body>${docNode.outerHTML}</body></html>`);
     w.document.close();
 
