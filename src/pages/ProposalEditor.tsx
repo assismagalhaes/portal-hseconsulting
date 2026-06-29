@@ -17,7 +17,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Plus, Trash2, Calculator, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown, Users } from "lucide-react";
 import { brl, pct, proposalStatusLabel, proposalOrigemLabel, proposalOrigemColor, formatCnpjCpf, formatDate, formatDateTime } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
-import { computePricing, statusMargemMeta, type PricingInput } from "@/lib/pricing";
+import {
+  computePricing,
+  statusMargemMeta,
+  type PricingInput,
+  type CustoDiretoRow,
+  type HoraTecnicaRow,
+  CUSTO_CATEGORIAS,
+  ATIVIDADE_CATEGORIAS,
+  normalizarCustosDiretos,
+  normalizarHorasTecnicas,
+} from "@/lib/pricing";
 import { toast } from "sonner";
 import logo from "@/assets/hse-logo-navy.png";
 import ProposalDocument from "@/components/proposal/ProposalDocument";
@@ -26,29 +36,7 @@ import CategoryCombobox from "@/components/CategoryCombobox";
 import GroupPricingDrawer from "@/components/proposal/GroupPricingDrawer";
 import HistoricoPrecificacao from "@/components/proposal/HistoricoPrecificacao";
 
-const emptyCustos = { deslocamento:0, alimentacao_hospedagem:0, terceiros:0, exames_laboratorio:0, taxas_art:0, equipamentos:0, materiais_epi:0, taxa_por_funcionario:0, outros:0 };
-const emptyHoras = { atendimento:0, analise_documental:0, deslocamento:0, visita_tecnica:0, elaboracao:0, revisao:0, pos_entrega:0, outras:0 };
-const horaLabels: Record<string,string> = {
-  atendimento: "Atendimento / alinhamento",
-  analise_documental: "Análise documental",
-  deslocamento: "Deslocamento vinculado",
-  visita_tecnica: "Visita técnica / levantamento",
-  elaboracao: "Elaboração técnica",
-  revisao: "Revisão / ajustes",
-  pos_entrega: "Envio / suporte pós-entrega",
-  outras: "Outras horas",
-};
-const custoLabels: Record<string,string> = {
-  deslocamento: "Deslocamento",
-  alimentacao_hospedagem: "Alimentação / hospedagem",
-  terceiros: "Terceiros",
-  exames_laboratorio: "Exames / laboratório",
-  taxas_art: "Taxas / ART",
-  equipamentos: "Equipamentos",
-  materiais_epi: "Materiais / EPI",
-  taxa_por_funcionario: "Taxa por funcionário",
-  outros: "Outros custos",
-};
+const newId = () => Math.random().toString(36).slice(2, 10);
 
 export default function ProposalEditor() {
   const { id } = useParams<{id:string}>();
