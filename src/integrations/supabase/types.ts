@@ -3061,6 +3061,67 @@ export type Database = {
           },
         ]
       }
+      historico_precificacao: {
+        Row: {
+          acao: string
+          created_at: string
+          detalhes: Json
+          id: string
+          proposal_id: string
+          proposal_item_id: string | null
+          simulacao_id: string | null
+          user_id: string | null
+          valor_anterior: number | null
+          valor_novo: number | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          detalhes?: Json
+          id?: string
+          proposal_id: string
+          proposal_item_id?: string | null
+          simulacao_id?: string | null
+          user_id?: string | null
+          valor_anterior?: number | null
+          valor_novo?: number | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          detalhes?: Json
+          id?: string
+          proposal_id?: string
+          proposal_item_id?: string | null
+          simulacao_id?: string | null
+          user_id?: string | null
+          valor_anterior?: number | null
+          valor_novo?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_precificacao_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_precificacao_proposal_item_id_fkey"
+            columns: ["proposal_item_id"]
+            isOneToOne: false
+            referencedRelation: "proposal_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_precificacao_simulacao_id_fkey"
+            columns: ["simulacao_id"]
+            isOneToOne: false
+            referencedRelation: "simulacoes_precificacao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ia_acoes_sugeridas: {
         Row: {
           applied_at: string | null
@@ -4573,6 +4634,187 @@ export type Database = {
         }
         Relationships: []
       }
+      simulacao_custos_compartilhados: {
+        Row: {
+          categoria: string
+          created_at: string
+          descricao: string | null
+          id: string
+          simulacao_id: string
+          valor: number
+        }
+        Insert: {
+          categoria: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          simulacao_id: string
+          valor?: number
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          simulacao_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulacao_custos_compartilhados_simulacao_id_fkey"
+            columns: ["simulacao_id"]
+            isOneToOne: false
+            referencedRelation: "simulacoes_precificacao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      simulacao_itens: {
+        Row: {
+          aliquota_imposto: number
+          created_at: string
+          custo_compartilhado_rateado: number
+          custo_individual: number
+          custo_total: number
+          custos_individuais: Json
+          desconto_comercial: number
+          horas: Json
+          id: string
+          indicadores: Json
+          lucro_desejado: number
+          lucro_estimado: number
+          margem_desejada: number
+          margem_liquida: number
+          markup: number
+          peso_manual: number
+          preco_final: number
+          preco_sugerido: number
+          proposal_item_id: string
+          qtd_funcionarios: number
+          simulacao_id: string
+          status_margem: string | null
+        }
+        Insert: {
+          aliquota_imposto?: number
+          created_at?: string
+          custo_compartilhado_rateado?: number
+          custo_individual?: number
+          custo_total?: number
+          custos_individuais?: Json
+          desconto_comercial?: number
+          horas?: Json
+          id?: string
+          indicadores?: Json
+          lucro_desejado?: number
+          lucro_estimado?: number
+          margem_desejada?: number
+          margem_liquida?: number
+          markup?: number
+          peso_manual?: number
+          preco_final?: number
+          preco_sugerido?: number
+          proposal_item_id: string
+          qtd_funcionarios?: number
+          simulacao_id: string
+          status_margem?: string | null
+        }
+        Update: {
+          aliquota_imposto?: number
+          created_at?: string
+          custo_compartilhado_rateado?: number
+          custo_individual?: number
+          custo_total?: number
+          custos_individuais?: Json
+          desconto_comercial?: number
+          horas?: Json
+          id?: string
+          indicadores?: Json
+          lucro_desejado?: number
+          lucro_estimado?: number
+          margem_desejada?: number
+          margem_liquida?: number
+          markup?: number
+          peso_manual?: number
+          preco_final?: number
+          preco_sugerido?: number
+          proposal_item_id?: string
+          qtd_funcionarios?: number
+          simulacao_id?: string
+          status_margem?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulacao_itens_proposal_item_id_fkey"
+            columns: ["proposal_item_id"]
+            isOneToOne: false
+            referencedRelation: "proposal_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulacao_itens_simulacao_id_fkey"
+            columns: ["simulacao_id"]
+            isOneToOne: false
+            referencedRelation: "simulacoes_precificacao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      simulacoes_precificacao: {
+        Row: {
+          aplicada: boolean
+          aplicada_em: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          nome: string | null
+          observacoes: string | null
+          parametros: Json
+          proposal_id: string
+          regra_rateio: Database["public"]["Enums"]["rateio_regra"]
+          tipo: Database["public"]["Enums"]["simulacao_tipo"]
+          totais: Json
+          updated_at: string
+        }
+        Insert: {
+          aplicada?: boolean
+          aplicada_em?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nome?: string | null
+          observacoes?: string | null
+          parametros?: Json
+          proposal_id: string
+          regra_rateio?: Database["public"]["Enums"]["rateio_regra"]
+          tipo?: Database["public"]["Enums"]["simulacao_tipo"]
+          totais?: Json
+          updated_at?: string
+        }
+        Update: {
+          aplicada?: boolean
+          aplicada_em?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nome?: string | null
+          observacoes?: string | null
+          parametros?: Json
+          proposal_id?: string
+          regra_rateio?: Database["public"]["Enums"]["rateio_regra"]
+          tipo?: Database["public"]["Enums"]["simulacao_tipo"]
+          totais?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulacoes_precificacao_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tarefas: {
         Row: {
           automacao_id: string | null
@@ -5067,6 +5309,14 @@ export type Database = {
         | "recusada"
         | "expirada"
         | "cancelada"
+      rateio_regra:
+        | "igual"
+        | "proporcional_venda"
+        | "proporcional_custo"
+        | "proporcional_horas"
+        | "proporcional_quantidade"
+        | "manual"
+      simulacao_tipo: "individual" | "agrupada"
       tarefa_prioridade: "baixa" | "normal" | "alta" | "critica"
       tarefa_status:
         | "pendente"
@@ -5503,6 +5753,15 @@ export const Constants = {
         "expirada",
         "cancelada",
       ],
+      rateio_regra: [
+        "igual",
+        "proporcional_venda",
+        "proporcional_custo",
+        "proporcional_horas",
+        "proporcional_quantidade",
+        "manual",
+      ],
+      simulacao_tipo: ["individual", "agrupada"],
       tarefa_prioridade: ["baixa", "normal", "alta", "critica"],
       tarefa_status: [
         "pendente",
