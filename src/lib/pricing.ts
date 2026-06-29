@@ -148,3 +148,100 @@ export const statusMargemMeta: Record<PricingResult["status_margem"], { label: s
   atencao: { label: "Atenção", color: "bg-warning/20 text-warning border-warning/40" },
   prejuizo: { label: "Prejuízo", color: "bg-danger/15 text-danger border-danger/30" },
 };
+
+/* ============ Catálogos para a UI individual ============ */
+export const CUSTO_CATEGORIAS = [
+  { value: "deslocamento", label: "Deslocamento" },
+  { value: "alimentacao_hospedagem", label: "Alimentação / Hospedagem" },
+  { value: "terceiros", label: "Terceiros / Profissional externo" },
+  { value: "exames_laboratorio", label: "Exames / Laboratório" },
+  { value: "taxas_art", label: "Taxas / ART" },
+  { value: "equipamentos", label: "Equipamentos" },
+  { value: "materiais_epi", label: "Materiais / EPI" },
+  { value: "taxa_por_funcionario", label: "Taxa por funcionário" },
+  { value: "outros", label: "Outros custos" },
+] as const;
+
+export const ATIVIDADE_CATEGORIAS = [
+  { value: "atendimento", label: "Atendimento / alinhamento" },
+  { value: "analise_documental", label: "Análise documental" },
+  { value: "deslocamento", label: "Deslocamento vinculado" },
+  { value: "visita_tecnica", label: "Visita técnica / levantamento" },
+  { value: "elaboracao", label: "Elaboração técnica" },
+  { value: "revisao", label: "Revisão / ajustes" },
+  { value: "pos_entrega", label: "Envio / suporte pós-entrega" },
+  { value: "outras", label: "Outras horas" },
+] as const;
+
+export const custoCategoriaLabel = (k: string) =>
+  CUSTO_CATEGORIAS.find((c) => c.value === k)?.label || k;
+export const atividadeLabel = (k: string) =>
+  ATIVIDADE_CATEGORIAS.find((a) => a.value === k)?.label || k;
+
+function uid() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+/** Converte custos (legado ou novo) em array detalhado.
+ *  Linhas com valor 0 são descartadas (não cria linhas zeradas). */
+export function normalizarCustosDiretos(
+  c: CustosDiretos | CustoDiretoRow[] | undefined | null
+): CustoDiretoRow[] {
+  if (!c) return [];
+  if (Array.isArray(c)) {
+    return c
+      .filter((r) => r && (Number(r.valor) || 0) !== 0 || (r?.categoria && r?.descricao))
+      .map((r) => ({
+        id: r.id || uid(),
+        categoria: r.categoria || "outros",
+        descricao: r.descricao || "",
+        valor: Number(r.valor) || 0,
+      }));
+  }
+  const out: CustoDiretoRow[] = [];
+  for (const [k, v] of Object.entries(c as Record<string, any>)) {
+    const valor = Number(v) || 0;
+    if (!valor) continue;
+    // mapeia legado -> nova categoria
+    const mapa: Record<string, string> = {
+      deslocamento: "deslocamento",
+      alimentacao_hospedagem: "alimentacao_hospedagem",
+      terceiros: "terceiros",
+      exames_laboratorio: "exames_laboratorio",
+      taxas_art: "taxas_art",
+      equipamentos: "equipamentos",
+      materiais_epi: "materiais_epi",
+      taxa_por_funcionario: "taxa_por_funcionario",
+      outros: "outros",
+    };
+    const cat = mapa[k] || "outros";
+    out.push({ id: uid(), categoria: cat, descricao: custoCategoriaLabel(cat), valor });
+  }
+  return out;
+}
+
+/** Converte horas (legado ou novo) em array detalhado. */
+export function normalizarHorasTecnicas(
+  h: Horas | HoraTecnicaRow[] | undefined | null,
+  valorHoraPadrao: number
+): HoraTecnicaRow[] {
+  if (!h) return [];
+  if (Array.isArray(h)) {
+    return h
+      .filter((r) => r && ((Number(r.horas) || 0) !== 0 || r?.atividade))
+      .map((r) => ({
+        id: r.id || uid(),
+        atividade: r.atividade || "outras",
+        descricao: r.descricao || "",
+        horas: Number(r.horas) || 0,
+        valor_hora: Number(r.valor_hora ?? valorHoraPadrao) || 0,
+      }));
+  }
+  const out: HoraTecnicaRow[] = [];
+  for (const [k, v] of Object.entries(h as Record<string, any>)) {
+    const horas = Number(v) || 0;
+    if (!horas) continue;
+    out.push({ id: uid(), atividade: k, horas, valor_hora: valorHoraPadrao });
+  }
+  return out;
+}
