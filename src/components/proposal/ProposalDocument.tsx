@@ -74,8 +74,8 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
 
   // ITEMS pagination — escopo começa na própria página de Dados do Cliente
   // (1 card cabe no espaço restante) e segue com 3 cards nas páginas seguintes.
-  const SCOPE_FIRST_INLINE = 1;
-  const SCOPE_PER_PAGE = 3;
+  const SCOPE_FIRST_INLINE = 2;
+  const SCOPE_PER_PAGE = 4;
   const scopeInline = items.slice(0, SCOPE_FIRST_INLINE);
   const scopeRest = items.slice(SCOPE_FIRST_INLINE);
   const scopePages: any[][] = [];
