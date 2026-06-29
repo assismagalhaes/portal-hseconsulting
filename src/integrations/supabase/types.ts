@@ -724,63 +724,149 @@ export type Database = {
       }
       clients: {
         Row: {
+          bairro: string | null
           cargo: string | null
+          cep: string | null
           cidade: string | null
+          cnae_principal: string | null
+          cnaes_secundarios: Json | null
           cnpj_cpf: string | null
+          complemento: string | null
           created_at: string
           created_by: string | null
+          data_abertura: string | null
           email: string | null
           endereco: string | null
+          fonte_consulta_cnpj: string | null
           id: string
+          natureza_juridica: string | null
           nome_fantasia: string | null
+          numero: string | null
           observacoes: string | null
+          porte: string | null
           qtd_funcionarios: number | null
           razao_social: string
+          situacao_cadastral: string | null
           solicitante: string | null
           telefone: string | null
           uf: string | null
+          ultima_consulta_cnpj: string | null
+          ultima_consulta_user: string | null
           updated_at: string
           whatsapp: string | null
         }
         Insert: {
+          bairro?: string | null
           cargo?: string | null
+          cep?: string | null
           cidade?: string | null
+          cnae_principal?: string | null
+          cnaes_secundarios?: Json | null
           cnpj_cpf?: string | null
+          complemento?: string | null
           created_at?: string
           created_by?: string | null
+          data_abertura?: string | null
           email?: string | null
           endereco?: string | null
+          fonte_consulta_cnpj?: string | null
           id?: string
+          natureza_juridica?: string | null
           nome_fantasia?: string | null
+          numero?: string | null
           observacoes?: string | null
+          porte?: string | null
           qtd_funcionarios?: number | null
           razao_social: string
+          situacao_cadastral?: string | null
           solicitante?: string | null
           telefone?: string | null
           uf?: string | null
+          ultima_consulta_cnpj?: string | null
+          ultima_consulta_user?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
         Update: {
+          bairro?: string | null
           cargo?: string | null
+          cep?: string | null
           cidade?: string | null
+          cnae_principal?: string | null
+          cnaes_secundarios?: Json | null
           cnpj_cpf?: string | null
+          complemento?: string | null
           created_at?: string
           created_by?: string | null
+          data_abertura?: string | null
           email?: string | null
           endereco?: string | null
+          fonte_consulta_cnpj?: string | null
           id?: string
+          natureza_juridica?: string | null
           nome_fantasia?: string | null
+          numero?: string | null
           observacoes?: string | null
+          porte?: string | null
           qtd_funcionarios?: number | null
           razao_social?: string
+          situacao_cadastral?: string | null
           solicitante?: string | null
           telefone?: string | null
           uf?: string | null
+          ultima_consulta_cnpj?: string | null
+          ultima_consulta_user?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
         Relationships: []
+      }
+      cnpj_consultas_log: {
+        Row: {
+          client_id: string | null
+          cnpj: string
+          created_at: string
+          fonte: string
+          http_status: number | null
+          id: string
+          mensagem: string | null
+          payload: Json | null
+          resultado: string
+          user_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          cnpj: string
+          created_at?: string
+          fonte?: string
+          http_status?: number | null
+          id?: string
+          mensagem?: string | null
+          payload?: Json | null
+          resultado: string
+          user_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          cnpj?: string
+          created_at?: string
+          fonte?: string
+          http_status?: number | null
+          id?: string
+          mensagem?: string | null
+          payload?: Json | null
+          resultado?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cnpj_consultas_log_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       crm_agenda: {
         Row: {
