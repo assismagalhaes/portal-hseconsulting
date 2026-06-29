@@ -72,13 +72,15 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   const diferenciais: string[] = Array.isArray(tpl.diferenciais) ? tpl.diferenciais : [];
   const diffIcons = [Award, Users, Zap, Scale, UserCheck, Sparkles];
 
-  // ITEMS pagination — 3 cards per page in scope (cards são mais ricos agora),
-  // 12 rows per page in investment table
+  // ITEMS pagination — escopo começa na própria página de Dados do Cliente
+  // (1 card cabe no espaço restante) e segue com 3 cards nas páginas seguintes.
+  const SCOPE_FIRST_INLINE = 1;
   const SCOPE_PER_PAGE = 3;
+  const scopeInline = items.slice(0, SCOPE_FIRST_INLINE);
+  const scopeRest = items.slice(SCOPE_FIRST_INLINE);
   const scopePages: any[][] = [];
-  for (let i = 0; i < items.length; i += SCOPE_PER_PAGE)
-    scopePages.push(items.slice(i, i + SCOPE_PER_PAGE));
-  if (scopePages.length === 0) scopePages.push([]);
+  for (let i = 0; i < scopeRest.length; i += SCOPE_PER_PAGE)
+    scopePages.push(scopeRest.slice(i, i + SCOPE_PER_PAGE));
 
   // Investimento: limita linhas por página e garante espaço para o card "Investimento total".
   // Se a última página ficaria cheia demais, força o resumo para uma página própria.
@@ -202,13 +204,22 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
             <p style={{ fontSize: 12.5, lineHeight: 1.65, color: "#334155", whiteSpace: "pre-line" }}>{proposal.escopo_geral}</p>
           </div>
         )}
+
+        {scopeInline.length > 0 && (
+          <div style={{ marginTop: 22 }}>
+            <SectionTitle eyebrow="Detalhamento" title="Escopo dos serviços" accent={accent} primary={primary} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {scopeInline.map((it: any) => (
+                <ScopeCard key={it.id} item={it} title={titleOf(it)} primary={primary} accent={accent} neutral={neutral} fontTitulo={tpl.font_titulo || "Sora"} />
+              ))}
+            </div>
+          </div>
+        )}
       </DocPage>
 
       {/* ============ ESCOPO DOS SERVIÇOS (cards) ============ */}
       {scopePages.map((page, idx) => (
-        <DocPage key={"scope-" + idx} ctx={ctxHeader} pageLabel="Escopo dos Serviços" pageNum={String(3 + idx).padStart(2, "0")}>
-          {idx === 0 && <SectionTitle eyebrow="Detalhamento" title="Escopo dos serviços" accent={accent} primary={primary} />}
-          {page.length === 0 && <p style={{ color: "#64748b", fontSize: 12 }}>Nenhum serviço adicionado.</p>}
+        <DocPage key={"scope-" + idx} ctx={ctxHeader} pageLabel="Escopo dos Serviços (cont.)" pageNum={String(3 + idx).padStart(2, "0")}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {page.map((it: any) => (
               <ScopeCard key={it.id} item={it} title={titleOf(it)} primary={primary} accent={accent} neutral={neutral} fontTitulo={tpl.font_titulo || "Sora"} />
