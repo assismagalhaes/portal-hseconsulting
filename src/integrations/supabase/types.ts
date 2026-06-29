@@ -4729,6 +4729,30 @@ export type Database = {
           },
         ]
       }
+      service_categories: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          nome: string
+          nome_normalizado: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nome: string
+          nome_normalizado?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nome?: string
+          nome_normalizado?: string | null
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           categoria: string | null
