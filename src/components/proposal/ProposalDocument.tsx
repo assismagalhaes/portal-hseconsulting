@@ -8,6 +8,7 @@ import contracapaImg from "@/assets/proposta-contracapa.jpg";
 import {
   Phone, Mail, Globe, MapPin, MessageCircle, ShieldCheck, Target, Eye, Heart,
   Award, Users, Zap, Scale, UserCheck, Sparkles, CheckCircle2, Building2, FileSignature,
+  ClipboardList, ListChecks, Package, Hash, Info,
 } from "lucide-react";
 
 /**
@@ -59,8 +60,9 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   const diferenciais: string[] = Array.isArray(tpl.diferenciais) ? tpl.diferenciais : [];
   const diffIcons = [Award, Users, Zap, Scale, UserCheck, Sparkles];
 
-  // ITEMS pagination — 6 cards per page in scope, 12 rows per page in investment table
-  const SCOPE_PER_PAGE = 4;
+  // ITEMS pagination — 3 cards per page in scope (cards são mais ricos agora),
+  // 12 rows per page in investment table
+  const SCOPE_PER_PAGE = 3;
   const scopePages: any[][] = [];
   for (let i = 0; i < items.length; i += SCOPE_PER_PAGE)
     scopePages.push(items.slice(i, i + SCOPE_PER_PAGE));
