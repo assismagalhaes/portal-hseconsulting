@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ArrowLeft, Plus, Trash2, Calculator, Printer, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown } from "lucide-react";
-import { brl, pct, proposalStatusLabel, formatCnpjCpf } from "@/lib/format";
+import { brl, pct, proposalStatusLabel, proposalOrigemLabel, proposalOrigemColor, formatCnpjCpf, formatDate, formatDateTime } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
 import { computePricing, statusMargemMeta, type PricingInput } from "@/lib/pricing";
 import { toast } from "sonner";
@@ -277,6 +277,8 @@ export default function ProposalEditor() {
     }
     const patch: any = { status: novo };
     if (novo === "enviada" && !proposal.data_envio) patch.data_envio = new Date().toISOString().slice(0,10);
+    if (novo === "aprovada" && !proposal.data_aprovacao) patch.data_aprovacao = new Date().toISOString().slice(0,10);
+    if ((novo === "recusada" || novo === "cancelada") && !proposal.data_recusa) patch.data_recusa = new Date().toISOString().slice(0,10);
     await saveProposalField(patch);
     // Recarrega revisões pois o trigger gravou uma nova
     const rv = await supabase.from("proposal_revisions").select("*").eq("proposal_id", proposal.id).order("revisao",{ascending:false});
@@ -330,6 +332,7 @@ export default function ProposalEditor() {
               <TabsList>
                 <TabsTrigger value="cliente">Cliente</TabsTrigger>
                 <TabsTrigger value="itens">Itens & escopo</TabsTrigger>
+                <TabsTrigger value="datas">Datas & origem</TabsTrigger>
                 <TabsTrigger value="comerciais">Condições</TabsTrigger>
                 <TabsTrigger value="internas">Notas internas</TabsTrigger>
                 <TabsTrigger value="revisoes"><History className="h-3.5 w-3.5 mr-1" /> Revisões</TabsTrigger>
@@ -356,6 +359,10 @@ export default function ProposalEditor() {
                     onSaveToCatalog={()=>saveItemAsService(it)}
                     isInternal={isInternal} />
                 ))}
+              </TabsContent>
+
+              <TabsContent value="datas" className="mt-4">
+                <DatesCard proposal={proposal} onSave={saveProposalField} />
               </TabsContent>
 
               <TabsContent value="comerciais" className="space-y-4 mt-4">
