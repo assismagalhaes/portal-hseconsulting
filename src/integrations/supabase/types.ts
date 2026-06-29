@@ -4412,11 +4412,14 @@ export type Database = {
           categoria: string | null
           created_at: string
           descricao_comercial: string
+          entregaveis: string | null
           escopo_tecnico: string | null
           id: string
           numero_item: number
+          observacoes_escopo: string | null
           proposal_id: string
           quantidade: number
+          quantidade_tecnica: string | null
           service_id: string | null
           unidade: string
           updated_at: string
@@ -4427,11 +4430,14 @@ export type Database = {
           categoria?: string | null
           created_at?: string
           descricao_comercial: string
+          entregaveis?: string | null
           escopo_tecnico?: string | null
           id?: string
           numero_item?: number
+          observacoes_escopo?: string | null
           proposal_id: string
           quantidade?: number
+          quantidade_tecnica?: string | null
           service_id?: string | null
           unidade?: string
           updated_at?: string
@@ -4442,11 +4448,14 @@ export type Database = {
           categoria?: string | null
           created_at?: string
           descricao_comercial?: string
+          entregaveis?: string | null
           escopo_tecnico?: string | null
           id?: string
           numero_item?: number
+          observacoes_escopo?: string | null
           proposal_id?: string
           quantidade?: number
+          quantidade_tecnica?: string | null
           service_id?: string | null
           unidade?: string
           updated_at?: string
@@ -4726,9 +4735,12 @@ export type Database = {
           created_at: string
           created_by: string | null
           descricao_comercial: string | null
+          entregaveis: string | null
           escopo_tecnico: string | null
           id: string
           nome: string
+          observacoes_escopo: string | null
+          quantidade_tecnica: string | null
           unidade_padrao: string | null
           updated_at: string
           valor_referencia: number | null
@@ -4738,9 +4750,12 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           descricao_comercial?: string | null
+          entregaveis?: string | null
           escopo_tecnico?: string | null
           id?: string
           nome: string
+          observacoes_escopo?: string | null
+          quantidade_tecnica?: string | null
           unidade_padrao?: string | null
           updated_at?: string
           valor_referencia?: number | null
@@ -4750,9 +4765,12 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           descricao_comercial?: string | null
+          entregaveis?: string | null
           escopo_tecnico?: string | null
           id?: string
           nome?: string
+          observacoes_escopo?: string | null
+          quantidade_tecnica?: string | null
           unidade_padrao?: string | null
           updated_at?: string
           valor_referencia?: number | null
