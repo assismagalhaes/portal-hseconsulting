@@ -383,6 +383,7 @@ export default function ProposalEditor() {
                 <TabsTrigger value="comerciais">Condições</TabsTrigger>
                 <TabsTrigger value="internas">Notas internas</TabsTrigger>
                 <TabsTrigger value="revisoes"><History className="h-3.5 w-3.5 mr-1" /> Revisões</TabsTrigger>
+                {isInternal && <TabsTrigger value="historico_prec"><Calculator className="h-3.5 w-3.5 mr-1" /> Histórico de preços</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="cliente" className="mt-4">
@@ -396,6 +397,17 @@ export default function ProposalEditor() {
                     <SelectTrigger className="w-72"><SelectValue placeholder="…ou adicionar do catálogo" /></SelectTrigger>
                     <SelectContent>{services.map(s=><SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}</SelectContent>
                   </Select>
+                  {isInternal && (() => {
+                    const count = Object.values(selected).filter(Boolean).length;
+                    return (
+                      <div className="ml-auto flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">{count} selecionado(s)</span>
+                        <Button size="sm" variant="outline" disabled={count < 1} onClick={()=>setGroupOpen(true)}>
+                          <Users className="h-4 w-4 mr-1" /> Calcular em grupo
+                        </Button>
+                      </div>
+                    );
+                  })()}
                 </div>
                 {items.length === 0 && <Card className="p-8 text-center text-muted-foreground">Nenhum item ainda. Adicione o primeiro serviço.</Card>}
                 {items.map(it => (
@@ -404,7 +416,9 @@ export default function ProposalEditor() {
                     onRemove={()=>removeItem(it)}
                     onOpenPricing={()=>setPricingOpen(it.id)}
                     onSaveToCatalog={()=>saveItemAsService(it)}
-                    isInternal={isInternal} />
+                    isInternal={isInternal}
+                    selected={!!selected[it.id]}
+                    onSelect={(v)=>setSelected(s=>({ ...s, [it.id]: v }))} />
                 ))}
               </TabsContent>
 
@@ -441,6 +455,12 @@ export default function ProposalEditor() {
               <TabsContent value="revisoes" className="mt-4">
                 <RevisionsCard revisions={revisions} onAdd={addRevisao} />
               </TabsContent>
+
+              {isInternal && (
+                <TabsContent value="historico_prec" className="mt-4">
+                  <HistoricoPrecificacao proposalId={proposal.id} />
+                </TabsContent>
+              )}
             </Tabs>
           )}
         </div>
