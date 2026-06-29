@@ -492,9 +492,9 @@ export default function ProposalEditor() {
                     <Textarea rows={3} value={proposal.escopo_geral||""} onChange={e=>scheduleProposalSave({ escopo_geral: e.target.value })} placeholder="Resumo do que está sendo proposto…" /></div>
                   <div className="grid sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5"><Label>Validade da proposta</Label>
-                      <Input type="date" value={proposal.validade||""} onChange={e=>scheduleProposalSave({ validade: e.target.value })} /></div>
+                      <Input type="date" value={proposal.validade||""} onChange={e=>scheduleProposalSave({ validade: e.target.value || null })} /></div>
                     <div className="space-y-1.5"><Label>Próximo follow-up</Label>
-                      <Input type="date" value={proposal.proximo_followup||""} onChange={e=>scheduleProposalSave({ proximo_followup: e.target.value })} /></div>
+                      <Input type="date" value={proposal.proximo_followup||""} onChange={e=>scheduleProposalSave({ proximo_followup: e.target.value || null })} /></div>
                   </div>
                   <div className="space-y-1.5"><Label>Condições de pagamento</Label>
                     <Textarea rows={4} value={proposal.condicoes_pagamento||""} onChange={e=>scheduleProposalSave({ condicoes_pagamento: e.target.value })} /></div>
