@@ -96,7 +96,7 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
             </h1>
             <div style={{ display: "flex", gap: 28, flexWrap: "wrap", fontSize: 13 }}>
               <Stat label="Nº da proposta" value={proposal.numero} accent={accent} />
-              <Stat label="Data" value={new Date(proposal.created_at).toLocaleDateString("pt-BR")} accent={accent} />
+              <Stat label="Data" value={new Date(((proposal.data_emissao||proposal.created_at) + "").slice(0,10) + "T00:00:00").toLocaleDateString("pt-BR")} accent={accent} />
               {(client?.cidade || client?.uf) && <Stat label="Cidade" value={`${client?.cidade || ""}${client?.uf ? "/" + client.uf : ""}`} accent={accent} />}
               {proposal.validade && <Stat label="Válida até" value={new Date(proposal.validade).toLocaleDateString("pt-BR")} accent={accent} />}
             </div>
