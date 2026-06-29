@@ -80,11 +80,19 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
     scopePages.push(items.slice(i, i + SCOPE_PER_PAGE));
   if (scopePages.length === 0) scopePages.push([]);
 
-  const INVEST_PER_PAGE = 14;
+  // Investimento: limita linhas por página e garante espaço para o card "Investimento total".
+  // Se a última página ficaria cheia demais, força o resumo para uma página própria.
+  const INVEST_PER_PAGE = 10;
+  const INVEST_LAST_PAGE_MAX = 6; // reserva ~4 linhas para o bloco de totais
   const investPages: any[][] = [];
   for (let i = 0; i < items.length; i += INVEST_PER_PAGE)
     investPages.push(items.slice(i, i + INVEST_PER_PAGE));
   if (investPages.length === 0) investPages.push([]);
+  // Se a última página tem itens demais para caber junto do card de totais, empurra para uma nova.
+  const lastIdx = investPages.length - 1;
+  if (investPages[lastIdx].length > INVEST_LAST_PAGE_MAX) {
+    investPages.push([]);
+  }
 
   const ctxHeader = { proposal, client, primary, accent, logoSrc, tpl };
 
