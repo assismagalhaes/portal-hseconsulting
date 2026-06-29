@@ -466,7 +466,7 @@ function Stat({ label, value, accent }: any) {
 }
 
 /* ---------- Scope card (technical/commercial, no financials) ---------- */
-function ScopeCard({ item, primary, accent, neutral, fontTitulo }: any) {
+function ScopeCard({ item, title, primary, accent, neutral, fontTitulo }: any) {
   const toList = (s?: string): string[] =>
     (s || "")
       .split(/\r?\n|;|•/)
@@ -478,7 +478,11 @@ function ScopeCard({ item, primary, accent, neutral, fontTitulo }: any) {
   const qtdTec =
     (item.quantidade_tecnica || "").trim() ||
     (Number(item.quantidade) > 1 ? `${item.quantidade} ${item.quantidade > 1 ? "unidades" : "unidade"}` : "");
-  const escopo = (item.escopo_tecnico || item.descricao_comercial || "").trim();
+  const headerTitle = (title || item.descricao_comercial || "Serviço").trim();
+  const descricao = (item.descricao_comercial || "").trim();
+  // Evita duplicar a descrição quando ela é igual ao nome do serviço
+  const descricaoDistinta = descricao && descricao !== headerTitle ? descricao : "";
+  const escopo = (item.escopo_tecnico || "").trim();
 
   const Block = ({ icon, title, children }: any) => (
     <div style={{ marginTop: 10 }}>
@@ -499,7 +503,7 @@ function ScopeCard({ item, primary, accent, neutral, fontTitulo }: any) {
         </span>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: `${fontTitulo}, sans-serif`, fontWeight: 700, fontSize: 15, color: primary, lineHeight: 1.2 }}>
-            {item.descricao_comercial}
+            {headerTitle}
           </div>
           {item.categoria && (
             <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: 1.4, color: "#64748b", marginTop: 2 }}>
@@ -509,8 +513,14 @@ function ScopeCard({ item, primary, accent, neutral, fontTitulo }: any) {
         </div>
       </div>
 
-      {escopo && (
+      {descricaoDistinta && (
         <Block icon={<ClipboardList size={12} />} title="Descrição">
+          <p style={{ whiteSpace: "pre-line", margin: 0 }}>{descricaoDistinta}</p>
+        </Block>
+      )}
+
+      {escopo && (
+        <Block icon={<ClipboardList size={12} />} title="Escopo técnico">
           <p style={{ whiteSpace: "pre-line", margin: 0 }}>{escopo}</p>
         </Block>
       )}
