@@ -21,6 +21,7 @@ import { computePricing, statusMargemMeta, type PricingInput } from "@/lib/prici
 import { toast } from "sonner";
 import logo from "@/assets/hse-logo-navy.png";
 import ProposalDocument from "@/components/proposal/ProposalDocument";
+import CnpjLookupField from "@/components/CnpjLookupField";
 import GroupPricingDrawer from "@/components/proposal/GroupPricingDrawer";
 import HistoricoPrecificacao from "@/components/proposal/HistoricoPrecificacao";
 
@@ -634,9 +635,20 @@ function ClientCard({ client, setClient, onSave }: any) {
       <div className="grid sm:grid-cols-2 gap-3">
         <Field label="Razão social" value={c.razao_social} onChange={v=>set({razao_social:v})} className="sm:col-span-2" />
         <Field label="Nome fantasia" value={c.nome_fantasia} onChange={v=>set({nome_fantasia:v})} />
-        <Field label="CNPJ / CPF" value={c.cnpj_cpf} onChange={v=>set({cnpj_cpf:formatCnpjCpf(v)})} />
+        <CnpjLookupField
+          value={c.cnpj_cpf || ""}
+          onChange={(v) => set({ cnpj_cpf: v })}
+          formSnapshot={c}
+          onAutofill={(patch) => setClient({ ...c, ...patch })}
+          onExistingClient={(ex) => setClient({ ...ex })}
+          ultimaConsulta={c.ultima_consulta_cnpj}
+          label="CNPJ / CPF"
+          compact
+        />
         <Field label="Qtd. funcionários" type="number" value={c.qtd_funcionarios} onChange={v=>set({qtd_funcionarios:v})} />
         <Field label="Endereço" value={c.endereco} onChange={v=>set({endereco:v})} className="sm:col-span-2" />
+        <Field label="Bairro" value={c.bairro} onChange={v=>set({bairro:v})} />
+        <Field label="CEP" value={c.cep} onChange={v=>set({cep:v})} />
         <Field label="Cidade" value={c.cidade} onChange={v=>set({cidade:v})} />
         <Field label="UF" value={c.uf} onChange={v=>set({uf:(v||"").toUpperCase().slice(0,2)})} />
         <Field label="Solicitante" value={c.solicitante} onChange={v=>set({solicitante:v})} />
