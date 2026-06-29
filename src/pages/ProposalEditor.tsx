@@ -453,7 +453,12 @@ export default function ProposalEditor() {
               </TabsContent>
 
               <TabsContent value="revisoes" className="mt-4">
-                <RevisionsCard revisions={revisions} onAdd={addRevisao} />
+                <RevisionsCard
+                  proposalId={proposal.id}
+                  valorAtual={total}
+                  revisions={revisions}
+                  onChanged={load}
+                />
               </TabsContent>
 
               {isInternal && (
