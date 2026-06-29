@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Plus, Trash2, Calculator, Printer, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown, Users } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Calculator, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown, Users } from "lucide-react";
 import { brl, pct, proposalStatusLabel, proposalOrigemLabel, proposalOrigemColor, formatCnpjCpf, formatDate, formatDateTime } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
 import { computePricing, statusMargemMeta, type PricingInput } from "@/lib/pricing";
@@ -400,7 +400,6 @@ export default function ProposalEditor() {
             <Button variant="outline" size="sm" onClick={handlePrint} disabled={!docReady}>
               <FileDown className="h-4 w-4 mr-1" /> Gerar PDF
             </Button>
-            <Button variant="ghost" size="sm" onClick={handlePrint} disabled={!docReady}><Printer className="h-4 w-4 mr-1" /> Imprimir</Button>
             <Select value={proposal.status} onValueChange={changeStatus}>
               <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
               <SelectContent>{Object.entries(proposalStatusLabel).map(([k,v])=><SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
