@@ -1,5 +1,22 @@
 // Cálculo de precificação interna por item da proposta.
 
+/* ============ Estrutura nova (detalhada) ============ */
+export type CustoDiretoRow = {
+  id?: string;
+  categoria: string;     // chave de CUSTO_CATEGORIAS
+  descricao: string;
+  valor: number;
+};
+
+export type HoraTecnicaRow = {
+  id?: string;
+  atividade: string;      // chave de ATIVIDADE_CATEGORIAS ou texto livre
+  descricao?: string;
+  horas: number;
+  valor_hora: number;
+};
+
+/* ============ Estrutura legada (campos fixos) ============ */
 export type CustosDiretos = {
   deslocamento?: number;
   alimentacao_hospedagem?: number;
@@ -24,8 +41,8 @@ export type Horas = {
 };
 
 export type PricingInput = {
-  custos: CustosDiretos;
-  horas: Horas;
+  custos: CustosDiretos | CustoDiretoRow[];
+  horas: Horas | HoraTecnicaRow[];
   qtd_funcionarios?: number;
   custo_hora_interno: number;       // legado (fallback)
   valor_hora_tecnica?: number;      // novo: valor/hora HSE configurável (preferencial)
@@ -57,16 +74,41 @@ export type PricingResult = {
   status_margem: "ok" | "baixa" | "atencao" | "prejuizo";
 };
 
-const sum = (o: Record<string, number | undefined>) =>
-  Object.values(o).reduce<number>((a, b) => a + (Number(b) || 0), 0);
+const sumObj = (o: Record<string, number | undefined>) =>
+  Object.values(o || {}).reduce<number>((a, b) => a + (Number(b) || 0), 0);
+
+export function sumCustos(c: CustosDiretos | CustoDiretoRow[] | undefined | null): number {
+  if (!c) return 0;
+  if (Array.isArray(c)) return c.reduce((a, r) => a + (Number(r?.valor) || 0), 0);
+  return sumObj(c as Record<string, number | undefined>);
+}
+
+export function computeHoras(
+  h: Horas | HoraTecnicaRow[] | undefined | null,
+  valorHoraPadrao: number
+): { horas_total: number; custo_horas: number } {
+  if (!h) return { horas_total: 0, custo_horas: 0 };
+  if (Array.isArray(h)) {
+    let horas_total = 0;
+    let custo_horas = 0;
+    for (const r of h) {
+      const hh = Number(r?.horas) || 0;
+      const vh = Number(r?.valor_hora ?? valorHoraPadrao) || 0;
+      horas_total += hh;
+      custo_horas += hh * vh;
+    }
+    return { horas_total, custo_horas };
+  }
+  const horas_total = sumObj(h as Record<string, number | undefined>);
+  return { horas_total, custo_horas: horas_total * valorHoraPadrao };
+}
 
 export function computePricing(i: PricingInput): PricingResult {
-  const custo_direto_total = sum(i.custos);
-  const horas_total = sum(i.horas);
+  const custo_direto_total = sumCustos(i.custos);
   const valorHora = Number(i.valor_hora_tecnica ?? 0) > 0
     ? Number(i.valor_hora_tecnica)
     : Number(i.custo_hora_interno || 0);
-  const custo_horas = horas_total * valorHora;
+  const { horas_total, custo_horas } = computeHoras(i.horas, valorHora);
   const custo_vidas = (i.qtd_funcionarios || 0) * (i.custo_por_vida || 0);
   const custo_total = custo_direto_total + custo_horas + custo_vidas;
 
