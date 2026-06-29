@@ -711,25 +711,25 @@ function DatesCard({ proposal, onSave }: any) {
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Data de emissão original <span className="text-danger">*</span></Label>
-          <Input type="date" value={proposal.data_emissao||""} onChange={e=>onSave({ data_emissao: e.target.value })} />
+          <Input type="date" value={proposal.data_emissao||""} onChange={e=>onSave({ data_emissao: e.target.value || null })} />
           <p className="text-[11px] text-muted-foreground">Referência principal nos relatórios comerciais.</p>
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Data de envio ao cliente</Label>
-          <Input type="date" value={proposal.data_envio||""} onChange={e=>onSave({ data_envio: e.target.value })} />
+          <Input type="date" value={proposal.data_envio||""} onChange={e=>onSave({ data_envio: e.target.value || null })} />
           <p className="text-[11px] text-muted-foreground">Se vazio, assume a data de emissão.</p>
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">
             Data de aprovação {proposal.status==="aprovada" && <span className="text-danger">*</span>}
           </Label>
-          <Input type="date" value={proposal.data_aprovacao||""} onChange={e=>onSave({ data_aprovacao: e.target.value })} />
+          <Input type="date" value={proposal.data_aprovacao||""} onChange={e=>onSave({ data_aprovacao: e.target.value || null })} />
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">
             Data de recusa / cancelamento {["recusada","cancelada"].includes(proposal.status) && <span className="text-danger">*</span>}
           </Label>
-          <Input type="date" value={proposal.data_recusa||""} onChange={e=>onSave({ data_recusa: e.target.value })} />
+          <Input type="date" value={proposal.data_recusa||""} onChange={e=>onSave({ data_recusa: e.target.value || null })} />
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Data de cadastro no sistema</Label>
