@@ -281,33 +281,31 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
       ))}
 
       {/* ============ CONDIÇÕES COMERCIAIS ============ */}
-      <DocPage ctx={ctxHeader} pageLabel="Condições Comerciais" pageNum="—">
+      <DocPage ctx={ctxHeader} pageLabel="Condições & Aceite" pageNum="—">
         <SectionTitle eyebrow="Termos" title="Condições comerciais" accent={accent} primary={primary} />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           {proposal.condicoes_pagamento && <ConditionCard title="Forma de pagamento" body={proposal.condicoes_pagamento} icon={<ShieldCheck size={18} />} primary={primary} accent={accent} neutral={neutral} />}
           {proposal.validade && <ConditionCard title="Validade da proposta" body={new Date(proposal.validade).toLocaleDateString("pt-BR")} icon={<CheckCircle2 size={18} />} primary={primary} accent={accent} neutral={neutral} />}
           {proposal.outras_condicoes && <ConditionCard title="Outras condições" body={proposal.outras_condicoes} icon={<FileSignature size={18} />} primary={primary} accent={accent} neutral={neutral} fullWidth />}
         </div>
-      </DocPage>
 
-      {/* ============ ACEITE ============ */}
-      <DocPage ctx={ctxHeader} pageLabel="Aceite" pageNum="—">
-        <SectionTitle eyebrow="Formalização" title="Aceite da proposta" accent={accent} primary={primary} />
-        <p style={{ fontSize: 13, lineHeight: 1.7, color: "#334155", marginBottom: 40, maxWidth: 560 }}>{tpl.texto_aceite}</p>
+        <div style={{ marginTop: 24 }}>
+          <SectionTitle eyebrow="Formalização" title="Aceite da proposta" accent={accent} primary={primary} />
+          <p style={{ fontSize: 13, lineHeight: 1.7, color: "#334155", marginBottom: 28, maxWidth: 560 }}>{tpl.texto_aceite}</p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 36, marginTop: 60 }}>
-          <SignatureBlock label="Cliente" name={client?.razao_social} subtitle={client?.solicitante} primary={primary} />
-          <SignatureBlock label="HSE Consulting" name="HSE Consulting" subtitle="Responsável Comercial" primary={primary} />
-        </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 36, marginTop: 24 }}>
+            <SignatureBlock label="Cliente" name={client?.razao_social} subtitle={client?.solicitante} primary={primary} />
+            <SignatureBlock label="HSE Consulting" name="HSE Consulting" subtitle="Responsável Comercial" primary={primary} />
+          </div>
 
-        <div style={{ marginTop: 40, display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ height: 1, background: neutral, flex: 1 }} />
-          <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 2, color: "#64748b" }}>Data: ___ / ___ / ______</span>
-          <div style={{ height: 1, background: neutral, flex: 1 }} />
-        </div>
+          <div style={{ marginTop: 24, display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ height: 1, background: neutral, flex: 1 }} />
+            <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 2, color: "#64748b" }}>Data: ___ / ___ / ______</span>
+            <div style={{ height: 1, background: neutral, flex: 1 }} />
+          </div>
 
-        {revisions.length > 0 && (
-          <div style={{ marginTop: 40 }}>
+          {revisions.length > 0 && (
+            <div style={{ marginTop: 28 }}>
             <h3 style={{ fontFamily: `${tpl.font_titulo || "Sora"}, sans-serif`, fontSize: 14, color: primary, marginBottom: 10 }}>Histórico de revisões</h3>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
               <thead>
@@ -330,8 +328,9 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </DocPage>
 
       {/* ============ CONTRACAPA ============ */}
