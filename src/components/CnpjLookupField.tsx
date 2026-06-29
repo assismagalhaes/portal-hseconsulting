@@ -10,7 +10,7 @@ import { Search, Loader2, CheckCircle2, AlertCircle, Info } from "lucide-react";
 import { toast } from "sonner";
 import {
   consultarCnpj, formatCnpj, onlyDigits, aplicarDadosCnpj,
-  buscarClienteExistentePorCnpj, hasConflict, type CnpjLookupData,
+  buscarClienteExistentePorCnpj, hasConflict, isSituacaoAtiva, type CnpjLookupData,
 } from "@/lib/cnpjLookup";
 
 type Props = {
@@ -78,6 +78,12 @@ export default function CnpjLookupField({
       // 3) Verifica conflito de campos preenchidos
       if (hasConflict(formSnapshot, r.data)) {
         setPending(r.data);
+        if (!isSituacaoAtiva(r.data.situacao_cadastral)) {
+          toast.warning(
+            `Atenção: CNPJ consta como "${r.data.situacao_cadastral}" na base pública. Verifique antes de emitir a proposta.`,
+            { duration: 8000 }
+          );
+        }
         return;
       }
 
@@ -85,6 +91,12 @@ export default function CnpjLookupField({
       const patch = aplicarDadosCnpj(formSnapshot, r.data);
       onAutofill(patch, r.data);
       toast.success("Dados encontrados e preenchidos.");
+      if (!isSituacaoAtiva(r.data.situacao_cadastral)) {
+        toast.warning(
+          `Atenção: CNPJ consta como "${r.data.situacao_cadastral}" na base pública. Verifique antes de emitir a proposta.`,
+          { duration: 8000 }
+        );
+      }
     } finally {
       setLoading(false);
     }
