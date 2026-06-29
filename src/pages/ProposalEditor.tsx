@@ -249,11 +249,12 @@ export default function ProposalEditor() {
     const existing = pricings[item.id];
     const qtd = Math.max(1, Number(item.quantidade||1));
     const valorAnt = Number(item.valor_unitario||0) * qtd;
-    const { error } = existing
-      ? await supabase.from("proposal_item_pricing").update(payload).eq("id", existing.id)
-      : await supabase.from("proposal_item_pricing").insert(payload);
+    const hasExistingId = existing && existing.id;
+    const { data: savedRow, error } = hasExistingId
+      ? await supabase.from("proposal_item_pricing").update(payload).eq("id", existing.id).select("*").single()
+      : await supabase.from("proposal_item_pricing").insert(payload).select("*").single();
     if (error) return toast.error(error.message);
-    setPricings({ ...pricings, [item.id]: { ...existing, ...payload }});
+    setPricings({ ...pricings, [item.id]: savedRow || { ...existing, ...payload } });
     await updateItem(item, { valor_unitario: Number((computed.preco_arredondado / qtd).toFixed(2)) });
     // Registra simulação individual + histórico
     try {
