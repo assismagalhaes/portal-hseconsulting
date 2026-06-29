@@ -60,6 +60,8 @@ export default function ProposalEditor() {
   const [revisions, setRevisions] = useState<any[]>([]);
   const [clientView, setClientView] = useState(false);
   const [pricingOpen, setPricingOpen] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [groupOpen, setGroupOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const dirtyTimer = useRef<any>(null);
 
@@ -244,13 +246,55 @@ export default function ProposalEditor() {
       preco_aprovado: computed.preco_arredondado, indicadores: computed,
     };
     const existing = pricings[item.id];
+    const qtd = Math.max(1, Number(item.quantidade||1));
+    const valorAnt = Number(item.valor_unitario||0) * qtd;
     const { error } = existing
       ? await supabase.from("proposal_item_pricing").update(payload).eq("id", existing.id)
       : await supabase.from("proposal_item_pricing").insert(payload);
     if (error) return toast.error(error.message);
     setPricings({ ...pricings, [item.id]: { ...existing, ...payload }});
-    const qtd = Math.max(1, Number(item.quantidade||1));
     await updateItem(item, { valor_unitario: Number((computed.preco_arredondado / qtd).toFixed(2)) });
+    // Registra simulação individual + histórico
+    try {
+      const { data: sim } = await supabase.from("simulacoes_precificacao").insert({
+        proposal_id: proposal.id,
+        tipo: "individual",
+        regra_rateio: "igual",
+        aplicada: true,
+        aplicada_em: new Date().toISOString(),
+        totais: computed as any,
+      }).select("id").single();
+      if (sim) {
+        await supabase.from("simulacao_itens").insert({
+          simulacao_id: sim.id,
+          proposal_item_id: item.id,
+          custos_individuais: draft.custos,
+          horas: draft.horas,
+          aliquota_imposto: draft.aliquota_imposto,
+          margem_desejada: draft.margem_desejada,
+          lucro_desejado: draft.lucro_desejado,
+          desconto_comercial: draft.desconto_comercial,
+          custo_individual: computed.custo_total,
+          custo_total: computed.custo_total,
+          preco_sugerido: computed.preco_sugerido,
+          preco_final: computed.preco_arredondado,
+          lucro_estimado: computed.lucro_estimado,
+          margem_liquida: computed.margem_liquida,
+          markup: computed.markup,
+          status_margem: computed.status_margem,
+          indicadores: computed as any,
+        });
+        await supabase.from("historico_precificacao").insert({
+          proposal_id: proposal.id,
+          simulacao_id: sim.id,
+          proposal_item_id: item.id,
+          acao: "aplicada_individual",
+          valor_anterior: valorAnt,
+          valor_novo: computed.preco_arredondado,
+          detalhes: { regra: "individual" } as any,
+        });
+      }
+    } catch { /* histórico é best-effort */ }
     toast.success("Precificação aplicada ao item");
     setPricingOpen(null);
   }
