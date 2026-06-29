@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { formatCnpjCpf } from "@/lib/format";
 import { toast } from "sonner";
+import CnpjLookupField from "@/components/CnpjLookupField";
 
 const empty = { razao_social:"", nome_fantasia:"", cnpj_cpf:"", email:"", telefone:"", whatsapp:"", endereco:"", cidade:"", uf:"", solicitante:"", cargo:"", qtd_funcionarios:0, observacoes:"" };
 
@@ -56,11 +57,21 @@ export default function Clients() {
               <form onSubmit={save} className="grid gap-3 sm:grid-cols-2">
                 <Field label="Razão social" className="sm:col-span-2" required value={form.razao_social} onChange={v=>setForm({...form,razao_social:v})} />
                 <Field label="Nome fantasia" value={form.nome_fantasia} onChange={v=>setForm({...form,nome_fantasia:v})} />
-                <Field label="CNPJ / CPF" value={form.cnpj_cpf} onChange={v=>setForm({...form,cnpj_cpf:formatCnpjCpf(v)})} />
+                <CnpjLookupField
+                  value={form.cnpj_cpf}
+                  onChange={(v)=>setForm({...form, cnpj_cpf:v})}
+                  formSnapshot={form}
+                  onAutofill={(patch)=>setForm({...form, ...patch})}
+                  onExistingClient={(c)=>{ setEditing(c); setForm({ ...empty, ...c }); toast.message("Cadastro existente carregado."); }}
+                  ultimaConsulta={form.ultima_consulta_cnpj}
+                  label="CNPJ / CPF"
+                />
                 <Field label="Email" type="email" value={form.email} onChange={v=>setForm({...form,email:v})} />
                 <Field label="Telefone" value={form.telefone} onChange={v=>setForm({...form,telefone:v})} />
                 <Field label="WhatsApp" value={form.whatsapp} onChange={v=>setForm({...form,whatsapp:v})} />
                 <Field label="Endereço" className="sm:col-span-2" value={form.endereco} onChange={v=>setForm({...form,endereco:v})} />
+                <Field label="Bairro" value={form.bairro||""} onChange={v=>setForm({...form,bairro:v})} />
+                <Field label="CEP" value={form.cep||""} onChange={v=>setForm({...form,cep:v})} />
                 <Field label="Cidade" value={form.cidade} onChange={v=>setForm({...form,cidade:v})} />
                 <Field label="UF" value={form.uf} onChange={v=>setForm({...form,uf:v.toUpperCase().slice(0,2)})} />
                 <Field label="Solicitante" value={form.solicitante} onChange={v=>setForm({...form,solicitante:v})} />
