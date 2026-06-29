@@ -309,7 +309,7 @@ export default function ProposalEditor() {
     if (!client?.cnpj_cpf) errs.push("Cliente sem CNPJ/CPF");
     if (items.length === 0) errs.push("Adicione pelo menos um serviço");
     items.forEach((it,i)=>{
-      if (!it.descricao_comercial) errs.push(`Item ${i+1}: descrição vazia`);
+      if (!(it.nome || it.descricao_comercial)) errs.push(`Item ${i+1}: nome vazio`);
       if (!Number(it.valor_unitario)) errs.push(`Item ${i+1}: valor unitário zerado`);
     });
     if (!proposal.validade) errs.push("Defina a validade da proposta");
