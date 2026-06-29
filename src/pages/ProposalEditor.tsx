@@ -21,6 +21,7 @@ import { computePricing, statusMargemMeta, type PricingInput } from "@/lib/prici
 import { toast } from "sonner";
 import logo from "@/assets/hse-logo-navy.png";
 import ProposalDocument from "@/components/proposal/ProposalDocument";
+import CnpjLookupField from "@/components/CnpjLookupField";
 import GroupPricingDrawer from "@/components/proposal/GroupPricingDrawer";
 import HistoricoPrecificacao from "@/components/proposal/HistoricoPrecificacao";
 
