@@ -398,7 +398,7 @@ export default function ProposalEditor() {
             </div>
           )}
           {clientView ? (
-            <ProposalDocument proposal={proposal} client={client} items={items} revisions={revisions} />
+            <ProposalDocument proposal={proposal} client={client} items={items} revisions={revisions} onReady={()=>setDocReady(true)} />
           ) : (
             <>
             <Tabs defaultValue="cliente">
