@@ -12,13 +12,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ArrowLeft, Plus, Trash2, Calculator, Printer, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowLeft, Plus, Trash2, Calculator, Printer, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown, Users } from "lucide-react";
 import { brl, pct, proposalStatusLabel, proposalOrigemLabel, proposalOrigemColor, formatCnpjCpf, formatDate, formatDateTime } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
 import { computePricing, statusMargemMeta, type PricingInput } from "@/lib/pricing";
 import { toast } from "sonner";
 import logo from "@/assets/hse-logo-navy.png";
 import ProposalDocument from "@/components/proposal/ProposalDocument";
+import GroupPricingDrawer from "@/components/proposal/GroupPricingDrawer";
+import HistoricoPrecificacao from "@/components/proposal/HistoricoPrecificacao";
 
 const emptyCustos = { deslocamento:0, alimentacao_hospedagem:0, terceiros:0, exames_laboratorio:0, taxas_art:0, equipamentos:0, materiais_epi:0, taxa_por_funcionario:0, outros:0 };
 const emptyHoras = { atendimento:0, analise_documental:0, deslocamento:0, visita_tecnica:0, elaboracao:0, revisao:0, pos_entrega:0, outras:0 };
@@ -57,6 +60,8 @@ export default function ProposalEditor() {
   const [revisions, setRevisions] = useState<any[]>([]);
   const [clientView, setClientView] = useState(false);
   const [pricingOpen, setPricingOpen] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [groupOpen, setGroupOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const dirtyTimer = useRef<any>(null);
 
@@ -241,13 +246,55 @@ export default function ProposalEditor() {
       preco_aprovado: computed.preco_arredondado, indicadores: computed,
     };
     const existing = pricings[item.id];
+    const qtd = Math.max(1, Number(item.quantidade||1));
+    const valorAnt = Number(item.valor_unitario||0) * qtd;
     const { error } = existing
       ? await supabase.from("proposal_item_pricing").update(payload).eq("id", existing.id)
       : await supabase.from("proposal_item_pricing").insert(payload);
     if (error) return toast.error(error.message);
     setPricings({ ...pricings, [item.id]: { ...existing, ...payload }});
-    const qtd = Math.max(1, Number(item.quantidade||1));
     await updateItem(item, { valor_unitario: Number((computed.preco_arredondado / qtd).toFixed(2)) });
+    // Registra simulação individual + histórico
+    try {
+      const { data: sim } = await supabase.from("simulacoes_precificacao").insert({
+        proposal_id: proposal.id,
+        tipo: "individual",
+        regra_rateio: "igual",
+        aplicada: true,
+        aplicada_em: new Date().toISOString(),
+        totais: computed as any,
+      }).select("id").single();
+      if (sim) {
+        await supabase.from("simulacao_itens").insert({
+          simulacao_id: sim.id,
+          proposal_item_id: item.id,
+          custos_individuais: draft.custos,
+          horas: draft.horas,
+          aliquota_imposto: draft.aliquota_imposto,
+          margem_desejada: draft.margem_desejada,
+          lucro_desejado: draft.lucro_desejado,
+          desconto_comercial: draft.desconto_comercial,
+          custo_individual: computed.custo_total,
+          custo_total: computed.custo_total,
+          preco_sugerido: computed.preco_sugerido,
+          preco_final: computed.preco_arredondado,
+          lucro_estimado: computed.lucro_estimado,
+          margem_liquida: computed.margem_liquida,
+          markup: computed.markup,
+          status_margem: computed.status_margem,
+          indicadores: computed as any,
+        });
+        await supabase.from("historico_precificacao").insert({
+          proposal_id: proposal.id,
+          simulacao_id: sim.id,
+          proposal_item_id: item.id,
+          acao: "aplicada_individual",
+          valor_anterior: valorAnt,
+          valor_novo: computed.preco_arredondado,
+          detalhes: { regra: "individual" } as any,
+        });
+      }
+    } catch { /* histórico é best-effort */ }
     toast.success("Precificação aplicada ao item");
     setPricingOpen(null);
   }
@@ -336,6 +383,7 @@ export default function ProposalEditor() {
                 <TabsTrigger value="comerciais">Condições</TabsTrigger>
                 <TabsTrigger value="internas">Notas internas</TabsTrigger>
                 <TabsTrigger value="revisoes"><History className="h-3.5 w-3.5 mr-1" /> Revisões</TabsTrigger>
+                {isInternal && <TabsTrigger value="historico_prec"><Calculator className="h-3.5 w-3.5 mr-1" /> Histórico de preços</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="cliente" className="mt-4">
@@ -349,6 +397,17 @@ export default function ProposalEditor() {
                     <SelectTrigger className="w-72"><SelectValue placeholder="…ou adicionar do catálogo" /></SelectTrigger>
                     <SelectContent>{services.map(s=><SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}</SelectContent>
                   </Select>
+                  {isInternal && (() => {
+                    const count = Object.values(selected).filter(Boolean).length;
+                    return (
+                      <div className="ml-auto flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">{count} selecionado(s)</span>
+                        <Button size="sm" variant="outline" disabled={count < 1} onClick={()=>setGroupOpen(true)}>
+                          <Users className="h-4 w-4 mr-1" /> Calcular em grupo
+                        </Button>
+                      </div>
+                    );
+                  })()}
                 </div>
                 {items.length === 0 && <Card className="p-8 text-center text-muted-foreground">Nenhum item ainda. Adicione o primeiro serviço.</Card>}
                 {items.map(it => (
@@ -357,7 +416,9 @@ export default function ProposalEditor() {
                     onRemove={()=>removeItem(it)}
                     onOpenPricing={()=>setPricingOpen(it.id)}
                     onSaveToCatalog={()=>saveItemAsService(it)}
-                    isInternal={isInternal} />
+                    isInternal={isInternal}
+                    selected={!!selected[it.id]}
+                    onSelect={(v)=>setSelected(s=>({ ...s, [it.id]: v }))} />
                 ))}
               </TabsContent>
 
@@ -394,6 +455,12 @@ export default function ProposalEditor() {
               <TabsContent value="revisoes" className="mt-4">
                 <RevisionsCard revisions={revisions} onAdd={addRevisao} />
               </TabsContent>
+
+              {isInternal && (
+                <TabsContent value="historico_prec" className="mt-4">
+                  <HistoricoPrecificacao proposalId={proposal.id} />
+                </TabsContent>
+              )}
             </Tabs>
           )}
         </div>
@@ -450,6 +517,19 @@ export default function ProposalEditor() {
           )}
         </SheetContent>
       </Sheet>
+
+      {isInternal && (
+        <GroupPricingDrawer
+          open={groupOpen}
+          onClose={()=>setGroupOpen(false)}
+          proposalId={proposal.id}
+          clientFuncionarios={client?.qtd_funcionarios || 0}
+          items={items.filter(it => selected[it.id])}
+          existingPricings={pricings}
+          params={params}
+          onApplied={()=>{ setSelected({}); load(); }}
+        />
+      )}
     </div>
   );
 }
@@ -596,7 +676,7 @@ function DatesCard({ proposal, onSave }: any) {
 }
 
 /* ---------------- Item Editor ---------------- */
-function ItemEditor({ item, pricing, onChange, onRemove, onOpenPricing, onSaveToCatalog, isInternal }: any) {
+function ItemEditor({ item, pricing, onChange, onRemove, onOpenPricing, onSaveToCatalog, isInternal, selected, onSelect }: any) {
   const [local, setLocal] = useState(item);
   useEffect(()=>setLocal(item), [item.id, item.valor_unitario, item.valor_total]);
   const margem = pricing?.indicadores?.status_margem;
@@ -605,13 +685,20 @@ function ItemEditor({ item, pricing, onChange, onRemove, onOpenPricing, onSaveTo
     <Card className="shadow-elegant">
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 space-y-2">
+          <div className="flex items-start gap-3 flex-1">
+            {isInternal && (
+              <div className="pt-2">
+                <Checkbox checked={!!selected} onCheckedChange={(v)=>onSelect?.(!!v)} aria-label="Selecionar para cálculo em grupo" />
+              </div>
+            )}
+            <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="outline" className="font-mono">#{item.numero_item}</Badge>
               {item.categoria && <Badge variant="secondary">{item.categoria}</Badge>}
               {meta && <Badge className={`border ${meta.color}`}>{meta.label}</Badge>}
             </div>
             <Input value={local.descricao_comercial} onChange={e=>setLocal({...local, descricao_comercial:e.target.value})} onBlur={()=>onChange({ descricao_comercial: local.descricao_comercial })} className="font-display font-semibold text-base" placeholder="Nome / descrição comercial" />
+            </div>
           </div>
           <Button variant="ghost" size="icon" onClick={onRemove}><Trash2 className="h-4 w-4 text-danger" /></Button>
         </div>
