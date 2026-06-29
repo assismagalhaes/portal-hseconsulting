@@ -171,6 +171,7 @@ export default function ProposalEditor() {
       proposal_id: proposal.id, numero_item,
       service_id: fromService?.id || null,
       categoria: fromService?.categoria || null,
+      nome: fromService?.nome || "Novo item",
       descricao_comercial: fromService?.descricao_comercial || fromService?.nome || "Novo item",
       escopo_tecnico: fromService?.escopo_tecnico || "",
       entregaveis: fromService?.entregaveis || "",
@@ -191,6 +192,7 @@ export default function ProposalEditor() {
     merged.valor_total = Number(merged.quantidade||0) * Number(merged.valor_unitario||0);
     const { error } = await supabase.from("proposal_items").update({
       categoria: merged.categoria || null,
+      nome: merged.nome,
       descricao_comercial: merged.descricao_comercial,
       escopo_tecnico: merged.escopo_tecnico,
       entregaveis: merged.entregaveis ?? null,
@@ -212,14 +214,15 @@ export default function ProposalEditor() {
   }
 
   async function saveItemAsService(it: any) {
-    if (!it.descricao_comercial) return toast.error("Item sem nome");
-    const { data: existing } = await supabase.from("services").select("id").eq("nome", it.descricao_comercial).maybeSingle();
+    const nomeRef = (it.nome || it.descricao_comercial || "").trim();
+    if (!nomeRef) return toast.error("Item sem nome");
+    const { data: existing } = await supabase.from("services").select("id").eq("nome", nomeRef).maybeSingle();
     if (existing) {
       await updateItem(it, { service_id: existing.id });
       return toast.info("Já existia no catálogo — vínculo atualizado.");
     }
     const { data, error } = await supabase.from("services").insert({
-      nome: it.descricao_comercial,
+      nome: nomeRef,
       categoria: it.categoria,
       descricao_comercial: it.descricao_comercial,
       escopo_tecnico: it.escopo_tecnico,
