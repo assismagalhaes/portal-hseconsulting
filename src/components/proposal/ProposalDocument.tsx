@@ -20,6 +20,7 @@ type Props = {
   client: any;
   items: any[];
   revisions?: any[];
+  onReady?: () => void;
 };
 
 const PAGE_STYLE: React.CSSProperties = {
@@ -33,12 +34,13 @@ const PAGE_STYLE: React.CSSProperties = {
   color: "#0f172a",
 };
 
-export default function ProposalDocument({ proposal, client, items, revisions = [] }: Props) {
+export default function ProposalDocument({ proposal, client, items, revisions = [], onReady }: Props) {
   const [tpl, setTpl] = useState<any>(null);
   useEffect(() => {
     supabase.from("proposal_template").select("*").limit(1).maybeSingle()
       .then(({ data }) => setTpl(data || {}));
   }, []);
+  useEffect(() => { if (tpl && onReady) onReady(); }, [tpl, onReady]);
   if (!tpl) return <div className="p-8 text-sm text-muted-foreground">Carregando modelo…</div>;
 
   const primary = tpl.cor_primaria || "#0b1f4d";

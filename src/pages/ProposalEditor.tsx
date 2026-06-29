@@ -65,6 +65,7 @@ export default function ProposalEditor() {
   const [groupOpen, setGroupOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const dirtyTimer = useRef<any>(null);
+  const [docReady, setDocReady] = useState(false);
 
   useEffect(() => { load(); }, [id]);
 
@@ -344,6 +345,23 @@ export default function ProposalEditor() {
 
   const errs = validate();
 
+  async function handlePrint() {
+    // Garante que o documento esteja montado e o template carregado
+    const t0 = Date.now();
+    while (!document.querySelector(".proposal-doc .pdf-page")) {
+      if (Date.now() - t0 > 5000) { toast.error("Não foi possível preparar o documento para impressão."); return; }
+      await new Promise(r => setTimeout(r, 100));
+    }
+    const prevTitle = document.title;
+    const clienteNome = client?.nome_fantasia || client?.razao_social || "Cliente";
+    const safe = (s: string) => (s || "").replace(/[\\/:*?"<>|]/g, "").trim();
+    document.title = `Proposta ${proposal.numero} - ${safe(clienteNome)}`;
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => { document.title = prevTitle; }, 500);
+    }, 200);
+  }
+
   return (
     <div className="pb-10">
       <PageHeader title={`Proposta ${proposal.numero}`}
@@ -352,10 +370,10 @@ export default function ProposalEditor() {
           <>
             <Button variant="ghost" size="sm" asChild><Link to="/propostas"><ArrowLeft className="h-4 w-4 mr-1" /> Voltar</Link></Button>
             {saving && <span className="text-xs text-muted-foreground flex items-center gap-1"><Save className="h-3 w-3 animate-pulse" /> salvando…</span>}
-            <Button variant="outline" size="sm" onClick={()=>{ setClientView(true); setTimeout(()=>window.print(), 150); }}>
+            <Button variant="outline" size="sm" onClick={handlePrint} disabled={!docReady}>
               <FileDown className="h-4 w-4 mr-1" /> Gerar PDF
             </Button>
-            <Button variant="ghost" size="sm" onClick={()=>window.print()}><Printer className="h-4 w-4 mr-1" /> Imprimir</Button>
+            <Button variant="ghost" size="sm" onClick={handlePrint} disabled={!docReady}><Printer className="h-4 w-4 mr-1" /> Imprimir</Button>
             <Select value={proposal.status} onValueChange={changeStatus}>
               <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
               <SelectContent>{Object.entries(proposalStatusLabel).map(([k,v])=><SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
@@ -380,8 +398,9 @@ export default function ProposalEditor() {
             </div>
           )}
           {clientView ? (
-            <ProposalDocument proposal={proposal} client={client} items={items} revisions={revisions} />
+            <ProposalDocument proposal={proposal} client={client} items={items} revisions={revisions} onReady={()=>setDocReady(true)} />
           ) : (
+            <>
             <Tabs defaultValue="cliente">
               <TabsList>
                 <TabsTrigger value="cliente">Cliente</TabsTrigger>
@@ -474,6 +493,11 @@ export default function ProposalEditor() {
                 </TabsContent>
               )}
             </Tabs>
+            {/* Documento sempre montado para impressão — oculto na tela quando não em modo cliente */}
+            <div className="hidden print:block" aria-hidden="true">
+              <ProposalDocument proposal={proposal} client={client} items={items} revisions={revisions} onReady={()=>setDocReady(true)} />
+            </div>
+            </>
           )}
         </div>
 
