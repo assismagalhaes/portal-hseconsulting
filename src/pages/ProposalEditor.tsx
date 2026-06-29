@@ -1148,7 +1148,13 @@ function PricingPanel({ item, existing, params, clientFuncionarios, onSave }: an
       </section>
 
       <div className="flex justify-end">
-        <Button onClick={()=>onSave(draft, c)}><Save className="h-4 w-4 mr-1" /> Aplicar preço ao item</Button>
+        <Button onClick={() => {
+          const custosInvalidos = draft.custos.filter((r: CustoDiretoRow) => !r.categoria || !r.descricao?.trim());
+          if (custosInvalidos.length) { toast.error("Preencha categoria e descrição em todos os custos diretos."); return; }
+          const horasInvalidas = draft.horas.filter((r: HoraTecnicaRow) => !r.atividade);
+          if (horasInvalidas.length) { toast.error("Selecione a atividade em todas as linhas de horas técnicas."); return; }
+          onSave(draft, c);
+        }}><Save className="h-4 w-4 mr-1" /> Aplicar preço ao item</Button>
       </div>
     </div>
   );
