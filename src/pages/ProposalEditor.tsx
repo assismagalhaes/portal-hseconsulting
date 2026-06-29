@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ArrowLeft, Plus, Trash2, Calculator, Printer, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown } from "lucide-react";
-import { brl, pct, proposalStatusLabel, formatCnpjCpf } from "@/lib/format";
+import { brl, pct, proposalStatusLabel, proposalOrigemLabel, proposalOrigemColor, formatCnpjCpf, formatDate, formatDateTime } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
 import { computePricing, statusMargemMeta, type PricingInput } from "@/lib/pricing";
 import { toast } from "sonner";
@@ -277,6 +277,8 @@ export default function ProposalEditor() {
     }
     const patch: any = { status: novo };
     if (novo === "enviada" && !proposal.data_envio) patch.data_envio = new Date().toISOString().slice(0,10);
+    if (novo === "aprovada" && !proposal.data_aprovacao) patch.data_aprovacao = new Date().toISOString().slice(0,10);
+    if ((novo === "recusada" || novo === "cancelada") && !proposal.data_recusa) patch.data_recusa = new Date().toISOString().slice(0,10);
     await saveProposalField(patch);
     // Recarrega revisões pois o trigger gravou uma nova
     const rv = await supabase.from("proposal_revisions").select("*").eq("proposal_id", proposal.id).order("revisao",{ascending:false});
@@ -330,6 +332,7 @@ export default function ProposalEditor() {
               <TabsList>
                 <TabsTrigger value="cliente">Cliente</TabsTrigger>
                 <TabsTrigger value="itens">Itens & escopo</TabsTrigger>
+                <TabsTrigger value="datas">Datas & origem</TabsTrigger>
                 <TabsTrigger value="comerciais">Condições</TabsTrigger>
                 <TabsTrigger value="internas">Notas internas</TabsTrigger>
                 <TabsTrigger value="revisoes"><History className="h-3.5 w-3.5 mr-1" /> Revisões</TabsTrigger>
@@ -356,6 +359,10 @@ export default function ProposalEditor() {
                     onSaveToCatalog={()=>saveItemAsService(it)}
                     isInternal={isInternal} />
                 ))}
+              </TabsContent>
+
+              <TabsContent value="datas" className="mt-4">
+                <DatesCard proposal={proposal} onSave={saveProposalField} />
               </TabsContent>
 
               <TabsContent value="comerciais" className="space-y-4 mt-4">
@@ -512,6 +519,79 @@ function Field({ label, value, onChange, type="text", className }: any) {
       <Label className="text-xs">{label}</Label>
       <Input type={type} value={value ?? ""} onChange={(e:any)=>onChange(e.target.value)} />
     </div>
+  );
+}
+
+/* ---------------- Datas & Origem ---------------- */
+function DatesCard({ proposal, onSave }: any) {
+  const isRetro = proposal.origem_cadastro === "retroativa" || proposal.origem_cadastro === "importacao_manual";
+  return (
+    <Card><CardContent className="p-4 space-y-4">
+      <div className="flex items-center gap-2">
+        <Badge className={(proposalOrigemColor[proposal.origem_cadastro]||"") + " border-0"} variant="secondary">
+          {proposalOrigemLabel[proposal.origem_cadastro] || "—"}
+        </Badge>
+        <span className="text-xs text-muted-foreground">
+          Cadastrada em {formatDateTime(proposal.created_at)}
+        </span>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Origem do cadastro <span className="text-danger">*</span></Label>
+          <Select value={proposal.origem_cadastro} onValueChange={(v)=>onSave({ origem_cadastro: v })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {Object.entries(proposalOrigemLabel).map(([k,v])=>(
+                <SelectItem key={k} value={k}>{v}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Data de emissão original <span className="text-danger">*</span></Label>
+          <Input type="date" value={proposal.data_emissao||""} onChange={e=>onSave({ data_emissao: e.target.value })} />
+          <p className="text-[11px] text-muted-foreground">Referência principal nos relatórios comerciais.</p>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Data de envio ao cliente</Label>
+          <Input type="date" value={proposal.data_envio||""} onChange={e=>onSave({ data_envio: e.target.value })} />
+          <p className="text-[11px] text-muted-foreground">Se vazio, assume a data de emissão.</p>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">
+            Data de aprovação {proposal.status==="aprovada" && <span className="text-danger">*</span>}
+          </Label>
+          <Input type="date" value={proposal.data_aprovacao||""} onChange={e=>onSave({ data_aprovacao: e.target.value })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">
+            Data de recusa / cancelamento {["recusada","cancelada"].includes(proposal.status) && <span className="text-danger">*</span>}
+          </Label>
+          <Input type="date" value={proposal.data_recusa||""} onChange={e=>onSave({ data_recusa: e.target.value })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Data de cadastro no sistema</Label>
+          <Input disabled value={formatDateTime(proposal.created_at)} />
+        </div>
+      </div>
+
+      {isRetro && (
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Observação retroativa</Label>
+            {!proposal.observacao_retroativa && (
+              <Button variant="ghost" size="sm" onClick={()=>onSave({ observacao_retroativa: "Proposta cadastrada retroativamente para alimentação inicial do sistema. Data de emissão baseada no documento comercial original." })}>
+                Sugerir texto padrão
+              </Button>
+            )}
+          </div>
+          <Textarea rows={3} value={proposal.observacao_retroativa||""}
+            onChange={e=>onSave({ observacao_retroativa: e.target.value })}
+            placeholder="Justificativa do cadastro retroativo (apenas auditoria interna — não vai no PDF do cliente)." />
+        </div>
+      )}
+    </CardContent></Card>
   );
 }
 

@@ -27,6 +27,20 @@ export const proposalStatusLabel: Record<string, string> = {
   expirada: "Expirada",
 };
 
+export const proposalOrigemLabel: Record<string, string> = {
+  nova_proposta: "Nova proposta",
+  retroativa: "Cadastro retroativo",
+  importacao_manual: "Importação manual",
+  importacao_planilha: "Importação por planilha",
+};
+
+export const proposalOrigemColor: Record<string, string> = {
+  nova_proposta: "bg-primary/10 text-primary",
+  retroativa: "bg-amber-100 text-amber-900",
+  importacao_manual: "bg-violet-100 text-violet-900",
+  importacao_planilha: "bg-cyan-100 text-cyan-900",
+};
+
 export const execStatusLabel: Record<string, string> = {
   pendente: "Pendente",
   em_andamento: "Em andamento",

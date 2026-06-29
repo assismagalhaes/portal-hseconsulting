@@ -4451,12 +4451,17 @@ export type Database = {
           condicoes_pagamento: string | null
           created_at: string
           created_by: string | null
+          data_aprovacao: string | null
+          data_emissao: string
           data_envio: string | null
+          data_recusa: string | null
           escopo_geral: string | null
           id: string
           numero: string
+          observacao_retroativa: string | null
           observacoes_comerciais: string | null
           observacoes_internas: string | null
+          origem_cadastro: Database["public"]["Enums"]["proposal_origem"]
           outras_condicoes: string | null
           proximo_followup: string | null
           status: Database["public"]["Enums"]["proposal_status"]
@@ -4473,12 +4478,17 @@ export type Database = {
           condicoes_pagamento?: string | null
           created_at?: string
           created_by?: string | null
+          data_aprovacao?: string | null
+          data_emissao?: string
           data_envio?: string | null
+          data_recusa?: string | null
           escopo_geral?: string | null
           id?: string
           numero?: string
+          observacao_retroativa?: string | null
           observacoes_comerciais?: string | null
           observacoes_internas?: string | null
+          origem_cadastro?: Database["public"]["Enums"]["proposal_origem"]
           outras_condicoes?: string | null
           proximo_followup?: string | null
           status?: Database["public"]["Enums"]["proposal_status"]
@@ -4495,12 +4505,17 @@ export type Database = {
           condicoes_pagamento?: string | null
           created_at?: string
           created_by?: string | null
+          data_aprovacao?: string | null
+          data_emissao?: string
           data_envio?: string | null
+          data_recusa?: string | null
           escopo_geral?: string | null
           id?: string
           numero?: string
+          observacao_retroativa?: string | null
           observacoes_comerciais?: string | null
           observacoes_internas?: string | null
+          origem_cadastro?: Database["public"]["Enums"]["proposal_origem"]
           outras_condicoes?: string | null
           proximo_followup?: string | null
           status?: Database["public"]["Enums"]["proposal_status"]
@@ -5039,6 +5054,11 @@ export type Database = {
         | "cancelada"
         | "remarcada"
       profissional_situacao: "ativo" | "inativo" | "ferias" | "afastado"
+      proposal_origem:
+        | "nova_proposta"
+        | "retroativa"
+        | "importacao_manual"
+        | "importacao_planilha"
       proposal_status:
         | "rascunho"
         | "enviada"
@@ -5468,6 +5488,12 @@ export const Constants = {
         "remarcada",
       ],
       profissional_situacao: ["ativo", "inativo", "ferias", "afastado"],
+      proposal_origem: [
+        "nova_proposta",
+        "retroativa",
+        "importacao_manual",
+        "importacao_planilha",
+      ],
       proposal_status: [
         "rascunho",
         "enviada",
