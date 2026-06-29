@@ -27,7 +27,8 @@ export type PricingInput = {
   custos: CustosDiretos;
   horas: Horas;
   qtd_funcionarios?: number;
-  custo_hora_interno: number;       // custo fixo/hora vindo dos parâmetros
+  custo_hora_interno: number;       // legado (fallback)
+  valor_hora_tecnica?: number;      // novo: valor/hora HSE configurável (preferencial)
   custo_por_vida: number;
   aliquota_imposto: number;         // 0..1
   margem_desejada: number;          // 0..1
@@ -62,7 +63,10 @@ const sum = (o: Record<string, number | undefined>) =>
 export function computePricing(i: PricingInput): PricingResult {
   const custo_direto_total = sum(i.custos);
   const horas_total = sum(i.horas);
-  const custo_horas = horas_total * (i.custo_hora_interno || 0);
+  const valorHora = Number(i.valor_hora_tecnica ?? 0) > 0
+    ? Number(i.valor_hora_tecnica)
+    : Number(i.custo_hora_interno || 0);
+  const custo_horas = horas_total * valorHora;
   const custo_vidas = (i.qtd_funcionarios || 0) * (i.custo_por_vida || 0);
   const custo_total = custo_direto_total + custo_horas + custo_vidas;
 
