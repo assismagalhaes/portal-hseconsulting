@@ -517,6 +517,19 @@ export default function ProposalEditor() {
           )}
         </SheetContent>
       </Sheet>
+
+      {isInternal && (
+        <GroupPricingDrawer
+          open={groupOpen}
+          onClose={()=>setGroupOpen(false)}
+          proposalId={proposal.id}
+          clientFuncionarios={client?.qtd_funcionarios || 0}
+          items={items.filter(it => selected[it.id])}
+          existingPricings={pricings}
+          params={params}
+          onApplied={()=>{ setSelected({}); load(); }}
+        />
+      )}
     </div>
   );
 }
