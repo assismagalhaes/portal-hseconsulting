@@ -25,8 +25,8 @@ export default function ProposalExample() {
     email: "",
   };
   const items = [
-    { id: "1", numero_item: 1, descricao_comercial: "Serviço de exemplo", categoria: "Categoria", escopo_tecnico: "Descrição técnica do serviço prestado, com detalhamento das atividades, entregas e prazos previstos.", quantidade: 1, unidade: "un", valor_unitario: 0, valor_total: 0 },
-    { id: "2", numero_item: 2, descricao_comercial: "Segundo serviço de exemplo", categoria: "Categoria", escopo_tecnico: "Descrição técnica do segundo serviço.", quantidade: 1, unidade: "un", valor_unitario: 0, valor_total: 0 },
+    { id: "1", numero_item: 1, descricao_comercial: "Serviço de exemplo", categoria: "Categoria", escopo_tecnico: "Descrição técnica do serviço prestado, com detalhamento das atividades, entregas e prazos previstos.", quantidade: 1, valor_unitario: 0, valor_total: 0 },
+    { id: "2", numero_item: 2, descricao_comercial: "Segundo serviço de exemplo", categoria: "Categoria", escopo_tecnico: "Descrição técnica do segundo serviço.", quantidade: 1, valor_unitario: 0, valor_total: 0 },
   ];
   return (
     <div style={{ background: "#eef2f7", padding: 16, minHeight: "100vh" }}>

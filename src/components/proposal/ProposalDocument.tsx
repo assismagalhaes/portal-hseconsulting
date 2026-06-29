@@ -209,7 +209,6 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
                 )}
                 <div style={{ display: "flex", gap: 16, fontSize: 11, color: "#64748b", borderTop: `1px dashed ${neutral}`, paddingTop: 8 }}>
                   <span><strong style={{ color: "#0f172a" }}>Qtd:</strong> {it.quantidade}</span>
-                  <span><strong style={{ color: "#0f172a" }}>Unidade:</strong> {it.unidade}</span>
                   <span><strong style={{ color: "#0f172a" }}>Unitário:</strong> {brl(it.valor_unitario)}</span>
                 </div>
               </div>
@@ -240,7 +239,7 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
                     <div style={{ fontWeight: 600, color: "#0f172a" }}>{it.descricao_comercial}</div>
                     {it.categoria && <div style={{ fontSize: 10, color: "#64748b" }}>{it.categoria}</div>}
                   </td>
-                  <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace" }}>{it.quantidade} {it.unidade}</td>
+                  <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace" }}>{it.quantidade}</td>
                   <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace" }}>{brl(it.valor_unitario)}</td>
                   <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace", fontWeight: 700 }}>{brl(it.valor_total)}</td>
                 </tr>
