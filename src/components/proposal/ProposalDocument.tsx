@@ -68,13 +68,6 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   const desconto = Number(proposal.desconto || 0);
   const subtotal = total;
   const valorFinal = subtotal - desconto;
-  const impostoEstimado = items.reduce(
-    (a, b) =>
-      a +
-      Number(b.valor_total || 0) *
-        (Number(b.aliquota_imposto) > 0 ? Number(b.aliquota_imposto) : aliquotaPadrao),
-    0,
-  );
 
   const diferenciais: string[] = Array.isArray(tpl.diferenciais) ? tpl.diferenciais : [];
   const diffIcons = [Award, Users, Zap, Scale, UserCheck, Sparkles];
