@@ -171,6 +171,7 @@ export default function ProposalEditor() {
       proposal_id: proposal.id, numero_item,
       service_id: fromService?.id || null,
       categoria: fromService?.categoria || null,
+      nome: fromService?.nome || "Novo item",
       descricao_comercial: fromService?.descricao_comercial || fromService?.nome || "Novo item",
       escopo_tecnico: fromService?.escopo_tecnico || "",
       entregaveis: fromService?.entregaveis || "",
@@ -191,6 +192,7 @@ export default function ProposalEditor() {
     merged.valor_total = Number(merged.quantidade||0) * Number(merged.valor_unitario||0);
     const { error } = await supabase.from("proposal_items").update({
       categoria: merged.categoria || null,
+      nome: merged.nome,
       descricao_comercial: merged.descricao_comercial,
       escopo_tecnico: merged.escopo_tecnico,
       entregaveis: merged.entregaveis ?? null,
@@ -212,14 +214,15 @@ export default function ProposalEditor() {
   }
 
   async function saveItemAsService(it: any) {
-    if (!it.descricao_comercial) return toast.error("Item sem nome");
-    const { data: existing } = await supabase.from("services").select("id").eq("nome", it.descricao_comercial).maybeSingle();
+    const nomeRef = (it.nome || it.descricao_comercial || "").trim();
+    if (!nomeRef) return toast.error("Item sem nome");
+    const { data: existing } = await supabase.from("services").select("id").eq("nome", nomeRef).maybeSingle();
     if (existing) {
       await updateItem(it, { service_id: existing.id });
       return toast.info("Já existia no catálogo — vínculo atualizado.");
     }
     const { data, error } = await supabase.from("services").insert({
-      nome: it.descricao_comercial,
+      nome: nomeRef,
       categoria: it.categoria,
       descricao_comercial: it.descricao_comercial,
       escopo_tecnico: it.escopo_tecnico,
@@ -306,7 +309,7 @@ export default function ProposalEditor() {
     if (!client?.cnpj_cpf) errs.push("Cliente sem CNPJ/CPF");
     if (items.length === 0) errs.push("Adicione pelo menos um serviço");
     items.forEach((it,i)=>{
-      if (!it.descricao_comercial) errs.push(`Item ${i+1}: descrição vazia`);
+      if (!(it.nome || it.descricao_comercial)) errs.push(`Item ${i+1}: nome vazio`);
       if (!Number(it.valor_unitario)) errs.push(`Item ${i+1}: valor unitário zerado`);
     });
     if (!proposal.validade) errs.push("Defina a validade da proposta");
@@ -775,13 +778,17 @@ function ItemEditor({ item, pricing, onChange, onRemove, onOpenPricing, onSaveTo
               {item.categoria && <Badge variant="secondary">{item.categoria}</Badge>}
               {meta && <Badge className={`border ${meta.color}`}>{meta.label}</Badge>}
             </div>
-            <Input value={local.descricao_comercial} onChange={e=>setLocal({...local, descricao_comercial:e.target.value})} onBlur={()=>onChange({ descricao_comercial: local.descricao_comercial })} className="font-display font-semibold text-base" placeholder="Nome / descrição comercial" />
+            <Input value={local.nome || ""} onChange={e=>setLocal({...local, nome:e.target.value})} onBlur={()=>onChange({ nome: local.nome })} className="font-display font-semibold text-base" placeholder="Nome do serviço (ex.: Visita Técnica)" />
             </div>
           </div>
           <Button variant="ghost" size="icon" onClick={onRemove}><Trash2 className="h-4 w-4 text-danger" /></Button>
         </div>
         <div className="space-y-1"><Label className="text-xs">Categoria</Label>
           <CategoryCombobox value={local.categoria||""} onChange={(v)=>{ setLocal({...local, categoria:v}); onChange({ categoria: v }); }} /></div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Descrição comercial (aparece na proposta)</Label>
+          <Textarea rows={3} value={local.descricao_comercial||""} onChange={e=>setLocal({...local, descricao_comercial:e.target.value})} onBlur={()=>onChange({ descricao_comercial: local.descricao_comercial })} placeholder="Descrição detalhada do serviço para o cliente" />
+        </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Escopo técnico (interno)</Label>
           <Textarea rows={2} value={local.escopo_tecnico||""} onChange={e=>setLocal({...local, escopo_tecnico:e.target.value})} onBlur={()=>onChange({ escopo_tecnico: local.escopo_tecnico })} />

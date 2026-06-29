@@ -54,7 +54,7 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   useEffect(() => { if (tpl && onReady) onReady(); }, [tpl, onReady]);
   if (!tpl) return <div className="p-8 text-sm text-muted-foreground">Carregando modelo…</div>;
 
-  const titleOf = (it: any) => serviceNames[it.service_id] || it.descricao_comercial || "Serviço";
+  const titleOf = (it: any) => it.nome || serviceNames[it.service_id] || it.descricao_comercial || "Serviço";
 
   const primary = tpl.cor_primaria || "#0b1f4d";
   const accent = tpl.cor_secundaria || "#16a34a";
