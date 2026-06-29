@@ -4415,6 +4415,7 @@ export type Database = {
           entregaveis: string | null
           escopo_tecnico: string | null
           id: string
+          nome: string | null
           numero_item: number
           observacoes_escopo: string | null
           proposal_id: string
@@ -4433,6 +4434,7 @@ export type Database = {
           entregaveis?: string | null
           escopo_tecnico?: string | null
           id?: string
+          nome?: string | null
           numero_item?: number
           observacoes_escopo?: string | null
           proposal_id: string
@@ -4451,6 +4453,7 @@ export type Database = {
           entregaveis?: string | null
           escopo_tecnico?: string | null
           id?: string
+          nome?: string | null
           numero_item?: number
           observacoes_escopo?: string | null
           proposal_id?: string
