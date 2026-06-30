@@ -5,7 +5,7 @@ import {
   ClipboardList, CalendarDays, Activity, ListTodo, UserCircle, FileSignature, Target,
   KanbanSquare, PhoneCall, Bell, UserPlus, DollarSign, Receipt, Wallet, Building2,
   Globe, Sparkles, Zap, Briefcase as BriefcaseIcon, Search, Plus, ChevronDown,
-  ChevronsLeft, ChevronsRight, Menu, ShieldCheck, BookOpen, FolderOpen, Cpu,
+  ChevronsLeft, ChevronsRight, Menu, ShieldCheck, BookOpen, FolderOpen, Cpu, FolderKanban,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import logo from "@/assets/hse-logo-green.png";
@@ -50,7 +50,7 @@ const GROUPS: NavGroup[] = [
   {
     id: "operacoes", label: "Operações", icon: ClipboardList,
     items: [
-      { to: "/execucao", label: "Serviços em Execução", icon: ClipboardList },
+      { to: "/projetos", label: "Projetos", icon: FolderKanban },
       { to: "/ordens-servico", label: "Ordens de Serviço", icon: ListTodo },
       { to: "/agenda", label: "Agenda Técnica", icon: CalendarDays },
       { to: "/planejamento", label: "Planejamento", icon: Activity },
