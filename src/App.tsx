@@ -17,6 +17,8 @@ import Proposals from "./pages/Proposals";
 import ProposalEditor from "./pages/ProposalEditor";
 import Execucao from "./pages/Execucao";
 import ExecucaoEditor from "./pages/ExecucaoEditor";
+import Projetos from "./pages/Projetos";
+import ProjetoEditor from "./pages/ProjetoEditor";
 import Profissionais from "./pages/Profissionais";
 import Settings from "./pages/Settings";
 import ProposalExample from "./pages/ProposalExample";
@@ -103,6 +105,8 @@ const App = () => (
               <Route path="/propostas/:id" element={<ProposalEditor />} />
               <Route path="/execucao" element={<Execucao />} />
               <Route path="/execucao/:id" element={<ExecucaoEditor />} />
+              <Route path="/projetos" element={<Projetos />} />
+              <Route path="/projetos/:id" element={<ProjetoEditor />} />
               <Route path="/ordens-servico" element={<OrdensServico />} />
               <Route path="/ordens-servico/:id" element={<OrdemServicoEditor />} />
               <Route path="/ordens-servico/:id/imprimir" element={<OrdemServicoPrint />} />

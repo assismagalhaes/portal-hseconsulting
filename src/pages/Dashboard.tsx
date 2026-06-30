@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { brl, formatDate, proposalStatusLabel } from "@/lib/format";
-import { FileText, Users, Briefcase, Plus, TrendingUp } from "lucide-react";
+import { FileText, Users, Plus, TrendingUp, FolderKanban } from "lucide-react";
 
-type Counts = { propostas: number; aprovadas: number; clientes: number; servicos: number; pipeline: number; aprovado_valor: number; };
+type Counts = { propostas: number; aprovadas: number; clientes: number; servicos: number; pipeline: number; aprovado_valor: number; projetos_ativos: number; projetos_atrasados: number; };
 const statusColor: Record<string, string> = {
   rascunho: "bg-muted text-muted-foreground",
   enviada: "bg-primary/15 text-primary",
@@ -20,7 +20,7 @@ const statusColor: Record<string, string> = {
 };
 
 export default function Dashboard() {
-  const [counts, setCounts] = useState<Counts>({ propostas:0, aprovadas:0, clientes:0, servicos:0, pipeline:0, aprovado_valor:0 });
+  const [counts, setCounts] = useState<Counts>({ propostas:0, aprovadas:0, clientes:0, servicos:0, pipeline:0, aprovado_valor:0, projetos_ativos:0, projetos_atrasados:0 });
   const [recent, setRecent] = useState<any[]>([]);
   const [allProps, setAllProps] = useState<any[]>([]);
   const [base, setBase] = useState<"emissao"|"envio"|"aprovacao"|"cadastro">("emissao");
@@ -28,14 +28,22 @@ export default function Dashboard() {
   useEffect(() => {
     document.title = "Dashboard | Portal HSE Consulting";
     (async () => {
-      const [p, c, s] = await Promise.all([
+      const [p, c, s, pr] = await Promise.all([
         supabase.from("proposals").select("id,numero,status,valor_total,created_at,data_emissao,data_envio,data_aprovacao,data_recusa,origem_cadastro,client_id,clients(razao_social,nome_fantasia)").order("data_emissao",{ascending:false,nullsFirst:false}),
         supabase.from("clients").select("id", { count: "exact", head: true }),
         supabase.from("services").select("id", { count: "exact", head: true }),
+        supabase.from("projetos").select("id,status"),
       ]);
       const props = p.data || [];
       setAllProps(props);
-      setCounts(prev => ({ ...prev, clientes: c.count || 0, servicos: s.count || 0 }));
+      const projetos = pr.data || [];
+      setCounts(prev => ({
+        ...prev,
+        clientes: c.count || 0,
+        servicos: s.count || 0,
+        projetos_ativos: projetos.filter((x:any) => ["planejamento","em_execucao","em_revisao"].includes(x.status)).length,
+        projetos_atrasados: projetos.filter((x:any) => x.status === "atrasado").length,
+      }));
       setRecent(props.slice(0,8));
     })();
   }, []);
@@ -80,8 +88,8 @@ export default function Dashboard() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard icon={FileText} label="Propostas" value={counts.propostas} hint={`${counts.aprovadas} aprovadas`} />
           <MetricCard icon={TrendingUp} label="Pipeline" value={brl(counts.pipeline)} hint="rascunho + enviadas + negociação" />
+          <MetricCard icon={FolderKanban} label="Projetos ativos" value={counts.projetos_ativos} hint={`${counts.projetos_atrasados} atrasados`} />
           <MetricCard icon={Users} label="Clientes" value={counts.clientes} hint="cadastrados" />
-          <MetricCard icon={Briefcase} label="Serviços" value={counts.servicos} hint="no catálogo" />
         </div>
 
         <Card className="shadow-elegant">

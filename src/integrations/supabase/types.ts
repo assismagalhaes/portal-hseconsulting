@@ -1914,6 +1914,7 @@ export type Database = {
           numero: string
           observacoes_internas: string | null
           os_id: string | null
+          projeto_id: string | null
           proposal_id: string | null
           responsavel_revisao_id: string | null
           responsavel_tecnico_id: string | null
@@ -1950,6 +1951,7 @@ export type Database = {
           numero?: string
           observacoes_internas?: string | null
           os_id?: string | null
+          projeto_id?: string | null
           proposal_id?: string | null
           responsavel_revisao_id?: string | null
           responsavel_tecnico_id?: string | null
@@ -1986,6 +1988,7 @@ export type Database = {
           numero?: string
           observacoes_internas?: string | null
           os_id?: string | null
+          projeto_id?: string | null
           proposal_id?: string | null
           responsavel_revisao_id?: string | null
           responsavel_tecnico_id?: string | null
@@ -2026,6 +2029,13 @@ export type Database = {
             columns: ["os_id"]
             isOneToOne: false
             referencedRelation: "ordens_servico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_tecnicos_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "projetos"
             referencedColumns: ["id"]
           },
           {
@@ -2764,6 +2774,7 @@ export type Database = {
           id: string
           numero: string | null
           observacoes: string | null
+          projeto_id: string | null
           proposal_id: string
           responsavel_comercial: string | null
           status: Database["public"]["Enums"]["fin_status_contrato"]
@@ -2783,6 +2794,7 @@ export type Database = {
           id?: string
           numero?: string | null
           observacoes?: string | null
+          projeto_id?: string | null
           proposal_id: string
           responsavel_comercial?: string | null
           status?: Database["public"]["Enums"]["fin_status_contrato"]
@@ -2802,6 +2814,7 @@ export type Database = {
           id?: string
           numero?: string | null
           observacoes?: string | null
+          projeto_id?: string | null
           proposal_id?: string
           responsavel_comercial?: string | null
           status?: Database["public"]["Enums"]["fin_status_contrato"]
@@ -2818,6 +2831,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_contratos_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "projetos"
             referencedColumns: ["id"]
           },
           {
@@ -3637,13 +3657,14 @@ export type Database = {
           device_id: string | null
           endereco: string | null
           escopo_contratado: string | null
-          execucao_id: string
+          execucao_id: string | null
           id: string
           numero: string
           objetivo: string | null
           observacoes_tecnicas: string | null
           percentual_executado: number
           prioridade: Database["public"]["Enums"]["os_prioridade"]
+          projeto_id: string | null
           proposal_id: string | null
           qr_token: string
           responsavel_comercial: string | null
@@ -3672,13 +3693,14 @@ export type Database = {
           device_id?: string | null
           endereco?: string | null
           escopo_contratado?: string | null
-          execucao_id: string
+          execucao_id?: string | null
           id?: string
           numero?: string
           objetivo?: string | null
           observacoes_tecnicas?: string | null
           percentual_executado?: number
           prioridade?: Database["public"]["Enums"]["os_prioridade"]
+          projeto_id?: string | null
           proposal_id?: string | null
           qr_token?: string
           responsavel_comercial?: string | null
@@ -3707,13 +3729,14 @@ export type Database = {
           device_id?: string | null
           endereco?: string | null
           escopo_contratado?: string | null
-          execucao_id?: string
+          execucao_id?: string | null
           id?: string
           numero?: string
           objetivo?: string | null
           observacoes_tecnicas?: string | null
           percentual_executado?: number
           prioridade?: Database["public"]["Enums"]["os_prioridade"]
+          projeto_id?: string | null
           proposal_id?: string | null
           qr_token?: string
           responsavel_comercial?: string | null
@@ -3740,6 +3763,13 @@ export type Database = {
             columns: ["execucao_id"]
             isOneToOne: false
             referencedRelation: "execucao_servicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordens_servico_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "projetos"
             referencedColumns: ["id"]
           },
           {
@@ -4348,6 +4378,285 @@ export type Database = {
         }
         Relationships: []
       }
+      projeto_renovacoes: {
+        Row: {
+          client_id: string
+          created_at: string
+          data_validade: string
+          id: string
+          observacoes: string | null
+          oportunidade_id: string | null
+          projeto_id: string
+          projeto_servico_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          data_validade: string
+          id?: string
+          observacoes?: string | null
+          oportunidade_id?: string | null
+          projeto_id: string
+          projeto_servico_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          data_validade?: string
+          id?: string
+          observacoes?: string | null
+          oportunidade_id?: string | null
+          projeto_id?: string
+          projeto_servico_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projeto_renovacoes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projeto_renovacoes_oportunidade_id_fkey"
+            columns: ["oportunidade_id"]
+            isOneToOne: false
+            referencedRelation: "crm_oportunidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projeto_renovacoes_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "projetos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projeto_renovacoes_projeto_servico_id_fkey"
+            columns: ["projeto_servico_id"]
+            isOneToOne: true
+            referencedRelation: "projeto_servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projeto_servicos: {
+        Row: {
+          categoria: string | null
+          created_at: string
+          data_conclusao: string | null
+          data_inicio: string | null
+          data_validade: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          percentual_progresso: number
+          projeto_id: string
+          proposal_item_id: string | null
+          quantidade: number | null
+          responsavel_id: string | null
+          service_id: string | null
+          status: Database["public"]["Enums"]["projeto_servico_status"]
+          unidade: string | null
+          updated_at: string
+          validade_meses: number | null
+          valor: number | null
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          data_validade?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          percentual_progresso?: number
+          projeto_id: string
+          proposal_item_id?: string | null
+          quantidade?: number | null
+          responsavel_id?: string | null
+          service_id?: string | null
+          status?: Database["public"]["Enums"]["projeto_servico_status"]
+          unidade?: string | null
+          updated_at?: string
+          validade_meses?: number | null
+          valor?: number | null
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          data_validade?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          percentual_progresso?: number
+          projeto_id?: string
+          proposal_item_id?: string | null
+          quantidade?: number | null
+          responsavel_id?: string | null
+          service_id?: string | null
+          status?: Database["public"]["Enums"]["projeto_servico_status"]
+          unidade?: string | null
+          updated_at?: string
+          validade_meses?: number | null
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projeto_servicos_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "projetos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projeto_servicos_proposal_item_id_fkey"
+            columns: ["proposal_item_id"]
+            isOneToOne: false
+            referencedRelation: "proposal_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projeto_servicos_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projeto_timeline: {
+        Row: {
+          created_at: string
+          detalhe: string | null
+          evento: string
+          id: string
+          projeto_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detalhe?: string | null
+          evento: string
+          id?: string
+          projeto_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detalhe?: string | null
+          evento?: string
+          id?: string
+          projeto_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projeto_timeline_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projetos: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          data_fim_prevista: string | null
+          data_fim_real: string | null
+          data_inicio: string | null
+          financeiro_contrato_id: string | null
+          gestor_id: string | null
+          id: string
+          numero: string | null
+          observacoes: string | null
+          percentual_progresso: number
+          proposal_id: string | null
+          responsavel_comercial_id: string | null
+          status: Database["public"]["Enums"]["projeto_status"]
+          titulo: string
+          updated_at: string
+          updated_by: string | null
+          valor_contratado: number | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          data_fim_prevista?: string | null
+          data_fim_real?: string | null
+          data_inicio?: string | null
+          financeiro_contrato_id?: string | null
+          gestor_id?: string | null
+          id?: string
+          numero?: string | null
+          observacoes?: string | null
+          percentual_progresso?: number
+          proposal_id?: string | null
+          responsavel_comercial_id?: string | null
+          status?: Database["public"]["Enums"]["projeto_status"]
+          titulo: string
+          updated_at?: string
+          updated_by?: string | null
+          valor_contratado?: number | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          data_fim_prevista?: string | null
+          data_fim_real?: string | null
+          data_inicio?: string | null
+          financeiro_contrato_id?: string | null
+          gestor_id?: string | null
+          id?: string
+          numero?: string | null
+          observacoes?: string | null
+          percentual_progresso?: number
+          proposal_id?: string | null
+          responsavel_comercial_id?: string | null
+          status?: Database["public"]["Enums"]["projeto_status"]
+          titulo?: string
+          updated_at?: string
+          updated_by?: string | null
+          valor_contratado?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projetos_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projetos_financeiro_contrato_id_fkey"
+            columns: ["financeiro_contrato_id"]
+            isOneToOne: false
+            referencedRelation: "financeiro_contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projetos_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proposal_item_pricing: {
         Row: {
           aliquota_imposto: number
@@ -4770,6 +5079,7 @@ export type Database = {
           quantidade_tecnica: string | null
           unidade_padrao: string | null
           updated_at: string
+          validade_padrao_meses: number | null
           valor_referencia: number | null
         }
         Insert: {
@@ -4785,6 +5095,7 @@ export type Database = {
           quantidade_tecnica?: string | null
           unidade_padrao?: string | null
           updated_at?: string
+          validade_padrao_meses?: number | null
           valor_referencia?: number | null
         }
         Update: {
@@ -4800,6 +5111,7 @@ export type Database = {
           quantidade_tecnica?: string | null
           unidade_padrao?: string | null
           updated_at?: string
+          validade_padrao_meses?: number | null
           valor_referencia?: number | null
         }
         Relationships: []
@@ -5220,6 +5532,10 @@ export type Database = {
         Args: { _proposal_id: string }
         Returns: number
       }
+      criar_projeto_da_proposta: {
+        Args: { _proposal_id: string }
+        Returns: string
+      }
       criar_revisao_documento: {
         Args: { _descricao: string; _doc_id: string }
         Returns: string
@@ -5254,6 +5570,7 @@ export type Database = {
       }
       gerar_numero_documento: { Args: never; Returns: string }
       gerar_numero_os: { Args: never; Returns: string }
+      gerar_numero_projeto: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -5262,6 +5579,11 @@ export type Database = {
         Returns: boolean
       }
       is_client_user: { Args: never; Returns: boolean }
+      projeto_recalcular_progresso: {
+        Args: { _projeto_id: string }
+        Returns: undefined
+      }
+      projetos_gerar_renovacoes: { Args: never; Returns: number }
     }
     Enums: {
       app_role: "admin" | "comercial" | "tecnico"
@@ -5523,6 +5845,18 @@ export type Database = {
         | "cancelada"
         | "remarcada"
       profissional_situacao: "ativo" | "inativo" | "ferias" | "afastado"
+      projeto_servico_status:
+        | "pendente"
+        | "em_andamento"
+        | "concluido"
+        | "cancelado"
+      projeto_status:
+        | "planejamento"
+        | "em_execucao"
+        | "em_revisao"
+        | "concluido"
+        | "atrasado"
+        | "cancelado"
       proposal_origem:
         | "nova_proposta"
         | "retroativa"
@@ -5965,6 +6299,20 @@ export const Constants = {
         "remarcada",
       ],
       profissional_situacao: ["ativo", "inativo", "ferias", "afastado"],
+      projeto_servico_status: [
+        "pendente",
+        "em_andamento",
+        "concluido",
+        "cancelado",
+      ],
+      projeto_status: [
+        "planejamento",
+        "em_execucao",
+        "em_revisao",
+        "concluido",
+        "atrasado",
+        "cancelado",
+      ],
       proposal_origem: [
         "nova_proposta",
         "retroativa",
