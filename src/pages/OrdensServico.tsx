@@ -19,23 +19,26 @@ export default function OrdensServico() {
   const [rows, setRows] = useState<any[]>([]);
   const [profs, setProfs] = useState<any[]>([]);
   const [execs, setExecs] = useState<any[]>([]);
+  const [projetos, setProjetos] = useState<any[]>([]);
   const [q, setQ] = useState("");
   const [fStatus, setFStatus] = useState("all");
   const [fPrio, setFPrio] = useState("all");
   const [fResp, setFResp] = useState("all");
+  const [fProjeto, setFProjeto] = useState("all");
   const [fCidade, setFCidade] = useState("");
   const [open, setOpen] = useState(false);
   const [novo, setNovo] = useState<any>({ execucao_id: "", titulo: "", prioridade: "media" });
 
   const load = async () => {
-    const [{ data }, { data: p }, { data: e }] = await Promise.all([
+    const [{ data }, { data: p }, { data: e }, { data: pj }] = await Promise.all([
       supabase.from("ordens_servico")
-        .select("*, clients(razao_social, nome_fantasia), execucao_profissionais!ordens_servico_responsavel_tecnico_id_fkey(nome)")
+        .select("*, clients(razao_social, nome_fantasia), projetos(id, numero, titulo), execucao_profissionais!ordens_servico_responsavel_tecnico_id_fkey(nome)")
         .order("created_at", { ascending: false }),
       supabase.from("execucao_profissionais").select("id, nome").order("nome"),
       supabase.from("execucao_servicos").select("id, titulo, numero_interno, client_id, proposal_id, service_id, responsavel_comercial").order("created_at", { ascending: false }),
+      supabase.from("projetos").select("id, numero, titulo").order("created_at", { ascending: false }),
     ]);
-    setRows((data as any) || []); setProfs((p as any) || []); setExecs((e as any) || []);
+    setRows((data as any) || []); setProfs((p as any) || []); setExecs((e as any) || []); setProjetos((pj as any) || []);
   };
   useEffect(() => { load(); }, []);
 
@@ -47,9 +50,10 @@ export default function OrdensServico() {
     if (fStatus !== "all" && r.status !== fStatus) return false;
     if (fPrio !== "all" && r.prioridade !== fPrio) return false;
     if (fResp !== "all" && r.responsavel_tecnico_id !== fResp) return false;
+    if (fProjeto !== "all" && r.projeto_id !== fProjeto) return false;
     if (fCidade && !(r.cidade || "").toLowerCase().includes(fCidade.toLowerCase())) return false;
     return true;
-  }), [rows, q, fStatus, fPrio, fResp, fCidade]);
+  }), [rows, q, fStatus, fPrio, fResp, fProjeto, fCidade]);
 
   const criar = async () => {
     if (!novo.execucao_id || !novo.titulo) return toast.error("Informe a execução e o título");
@@ -112,13 +116,17 @@ export default function OrdensServico() {
             <SelectTrigger><SelectValue placeholder="Responsável" /></SelectTrigger>
             <SelectContent><SelectItem value="all">Todos</SelectItem>{profs.map(p => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
           </Select>
+          <Select value={fProjeto} onValueChange={setFProjeto}>
+            <SelectTrigger><SelectValue placeholder="Projeto" /></SelectTrigger>
+            <SelectContent><SelectItem value="all">Todos projetos</SelectItem>{projetos.map(p => <SelectItem key={p.id} value={p.id}>{p.numero} — {p.titulo}</SelectItem>)}</SelectContent>
+          </Select>
           <Input placeholder="Cidade" value={fCidade} onChange={e => setFCidade(e.target.value)} className="md:col-span-5 lg:col-span-1" />
         </CardContent></Card>
 
         <div className="rounded-lg border bg-card">
           <Table>
             <TableHeader><TableRow>
-              <TableHead>Nº</TableHead><TableHead>Título</TableHead><TableHead>Cliente</TableHead>
+              <TableHead>Nº</TableHead><TableHead>Título</TableHead><TableHead>Cliente</TableHead><TableHead>Projeto</TableHead>
               <TableHead>Cidade</TableHead><TableHead>Responsável</TableHead>
               <TableHead>Prioridade</TableHead><TableHead>Status</TableHead><TableHead>Prazo</TableHead><TableHead></TableHead>
             </TableRow></TableHeader>
@@ -130,6 +138,7 @@ export default function OrdensServico() {
                     <TableCell className="font-mono text-xs">{r.numero}</TableCell>
                     <TableCell className="font-medium">{r.titulo}</TableCell>
                     <TableCell>{r.cliente_nome || r.clients?.nome_fantasia || r.clients?.razao_social || "—"}</TableCell>
+                    <TableCell>{r.projetos ? <Link to={`/projetos/${r.projetos.id}`} className="text-primary hover:underline font-mono text-xs">{r.projetos.numero}</Link> : <span className="text-muted-foreground">—</span>}</TableCell>
                     <TableCell>{r.cidade || "—"}</TableCell>
                     <TableCell>{r.execucao_profissionais?.nome || <span className="text-muted-foreground">—</span>}</TableCell>
                     <TableCell><Badge className={osPrioridadeColor[r.prioridade]} variant="secondary">{osPrioridadeLabel[r.prioridade]}</Badge></TableCell>
@@ -139,7 +148,7 @@ export default function OrdensServico() {
                   </TableRow>
                 );
               })}
-              {!filtered.length && <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Nenhuma OS encontrada.</TableCell></TableRow>}
+              {!filtered.length && <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">Nenhuma OS encontrada.</TableCell></TableRow>}
             </TableBody>
           </Table>
         </div>
