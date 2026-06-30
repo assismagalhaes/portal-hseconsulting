@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { brl, formatDate, proposalStatusLabel } from "@/lib/format";
-import { FileText, Users, Briefcase, Plus, TrendingUp, FolderKanban } from "lucide-react";
+import { FileText, Users, Plus, TrendingUp, FolderKanban } from "lucide-react";
 
 type Counts = { propostas: number; aprovadas: number; clientes: number; servicos: number; pipeline: number; aprovado_valor: number; projetos_ativos: number; projetos_atrasados: number; };
 const statusColor: Record<string, string> = {
