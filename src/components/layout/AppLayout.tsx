@@ -24,6 +24,7 @@ import {
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import GlobalAssistenteIa from "@/components/ia/GlobalAssistenteIa";
 import NotificacoesBell from "@/components/NotificacoesBell";
+import BackToTop from "@/components/BackToTop";
 import { cn } from "@/lib/utils";
 
 type NavItem = { to: string; label: string; icon: ComponentType<any>; end?: boolean };
@@ -503,6 +504,7 @@ export default function AppLayout() {
           <Outlet />
         </div>
         <GlobalAssistenteIa />
+        <BackToTop />
       </main>
     </div>
   );
