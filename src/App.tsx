@@ -105,6 +105,8 @@ const App = () => (
               <Route path="/propostas/:id" element={<ProposalEditor />} />
               <Route path="/execucao" element={<Execucao />} />
               <Route path="/execucao/:id" element={<ExecucaoEditor />} />
+              <Route path="/projetos" element={<Projetos />} />
+              <Route path="/projetos/:id" element={<ProjetoEditor />} />
               <Route path="/ordens-servico" element={<OrdensServico />} />
               <Route path="/ordens-servico/:id" element={<OrdemServicoEditor />} />
               <Route path="/ordens-servico/:id/imprimir" element={<OrdemServicoPrint />} />
