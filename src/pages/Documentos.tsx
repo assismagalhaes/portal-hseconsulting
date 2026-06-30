@@ -19,23 +19,26 @@ export default function Documentos() {
   const [clientes, setClientes] = useState<any[]>([]);
   const [profs, setProfs] = useState<any[]>([]);
   const [modelos, setModelos] = useState<any[]>([]);
+  const [projetos, setProjetos] = useState<any[]>([]);
   const [q, setQ] = useState("");
   const [fStatus, setFStatus] = useState<string>("all");
   const [fTipo, setFTipo] = useState<string>("all");
   const [fCliente, setFCliente] = useState<string>("all");
+  const [fProjeto, setFProjeto] = useState<string>("all");
   const [open, setOpen] = useState(false);
   const [novo, setNovo] = useState<any>({ tipo: "PGR", titulo: "", status: "rascunho" });
   const navigate = useNavigate();
 
   const load = async () => {
-    const [d, c, p, m] = await Promise.all([
-      supabase.from("documentos_tecnicos").select("*").order("created_at", { ascending: false }),
+    const [d, c, p, m, pj] = await Promise.all([
+      supabase.from("documentos_tecnicos").select("*, projetos(id, numero)").order("created_at", { ascending: false }),
       supabase.from("clients").select("id, razao_social, nome_fantasia").order("razao_social"),
       supabase.from("execucao_profissionais").select("id, nome").order("nome"),
       supabase.from("documentos_modelos").select("id, nome, tipo, validade_padrao_dias, responsavel_padrao_id").eq("ativo", true),
+      supabase.from("projetos").select("id, numero, titulo").order("created_at", { ascending: false }),
     ]);
     if (d.error) toast.error(d.error.message); else setItems(d.data || []);
-    setClientes(c.data || []); setProfs(p.data || []); setModelos(m.data || []);
+    setClientes(c.data || []); setProfs(p.data || []); setModelos(m.data || []); setProjetos(pj.data || []);
   };
   useEffect(() => { load(); }, []);
 
@@ -43,12 +46,13 @@ export default function Documentos() {
     if (fStatus !== "all" && d.status !== fStatus) return false;
     if (fTipo !== "all" && d.tipo !== fTipo) return false;
     if (fCliente !== "all" && d.client_id !== fCliente) return false;
+    if (fProjeto !== "all" && d.projeto_id !== fProjeto) return false;
     if (q) {
       const s = (d.numero + " " + d.titulo + " " + (d.cliente_nome || "")).toLowerCase();
       if (!s.includes(q.toLowerCase())) return false;
     }
     return true;
-  }), [items, fStatus, fTipo, fCliente, q]);
+  }), [items, fStatus, fTipo, fCliente, fProjeto, q]);
 
   const counters = useMemo(() => {
     const c = { elab: 0, rev: 0, cli: 0, emit: 0, entreg: 0, prox: 0, venc: 0 };
@@ -174,6 +178,13 @@ export default function Documentos() {
                 {clientes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome_fantasia || c.razao_social}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Select value={fProjeto} onValueChange={setFProjeto}>
+              <SelectTrigger className="w-56"><SelectValue placeholder="Projeto" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os projetos</SelectItem>
+                {projetos.map((p) => <SelectItem key={p.id} value={p.id}>{p.numero} — {p.titulo}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
 
           <Table>
@@ -183,6 +194,7 @@ export default function Documentos() {
                 <TableHead>Tipo</TableHead>
                 <TableHead>Título</TableHead>
                 <TableHead>Cliente</TableHead>
+                <TableHead>Projeto</TableHead>
                 <TableHead>Rev.</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Validade</TableHead>
@@ -191,7 +203,7 @@ export default function Documentos() {
             </TableHeader>
             <TableBody>
               {filtered.length === 0 && (
-                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   <FileText className="h-8 w-8 mx-auto mb-2 opacity-40" />Nenhum documento.
                 </TableCell></TableRow>
               )}
@@ -204,6 +216,7 @@ export default function Documentos() {
                     <TableCell className="text-sm">{tipoLabel(d.tipo)}</TableCell>
                     <TableCell className="font-medium">{d.titulo}</TableCell>
                     <TableCell className="text-sm">{d.cliente_nome || "—"}</TableCell>
+                    <TableCell className="text-xs font-mono">{d.projetos ? <Link to={`/projetos/${d.projetos.id}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{d.projetos.numero}</Link> : "—"}</TableCell>
                     <TableCell className="text-sm">Rev. {String(d.revisao).padStart(2, "0")}</TableCell>
                     <TableCell><Badge className={statusColor(d.status)} variant="outline">{statusLabel(d.status)}</Badge></TableCell>
                     <TableCell><Badge className={v.cor} variant="outline">{v.rotulo}</Badge></TableCell>

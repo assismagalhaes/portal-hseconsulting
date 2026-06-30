@@ -37,7 +37,7 @@ export default function OrdemServicoEditor() {
     if (!id) return;
     const { data, error } = await supabase
       .from("ordens_servico")
-      .select("*, clients(*), execucao_servicos(numero_interno, titulo), services(nome), execucao_profissionais!ordens_servico_responsavel_tecnico_id_fkey(*)")
+      .select("*, clients(*), execucao_servicos(numero_interno, titulo), services(nome), projetos(id, numero, titulo), execucao_profissionais!ordens_servico_responsavel_tecnico_id_fkey(*)")
       .eq("id", id).maybeSingle();
     if (error) return toast.error(error.message);
     setOs(data);
@@ -75,10 +75,13 @@ export default function OrdemServicoEditor() {
 
   return (
     <>
-      <PageHeader title={`${os.numero} — ${os.titulo}`} subtitle={os.execucao_servicos ? `Execução ${os.execucao_servicos.numero_interno} • ${os.execucao_servicos.titulo}` : undefined}
+      <PageHeader title={`${os.numero} — ${os.titulo}`} subtitle={os.projetos ? `Projeto ${os.projetos.numero} • ${os.projetos.titulo}` : os.execucao_servicos ? `Execução ${os.execucao_servicos.numero_interno} • ${os.execucao_servicos.titulo}` : undefined}
         actions={
           <>
             <Button variant="outline" size="sm" onClick={() => navigate("/ordens-servico")}><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>
+            {os.projetos && (
+              <Button variant="outline" size="sm" onClick={() => navigate(`/projetos/${os.projetos.id}`)}>Ver projeto</Button>
+            )}
             <Button variant="outline" size="sm" onClick={() => window.open(`/ordens-servico/${os.id}/imprimir`, "_blank")}><Printer className="h-4 w-4 mr-2" />Imprimir OS</Button>
           </>
         } />
