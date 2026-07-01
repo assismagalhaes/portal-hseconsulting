@@ -31,9 +31,8 @@ export default function Auth() {
     <div className="min-h-screen grid md:grid-cols-2">
       <div className="hidden md:flex flex-col justify-between p-12 bg-gradient-hse text-white">
         <div className="flex items-center gap-3">
-          <img src={logo} className="h-12 w-12 rounded-md bg-white/10 p-1.5" alt="" />
+          <img src={logo} className="h-20 w-20 rounded-md bg-white/10 p-2" alt="HSE Consulting" />
           <div>
-            <div className="font-display text-xl font-bold">HSE Consulting</div>
             <div className="text-white/70 text-xs uppercase tracking-widest">Portal Interno</div>
           </div>
         </div>
