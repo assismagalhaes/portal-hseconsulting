@@ -310,10 +310,9 @@ function SidebarShell({
           collapsed ? "px-3 py-4 justify-center" : "px-5 py-4",
         )}
       >
-        <img src={logo} alt="HSE Consulting" className="h-8 w-auto object-contain" />
+        <img src={logo} alt="HSE Consulting" className={cn("w-auto object-contain", collapsed ? "h-10" : "h-14")} />
         {!collapsed && (
           <div className="leading-tight">
-            <div className="font-display font-bold text-[15px]">HSE Consulting</div>
             <div className="text-[10px] uppercase tracking-wider text-sidebar-foreground/60">
               Portal Interno
             </div>
@@ -406,9 +405,8 @@ export default function AppLayout() {
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="p-0 w-72 bg-sidebar text-sidebar-foreground border-sidebar-border">
           <Link to="/" className="flex items-center gap-3 px-5 py-4 border-b border-sidebar-border" onClick={() => setMobileOpen(false)}>
-            <img src={logo} alt="HSE Consulting" className="h-8 w-auto object-contain" />
+            <img src={logo} alt="HSE Consulting" className="h-14 w-auto object-contain" />
             <div className="leading-tight">
-              <div className="font-display font-bold text-[15px]">HSE Consulting</div>
               <div className="text-[10px] uppercase tracking-wider text-sidebar-foreground/60">Portal Interno</div>
             </div>
           </Link>
