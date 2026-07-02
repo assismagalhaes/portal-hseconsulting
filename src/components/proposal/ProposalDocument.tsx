@@ -499,7 +499,7 @@ function DocPage({ ctx, pageNum, pageLabel, children }: any) {
           </div>
           <div style={{ textAlign: "right", fontSize: 10, color: "#64748b" }}>
             <div style={{ fontFamily: "monospace", color: primary, fontWeight: 700 }}>Proposta {proposal.numero}</div>
-            <div>Página {pageNum}</div>
+            <div>Página {pageNum || "01"}</div>
           </div>
         </header>
 
@@ -510,7 +510,6 @@ function DocPage({ ctx, pageNum, pageLabel, children }: any) {
         <footer style={{ padding: "6mm 18mm 10mm", borderTop: `1px solid #e5e7eb`, display: "flex", justifyContent: "space-between", fontSize: 9, color: "#64748b" }}>
           <span>HSE Consulting · {tpl.site}</span>
           <span>{tpl.telefone} · {tpl.email}</span>
-          <span>{tpl.rodape_versao}</span>
         </footer>
       </div>
     </section>
