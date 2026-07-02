@@ -35,6 +35,17 @@ const PAGE_STYLE: React.CSSProperties = {
   color: "#0f172a",
 };
 
+const TIPO_REVISAO_LABELS: Record<string, string> = {
+  emissao_inicial: "Emissão inicial",
+  desconto: "Desconto comercial",
+  alteracao_servicos: "Alteração de serviços",
+  ajuste_tecnico: "Ajuste técnico",
+  renegociacao: "Renegociação",
+  outro: "Outro",
+};
+const tipoRevisaoLabel = (t?: string) => (t ? TIPO_REVISAOLABELS_SAFE(t) : "—");
+function TIPO_REVISAOLABELS_SAFE(t: string) { return TIPO_REVISAO_LABELS[t] || "Revisão"; }
+
 export default function ProposalDocument({ proposal, client, items, revisions = [], onReady }: Props) {
   const [tpl, setTpl] = useState<any>(null);
   const [serviceNames, setServiceNames] = useState<Record<string, string>>({});
@@ -302,35 +313,45 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
             <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 2, color: "#64748b" }}>Data: ___ / ___ / ______</span>
             <div style={{ height: 1, background: neutral, flex: 1 }} />
           </div>
-
-          {revisions.length > 0 && (
-            <div style={{ marginTop: 28 }}>
-            <h3 style={{ fontFamily: `${tpl.font_titulo || "Sora"}, sans-serif`, fontSize: 14, color: primary, marginBottom: 10 }}>Histórico de revisões</h3>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-              <thead>
-                <tr style={{ background: neutral, color: primary }}>
-                  <th style={{ padding: "8px 10px", textAlign: "left", width: 60 }}>Revisão</th>
-                  <th style={{ padding: "8px 10px", textAlign: "left" }}>Descrição</th>
-                  <th style={{ padding: "8px 10px", textAlign: "left", width: 120 }}>Data</th>
-                </tr>
-              </thead>
-              <tbody>
-                {revisions.map((r) => (
-                  <tr key={r.id} style={{ borderBottom: `1px solid ${neutral}` }}>
-                    <td style={{ padding: "8px 10px", fontFamily: "monospace" }}>R{r.revisao}</td>
-                    <td style={{ padding: "8px 10px" }}>
-                      <div style={{ fontWeight: 600 }}>{r.titulo || "—"}</div>
-                      {r.descricao && <div style={{ color: "#64748b" }}>{r.descricao}</div>}
-                    </td>
-                    <td style={{ padding: "8px 10px", color: "#64748b" }}>{new Date(r.created_at).toLocaleDateString("pt-BR")}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            </div>
-          )}
         </div>
       </DocPage>
+
+      {/* ============ HISTÓRICO DE REVISÕES ============ */}
+      {revisions.length > 0 && (
+        <DocPage ctx={ctxHeader} pageLabel="Histórico de Revisões" pageNum="—">
+          <SectionTitle eyebrow="Rastreabilidade" title="Histórico de revisões" accent={accent} primary={primary} />
+          <p style={{ fontSize: 12, color: "#64748b", marginBottom: 14, maxWidth: 620 }}>
+            Registro cronológico das alterações comerciais desta proposta (emissão inicial, descontos, alterações de escopo, ajustes técnicos e renegociações).
+          </p>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+            <thead>
+              <tr style={{ background: neutral, color: primary }}>
+                <th style={{ padding: "8px 10px", textAlign: "left", width: 60 }}>Rev.</th>
+                <th style={{ padding: "8px 10px", textAlign: "left", width: 160 }}>Tipo</th>
+                <th style={{ padding: "8px 10px", textAlign: "left" }}>Descrição</th>
+                <th style={{ padding: "8px 10px", textAlign: "right", width: 110 }}>Valor</th>
+                <th style={{ padding: "8px 10px", textAlign: "left", width: 100 }}>Data</th>
+              </tr>
+            </thead>
+            <tbody>
+              {revisions.map((r) => (
+                <tr key={r.id} style={{ borderBottom: `1px solid ${neutral}` }}>
+                  <td style={{ padding: "8px 10px", fontFamily: "monospace" }}>R{String(r.revisao).padStart(2,"0")}</td>
+                  <td style={{ padding: "8px 10px", color: "#334155" }}>{tipoRevisaoLabel(r.tipo)}</td>
+                  <td style={{ padding: "8px 10px" }}>
+                    <div style={{ fontWeight: 600 }}>{r.titulo || "—"}</div>
+                    {r.descricao && r.descricao !== r.titulo && <div style={{ color: "#64748b" }}>{r.descricao}</div>}
+                  </td>
+                  <td style={{ padding: "8px 10px", textAlign: "right", fontFamily: "monospace" }}>
+                    {r.valor_novo != null ? Number(r.valor_novo).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—"}
+                  </td>
+                  <td style={{ padding: "8px 10px", color: "#64748b" }}>{new Date(r.created_at).toLocaleDateString("pt-BR")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </DocPage>
+      )}
 
       {/* ============ CONTRACAPA ============ */}
       <section className="pdf-page" style={{ ...PAGE_STYLE, background: primary, color: "#fff" }}>
