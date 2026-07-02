@@ -83,11 +83,11 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   const diferenciais: string[] = Array.isArray(tpl.diferenciais) ? tpl.diferenciais : [];
   const diffIcons = [Award, Users, Zap, Scale, UserCheck, Sparkles];
 
-  // ITEMS pagination — cada card de escopo pode ser extenso (descrição,
-  // entregáveis, observações, quantidade técnica). Para evitar que um card
-  // seja cortado entre páginas, movemos todo o escopo para páginas próprias
-  // com no máximo 3 cards por página.
-  const SCOPE_FIRST_INLINE = 0;
+  // ITEMS pagination — os tópicos devem fluir em sequência: o "Escopo dos
+  // serviços" começa logo após os "Dados do Cliente" (encaixa 1 card no
+  // espaço restante) e continua nas próximas páginas com até 3 cards por
+  // página. Cada card usa `avoid-break` para não ser cortado entre páginas.
+  const SCOPE_FIRST_INLINE = 1;
   const SCOPE_PER_PAGE = 3;
   const scopeInline = items.slice(0, SCOPE_FIRST_INLINE);
   const scopeRest = items.slice(SCOPE_FIRST_INLINE);
@@ -217,7 +217,7 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
           </div>
         )}
 
-        {scopeInline.length > 0 && (
+        {items.length > 0 && (
           <div style={{ marginTop: 22 }}>
             <SectionTitle eyebrow="Detalhamento" title="Escopo dos serviços" accent={accent} primary={primary} />
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -232,6 +232,9 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
       {/* ============ ESCOPO DOS SERVIÇOS (cards) ============ */}
       {scopePages.map((page, idx) => (
         <DocPage key={"scope-" + idx} ctx={ctxHeader} pageLabel="Escopo dos Serviços (cont.)" pageNum={String(3 + idx).padStart(2, "0")}>
+          {idx === 0 && scopeInline.length === 0 && (
+            <SectionTitle eyebrow="Detalhamento" title="Escopo dos serviços" accent={accent} primary={primary} />
+          )}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {page.map((it: any) => (
               <ScopeCard key={it.id} item={it} title={titleOf(it)} primary={primary} accent={accent} neutral={neutral} fontTitulo={tpl.font_titulo || "Sora"} />
