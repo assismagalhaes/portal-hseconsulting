@@ -384,6 +384,105 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
 
 /* ============== sub-components ============== */
 
+type Block = { key: string; label: string; node: React.ReactNode; keepWithNext?: boolean };
+
+/**
+ * FlowPages — paginador dinâmico.
+ * Mede a altura real de cada bloco em um container invisível de mesma largura
+ * útil das páginas e distribui os blocos em páginas A4, garantindo que:
+ *  - blocos entrem em sequência sem espaços forçados;
+ *  - se um bloco não couber no restante da página, ele vai inteiro pra próxima;
+ *  - se um bloco tem `keepWithNext`, tenta mantê-lo junto do próximo.
+ */
+function FlowPages({ ctx, blocks }: { ctx: any; blocks: Block[] }) {
+  const [pages, setPages] = useState<number[][] | null>(null);
+  const measureRef = useRef<HTMLDivElement>(null);
+
+  // altura útil de uma página (297mm - cabeçalho - rodapé - padding vertical)
+  // Cabeçalho ~28mm, rodapé ~19mm, padding 10mm+10mm = 20mm → ~230mm de conteúdo.
+  const MM_TO_PX = 96 / 25.4;
+  const CONTENT_H_PX = 228 * MM_TO_PX;
+
+  useLayoutEffect(() => {
+    if (!measureRef.current) return;
+    const children = Array.from(measureRef.current.children) as HTMLElement[];
+    if (children.length !== blocks.length) return;
+    const heights = children.map((el) => el.getBoundingClientRect().height);
+
+    const result: number[][] = [[]];
+    let used = 0;
+    for (let i = 0; i < blocks.length; i++) {
+      const h = heights[i];
+      const current = result[result.length - 1];
+
+      // keepWithNext: se este bloco (ex.: título de seção) e o próximo juntos
+      // não couberem no restante da página, força quebra antes.
+      let neededH = h;
+      if (blocks[i].keepWithNext && i + 1 < blocks.length) {
+        neededH = h + heights[i + 1];
+      }
+
+      const remaining = CONTENT_H_PX - used;
+      if (h > CONTENT_H_PX) {
+        // bloco maior que uma página: joga sozinho (vai transbordar; edge case).
+        if (current.length > 0) result.push([]);
+        result[result.length - 1].push(i);
+        result.push([]);
+        used = 0;
+        continue;
+      }
+      if (neededH > remaining && current.length > 0) {
+        result.push([i]);
+        used = h;
+      } else {
+        current.push(i);
+        used += h;
+      }
+    }
+    if (result[result.length - 1].length === 0) result.pop();
+    setPages(result);
+  }, [blocks]);
+
+  // Rótulo de página = primeira label encontrada nos blocos da página
+  const pageLabelFor = (idxs: number[]) => (idxs.length ? blocks[idxs[0]].label : "");
+
+  return (
+    <>
+      {/* Container de medição: fora da tela, mas com a largura real do conteúdo. */}
+      <div
+        ref={measureRef}
+        aria-hidden
+        style={{
+          position: "absolute",
+          left: -99999,
+          top: 0,
+          width: "174mm", // 210mm - 2*18mm de padding lateral do DocPage
+          visibility: "hidden",
+          pointerEvents: "none",
+        }}
+      >
+        {blocks.map((b) => (
+          <div key={"m-" + b.key}>{b.node}</div>
+        ))}
+      </div>
+
+      {pages &&
+        pages.map((idxs, pi) => (
+          <DocPage
+            key={"flow-" + pi}
+            ctx={ctx}
+            pageLabel={pageLabelFor(idxs)}
+            pageNum={String(pi + 1).padStart(2, "0")}
+          >
+            {idxs.map((i) => (
+              <div key={blocks[i].key}>{blocks[i].node}</div>
+            ))}
+          </DocPage>
+        ))}
+    </>
+  );
+}
+
 function DocPage({ ctx, pageNum, pageLabel, children }: any) {
   const { proposal, client, primary, accent, logoSrc, tpl } = ctx;
   return (
