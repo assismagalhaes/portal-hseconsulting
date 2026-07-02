@@ -399,9 +399,11 @@ function FlowPages({ ctx, blocks }: { ctx: any; blocks: Block[] }) {
   const measureRef = useRef<HTMLDivElement>(null);
 
   // altura útil de uma página (297mm - cabeçalho - rodapé - padding vertical)
-  // Cabeçalho ~28mm, rodapé ~19mm, padding 10mm+10mm = 20mm → ~230mm de conteúdo.
+  // Cabeçalho ~30mm, rodapé ~22mm, padding 10mm+10mm = 20mm → ~225mm.
+  // Usamos margem de segurança para evitar overflow físico durante impressão,
+  // que geraria páginas extras sem cabeçalho (sem numeração).
   const MM_TO_PX = 96 / 25.4;
-  const CONTENT_H_PX = 228 * MM_TO_PX;
+  const CONTENT_H_PX = 210 * MM_TO_PX;
 
   useLayoutEffect(() => {
     if (!measureRef.current) return;
@@ -499,7 +501,7 @@ function DocPage({ ctx, pageNum, pageLabel, children }: any) {
           </div>
           <div style={{ textAlign: "right", fontSize: 10, color: "#64748b" }}>
             <div style={{ fontFamily: "monospace", color: primary, fontWeight: 700 }}>Proposta {proposal.numero}</div>
-            <div>Página {pageNum}</div>
+            <div>Página {pageNum || "01"}</div>
           </div>
         </header>
 
@@ -510,7 +512,6 @@ function DocPage({ ctx, pageNum, pageLabel, children }: any) {
         <footer style={{ padding: "6mm 18mm 10mm", borderTop: `1px solid #e5e7eb`, display: "flex", justifyContent: "space-between", fontSize: 9, color: "#64748b" }}>
           <span>HSE Consulting · {tpl.site}</span>
           <span>{tpl.telefone} · {tpl.email}</span>
-          <span>{tpl.rodape_versao}</span>
         </footer>
       </div>
     </section>
