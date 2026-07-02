@@ -399,9 +399,11 @@ function FlowPages({ ctx, blocks }: { ctx: any; blocks: Block[] }) {
   const measureRef = useRef<HTMLDivElement>(null);
 
   // altura útil de uma página (297mm - cabeçalho - rodapé - padding vertical)
-  // Cabeçalho ~28mm, rodapé ~19mm, padding 10mm+10mm = 20mm → ~230mm de conteúdo.
+  // Cabeçalho ~30mm, rodapé ~22mm, padding 10mm+10mm = 20mm → ~225mm.
+  // Usamos margem de segurança para evitar overflow físico durante impressão,
+  // que geraria páginas extras sem cabeçalho (sem numeração).
   const MM_TO_PX = 96 / 25.4;
-  const CONTENT_H_PX = 228 * MM_TO_PX;
+  const CONTENT_H_PX = 210 * MM_TO_PX;
 
   useLayoutEffect(() => {
     if (!measureRef.current) return;
