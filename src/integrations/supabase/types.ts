@@ -4806,6 +4806,7 @@ export type Database = {
           revisao: number
           snapshot: Json | null
           status: string
+          tipo: string
           titulo: string | null
           user_id: string | null
           valor_anterior: number | null
@@ -4825,6 +4826,7 @@ export type Database = {
           revisao?: number
           snapshot?: Json | null
           status?: string
+          tipo?: string
           titulo?: string | null
           user_id?: string | null
           valor_anterior?: number | null
@@ -4844,6 +4846,7 @@ export type Database = {
           revisao?: number
           snapshot?: Json | null
           status?: string
+          tipo?: string
           titulo?: string | null
           user_id?: string | null
           valor_anterior?: number | null
@@ -5540,15 +5543,26 @@ export type Database = {
         Args: { _descricao: string; _doc_id: string }
         Returns: string
       }
-      criar_revisao_proposta: {
-        Args: {
-          _motivo: string
-          _observacoes: string
-          _proposal_id: string
-          _valor_novo: number
-        }
-        Returns: string
-      }
+      criar_revisao_proposta:
+        | {
+            Args: {
+              _motivo: string
+              _observacoes: string
+              _proposal_id: string
+              _valor_novo: number
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              _motivo: string
+              _observacoes: string
+              _proposal_id: string
+              _tipo?: string
+              _valor_novo: number
+            }
+            Returns: string
+          }
       crm_converter_lead: { Args: { _lead_id: string }; Returns: string }
       current_client_id: { Args: never; Returns: string }
       financeiro_atualizar_vencidas: { Args: never; Returns: number }
