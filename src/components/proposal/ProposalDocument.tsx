@@ -83,11 +83,11 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   const diferenciais: string[] = Array.isArray(tpl.diferenciais) ? tpl.diferenciais : [];
   const diffIcons = [Award, Users, Zap, Scale, UserCheck, Sparkles];
 
-  // ITEMS pagination — cada card de escopo pode ser extenso (descrição,
-  // entregáveis, observações, quantidade técnica). Para evitar que um card
-  // seja cortado entre páginas, movemos todo o escopo para páginas próprias
-  // com no máximo 3 cards por página.
-  const SCOPE_FIRST_INLINE = 0;
+  // ITEMS pagination — os tópicos devem fluir em sequência: o "Escopo dos
+  // serviços" começa logo após os "Dados do Cliente" (encaixa 1 card no
+  // espaço restante) e continua nas próximas páginas com até 3 cards por
+  // página. Cada card usa `avoid-break` para não ser cortado entre páginas.
+  const SCOPE_FIRST_INLINE = 1;
   const SCOPE_PER_PAGE = 3;
   const scopeInline = items.slice(0, SCOPE_FIRST_INLINE);
   const scopeRest = items.slice(SCOPE_FIRST_INLINE);
