@@ -304,29 +304,33 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
           </div>
 
           {revisions.length > 0 && (
-            <div style={{ marginTop: 28 }}>
-            <h3 style={{ fontFamily: `${tpl.font_titulo || "Sora"}, sans-serif`, fontSize: 14, color: primary, marginBottom: 10 }}>Histórico de revisões</h3>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-              <thead>
-                <tr style={{ background: neutral, color: primary }}>
-                  <th style={{ padding: "8px 10px", textAlign: "left", width: 60 }}>Revisão</th>
-                  <th style={{ padding: "8px 10px", textAlign: "left" }}>Descrição</th>
-                  <th style={{ padding: "8px 10px", textAlign: "left", width: 120 }}>Data</th>
-                </tr>
-              </thead>
-              <tbody>
-                {revisions.map((r) => (
-                  <tr key={r.id} style={{ borderBottom: `1px solid ${neutral}` }}>
-                    <td style={{ padding: "8px 10px", fontFamily: "monospace" }}>R{r.revisao}</td>
-                    <td style={{ padding: "8px 10px" }}>
-                      <div style={{ fontWeight: 600 }}>{r.titulo || "—"}</div>
-                      {r.descricao && <div style={{ color: "#64748b" }}>{r.descricao}</div>}
-                    </td>
-                    <td style={{ padding: "8px 10px", color: "#64748b" }}>{new Date(r.created_at).toLocaleDateString("pt-BR")}</td>
+            <div
+              style={{ marginTop: 28, breakInside: "avoid", pageBreakInside: "avoid" } as any}
+            >
+              <h3 style={{ fontFamily: `${tpl.font_titulo || "Sora"}, sans-serif`, fontSize: 14, color: primary, marginBottom: 10 }}>Histórico de revisões</h3>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                <thead>
+                  <tr style={{ background: neutral, color: primary }}>
+                    <th style={{ padding: "8px 10px", textAlign: "left", width: 60 }}>Revisão</th>
+                    <th style={{ padding: "8px 10px", textAlign: "left", width: 140 }}>Tipo</th>
+                    <th style={{ padding: "8px 10px", textAlign: "left" }}>Descrição</th>
+                    <th style={{ padding: "8px 10px", textAlign: "left", width: 100 }}>Data</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {revisions.map((r) => (
+                    <tr key={r.id} style={{ borderBottom: `1px solid ${neutral}`, breakInside: "avoid", pageBreakInside: "avoid" } as any}>
+                      <td style={{ padding: "8px 10px", fontFamily: "monospace" }}>R{String(r.revisao).padStart(2,"0")}</td>
+                      <td style={{ padding: "8px 10px", color: "#334155" }}>{tipoRevisaoLabel(r.tipo)}</td>
+                      <td style={{ padding: "8px 10px" }}>
+                        <div style={{ fontWeight: 600 }}>{r.titulo || "—"}</div>
+                        {r.descricao && r.descricao !== r.titulo && <div style={{ color: "#64748b" }}>{r.descricao}</div>}
+                      </td>
+                      <td style={{ padding: "8px 10px", color: "#64748b" }}>{new Date(r.created_at).toLocaleDateString("pt-BR")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
