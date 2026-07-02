@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { brl, formatCnpjCpf } from "@/lib/format";
 import logoNavy from "@/assets/hse-logo-navy.png";
