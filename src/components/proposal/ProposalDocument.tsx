@@ -110,8 +110,7 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
 
         <div style={{ position: "relative", height: "297mm", padding: "22mm 22mm", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div>
-            <img src={logoSrcLight} alt="HSE Consulting" style={{ height: 64, objectFit: "contain" }} />
-            <div style={{ marginTop: 4, fontSize: 11, letterSpacing: 2, opacity: 0.85, textTransform: "uppercase" }}>HSE Consulting</div>
+            <img src={logoSrcLight} alt="HSE Consulting" style={{ height: 110, objectFit: "contain" }} />
           </div>
 
           <div>
