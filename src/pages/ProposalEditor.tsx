@@ -950,18 +950,6 @@ function RevisionsCard({ proposalId, valorAtual, revisions, onChanged }: any) {
               {r.motivo && r.motivo !== r.titulo && <p className="text-xs text-muted-foreground"><strong>Motivo:</strong> {r.motivo}</p>}
               {r.descricao && <p className="text-xs text-muted-foreground">{r.descricao}</p>}
               {r.observacoes_internas && <p className="text-xs italic text-muted-foreground">{r.observacoes_internas}</p>}
-              {!bloqueada && (
-                <div className="flex items-center gap-1 pt-1">
-                  <span className="text-[11px] text-muted-foreground mr-1">Alterar status:</span>
-                  {["rascunho","enviada","em_negociacao","aprovada","recusada","cancelada"].map(s => (
-                    <Button key={s} size="sm" variant={s === r.status ? "default" : "ghost"}
-                      className="h-6 px-2 text-[11px]"
-                      onClick={() => atualizarStatus(r, s)}>
-                      {REVISAO_STATUS[s].label}
-                    </Button>
-                  ))}
-                </div>
-              )}
             </li>
           );
         })}
