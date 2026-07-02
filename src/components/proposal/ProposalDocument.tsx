@@ -35,6 +35,17 @@ const PAGE_STYLE: React.CSSProperties = {
   color: "#0f172a",
 };
 
+const TIPO_REVISAO_LABELS: Record<string, string> = {
+  emissao_inicial: "Emissão inicial",
+  desconto: "Desconto comercial",
+  alteracao_servicos: "Alteração de serviços",
+  ajuste_tecnico: "Ajuste técnico",
+  renegociacao: "Renegociação",
+  outro: "Outro",
+};
+const tipoRevisaoLabel = (t?: string) => (t ? TIPO_REVISAOLABELS_SAFE(t) : "—");
+function TIPO_REVISAOLABELS_SAFE(t: string) { return TIPO_REVISAO_LABELS[t] || "Revisão"; }
+
 export default function ProposalDocument({ proposal, client, items, revisions = [], onReady }: Props) {
   const [tpl, setTpl] = useState<any>(null);
   const [serviceNames, setServiceNames] = useState<Record<string, string>>({});
