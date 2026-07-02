@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { brl, formatCnpjCpf } from "@/lib/format";
 import logoNavy from "@/assets/hse-logo-navy.png";
@@ -83,33 +83,232 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   const diferenciais: string[] = Array.isArray(tpl.diferenciais) ? tpl.diferenciais : [];
   const diffIcons = [Award, Users, Zap, Scale, UserCheck, Sparkles];
 
-  // ITEMS pagination — os tópicos devem fluir em sequência: o "Escopo dos
-  // serviços" começa logo após os "Dados do Cliente" (encaixa 1 card no
-  // espaço restante) e continua nas próximas páginas com até 3 cards por
-  // página. Cada card usa `avoid-break` para não ser cortado entre páginas.
-  const SCOPE_FIRST_INLINE = 1;
-  const SCOPE_PER_PAGE = 3;
-  const scopeInline = items.slice(0, SCOPE_FIRST_INLINE);
-  const scopeRest = items.slice(SCOPE_FIRST_INLINE);
-  const scopePages: any[][] = [];
-  for (let i = 0; i < scopeRest.length; i += SCOPE_PER_PAGE)
-    scopePages.push(scopeRest.slice(i, i + SCOPE_PER_PAGE));
+  const ctxHeader = { proposal, client, primary, accent, logoSrc, tpl };
 
-  // Investimento: limita linhas por página e garante espaço para o card "Investimento total".
-  // Se a última página ficaria cheia demais, força o resumo para uma página própria.
-  const INVEST_PER_PAGE = 10;
-  const INVEST_LAST_PAGE_MAX = 6; // reserva ~4 linhas para o bloco de totais
-  const investPages: any[][] = [];
-  for (let i = 0; i < items.length; i += INVEST_PER_PAGE)
-    investPages.push(items.slice(i, i + INVEST_PER_PAGE));
-  if (investPages.length === 0) investPages.push([]);
-  // Se a última página tem itens demais para caber junto do card de totais, empurra para uma nova.
-  const lastIdx = investPages.length - 1;
-  if (investPages[lastIdx].length > INVEST_LAST_PAGE_MAX) {
-    investPages.push([]);
+  // ============ Blocos de conteúdo com paginação dinâmica ============
+  // Cada bloco é medido em runtime; o FlowPages abaixo distribui os blocos
+  // em páginas A4 preservando o fluxo (um bloco só quebra pra próxima página
+  // se não couber inteiro no espaço restante da página atual).
+  const fontTitulo = tpl.font_titulo || "Sora";
+  const invChunk = 8;
+  const invChunks: any[][] = [];
+  for (let i = 0; i < items.length; i += invChunk) invChunks.push(items.slice(i, i + invChunk));
+
+  const revChunk = 20;
+  const revChunks: any[][] = [];
+  for (let i = 0; i < revisions.length; i += revChunk) revChunks.push(revisions.slice(i, i + revChunk));
+
+  const bodyBlocks: Block[] = [];
+  const push = (label: string, key: string, node: React.ReactNode, keepWithNext = false) =>
+    bodyBlocks.push({ key, label, node, keepWithNext });
+
+  // -------- Apresentação --------
+  push("Apresentação", "ap-title", <SectionTitle eyebrow="Apresentação" title="Quem somos" accent={accent} primary={primary} />, true);
+  push("Apresentação", "ap-quem", <p style={{ fontSize: 13, lineHeight: 1.65, color: "#334155" }}>{tpl.quem_somos}</p>);
+  push("Apresentação", "ap-values", (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 18 }}>
+      <ValueCard icon={<Target size={20} />} title="Missão" body={tpl.missao} accent={accent} />
+      <ValueCard icon={<Eye size={20} />} title="Visão" body={tpl.visao} accent={accent} />
+      <ValueCard icon={<Heart size={20} />} title="Valores" body={tpl.valores} accent={accent} />
+    </div>
+  ));
+  if (diferenciais.length > 0) {
+    push("Apresentação", "ap-dif", (
+      <div style={{ marginTop: 22, paddingTop: 16, borderTop: `2px solid ${neutral}` }}>
+        <h3 style={{ fontFamily: `${fontTitulo}, sans-serif`, fontSize: 18, color: primary, marginBottom: 14 }}>Por que escolher a HSE?</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          {diferenciais.map((d, i) => {
+            const Icon = diffIcons[i % diffIcons.length];
+            return (
+              <div key={i} style={{ display: "flex", gap: 10, padding: "10px 12px", background: neutral, borderRadius: 8, alignItems: "center" }}>
+                <span style={{ width: 32, height: 32, borderRadius: 8, background: accent, color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Icon size={16} />
+                </span>
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a" }}>{d}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    ));
   }
 
-  const ctxHeader = { proposal, client, primary, accent, logoSrc, tpl };
+  // -------- Dados do Cliente --------
+  push("Dados do Cliente", "dc-title", <SectionTitle eyebrow="Identificação" title="Dados do cliente" accent={accent} primary={primary} />, true);
+  push("Dados do Cliente", "dc-card", (
+    <div style={{ border: `1px solid ${neutral}`, borderRadius: 14, overflow: "hidden" }}>
+      <div style={{ background: primary, color: "#fff", padding: "16px 22px", display: "flex", alignItems: "center", gap: 12 }}>
+        <Building2 size={20} />
+        <div>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>{client?.razao_social || "—"}</div>
+          {client?.nome_fantasia && <div style={{ fontSize: 12, opacity: 0.85 }}>{client.nome_fantasia}</div>}
+        </div>
+      </div>
+      <div style={{ padding: 22, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 28px" }}>
+        <KV k="CNPJ / CPF" v={formatCnpjCpf(client?.cnpj_cpf || "—")} />
+        <KV k="Qtd. funcionários" v={client?.qtd_funcionarios ?? "—"} />
+        <KV k="Endereço" v={client?.endereco || "—"} />
+        <KV k="Cidade / UF" v={[client?.cidade, client?.uf].filter(Boolean).join("/") || "—"} />
+        <KV k="Solicitante" v={[client?.solicitante, client?.cargo].filter(Boolean).join(" — ") || "—"} />
+        <KV k="Telefone" v={client?.telefone || "—"} />
+        <KV k="E-mail" v={client?.email || "—"} />
+        <KV k="Validade da proposta" v={proposal.validade ? new Date(proposal.validade).toLocaleDateString("pt-BR") : "—"} />
+      </div>
+    </div>
+  ));
+  if (proposal.observacoes_comerciais) {
+    push("Dados do Cliente", "dc-obs", (
+      <div style={{ marginTop: 18, padding: "14px 18px", background: `${accent}14`, borderLeft: `4px solid ${accent}`, borderRadius: 6 }}>
+        <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1.2, color: primary, fontWeight: 700, marginBottom: 4 }}>Observação importante</div>
+        <p style={{ fontSize: 12.5, lineHeight: 1.55, whiteSpace: "pre-line", color: "#334155" }}>{proposal.observacoes_comerciais}</p>
+      </div>
+    ));
+  }
+  if (proposal.escopo_geral) {
+    push("Dados do Cliente", "dc-esc", (
+      <div style={{ marginTop: 18 }}>
+        <h3 style={{ fontFamily: `${fontTitulo}, sans-serif`, fontSize: 16, color: primary, marginBottom: 8 }}>Escopo geral</h3>
+        <p style={{ fontSize: 12.5, lineHeight: 1.65, color: "#334155", whiteSpace: "pre-line" }}>{proposal.escopo_geral}</p>
+      </div>
+    ));
+  }
+
+  // -------- Escopo dos Serviços (cards) --------
+  if (items.length > 0) {
+    push("Escopo dos Serviços", "sc-title", <SectionTitle eyebrow="Detalhamento" title="Escopo dos serviços" accent={accent} primary={primary} />, true);
+    items.forEach((it) => {
+      push("Escopo dos Serviços", "sc-" + it.id, (
+        <div style={{ marginTop: 12 }}>
+          <ScopeCard item={it} title={titleOf(it)} primary={primary} accent={accent} neutral={neutral} fontTitulo={fontTitulo} />
+        </div>
+      ));
+    });
+  }
+
+  // -------- Investimento --------
+  push("Investimento", "inv-title", <SectionTitle eyebrow="Resumo financeiro" title="Investimento" accent={accent} primary={primary} />, true);
+  invChunks.forEach((chunk, idx) => {
+    push("Investimento", "inv-t-" + idx, (
+      <div style={{ marginTop: idx === 0 ? 0 : 6 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+          <thead>
+            <tr style={{ background: primary, color: "#fff" }}>
+              <th style={{ padding: "10px 12px", textAlign: "left", width: 38 }}>#</th>
+              <th style={{ padding: "10px 12px", textAlign: "left" }}>Descrição</th>
+              <th style={{ padding: "10px 12px", textAlign: "right", width: 60 }}>Qtd</th>
+              <th style={{ padding: "10px 12px", textAlign: "right", width: 110 }}>Unitário</th>
+              <th style={{ padding: "10px 12px", textAlign: "right", width: 120 }}>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {chunk.map((it: any, i: number) => (
+              <tr key={it.id} style={{ background: i % 2 ? neutral : "#fff", verticalAlign: "top" }}>
+                <td style={{ padding: "10px 12px", fontFamily: "monospace", color: "#64748b" }}>{String(it.numero_item).padStart(2, "0")}</td>
+                <td style={{ padding: "10px 12px" }}>
+                  <div style={{ fontWeight: 600, color: "#0f172a" }}>{titleOf(it)}</div>
+                  {it.categoria && <div style={{ fontSize: 10, color: "#64748b" }}>{it.categoria}</div>}
+                  {it.observacoes_escopo && (
+                    <div style={{ marginTop: 4, fontSize: 10.5, color: "#64748b", fontStyle: "italic", whiteSpace: "pre-line" }}>
+                      Obs.: {it.observacoes_escopo}
+                    </div>
+                  )}
+                </td>
+                <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace" }}>{it.quantidade}</td>
+                <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace" }}>{brl(it.valor_unitario)}</td>
+                <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace", fontWeight: 700 }}>{brl(it.valor_total)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ));
+  });
+  push("Investimento", "inv-totals", (
+    <div style={{ marginTop: 22, display: "flex", justifyContent: "flex-end" }}>
+      <div style={{ minWidth: 320 }}>
+        <Line label="Subtotal" value={brl(subtotal)} />
+        {desconto > 0 && <Line label="Descontos" value={"- " + brl(desconto)} />}
+        <div style={{ marginTop: 10, background: primary, color: "#fff", borderRadius: 12, padding: "18px 22px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: `0 12px 30px -10px ${primary}66` }}>
+          <div>
+            <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 2, opacity: 0.85 }}>Investimento total</div>
+          </div>
+          <div style={{ fontFamily: `${fontTitulo}, sans-serif`, fontSize: 28, fontWeight: 800, color: accent }}>{brl(valorFinal)}</div>
+        </div>
+      </div>
+    </div>
+  ));
+
+  // -------- Condições & Aceite --------
+  push("Condições & Aceite", "cd-title", <SectionTitle eyebrow="Termos" title="Condições comerciais" accent={accent} primary={primary} />, true);
+  push("Condições & Aceite", "cd-grid", (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      {proposal.condicoes_pagamento && <ConditionCard title="Forma de pagamento" body={proposal.condicoes_pagamento} icon={<ShieldCheck size={18} />} primary={primary} accent={accent} neutral={neutral} />}
+      {proposal.validade && <ConditionCard title="Validade da proposta" body={new Date(proposal.validade).toLocaleDateString("pt-BR")} icon={<CheckCircle2 size={18} />} primary={primary} accent={accent} neutral={neutral} />}
+      {proposal.outras_condicoes && <ConditionCard title="Outras condições" body={proposal.outras_condicoes} icon={<FileSignature size={18} />} primary={primary} accent={accent} neutral={neutral} fullWidth />}
+    </div>
+  ));
+  push("Condições & Aceite", "ac-title", (
+    <div style={{ marginTop: 24 }}>
+      <SectionTitle eyebrow="Formalização" title="Aceite da proposta" accent={accent} primary={primary} />
+    </div>
+  ), true);
+  push("Condições & Aceite", "ac-body", (
+    <div>
+      <p style={{ fontSize: 13, lineHeight: 1.7, color: "#334155", marginBottom: 28, maxWidth: 560 }}>{tpl.texto_aceite}</p>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 36, marginTop: 24 }}>
+        <SignatureBlock label="Cliente" name={client?.razao_social} subtitle={client?.solicitante} primary={primary} />
+        <SignatureBlock label="HSE Consulting" name="HSE Consulting" subtitle="Responsável Comercial" primary={primary} />
+      </div>
+      <div style={{ marginTop: 24, display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ height: 1, background: neutral, flex: 1 }} />
+        <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 2, color: "#64748b" }}>Data: ___ / ___ / ______</span>
+        <div style={{ height: 1, background: neutral, flex: 1 }} />
+      </div>
+    </div>
+  ));
+
+  // -------- Histórico de Revisões --------
+  if (revisions.length > 0) {
+    push("Histórico de Revisões", "hr-title", (
+      <div>
+        <SectionTitle eyebrow="Rastreabilidade" title="Histórico de revisões" accent={accent} primary={primary} />
+        <p style={{ fontSize: 12, color: "#64748b", marginBottom: 14, maxWidth: 620 }}>
+          Registro cronológico das alterações comerciais desta proposta (emissão inicial, descontos, alterações de escopo, ajustes técnicos e renegociações).
+        </p>
+      </div>
+    ), true);
+    revChunks.forEach((chunk, idx) => {
+      push("Histórico de Revisões", "hr-t-" + idx, (
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, marginTop: idx === 0 ? 0 : 6 }}>
+          <thead>
+            <tr style={{ background: neutral, color: primary }}>
+              <th style={{ padding: "8px 10px", textAlign: "left", width: 60 }}>Rev.</th>
+              <th style={{ padding: "8px 10px", textAlign: "left", width: 160 }}>Tipo</th>
+              <th style={{ padding: "8px 10px", textAlign: "left" }}>Descrição</th>
+              <th style={{ padding: "8px 10px", textAlign: "right", width: 110 }}>Valor</th>
+              <th style={{ padding: "8px 10px", textAlign: "left", width: 100 }}>Data</th>
+            </tr>
+          </thead>
+          <tbody>
+            {chunk.map((r: any) => (
+              <tr key={r.id} style={{ borderBottom: `1px solid ${neutral}` }}>
+                <td style={{ padding: "8px 10px", fontFamily: "monospace" }}>R{String(r.revisao).padStart(2,"0")}</td>
+                <td style={{ padding: "8px 10px", color: "#334155" }}>{tipoRevisaoLabel(r.tipo)}</td>
+                <td style={{ padding: "8px 10px" }}>
+                  <div style={{ fontWeight: 600 }}>{r.titulo || "—"}</div>
+                  {r.descricao && r.descricao !== r.titulo && <div style={{ color: "#64748b" }}>{r.descricao}</div>}
+                </td>
+                <td style={{ padding: "8px 10px", textAlign: "right", fontFamily: "monospace" }}>
+                  {r.valor_novo != null ? Number(r.valor_novo).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—"}
+                </td>
+                <td style={{ padding: "8px 10px", color: "#64748b" }}>{new Date(r.created_at).toLocaleDateString("pt-BR")}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ));
+    });
+  }
 
   return (
     <div className="proposal-doc" style={{ fontFamily: `${tpl.font_corpo || "Manrope"}, system-ui, sans-serif` }}>
@@ -152,211 +351,7 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
       </section>
 
       {/* ============ APRESENTAÇÃO ============ */}
-      <DocPage ctx={ctxHeader} pageLabel="Apresentação" pageNum="01">
-        <SectionTitle eyebrow="Apresentação" title="Quem somos" accent={accent} primary={primary} />
-        <p style={{ fontSize: 13, lineHeight: 1.65, color: "#334155", marginBottom: 22 }}>{tpl.quem_somos}</p>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 22 }}>
-          <ValueCard icon={<Target size={20} />} title="Missão" body={tpl.missao} accent={accent} />
-          <ValueCard icon={<Eye size={20} />} title="Visão" body={tpl.visao} accent={accent} />
-          <ValueCard icon={<Heart size={20} />} title="Valores" body={tpl.valores} accent={accent} />
-        </div>
-
-        <div style={{ marginTop: 8, paddingTop: 16, borderTop: `2px solid ${neutral}` }}>
-          <h3 style={{ fontFamily: `${tpl.font_titulo || "Sora"}, sans-serif`, fontSize: 18, color: primary, marginBottom: 14 }}>Por que escolher a HSE?</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {diferenciais.map((d, i) => {
-              const Icon = diffIcons[i % diffIcons.length];
-              return (
-                <div key={i} className="avoid-break" style={{ display: "flex", gap: 10, padding: "10px 12px", background: neutral, borderRadius: 8, alignItems: "center" }}>
-                  <span style={{ width: 32, height: 32, borderRadius: 8, background: accent, color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Icon size={16} />
-                  </span>
-                  <span style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a" }}>{d}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </DocPage>
-
-      {/* ============ DADOS DO CLIENTE ============ */}
-      <DocPage ctx={ctxHeader} pageLabel="Dados do Cliente" pageNum="02">
-        <SectionTitle eyebrow="Identificação" title="Dados do cliente" accent={accent} primary={primary} />
-        <div className="avoid-break" style={{ border: `1px solid ${neutral}`, borderRadius: 14, overflow: "hidden" }}>
-          <div style={{ background: primary, color: "#fff", padding: "16px 22px", display: "flex", alignItems: "center", gap: 12 }}>
-            <Building2 size={20} />
-            <div>
-              <div style={{ fontSize: 18, fontWeight: 700 }}>{client?.razao_social || "—"}</div>
-              {client?.nome_fantasia && <div style={{ fontSize: 12, opacity: 0.85 }}>{client.nome_fantasia}</div>}
-            </div>
-          </div>
-          <div style={{ padding: 22, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 28px" }}>
-            <KV k="CNPJ / CPF" v={formatCnpjCpf(client?.cnpj_cpf || "—")} />
-            <KV k="Qtd. funcionários" v={client?.qtd_funcionarios ?? "—"} />
-            <KV k="Endereço" v={client?.endereco || "—"} />
-            <KV k="Cidade / UF" v={[client?.cidade, client?.uf].filter(Boolean).join("/") || "—"} />
-            <KV k="Solicitante" v={[client?.solicitante, client?.cargo].filter(Boolean).join(" — ") || "—"} />
-            <KV k="Telefone" v={client?.telefone || "—"} />
-            <KV k="E-mail" v={client?.email || "—"} />
-            <KV k="Validade da proposta" v={proposal.validade ? new Date(proposal.validade).toLocaleDateString("pt-BR") : "—"} />
-          </div>
-        </div>
-
-        {proposal.observacoes_comerciais && (
-          <div className="avoid-break" style={{ marginTop: 18, padding: "14px 18px", background: `${accent}14`, borderLeft: `4px solid ${accent}`, borderRadius: 6 }}>
-            <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1.2, color: primary, fontWeight: 700, marginBottom: 4 }}>Observação importante</div>
-            <p style={{ fontSize: 12.5, lineHeight: 1.55, whiteSpace: "pre-line", color: "#334155" }}>{proposal.observacoes_comerciais}</p>
-          </div>
-        )}
-
-        {proposal.escopo_geral && (
-          <div style={{ marginTop: 22 }}>
-            <h3 style={{ fontFamily: `${tpl.font_titulo || "Sora"}, sans-serif`, fontSize: 16, color: primary, marginBottom: 8 }}>Escopo geral</h3>
-            <p style={{ fontSize: 12.5, lineHeight: 1.65, color: "#334155", whiteSpace: "pre-line" }}>{proposal.escopo_geral}</p>
-          </div>
-        )}
-
-        {items.length > 0 && (
-          <div style={{ marginTop: 22 }}>
-            <SectionTitle eyebrow="Detalhamento" title="Escopo dos serviços" accent={accent} primary={primary} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {scopeInline.map((it: any) => (
-                <ScopeCard key={it.id} item={it} title={titleOf(it)} primary={primary} accent={accent} neutral={neutral} fontTitulo={tpl.font_titulo || "Sora"} />
-              ))}
-            </div>
-          </div>
-        )}
-      </DocPage>
-
-      {/* ============ ESCOPO DOS SERVIÇOS (cards) ============ */}
-      {scopePages.map((page, idx) => (
-        <DocPage key={"scope-" + idx} ctx={ctxHeader} pageLabel="Escopo dos Serviços (cont.)" pageNum={String(3 + idx).padStart(2, "0")}>
-          {idx === 0 && scopeInline.length === 0 && (
-            <SectionTitle eyebrow="Detalhamento" title="Escopo dos serviços" accent={accent} primary={primary} />
-          )}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {page.map((it: any) => (
-              <ScopeCard key={it.id} item={it} title={titleOf(it)} primary={primary} accent={accent} neutral={neutral} fontTitulo={tpl.font_titulo || "Sora"} />
-            ))}
-          </div>
-        </DocPage>
-      ))}
-
-      {/* ============ INVESTIMENTO ============ */}
-      {investPages.map((page, idx) => (
-        <DocPage key={"invest-" + idx} ctx={ctxHeader} pageLabel="Investimento" pageNum={String(3 + scopePages.length + idx).padStart(2, "0")}>
-          {idx === 0 && <SectionTitle eyebrow="Resumo financeiro" title="Investimento" accent={accent} primary={primary} />}
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-            <thead>
-              <tr style={{ background: primary, color: "#fff" }}>
-                <th style={{ padding: "10px 12px", textAlign: "left", width: 38 }}>#</th>
-                <th style={{ padding: "10px 12px", textAlign: "left" }}>Descrição</th>
-                <th style={{ padding: "10px 12px", textAlign: "right", width: 60 }}>Qtd</th>
-                <th style={{ padding: "10px 12px", textAlign: "right", width: 110 }}>Unitário</th>
-                <th style={{ padding: "10px 12px", textAlign: "right", width: 120 }}>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {page.map((it: any, i: number) => (
-                <tr key={it.id} style={{ background: i % 2 ? neutral : "#fff", verticalAlign: "top" }}>
-                  <td style={{ padding: "10px 12px", fontFamily: "monospace", color: "#64748b" }}>{String(it.numero_item).padStart(2, "0")}</td>
-                  <td style={{ padding: "10px 12px" }}>
-                    <div style={{ fontWeight: 600, color: "#0f172a" }}>{titleOf(it)}</div>
-                    {it.categoria && <div style={{ fontSize: 10, color: "#64748b" }}>{it.categoria}</div>}
-                    {it.observacoes_escopo && (
-                      <div style={{ marginTop: 4, fontSize: 10.5, color: "#64748b", fontStyle: "italic", whiteSpace: "pre-line" }}>
-                        Obs.: {it.observacoes_escopo}
-                      </div>
-                    )}
-                  </td>
-                  <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace" }}>{it.quantidade}</td>
-                  <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace" }}>{brl(it.valor_unitario)}</td>
-                  <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace", fontWeight: 700 }}>{brl(it.valor_total)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {idx === investPages.length - 1 && (
-            <div className="avoid-break" style={{ marginTop: 22, display: "flex", justifyContent: "flex-end" }}>
-              <div style={{ minWidth: 320 }}>
-                <Line label="Subtotal" value={brl(subtotal)} />
-                {desconto > 0 && <Line label="Descontos" value={"- " + brl(desconto)} />}
-                <div style={{ marginTop: 10, background: primary, color: "#fff", borderRadius: 12, padding: "18px 22px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: `0 12px 30px -10px ${primary}66` }}>
-                  <div>
-                    <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 2, opacity: 0.85 }}>Investimento total</div>
-                  </div>
-                  <div style={{ fontFamily: `${tpl.font_titulo || "Sora"}, sans-serif`, fontSize: 28, fontWeight: 800, color: accent }}>{brl(valorFinal)}</div>
-                </div>
-              </div>
-            </div>
-          )}
-        </DocPage>
-      ))}
-
-      {/* ============ CONDIÇÕES COMERCIAIS ============ */}
-      <DocPage ctx={ctxHeader} pageLabel="Condições & Aceite" pageNum="—">
-        <SectionTitle eyebrow="Termos" title="Condições comerciais" accent={accent} primary={primary} />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          {proposal.condicoes_pagamento && <ConditionCard title="Forma de pagamento" body={proposal.condicoes_pagamento} icon={<ShieldCheck size={18} />} primary={primary} accent={accent} neutral={neutral} />}
-          {proposal.validade && <ConditionCard title="Validade da proposta" body={new Date(proposal.validade).toLocaleDateString("pt-BR")} icon={<CheckCircle2 size={18} />} primary={primary} accent={accent} neutral={neutral} />}
-          {proposal.outras_condicoes && <ConditionCard title="Outras condições" body={proposal.outras_condicoes} icon={<FileSignature size={18} />} primary={primary} accent={accent} neutral={neutral} fullWidth />}
-        </div>
-
-        <div style={{ marginTop: 24 }}>
-          <SectionTitle eyebrow="Formalização" title="Aceite da proposta" accent={accent} primary={primary} />
-          <p style={{ fontSize: 13, lineHeight: 1.7, color: "#334155", marginBottom: 28, maxWidth: 560 }}>{tpl.texto_aceite}</p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 36, marginTop: 24 }}>
-            <SignatureBlock label="Cliente" name={client?.razao_social} subtitle={client?.solicitante} primary={primary} />
-            <SignatureBlock label="HSE Consulting" name="HSE Consulting" subtitle="Responsável Comercial" primary={primary} />
-          </div>
-
-          <div style={{ marginTop: 24, display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ height: 1, background: neutral, flex: 1 }} />
-            <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 2, color: "#64748b" }}>Data: ___ / ___ / ______</span>
-            <div style={{ height: 1, background: neutral, flex: 1 }} />
-          </div>
-        </div>
-      </DocPage>
-
-      {/* ============ HISTÓRICO DE REVISÕES ============ */}
-      {revisions.length > 0 && (
-        <DocPage ctx={ctxHeader} pageLabel="Histórico de Revisões" pageNum="—">
-          <SectionTitle eyebrow="Rastreabilidade" title="Histórico de revisões" accent={accent} primary={primary} />
-          <p style={{ fontSize: 12, color: "#64748b", marginBottom: 14, maxWidth: 620 }}>
-            Registro cronológico das alterações comerciais desta proposta (emissão inicial, descontos, alterações de escopo, ajustes técnicos e renegociações).
-          </p>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-            <thead>
-              <tr style={{ background: neutral, color: primary }}>
-                <th style={{ padding: "8px 10px", textAlign: "left", width: 60 }}>Rev.</th>
-                <th style={{ padding: "8px 10px", textAlign: "left", width: 160 }}>Tipo</th>
-                <th style={{ padding: "8px 10px", textAlign: "left" }}>Descrição</th>
-                <th style={{ padding: "8px 10px", textAlign: "right", width: 110 }}>Valor</th>
-                <th style={{ padding: "8px 10px", textAlign: "left", width: 100 }}>Data</th>
-              </tr>
-            </thead>
-            <tbody>
-              {revisions.map((r) => (
-                <tr key={r.id} style={{ borderBottom: `1px solid ${neutral}` }}>
-                  <td style={{ padding: "8px 10px", fontFamily: "monospace" }}>R{String(r.revisao).padStart(2,"0")}</td>
-                  <td style={{ padding: "8px 10px", color: "#334155" }}>{tipoRevisaoLabel(r.tipo)}</td>
-                  <td style={{ padding: "8px 10px" }}>
-                    <div style={{ fontWeight: 600 }}>{r.titulo || "—"}</div>
-                    {r.descricao && r.descricao !== r.titulo && <div style={{ color: "#64748b" }}>{r.descricao}</div>}
-                  </td>
-                  <td style={{ padding: "8px 10px", textAlign: "right", fontFamily: "monospace" }}>
-                    {r.valor_novo != null ? Number(r.valor_novo).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—"}
-                  </td>
-                  <td style={{ padding: "8px 10px", color: "#64748b" }}>{new Date(r.created_at).toLocaleDateString("pt-BR")}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </DocPage>
-      )}
+      <FlowPages ctx={ctxHeader} blocks={bodyBlocks} />
 
       {/* ============ CONTRACAPA ============ */}
       <section className="pdf-page" style={{ ...PAGE_STYLE, background: primary, color: "#fff" }}>
@@ -388,6 +383,105 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
 }
 
 /* ============== sub-components ============== */
+
+type Block = { key: string; label: string; node: React.ReactNode; keepWithNext?: boolean };
+
+/**
+ * FlowPages — paginador dinâmico.
+ * Mede a altura real de cada bloco em um container invisível de mesma largura
+ * útil das páginas e distribui os blocos em páginas A4, garantindo que:
+ *  - blocos entrem em sequência sem espaços forçados;
+ *  - se um bloco não couber no restante da página, ele vai inteiro pra próxima;
+ *  - se um bloco tem `keepWithNext`, tenta mantê-lo junto do próximo.
+ */
+function FlowPages({ ctx, blocks }: { ctx: any; blocks: Block[] }) {
+  const [pages, setPages] = useState<number[][] | null>(null);
+  const measureRef = useRef<HTMLDivElement>(null);
+
+  // altura útil de uma página (297mm - cabeçalho - rodapé - padding vertical)
+  // Cabeçalho ~28mm, rodapé ~19mm, padding 10mm+10mm = 20mm → ~230mm de conteúdo.
+  const MM_TO_PX = 96 / 25.4;
+  const CONTENT_H_PX = 228 * MM_TO_PX;
+
+  useLayoutEffect(() => {
+    if (!measureRef.current) return;
+    const children = Array.from(measureRef.current.children) as HTMLElement[];
+    if (children.length !== blocks.length) return;
+    const heights = children.map((el) => el.getBoundingClientRect().height);
+
+    const result: number[][] = [[]];
+    let used = 0;
+    for (let i = 0; i < blocks.length; i++) {
+      const h = heights[i];
+      const current = result[result.length - 1];
+
+      // keepWithNext: se este bloco (ex.: título de seção) e o próximo juntos
+      // não couberem no restante da página, força quebra antes.
+      let neededH = h;
+      if (blocks[i].keepWithNext && i + 1 < blocks.length) {
+        neededH = h + heights[i + 1];
+      }
+
+      const remaining = CONTENT_H_PX - used;
+      if (h > CONTENT_H_PX) {
+        // bloco maior que uma página: joga sozinho (vai transbordar; edge case).
+        if (current.length > 0) result.push([]);
+        result[result.length - 1].push(i);
+        result.push([]);
+        used = 0;
+        continue;
+      }
+      if (neededH > remaining && current.length > 0) {
+        result.push([i]);
+        used = h;
+      } else {
+        current.push(i);
+        used += h;
+      }
+    }
+    if (result[result.length - 1].length === 0) result.pop();
+    setPages(result);
+  }, [blocks]);
+
+  // Rótulo de página = primeira label encontrada nos blocos da página
+  const pageLabelFor = (idxs: number[]) => (idxs.length ? blocks[idxs[0]].label : "");
+
+  return (
+    <>
+      {/* Container de medição: fora da tela, mas com a largura real do conteúdo. */}
+      <div
+        ref={measureRef}
+        aria-hidden
+        style={{
+          position: "absolute",
+          left: -99999,
+          top: 0,
+          width: "174mm", // 210mm - 2*18mm de padding lateral do DocPage
+          visibility: "hidden",
+          pointerEvents: "none",
+        }}
+      >
+        {blocks.map((b) => (
+          <div key={"m-" + b.key}>{b.node}</div>
+        ))}
+      </div>
+
+      {pages &&
+        pages.map((idxs, pi) => (
+          <DocPage
+            key={"flow-" + pi}
+            ctx={ctx}
+            pageLabel={pageLabelFor(idxs)}
+            pageNum={String(pi + 1).padStart(2, "0")}
+          >
+            {idxs.map((i) => (
+              <div key={blocks[i].key}>{blocks[i].node}</div>
+            ))}
+          </DocPage>
+        ))}
+    </>
+  );
+}
 
 function DocPage({ ctx, pageNum, pageLabel, children }: any) {
   const { proposal, client, primary, accent, logoSrc, tpl } = ctx;
