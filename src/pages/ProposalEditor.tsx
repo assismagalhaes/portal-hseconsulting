@@ -846,6 +846,14 @@ const REVISAO_STATUS: Record<string, { label: string; color: string }> = {
 };
 
 function RevisionsCard({ proposalId, valorAtual, revisions, onChanged }: any) {
+  const TIPOS: { value: string; label: string }[] = [
+    { value: "desconto", label: "Desconto comercial" },
+    { value: "alteracao_servicos", label: "Alteração de serviços" },
+    { value: "ajuste_tecnico", label: "Ajuste técnico" },
+    { value: "renegociacao", label: "Renegociação" },
+    { value: "outro", label: "Outro" },
+  ];
+  const [tipo, setTipo] = useState<string>("desconto");
   const [motivo, setMotivo] = useState("");
   const [obs, setObs] = useState("");
   const [valorNovo, setValorNovo] = useState<number>(Number(valorAtual) || 0);
@@ -858,6 +866,7 @@ function RevisionsCard({ proposalId, valorAtual, revisions, onChanged }: any) {
       _motivo: motivo,
       _observacoes: obs,
       _valor_novo: valorNovo,
+      _tipo: tipo,
     });
     if (error) return toast.error(error.message);
     setMotivo(""); setObs("");
@@ -887,9 +896,18 @@ function RevisionsCard({ proposalId, valorAtual, revisions, onChanged }: any) {
       )}
 
       <div className="space-y-2">
-        <Label className="text-xs">Registrar nova revisão / contraproposta</Label>
-        <div className="grid sm:grid-cols-2 gap-2">
-          <Input placeholder="Motivo da revisão *" value={motivo} onChange={e=>setMotivo(e.target.value)} />
+        <Label className="text-xs">Registrar nova revisão</Label>
+        <p className="text-[11px] text-muted-foreground -mt-1">
+          Use apenas para eventos relevantes (desconto, alteração de serviços, ajuste técnico, renegociação). Mudanças internas de status (rascunho, enviada, aprovada) não geram revisão.
+        </p>
+        <div className="grid sm:grid-cols-3 gap-2">
+          <Select value={tipo} onValueChange={setTipo}>
+            <SelectTrigger><SelectValue placeholder="Tipo *" /></SelectTrigger>
+            <SelectContent>
+              {TIPOS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Input placeholder="Motivo / descrição curta *" value={motivo} onChange={e=>setMotivo(e.target.value)} />
           <Input type="number" step="0.01" placeholder="Novo valor total (R$)" value={valorNovo}
             onChange={e=>setValorNovo(Number(e.target.value)||0)} />
         </div>
@@ -902,10 +920,12 @@ function RevisionsCard({ proposalId, valorAtual, revisions, onChanged }: any) {
         </div>
       </div>
       <hr/>
-      {revisions.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma revisão ainda. Mudanças de status da proposta também geram revisões automáticas.</p>}
+      {revisions.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma revisão registrada ainda.</p>}
       <ul className="space-y-2">
         {revisions.map((r: any) => {
           const meta = REVISAO_STATUS[r.status] || REVISAO_STATUS.rascunho;
+          const tipoLabel = (TIPOS.find(t => t.value === r.tipo)?.label)
+            || (r.tipo === "emissao_inicial" ? "Emissão inicial" : null);
           const dif = Number(r.diferenca_valor || 0);
           const difPct = Number(r.diferenca_percentual || 0);
           const bloqueada = r.status === "aprovada";
@@ -915,6 +935,7 @@ function RevisionsCard({ proposalId, valorAtual, revisions, onChanged }: any) {
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge variant="outline" className="font-mono">Rev. {String(r.revisao).padStart(2,"0")}</Badge>
                   <Badge className={`border-0 ${meta.color}`}>{meta.label}</Badge>
+                  {tipoLabel && <Badge variant="secondary" className="text-[10px]">{tipoLabel}</Badge>}
                   <span className="font-medium">{r.titulo || r.motivo || "Revisão"}</span>
                 </div>
                 <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString("pt-BR")}</span>
