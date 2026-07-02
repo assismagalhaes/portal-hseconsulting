@@ -217,7 +217,7 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
           </div>
         )}
 
-        {scopeInline.length > 0 && (
+        {items.length > 0 && (
           <div style={{ marginTop: 22 }}>
             <SectionTitle eyebrow="Detalhamento" title="Escopo dos serviços" accent={accent} primary={primary} />
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -232,6 +232,9 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
       {/* ============ ESCOPO DOS SERVIÇOS (cards) ============ */}
       {scopePages.map((page, idx) => (
         <DocPage key={"scope-" + idx} ctx={ctxHeader} pageLabel="Escopo dos Serviços (cont.)" pageNum={String(3 + idx).padStart(2, "0")}>
+          {idx === 0 && scopeInline.length === 0 && (
+            <SectionTitle eyebrow="Detalhamento" title="Escopo dos serviços" accent={accent} primary={primary} />
+          )}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {page.map((it: any) => (
               <ScopeCard key={it.id} item={it} title={titleOf(it)} primary={primary} accent={accent} neutral={neutral} fontTitulo={tpl.font_titulo || "Sora"} />
