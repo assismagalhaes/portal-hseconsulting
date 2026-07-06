@@ -5614,7 +5614,7 @@ export type Database = {
       projetos_gerar_renovacoes: { Args: never; Returns: number }
     }
     Enums: {
-      app_role: "admin" | "comercial" | "tecnico"
+      app_role: "admin" | "comercial" | "tecnico" | "financeiro"
       automacao_acao_tipo:
         | "criar_notificacao"
         | "criar_alerta"
@@ -6040,7 +6040,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "comercial", "tecnico"],
+      app_role: ["admin", "comercial", "tecnico", "financeiro"],
       automacao_acao_tipo: [
         "criar_notificacao",
         "criar_alerta",
