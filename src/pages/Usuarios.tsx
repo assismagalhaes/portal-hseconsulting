@@ -31,11 +31,12 @@ type Row = {
 
 const empty: any = { status: "ativo", role: "tecnico" };
 
-const statusLabel: Record<string, string> = { ativo: "Ativo", inativo: "Inativo", bloqueado: "Bloqueado" };
+const statusLabel: Record<string, string> = { ativo: "Ativo", inativo: "Inativo", bloqueado: "Bloqueado", excluido: "Excluído" };
 const statusColor: Record<string, string> = {
   ativo: "bg-success/15 text-success",
   inativo: "bg-muted text-muted-foreground",
   bloqueado: "bg-danger/15 text-danger",
+  excluido: "bg-danger/15 text-danger line-through",
 };
 const roleLabel: Record<Role, string> = {
   admin: "Administrador",
@@ -57,7 +58,7 @@ export default function Usuarios() {
 
   const load = async () => {
     const { data: profiles, error } = await supabase
-      .from("profiles").select("*").order("nome");
+      .from("profiles").select("*").neq("status", "excluido").order("nome");
     if (error) return toast.error(error.message);
     const { data: rolesRows } = await supabase.from("user_roles").select("user_id, role");
     const rolesMap = new Map<string, Role>();
@@ -122,7 +123,18 @@ export default function Usuarios() {
     const { data, error } = await supabase.functions.invoke("admin-user-actions", {
       body: { action, user_id: r.id, redirect_to: `${window.location.origin}/auth` },
     });
-    if (error) return toast.error(error.message);
+    if (error) {
+      // supabase-js swallows the response body on non-2xx; tenta ler o contexto
+      const ctx: any = (error as any).context;
+      let msg = error.message;
+      try {
+        if (ctx && typeof ctx.json === "function") {
+          const body = await ctx.json();
+          if (body?.error) msg = body.error;
+        }
+      } catch { /* ignore */ }
+      return toast.error(msg);
+    }
     if ((data as any)?.error) return toast.error((data as any).error);
     const senha = (data as any)?.senha_provisoria;
     if (senha) {
