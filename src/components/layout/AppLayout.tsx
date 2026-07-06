@@ -305,7 +305,7 @@ function SidebarBody({
 }
 
 function SidebarShell({
-  collapsed, openGroup, setOpenGroup, user, roles, onSignOut,
+  collapsed, openGroup, setOpenGroup, user, roles, onSignOut, groups,
 }: any) {
   return (
     <aside
@@ -331,7 +331,7 @@ function SidebarShell({
         )}
       </Link>
 
-      <SidebarBody collapsed={collapsed} openGroup={openGroup} setOpenGroup={setOpenGroup} />
+      <SidebarBody collapsed={collapsed} openGroup={openGroup} setOpenGroup={setOpenGroup} groups={groups} />
 
       <div className="border-t border-sidebar-border p-2">
         {collapsed ? (
@@ -365,9 +365,10 @@ function SidebarShell({
 }
 
 export default function AppLayout() {
-  const { user, roles, signOut } = useAuth();
+  const { user, roles, signOut, isTecnico } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const groups = isTecnico ? TECNICO_GROUPS : GROUPS;
 
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
@@ -410,6 +411,7 @@ export default function AppLayout() {
         user={user}
         roles={roles}
         onSignOut={handleSignOut}
+        groups={groups}
       />
 
       {/* Mobile drawer */}
@@ -426,6 +428,7 @@ export default function AppLayout() {
             openGroup={openGroup}
             setOpenGroup={setOpenGroup}
             onNavigate={() => setMobileOpen(false)}
+            groups={groups}
           />
           <div className="border-t border-sidebar-border p-2">
             <Button variant="ghost" size="sm"
