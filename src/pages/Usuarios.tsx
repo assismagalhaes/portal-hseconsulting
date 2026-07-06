@@ -127,6 +127,7 @@ export default function Usuarios() {
                       <SelectItem value="admin">Administrador</SelectItem>
                       <SelectItem value="tecnico">Profissional Técnico</SelectItem>
                       <SelectItem value="comercial">Comercial</SelectItem>
+                      <SelectItem value="financeiro">Financeiro</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
