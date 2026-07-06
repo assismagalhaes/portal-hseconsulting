@@ -5685,9 +5685,9 @@ export type Database = {
       is_tecnico: { Args: never; Returns: boolean }
       notificar_admins: {
         Args: {
-          _entidade_id: string
-          _entidade_tipo: string
-          _link: string
+          _entidade_id?: string
+          _entidade_tipo?: string
+          _link?: string
           _mensagem: string
           _titulo: string
         }
