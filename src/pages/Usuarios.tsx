@@ -100,6 +100,24 @@ export default function Usuarios() {
 
   const filtered = rows.filter((r) => !q || [r.nome, r.email, r.cargo, r.area].some((s) => (s || "").toLowerCase().includes(q.toLowerCase())));
 
+  async function runAction(action: string, r: Row) {
+    const confirmMsg: Record<string, string> = {
+      reset_password: `Enviar link de redefinição de senha para ${r.email}?`,
+      resend_invite: `Reenviar convite de acesso para ${r.email}?`,
+      block: `Bloquear ${r.nome || r.email}? O usuário não conseguirá mais entrar.`,
+      unblock: `Desbloquear ${r.nome || r.email}?`,
+      delete: `Excluir DEFINITIVAMENTE ${r.nome || r.email}? Esta ação não pode ser desfeita.`,
+    };
+    if (!confirm(confirmMsg[action])) return;
+    const { data, error } = await supabase.functions.invoke("admin-user-actions", {
+      body: { action, user_id: r.id, redirect_to: `${window.location.origin}/auth` },
+    });
+    if (error) return toast.error(error.message);
+    if ((data as any)?.error) return toast.error((data as any).error);
+    toast.success("Ação executada");
+    load();
+  }
+
   return (
     <>
       <PageHeader
