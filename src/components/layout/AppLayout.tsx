@@ -388,10 +388,12 @@ function SidebarShell({
 }
 
 export default function AppLayout() {
-  const { user, roles, signOut, isTecnico } = useAuth();
+  const { user, roles, signOut, isTecnico, isAdmin, isComercial, isFinanceiro } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const groups = isTecnico ? TECNICO_GROUPS : GROUPS;
+  const groups = isTecnico
+    ? TECNICO_GROUPS
+    : filterGroupsForRole({ isAdmin, isComercial, isFinanceiro });
 
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
