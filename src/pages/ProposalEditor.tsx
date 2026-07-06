@@ -608,11 +608,7 @@ function Row({ label, children }: any) {
   return <div className="flex items-center justify-between gap-3"><span className="text-muted-foreground">{label}</span><span className="text-right">{children}</span></div>;
 }
 
-function InternalSummary({ items, pricings }: any) {
-  // descontoRevisao passado via props (opcional)
-  return <InternalSummaryImpl items={items} pricings={pricings} descontoRevisao={0} />;
-}
-function InternalSummaryImpl({ items, pricings, descontoRevisao = 0 }: any) {
+function InternalSummary({ items, pricings, descontoRevisao = 0 }: any) {
   let custoTotal = 0, lucroTotal = 0, receita = 0, imposto = 0;
   items.forEach((it:any) => {
     const p = pricings[it.id];
