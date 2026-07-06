@@ -9,10 +9,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Search, MoreHorizontal, KeyRound, Send, Ban, Unlock, Trash2, History } from "lucide-react";
+import { Plus, Pencil, Search, MoreHorizontal, KeyRound, Send, Ban, Unlock, Trash2, History, ShieldCheck } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import PermissoesDialog from "@/components/usuarios/PermissoesDialog";
 
 type Role = "admin" | "comercial" | "tecnico" | "financeiro";
 type Row = {
@@ -49,6 +50,8 @@ export default function Usuarios() {
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<any>(empty);
+  const [permOpen, setPermOpen] = useState(false);
+  const [permUser, setPermUser] = useState<Row | null>(null);
 
   const load = async () => {
     const { data: profiles, error } = await supabase
@@ -229,6 +232,10 @@ export default function Usuarios() {
                             <Send className="h-4 w-4 mr-2" /> Reenviar convite
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => { setPermUser(r); setPermOpen(true); }}>
+                            <ShieldCheck className="h-4 w-4 mr-2" /> Permissões granulares
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           {r.status === "bloqueado" ? (
                             <DropdownMenuItem onClick={() => runAction("unblock", r)}>
                               <Unlock className="h-4 w-4 mr-2" /> Desbloquear
@@ -253,6 +260,7 @@ export default function Usuarios() {
           </Table>
         </div>
       </div>
+      <PermissoesDialog open={permOpen} onOpenChange={setPermOpen} user={permUser} />
     </>
   );
 }

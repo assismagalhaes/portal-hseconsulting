@@ -5514,6 +5514,45 @@ export type Database = {
           },
         ]
       }
+      user_permission_overrides: {
+        Row: {
+          ativo: boolean
+          concedido_por: string | null
+          created_at: string
+          expira_em: string | null
+          id: string
+          motivo: string | null
+          recurso_id: string | null
+          tipo: Database["public"]["Enums"]["permission_override_tipo"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          concedido_por?: string | null
+          created_at?: string
+          expira_em?: string | null
+          id?: string
+          motivo?: string | null
+          recurso_id?: string | null
+          tipo: Database["public"]["Enums"]["permission_override_tipo"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          concedido_por?: string | null
+          created_at?: string
+          expira_em?: string | null
+          id?: string
+          motivo?: string | null
+          recurso_id?: string | null
+          tipo?: Database["public"]["Enums"]["permission_override_tipo"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -5659,6 +5698,18 @@ export type Database = {
       }
       user_can_access_projeto: {
         Args: { _projeto_id: string; _uid: string }
+        Returns: boolean
+      }
+      user_can_approve_document: {
+        Args: { _doc_id?: string; _uid: string }
+        Returns: boolean
+      }
+      user_has_override: {
+        Args: {
+          _recurso_id?: string
+          _tipo: Database["public"]["Enums"]["permission_override_tipo"]
+          _user_id: string
+        }
         Returns: boolean
       }
     }
@@ -5921,6 +5972,11 @@ export type Database = {
         | "realizada"
         | "cancelada"
         | "remarcada"
+      permission_override_tipo:
+        | "ver_financeiro"
+        | "ver_comercial"
+        | "acessar_projeto"
+        | "aprovar_documentos"
       profissional_situacao: "ativo" | "inativo" | "ferias" | "afastado"
       projeto_servico_status:
         | "pendente"
@@ -6374,6 +6430,12 @@ export const Constants = {
         "realizada",
         "cancelada",
         "remarcada",
+      ],
+      permission_override_tipo: [
+        "ver_financeiro",
+        "ver_comercial",
+        "acessar_projeto",
+        "aprovar_documentos",
       ],
       profissional_situacao: ["ativo", "inativo", "ferias", "afastado"],
       projeto_servico_status: [
