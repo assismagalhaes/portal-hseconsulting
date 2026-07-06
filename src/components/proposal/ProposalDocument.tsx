@@ -76,9 +76,22 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   const contraSrc = tpl.contracapa_imagem_url || contracapaImg;
 
   const total = items.reduce((a, b) => a + Number(b.valor_total || 0), 0);
-  const desconto = Number(proposal.desconto || 0);
   const subtotal = total;
-  const valorFinal = subtotal - desconto;
+  // Revisão vigente = última aprovada; se não houver, a última registrada (maior revisão).
+  const revisoesOrdenadas = [...revisions].sort((a, b) => Number(b.revisao || 0) - Number(a.revisao || 0));
+  const revVigente =
+    revisoesOrdenadas.find((r: any) => r.status === "aprovada") ||
+    revisoesOrdenadas[0] ||
+    null;
+  const valorRevisao = revVigente && revVigente.valor_novo != null ? Number(revVigente.valor_novo) : null;
+  const descontoField = Number(proposal.desconto || 0);
+  // desconto efetivo: diferença entre subtotal e valor da revisão (quando menor), ou campo legado.
+  const descontoRev = valorRevisao != null && valorRevisao < subtotal ? subtotal - valorRevisao : 0;
+  const desconto = descontoRev > 0 ? descontoRev : descontoField;
+  const valorFinal = Math.max(0, subtotal - desconto);
+  const descontoLabel = descontoRev > 0
+    ? `Desconto (Rev. ${String(revVigente.revisao).padStart(2, "0")}${revVigente.tipo && revVigente.tipo !== "emissao_inicial" ? " · " + tipoRevisaoLabel(revVigente.tipo) : ""})`
+    : "Descontos";
 
   const diferenciais: string[] = Array.isArray(tpl.diferenciais) ? tpl.diferenciais : [];
   const diffIcons = [Award, Users, Zap, Scale, UserCheck, Sparkles];
