@@ -124,7 +124,11 @@ export default function Usuarios() {
         title="Usuários"
         subtitle="Cadastro e permissões de acesso ao Portal HSE Consulting"
         actions={
-          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditing(empty); setCreating(false); } }}>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline">
+              <Link to="/usuarios/logs"><History className="h-4 w-4 mr-2" /> Trilha de acessos</Link>
+            </Button>
+            <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditing(empty); setCreating(false); } }}>
             <DialogTrigger asChild>
               <Button onClick={() => { setCreating(true); setEditing(empty); }}>
                 <Plus className="h-4 w-4 mr-2" /> Novo usuário
@@ -167,7 +171,8 @@ export default function Usuarios() {
               </div>
               <DialogFooter><Button onClick={save}>{creating ? "Criar usuário" : "Salvar"}</Button></DialogFooter>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         }
       />
       <div className="p-6 space-y-4">
