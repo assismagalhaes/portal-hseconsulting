@@ -34,7 +34,7 @@ export default function ProjetoEditor() {
     setLoading(true);
     const { data: p } = await supabase
       .from("projetos")
-      .select("*, clients(razao_social, nome_fantasia, cnpj_cpf, cidade, uf), proposals(numero), responsavel_execucao:profiles!projetos_responsavel_execucao_id_fkey(id, nome, email)")
+      .select("*, clients(razao_social, nome_fantasia, cnpj_cpf, cidade, uf), proposals(numero)")
       .eq("id", id).maybeSingle();
     setProjeto(p);
     document.title = `${p?.numero || "Projeto"} | HSE Consulting`;
