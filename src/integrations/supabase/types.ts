@@ -4633,6 +4633,7 @@ export type Database = {
           percentual_progresso: number
           proposal_id: string | null
           responsavel_comercial_id: string | null
+          responsavel_execucao_id: string | null
           status: Database["public"]["Enums"]["projeto_status"]
           titulo: string
           updated_at: string
@@ -4654,6 +4655,7 @@ export type Database = {
           percentual_progresso?: number
           proposal_id?: string | null
           responsavel_comercial_id?: string | null
+          responsavel_execucao_id?: string | null
           status?: Database["public"]["Enums"]["projeto_status"]
           titulo: string
           updated_at?: string
@@ -4675,6 +4677,7 @@ export type Database = {
           percentual_progresso?: number
           proposal_id?: string | null
           responsavel_comercial_id?: string | null
+          responsavel_execucao_id?: string | null
           status?: Database["public"]["Enums"]["projeto_status"]
           titulo?: string
           updated_at?: string
