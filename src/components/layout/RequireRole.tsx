@@ -11,11 +11,18 @@ export default function RequireRole({
   allow = "internal",
 }: {
   children: ReactNode;
-  allow?: "admin" | "internal";
+  allow?: "admin" | "internal" | "comercial" | "financeiro" | "operacional";
 }) {
-  const { loading, isAdmin, isInternal } = useAuth();
+  const { loading, isAdmin, isInternal, canSeeComercial, canSeeFinanceiro } = useAuth();
   if (loading) return null;
-  const ok = allow === "admin" ? isAdmin : isInternal;
+  let ok = false;
+  switch (allow) {
+    case "admin":       ok = isAdmin; break;
+    case "internal":    ok = isInternal; break;   // admin || comercial
+    case "comercial":   ok = canSeeComercial; break;
+    case "financeiro":  ok = canSeeFinanceiro; break;
+    case "operacional": ok = isInternal || canSeeFinanceiro; break; // qualquer perfil interno
+  }
   if (!ok) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
