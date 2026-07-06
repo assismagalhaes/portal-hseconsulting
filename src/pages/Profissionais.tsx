@@ -24,6 +24,7 @@ type Prof = {
   telefone: string | null;
   situacao: "ativo" | "inativo" | "ferias" | "afastado";
   observacoes: string | null;
+  auth_user_id: string | null;
 };
 
 const empty: Partial<Prof> = { situacao: "ativo" };
@@ -33,6 +34,7 @@ export default function Profissionais() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Prof>>(empty);
+  const [usuarios, setUsuarios] = useState<{ id: string; nome: string | null; email: string | null }[]>([]);
 
   const load = async () => {
     const { data, error } = await supabase
@@ -43,6 +45,12 @@ export default function Profissionais() {
     else setItems((data || []) as Prof[]);
   };
   useEffect(() => { load(); }, []);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("profiles").select("id, nome, email").order("nome");
+      setUsuarios((data as any) || []);
+    })();
+  }, []);
 
   const save = async () => {
     if (!editing.nome?.trim()) return toast.error("Informe o nome");
@@ -56,6 +64,7 @@ export default function Profissionais() {
       telefone: editing.telefone || null,
       situacao: editing.situacao || "ativo",
       observacoes: editing.observacoes || null,
+      auth_user_id: editing.auth_user_id || null,
     };
     const { error } = editing.id
       ? await supabase.from("execucao_profissionais").update(payload).eq("id", editing.id)
