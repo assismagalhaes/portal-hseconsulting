@@ -543,11 +543,11 @@ export default function ProposalEditor() {
               <Row label="Cliente">{client?.nome_fantasia || client?.razao_social || "—"}</Row>
               <Row label="Serviços">{items.length}</Row>
               <Row label="Qtd. total de itens">{totalItens}</Row>
-              <Row label="Valor total"><span className="font-mono font-semibold text-primary">{brl(total)}</span></Row>
+              <ResumoValor total={total} revisions={revisions} />
               {isInternal && !clientView && (
                 <>
                   <hr/>
-                  <InternalSummary items={items} pricings={pricings} />
+                  <InternalSummary items={items} pricings={pricings} descontoRevisao={calcDescontoRevisao(total, revisions)} />
                 </>
               )}
             </CardContent>
@@ -608,7 +608,7 @@ function Row({ label, children }: any) {
   return <div className="flex items-center justify-between gap-3"><span className="text-muted-foreground">{label}</span><span className="text-right">{children}</span></div>;
 }
 
-function InternalSummary({ items, pricings }: any) {
+function InternalSummary({ items, pricings, descontoRevisao = 0 }: any) {
   let custoTotal = 0, lucroTotal = 0, receita = 0, imposto = 0;
   items.forEach((it:any) => {
     const p = pricings[it.id];
@@ -619,15 +619,57 @@ function InternalSummary({ items, pricings }: any) {
       imposto += Number(p.indicadores.imposto_estimado||0);
     }
   });
-  const margem = receita > 0 ? lucroTotal / receita : 0;
+  const desc = Number(descontoRevisao) || 0;
+  const receitaFinal = Math.max(0, receita - desc);
+  const lucroFinal = lucroTotal - desc;
+  const margem = receitaFinal > 0 ? lucroFinal / receitaFinal : 0;
   return (
     <div className="space-y-2">
       <Row label="Custo total interno"><span className="font-mono">{brl(custoTotal)}</span></Row>
       <Row label="Impostos estimados"><span className="font-mono">{brl(imposto)}</span></Row>
       <Row label="Receita líquida"><span className="font-mono">{brl(receita)}</span></Row>
-      <Row label="Lucro estimado"><span className="font-mono">{brl(lucroTotal)}</span></Row>
-      <Row label="Margem média"><span className="font-mono">{pct(margem)}</span></Row>
+      {desc > 0 && (
+        <>
+          <Row label="Desconto (revisão)"><span className="font-mono text-danger">- {brl(desc)}</span></Row>
+          <Row label="Receita líquida final"><span className="font-mono font-semibold">{brl(receitaFinal)}</span></Row>
+        </>
+      )}
+      <Row label={desc > 0 ? "Lucro estimado (com desconto)" : "Lucro estimado"}>
+        <span className={`font-mono ${lucroFinal < 0 ? "text-danger" : ""}`}>{brl(lucroFinal)}</span>
+      </Row>
+      <Row label="Margem média"><span className={`font-mono ${margem < 0 ? "text-danger" : ""}`}>{pct(margem)}</span></Row>
     </div>
+  );
+}
+
+/* ---------------- Helpers de revisão (resumo) ---------------- */
+function calcDescontoRevisao(subtotal: number, revisions: any[]): number {
+  if (!revisions?.length) return 0;
+  const ord = [...revisions].sort((a, b) => Number(b.revisao || 0) - Number(a.revisao || 0));
+  const rev = ord.find((r) => r.status === "aprovada") || ord[0];
+  if (!rev || rev.valor_novo == null) return 0;
+  const v = Number(rev.valor_novo);
+  return v < subtotal ? subtotal - v : 0;
+}
+
+function ResumoValor({ total, revisions }: { total: number; revisions: any[] }) {
+  const desc = calcDescontoRevisao(total, revisions);
+  if (!desc) {
+    return <Row label="Valor total"><span className="font-mono font-semibold text-primary">{brl(total)}</span></Row>;
+  }
+  const final = total - desc;
+  const ord = [...revisions].sort((a, b) => Number(b.revisao || 0) - Number(a.revisao || 0));
+  const rev = ord.find((r: any) => r.status === "aprovada") || ord[0];
+  return (
+    <>
+      <Row label="Subtotal"><span className="font-mono">{brl(total)}</span></Row>
+      <Row label={`Desconto (Rev. ${String(rev.revisao).padStart(2, "0")})`}>
+        <span className="font-mono text-danger">- {brl(desc)}</span>
+      </Row>
+      <Row label="Valor final">
+        <span className="font-mono font-semibold text-primary">{brl(final)}</span>
+      </Row>
+    </>
   );
 }
 
