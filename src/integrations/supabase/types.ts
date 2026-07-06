@@ -4391,6 +4391,7 @@ export type Database = {
           id: string
           nome: string
           registro_profissional: string | null
+          senha_provisoria: boolean
           status: string
           telefone: string | null
           updated_at: string
@@ -4404,6 +4405,7 @@ export type Database = {
           id: string
           nome?: string
           registro_profissional?: string | null
+          senha_provisoria?: boolean
           status?: string
           telefone?: string | null
           updated_at?: string
@@ -4417,6 +4419,7 @@ export type Database = {
           id?: string
           nome?: string
           registro_profissional?: string | null
+          senha_provisoria?: boolean
           status?: string
           telefone?: string | null
           updated_at?: string

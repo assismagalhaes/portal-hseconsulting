@@ -493,13 +493,15 @@ export default function AppLayout() {
 
           <div className="flex-1" />
 
-          <Button
-            size="sm"
-            className="hidden sm:inline-flex gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
-            onClick={() => navigate("/propostas")}
-          >
-            <Plus className="h-4 w-4" /> Nova Proposta
-          </Button>
+          {!isTecnico && (
+            <Button
+              size="sm"
+              className="hidden sm:inline-flex gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+              onClick={() => navigate("/propostas")}
+            >
+              <Plus className="h-4 w-4" /> Nova Proposta
+            </Button>
+          )}
 
           <NotificacoesBell />
 
