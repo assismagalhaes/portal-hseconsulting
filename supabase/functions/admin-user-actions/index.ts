@@ -83,9 +83,25 @@ Deno.serve(async (req) => {
           ban_duration: "876000h",
         } as any);
         if (banErr) return json({ error: banErr.message }, 400);
-        await admin.from("user_roles").delete().eq("user_id", user_id);
-        await admin.from("user_permission_overrides").delete().eq("user_id", user_id);
-        await admin.from("profiles").update({ status: "excluido" }).eq("id", user_id);
+
+        const { error: rolesErr } = await admin.from("user_roles").delete().eq("user_id", user_id);
+        if (rolesErr) return json({ error: `Erro ao remover perfil de acesso: ${rolesErr.message}` }, 400);
+
+        const { error: overridesErr } = await admin.from("user_permission_overrides").delete().eq("user_id", user_id);
+        if (overridesErr) return json({ error: `Erro ao remover permissões granulares: ${overridesErr.message}` }, 400);
+
+        const { data: updatedProfile, error: profileErr } = await admin
+          .from("profiles")
+          .update({ status: "excluido" })
+          .eq("id", user_id)
+          .select("id, status")
+          .maybeSingle();
+
+        if (profileErr) return json({ error: `Erro ao marcar usuário como excluído: ${profileErr.message}` }, 400);
+        if (!updatedProfile || updatedProfile.status !== "excluido") {
+          return json({ error: "Não foi possível confirmar a exclusão do usuário." }, 400);
+        }
+
         detalhe = `Usuário ${email || user_id} excluído (soft-delete)`;
         break;
       }
