@@ -24,6 +24,7 @@ type Prof = {
   telefone: string | null;
   situacao: "ativo" | "inativo" | "ferias" | "afastado";
   observacoes: string | null;
+  auth_user_id: string | null;
 };
 
 const empty: Partial<Prof> = { situacao: "ativo" };
@@ -33,6 +34,7 @@ export default function Profissionais() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Prof>>(empty);
+  const [usuarios, setUsuarios] = useState<{ id: string; nome: string | null; email: string | null }[]>([]);
 
   const load = async () => {
     const { data, error } = await supabase
@@ -43,6 +45,12 @@ export default function Profissionais() {
     else setItems((data || []) as Prof[]);
   };
   useEffect(() => { load(); }, []);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("profiles").select("id, nome, email").order("nome");
+      setUsuarios((data as any) || []);
+    })();
+  }, []);
 
   const save = async () => {
     if (!editing.nome?.trim()) return toast.error("Informe o nome");
@@ -56,6 +64,7 @@ export default function Profissionais() {
       telefone: editing.telefone || null,
       situacao: editing.situacao || "ativo",
       observacoes: editing.observacoes || null,
+      auth_user_id: editing.auth_user_id || null,
     };
     const { error } = editing.id
       ? await supabase.from("execucao_profissionais").update(payload).eq("id", editing.id)
@@ -99,6 +108,24 @@ export default function Profissionais() {
                   </Select>
                 </div>
                 <div className="col-span-2"><Label>Observações</Label><Textarea value={editing.observacoes || ""} onChange={(e) => setEditing({ ...editing, observacoes: e.target.value })} /></div>
+                <div className="col-span-2">
+                  <Label>Usuário do sistema (login)</Label>
+                  <Select
+                    value={editing.auth_user_id || "__none__"}
+                    onValueChange={(v) => setEditing({ ...editing, auth_user_id: v === "__none__" ? null : v })}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Não vinculado" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Sem login vinculado</SelectItem>
+                      {usuarios.map(u => (
+                        <SelectItem key={u.id} value={u.id}>{u.nome || u.email || u.id}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Vincula o profissional a um usuário. Técnicos vêem no portal apenas os projetos em que estão alocados via esse vínculo.
+                  </p>
+                </div>
               </div>
               <DialogFooter><Button onClick={save}>Salvar</Button></DialogFooter>
             </DialogContent>

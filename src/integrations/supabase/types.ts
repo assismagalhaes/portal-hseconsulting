@@ -2276,6 +2276,7 @@ export type Database = {
       execucao_profissionais: {
         Row: {
           area: string | null
+          auth_user_id: string | null
           cargo: string | null
           created_at: string
           created_by: string | null
@@ -2292,6 +2293,7 @@ export type Database = {
         }
         Insert: {
           area?: string | null
+          auth_user_id?: string | null
           cargo?: string | null
           created_at?: string
           created_by?: string | null
@@ -2308,6 +2310,7 @@ export type Database = {
         }
         Update: {
           area?: string | null
+          auth_user_id?: string | null
           cargo?: string | null
           created_at?: string
           created_by?: string | null
@@ -5646,6 +5649,18 @@ export type Database = {
         Returns: undefined
       }
       projetos_gerar_renovacoes: { Args: never; Returns: number }
+      user_can_access_execucao: {
+        Args: { _execucao_id: string; _uid: string }
+        Returns: boolean
+      }
+      user_can_access_os: {
+        Args: { _os_id: string; _uid: string }
+        Returns: boolean
+      }
+      user_can_access_projeto: {
+        Args: { _projeto_id: string; _uid: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "comercial" | "tecnico" | "financeiro"
