@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import DashboardTecnico from "./pages/DashboardTecnico";
 import Usuarios from "./pages/Usuarios";
+import UsuariosLogs from "./pages/UsuariosLogs";
 import MeuPerfil from "./pages/MeuPerfil";
 import Clients from "./pages/Clients";
 import Services from "./pages/Services";
@@ -111,6 +112,7 @@ const App = () => (
               <Route path="/" element={<DashboardSwitch />} />
               <Route path="/meu-perfil" element={<MeuPerfil />} />
               <Route path="/usuarios" element={<RequireRole allow="admin"><Usuarios /></RequireRole>} />
+              <Route path="/usuarios/logs" element={<RequireRole allow="admin"><UsuariosLogs /></RequireRole>} />
               <Route path="/clientes" element={<RequireRole><Clients /></RequireRole>} />
               <Route path="/servicos" element={<RequireRole><Services /></RequireRole>} />
               <Route path="/propostas" element={<RequireRole><Proposals /></RequireRole>} />
