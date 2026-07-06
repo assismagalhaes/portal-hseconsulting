@@ -647,9 +647,13 @@ function calcDescontoRevisao(subtotal: number, revisions: any[]): number {
   if (!revisions?.length) return 0;
   const ord = [...revisions].sort((a, b) => Number(b.revisao || 0) - Number(a.revisao || 0));
   const rev = ord.find((r) => r.status === "aprovada") || ord[0];
-  if (!rev || rev.valor_novo == null) return 0;
-  const v = Number(rev.valor_novo);
-  return v < subtotal ? subtotal - v : 0;
+  if (!rev || rev.valor_novo == null || rev.valor_anterior == null) return 0;
+  // Só considera desconto real quando houve redução entre valor anterior e novo da própria revisão.
+  // Evita interpretar "emissão inicial" ou adição de itens após a revisão como desconto.
+  if (rev.tipo && rev.tipo !== "desconto") return 0;
+  const novo = Number(rev.valor_novo);
+  const ant = Number(rev.valor_anterior);
+  return ant > novo ? ant - novo : 0;
 }
 
 function ResumoValor({ total, revisions }: { total: number; revisions: any[] }) {
