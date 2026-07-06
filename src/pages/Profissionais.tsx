@@ -108,6 +108,24 @@ export default function Profissionais() {
                   </Select>
                 </div>
                 <div className="col-span-2"><Label>Observações</Label><Textarea value={editing.observacoes || ""} onChange={(e) => setEditing({ ...editing, observacoes: e.target.value })} /></div>
+                <div className="col-span-2">
+                  <Label>Usuário do sistema (login)</Label>
+                  <Select
+                    value={editing.auth_user_id || "__none__"}
+                    onValueChange={(v) => setEditing({ ...editing, auth_user_id: v === "__none__" ? null : v })}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Não vinculado" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Sem login vinculado</SelectItem>
+                      {usuarios.map(u => (
+                        <SelectItem key={u.id} value={u.id}>{u.nome || u.email || u.id}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Vincula o profissional a um usuário. Técnicos vêem no portal apenas os projetos em que estão alocados via esse vínculo.
+                  </p>
+                </div>
               </div>
               <DialogFooter><Button onClick={save}>Salvar</Button></DialogFooter>
             </DialogContent>
