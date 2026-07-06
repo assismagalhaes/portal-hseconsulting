@@ -3563,6 +3563,36 @@ export type Database = {
         }
         Relationships: []
       }
+      internos_logs_acesso: {
+        Row: {
+          acao: string
+          created_at: string
+          detalhe: string | null
+          id: string
+          ip: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          detalhe?: string | null
+          id?: string
+          ip?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          detalhe?: string | null
+          id?: string
+          ip?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       notificacoes: {
         Row: {
           automacao_id: string | null

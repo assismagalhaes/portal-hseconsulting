@@ -33,11 +33,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
         setTimeout(() => fetchRoles(s.user.id), 0);
+        if (event === "SIGNED_IN") {
+          setTimeout(() => {
+            supabase.from("internos_logs_acesso").insert({
+              user_id: s.user.id,
+              acao: "login",
+              detalhe: s.user.email || null,
+              user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+            }).then(() => {});
+          }, 0);
+        }
       } else {
         setRoles([]);
       }
@@ -69,7 +79,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user, session, roles, loading,
       isInternal, isAdmin, isComercial, isFinanceiro, isTecnico,
       canSeeComercial, canSeeFinanceiro,
-      signOut: async () => { await supabase.auth.signOut(); },
+      signOut: async () => {
+        if (user) {
+          await supabase.from("internos_logs_acesso").insert({
+            user_id: user.id, acao: "logout", detalhe: user.email || null,
+          });
+        }
+        await supabase.auth.signOut();
+      },
     }}>
       {children}
     </Ctx.Provider>

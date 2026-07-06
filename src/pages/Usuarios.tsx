@@ -9,7 +9,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Search } from "lucide-react";
+import { Plus, Pencil, Search, MoreHorizontal, KeyRound, Send, Ban, Unlock, Trash2, History } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 type Role = "admin" | "comercial" | "tecnico" | "financeiro";
@@ -98,13 +100,35 @@ export default function Usuarios() {
 
   const filtered = rows.filter((r) => !q || [r.nome, r.email, r.cargo, r.area].some((s) => (s || "").toLowerCase().includes(q.toLowerCase())));
 
+  async function runAction(action: string, r: Row) {
+    const confirmMsg: Record<string, string> = {
+      reset_password: `Enviar link de redefinição de senha para ${r.email}?`,
+      resend_invite: `Reenviar convite de acesso para ${r.email}?`,
+      block: `Bloquear ${r.nome || r.email}? O usuário não conseguirá mais entrar.`,
+      unblock: `Desbloquear ${r.nome || r.email}?`,
+      delete: `Excluir DEFINITIVAMENTE ${r.nome || r.email}? Esta ação não pode ser desfeita.`,
+    };
+    if (!confirm(confirmMsg[action])) return;
+    const { data, error } = await supabase.functions.invoke("admin-user-actions", {
+      body: { action, user_id: r.id, redirect_to: `${window.location.origin}/auth` },
+    });
+    if (error) return toast.error(error.message);
+    if ((data as any)?.error) return toast.error((data as any).error);
+    toast.success("Ação executada");
+    load();
+  }
+
   return (
     <>
       <PageHeader
         title="Usuários"
         subtitle="Cadastro e permissões de acesso ao Portal HSE Consulting"
         actions={
-          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditing(empty); setCreating(false); } }}>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline">
+              <Link to="/usuarios/logs"><History className="h-4 w-4 mr-2" /> Trilha de acessos</Link>
+            </Button>
+            <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditing(empty); setCreating(false); } }}>
             <DialogTrigger asChild>
               <Button onClick={() => { setCreating(true); setEditing(empty); }}>
                 <Plus className="h-4 w-4 mr-2" /> Novo usuário
@@ -147,7 +171,8 @@ export default function Usuarios() {
               </div>
               <DialogFooter><Button onClick={save}>{creating ? "Criar usuário" : "Salvar"}</Button></DialogFooter>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         }
       />
       <div className="p-6 space-y-4">
@@ -188,9 +213,38 @@ export default function Usuarios() {
                   <TableCell><Badge variant="secondary">{roleLabel[r.role]}</Badge></TableCell>
                   <TableCell><Badge className={statusColor[r.status] + " border-0"}>{statusLabel[r.status] || r.status}</Badge></TableCell>
                   <TableCell>
-                    <Button size="sm" variant="ghost" onClick={() => { setEditing(r); setCreating(false); setOpen(true); }}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => { setEditing(r); setCreating(false); setOpen(true); }}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="sm" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => runAction("reset_password", r)}>
+                            <KeyRound className="h-4 w-4 mr-2" /> Redefinir senha
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => runAction("resend_invite", r)}>
+                            <Send className="h-4 w-4 mr-2" /> Reenviar convite
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {r.status === "bloqueado" ? (
+                            <DropdownMenuItem onClick={() => runAction("unblock", r)}>
+                              <Unlock className="h-4 w-4 mr-2" /> Desbloquear
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => runAction("block", r)}>
+                              <Ban className="h-4 w-4 mr-2" /> Bloquear
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-danger" onClick={() => runAction("delete", r)}>
+                            <Trash2 className="h-4 w-4 mr-2" /> Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

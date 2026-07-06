@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { email, nome, role, telefone, cargo, area, registro_profissional } = body || {};
     if (!email || !nome) return json({ error: "email e nome são obrigatórios" }, 400);
-    const perfil = ["admin", "comercial", "tecnico"].includes(role) ? role : "tecnico";
+    const perfil = ["admin", "comercial", "tecnico", "financeiro"].includes(role) ? role : "tecnico";
 
     // cria usuário — senha aleatória; o convite é enviado por invite link
     const { data: created, error: cErr } = await admin.auth.admin.inviteUserByEmail(email, {
@@ -49,6 +49,12 @@ Deno.serve(async (req) => {
     // garante o papel (o trigger handle_new_user já insere, mas garantimos)
     await admin.from("user_roles").delete().eq("user_id", userId);
     await admin.from("user_roles").insert({ user_id: userId, role: perfil });
+
+    await admin.from("internos_logs_acesso").insert({
+      user_id: callerId,
+      acao: "usuario_criado",
+      detalhe: `${email} (${perfil})`,
+    });
 
     return json({ ok: true, user_id: userId });
   } catch (e) {
