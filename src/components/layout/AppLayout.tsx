@@ -136,12 +136,13 @@ function activeGroupForPath(pathname: string): string {
 }
 
 function SidebarBody({
-  collapsed, openGroup, setOpenGroup, onNavigate,
+  collapsed, openGroup, setOpenGroup, onNavigate, groups,
 }: {
   collapsed: boolean;
   openGroup: string;
   setOpenGroup: (id: string) => void;
   onNavigate?: () => void;
+  groups: NavGroup[];
 }) {
   const { pathname } = useLocation();
   const isItemActive = (it: NavItem) =>
@@ -152,7 +153,7 @@ function SidebarBody({
     return (
       <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-1">
         <TooltipProvider delayDuration={150}>
-          {GROUPS.map((g) => {
+          {groups.map((g) => {
             const Icon = g.icon;
             const active = isGroupActive(g);
             return (
@@ -214,7 +215,7 @@ function SidebarBody({
 
   return (
     <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
-      {GROUPS.map((g) => {
+      {groups.map((g) => {
         const Icon = g.icon;
         const active = isGroupActive(g);
         const open = openGroup === g.id;
