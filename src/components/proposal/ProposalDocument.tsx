@@ -83,10 +83,20 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
     revisoesOrdenadas.find((r: any) => r.status === "aprovada") ||
     revisoesOrdenadas[0] ||
     null;
-  const valorRevisao = revVigente && revVigente.valor_novo != null ? Number(revVigente.valor_novo) : null;
   const descontoField = Number(proposal.desconto || 0);
-  // desconto efetivo: diferença entre subtotal e valor da revisão (quando menor), ou campo legado.
-  const descontoRev = valorRevisao != null && valorRevisao < subtotal ? subtotal - valorRevisao : 0;
+  // desconto efetivo: só quando a própria revisão registrou redução (valor_anterior > valor_novo)
+  // e é do tipo "desconto". Evita falso desconto quando itens foram adicionados após a revisão
+  // ou quando existe apenas a emissão inicial.
+  const isDescontoReal =
+    revVigente &&
+    (revVigente.tipo === "desconto" || !revVigente.tipo === false) &&
+    revVigente.tipo === "desconto" &&
+    revVigente.valor_anterior != null &&
+    revVigente.valor_novo != null &&
+    Number(revVigente.valor_anterior) > Number(revVigente.valor_novo);
+  const descontoRev = isDescontoReal
+    ? Number(revVigente.valor_anterior) - Number(revVigente.valor_novo)
+    : 0;
   const desconto = descontoRev > 0 ? descontoRev : descontoField;
   const valorFinal = Math.max(0, subtotal - desconto);
   const descontoLabel = descontoRev > 0
