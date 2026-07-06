@@ -4350,29 +4350,41 @@ export type Database = {
       }
       profiles: {
         Row: {
+          area: string | null
           cargo: string | null
           created_at: string
           email: string | null
+          foto_url: string | null
           id: string
           nome: string
+          registro_profissional: string | null
+          status: string
           telefone: string | null
           updated_at: string
         }
         Insert: {
+          area?: string | null
           cargo?: string | null
           created_at?: string
           email?: string | null
+          foto_url?: string | null
           id: string
           nome?: string
+          registro_profissional?: string | null
+          status?: string
           telefone?: string | null
           updated_at?: string
         }
         Update: {
+          area?: string | null
           cargo?: string | null
           created_at?: string
           email?: string | null
+          foto_url?: string | null
           id?: string
           nome?: string
+          registro_profissional?: string | null
+          status?: string
           telefone?: string | null
           updated_at?: string
         }
@@ -5592,7 +5604,9 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: { Args: never; Returns: boolean }
       is_client_user: { Args: never; Returns: boolean }
+      is_tecnico: { Args: never; Returns: boolean }
       projeto_recalcular_progresso: {
         Args: { _projeto_id: string }
         Returns: undefined

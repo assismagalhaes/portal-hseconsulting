@@ -11,6 +11,9 @@ import ClienteLayout from "./components/layout/ClienteLayout";
 import RequireCliente from "./components/layout/RequireCliente";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import DashboardTecnico from "./pages/DashboardTecnico";
+import Usuarios from "./pages/Usuarios";
+import MeuPerfil from "./pages/MeuPerfil";
 import Clients from "./pages/Clients";
 import Services from "./pages/Services";
 import Proposals from "./pages/Proposals";
@@ -71,6 +74,13 @@ import ClientePendencias from "./pages/cliente/ClientePendencias";
 import ClienteComunicacoes from "./pages/cliente/ClienteComunicacoes";
 import ClientePerfil from "./pages/cliente/ClientePerfil";
 import NotFound from "./pages/NotFound.tsx";
+import RequireRole from "./components/layout/RequireRole";
+import { useAuth } from "@/lib/auth";
+
+function DashboardSwitch() {
+  const { isTecnico } = useAuth();
+  return isTecnico ? <DashboardTecnico /> : <Dashboard />;
+}
 
 const queryClient = new QueryClient();
 
@@ -98,56 +108,58 @@ const App = () => (
               <Route path="/cliente/perfil" element={<ClientePerfil />} />
             </Route>
             <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/clientes" element={<Clients />} />
-              <Route path="/servicos" element={<Services />} />
-              <Route path="/propostas" element={<Proposals />} />
-              <Route path="/propostas/:id" element={<ProposalEditor />} />
-              <Route path="/execucao" element={<Execucao />} />
-              <Route path="/execucao/:id" element={<ExecucaoEditor />} />
+              <Route path="/" element={<DashboardSwitch />} />
+              <Route path="/meu-perfil" element={<MeuPerfil />} />
+              <Route path="/usuarios" element={<RequireRole allow="admin"><Usuarios /></RequireRole>} />
+              <Route path="/clientes" element={<RequireRole><Clients /></RequireRole>} />
+              <Route path="/servicos" element={<RequireRole><Services /></RequireRole>} />
+              <Route path="/propostas" element={<RequireRole><Proposals /></RequireRole>} />
+              <Route path="/propostas/:id" element={<RequireRole><ProposalEditor /></RequireRole>} />
+              <Route path="/execucao" element={<RequireRole><Execucao /></RequireRole>} />
+              <Route path="/execucao/:id" element={<RequireRole><ExecucaoEditor /></RequireRole>} />
               <Route path="/projetos" element={<Projetos />} />
               <Route path="/projetos/:id" element={<ProjetoEditor />} />
-              <Route path="/ordens-servico" element={<OrdensServico />} />
-              <Route path="/ordens-servico/:id" element={<OrdemServicoEditor />} />
-              <Route path="/ordens-servico/:id/imprimir" element={<OrdemServicoPrint />} />
-              <Route path="/agenda" element={<Agenda />} />
-              <Route path="/planejamento" element={<Planejamento />} />
-              <Route path="/meu-painel" element={<MeuPainel />} />
-              <Route path="/profissionais" element={<Profissionais />} />
-              <Route path="/documentos" element={<Documentos />} />
-              <Route path="/documentos/modelos" element={<DocumentosModelos />} />
-              <Route path="/documentos/recebidos" element={<DocumentosRecebidos />} />
-              <Route path="/documentos/pendentes" element={<DocumentosPendentes />} />
-              <Route path="/documentos/:id" element={<DocumentoEditor />} />
-              <Route path="/documentos/:id/pdf" element={<DocumentoPDF />} />
-              <Route path="/crm" element={<CrmDashboard />} />
-              <Route path="/crm/leads" element={<CrmLeads />} />
-              <Route path="/crm/oportunidades" element={<CrmOportunidades />} />
-              <Route path="/crm/pipeline" element={<CrmPipeline />} />
-              <Route path="/crm/followups" element={<CrmFollowups />} />
-              <Route path="/crm/agenda" element={<CrmAgenda />} />
-              <Route path="/crm/alertas" element={<CrmAlertas />} />
-              <Route path="/financeiro" element={<FinanceiroDashboard />} />
-              <Route path="/financeiro/contratos" element={<FinContratos />} />
-              <Route path="/financeiro/contratos/:id" element={<FinContratoEditor />} />
-              <Route path="/financeiro/contas-receber" element={<FinContasReceber />} />
-              <Route path="/financeiro/custos" element={<FinCustos />} />
-              <Route path="/financeiro/alertas" element={<FinAlertas />} />
-              <Route path="/financeiro/centros-custo" element={<FinCentrosCusto />} />
-              <Route path="/portal-cliente" element={<PortalClienteConfig />} />
-              <Route path="/ia" element={<IaHub />} />
-              <Route path="/ia/chat" element={<IaChatPage />} />
-              <Route path="/ia/alertas" element={<IaAlertas />} />
-              <Route path="/ia/prompts" element={<IaPrompts />} />
-              <Route path="/ia/interacoes" element={<IaInteracoes />} />
-              <Route path="/ia/resumo-dia" element={<IaResumoDia />} />
-              <Route path="/ia/resumo-semanal" element={<IaResumoSemanal />} />
-              <Route path="/automacoes" element={<Automacoes />} />
-              <Route path="/automacoes/dashboard" element={<AutomacoesDashboard />} />
-              <Route path="/automacoes/execucoes" element={<AutomacoesExecucoes />} />
-              <Route path="/notificacoes" element={<Notificacoes />} />
-              <Route path="/tarefas" element={<Tarefas />} />
-              <Route path="/configuracoes" element={<Settings />} />
+              <Route path="/ordens-servico" element={<RequireRole><OrdensServico /></RequireRole>} />
+              <Route path="/ordens-servico/:id" element={<RequireRole><OrdemServicoEditor /></RequireRole>} />
+              <Route path="/ordens-servico/:id/imprimir" element={<RequireRole><OrdemServicoPrint /></RequireRole>} />
+              <Route path="/agenda" element={<RequireRole><Agenda /></RequireRole>} />
+              <Route path="/planejamento" element={<RequireRole><Planejamento /></RequireRole>} />
+              <Route path="/meu-painel" element={<RequireRole><MeuPainel /></RequireRole>} />
+              <Route path="/profissionais" element={<RequireRole allow="admin"><Profissionais /></RequireRole>} />
+              <Route path="/documentos" element={<RequireRole><Documentos /></RequireRole>} />
+              <Route path="/documentos/modelos" element={<RequireRole><DocumentosModelos /></RequireRole>} />
+              <Route path="/documentos/recebidos" element={<RequireRole><DocumentosRecebidos /></RequireRole>} />
+              <Route path="/documentos/pendentes" element={<RequireRole><DocumentosPendentes /></RequireRole>} />
+              <Route path="/documentos/:id" element={<RequireRole><DocumentoEditor /></RequireRole>} />
+              <Route path="/documentos/:id/pdf" element={<RequireRole><DocumentoPDF /></RequireRole>} />
+              <Route path="/crm" element={<RequireRole><CrmDashboard /></RequireRole>} />
+              <Route path="/crm/leads" element={<RequireRole><CrmLeads /></RequireRole>} />
+              <Route path="/crm/oportunidades" element={<RequireRole><CrmOportunidades /></RequireRole>} />
+              <Route path="/crm/pipeline" element={<RequireRole><CrmPipeline /></RequireRole>} />
+              <Route path="/crm/followups" element={<RequireRole><CrmFollowups /></RequireRole>} />
+              <Route path="/crm/agenda" element={<RequireRole><CrmAgenda /></RequireRole>} />
+              <Route path="/crm/alertas" element={<RequireRole><CrmAlertas /></RequireRole>} />
+              <Route path="/financeiro" element={<RequireRole><FinanceiroDashboard /></RequireRole>} />
+              <Route path="/financeiro/contratos" element={<RequireRole><FinContratos /></RequireRole>} />
+              <Route path="/financeiro/contratos/:id" element={<RequireRole><FinContratoEditor /></RequireRole>} />
+              <Route path="/financeiro/contas-receber" element={<RequireRole><FinContasReceber /></RequireRole>} />
+              <Route path="/financeiro/custos" element={<RequireRole><FinCustos /></RequireRole>} />
+              <Route path="/financeiro/alertas" element={<RequireRole><FinAlertas /></RequireRole>} />
+              <Route path="/financeiro/centros-custo" element={<RequireRole><FinCentrosCusto /></RequireRole>} />
+              <Route path="/portal-cliente" element={<RequireRole><PortalClienteConfig /></RequireRole>} />
+              <Route path="/ia" element={<RequireRole><IaHub /></RequireRole>} />
+              <Route path="/ia/chat" element={<RequireRole><IaChatPage /></RequireRole>} />
+              <Route path="/ia/alertas" element={<RequireRole><IaAlertas /></RequireRole>} />
+              <Route path="/ia/prompts" element={<RequireRole><IaPrompts /></RequireRole>} />
+              <Route path="/ia/interacoes" element={<RequireRole><IaInteracoes /></RequireRole>} />
+              <Route path="/ia/resumo-dia" element={<RequireRole><IaResumoDia /></RequireRole>} />
+              <Route path="/ia/resumo-semanal" element={<RequireRole><IaResumoSemanal /></RequireRole>} />
+              <Route path="/automacoes" element={<RequireRole><Automacoes /></RequireRole>} />
+              <Route path="/automacoes/dashboard" element={<RequireRole><AutomacoesDashboard /></RequireRole>} />
+              <Route path="/automacoes/execucoes" element={<RequireRole><AutomacoesExecucoes /></RequireRole>} />
+              <Route path="/notificacoes" element={<RequireRole><Notificacoes /></RequireRole>} />
+              <Route path="/tarefas" element={<RequireRole><Tarefas /></RequireRole>} />
+              <Route path="/configuracoes" element={<RequireRole allow="admin"><Settings /></RequireRole>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

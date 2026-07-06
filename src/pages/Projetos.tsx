@@ -10,8 +10,10 @@ import { Progress } from "@/components/ui/progress";
 import { brl, formatDate } from "@/lib/format";
 import { projetoStatusColor, projetoStatusLabel } from "@/lib/projetos";
 import { FolderKanban, Search } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 
 export default function Projetos() {
+  const { isTecnico } = useAuth();
   const [rows, setRows] = useState<any[]>([]);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<string>("all");
@@ -104,7 +106,9 @@ export default function Projetos() {
                         <div>Início: {formatDate(r.data_inicio)}</div>
                         <div>Fim: {formatDate(r.data_fim_prevista)}</div>
                       </div>
-                      <div className="font-mono text-sm w-28 text-right">{brl(r.valor_contratado)}</div>
+                      {!isTecnico && (
+                        <div className="font-mono text-sm w-28 text-right">{brl(r.valor_contratado)}</div>
+                      )}
                       <Badge className={projetoStatusColor[r.status] + " border-0 whitespace-nowrap"}>{projetoStatusLabel[r.status]}</Badge>
                     </Link>
                   </li>

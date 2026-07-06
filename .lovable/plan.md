@@ -1,97 +1,68 @@
-# Plano — Reestruturação para Arquitetura Centrada em Projetos
+## Contexto atual
 
-Vamos introduzir o módulo **Projetos / Contratos** como o "pai" da operação após a aprovação da proposta, substituindo o modelo atual de "1 serviço = N OS" por "1 projeto = N serviços contratados = 1 OS principal = N visitas".
+- Já existe enum `app_role` com valores `admin`, `comercial`, `tecnico` e tabela `user_roles` com função `has_role()`.
+- `handle_new_user` cria papel `comercial` por padrão (primeiro usuário vira `admin`).
+- Existe `execucao_profissionais` (cadastro operacional, sem login) e `profiles` (vinculada a `auth.users`).
+- `AuthProvider` já expõe `roles` e `isInternal` (admin || comercial).
+- Sidebar (`AppLayout`) hoje mostra tudo para qualquer usuário logado.
+- RLS de tabelas comerciais/financeiras precisa ser revista para bloquear `tecnico`.
 
-## Fases
+## O que será entregue (Fase 1)
 
-### Fase 1 — Modelo de Dados (migration)
+### 1. Backend — papéis e segurança
 
-Novas tabelas:
-- `projetos` — núcleo do contrato operacional
-  - vínculo: `proposal_id`, `client_id`, `financeiro_contrato_id`
-  - campos: `numero` (PRJ-AAAA-NNNNN), `titulo`, `status` (planejamento, em_execucao, em_revisao, concluido, atrasado, cancelado), `gestor_id`, `responsavel_comercial_id`, `valor_contratado`, `data_inicio`, `data_fim_prevista`, `data_fim_real`, `percentual_progresso`, `observacoes`
-- `projeto_servicos` — serviços contratados dentro do projeto (substitui `approved_services` como entidade operacional)
-  - vínculo: `projeto_id`, `proposal_item_id`, `service_id`, `responsavel_id`
-  - campos: `nome`, `categoria`, `status` (pendente, em_andamento, concluido, cancelado), `percentual_progresso`, `validade_meses`, `data_validade`, `valor`
-- `projeto_timeline` — histórico de eventos do projeto
-- `projeto_renovacoes` — controle de renovações próximas (job/automação cria)
+- Migration para:
+  - Ajustar `handle_new_user`: novos usuários passam a nascer com papel `tecnico` (o primeiro continua `admin`).
+  - Criar função `public.is_admin()` (wrapper de `has_role(auth.uid(),'admin')`) para simplificar policies.
+  - Revisar policies das tabelas sensíveis para exigir `is_admin()` ou `can_see_internal()` (bloquear `tecnico`):
+    - Comercial: `proposals`, `proposal_items`, `proposal_revisions`, `proposal_item_pricing`, `proposal_template`, `crm_*`, `historico_precificacao`, `simulacoes_precificacao`, `simulacao_*`, `pricing_params`, `valor_hora_tecnica_historico`, `approved_services`, `services` (leitura ok, escrita admin).
+    - Financeiro: todas `financeiro_*`.
+    - Config/usuários: `user_roles`, `profiles` (tecnico só lê o próprio), `automacoes*`, `ia_*` restritos, `documentos_modelos`.
+  - Projetos: `projetos`, `projeto_servicos`, `projeto_timeline`, `projeto_renovacoes`, `ordens_servico`, `os_*`, `execucao_*`, `tarefas*`, `documentos_tecnicos` (somente arquivos liberados), `clients` (leitura ok para nome/serviço) — permitir SELECT para `tecnico`.
+  - Restringir UPDATE de campos de responsável em `projetos` (`responsavel_comercial_id`, etc.) — via policy `WITH CHECK` que exige `is_admin()` para UPDATE.
+- Vincular `execucao_profissionais.auth_user_id` (adicionar coluna opcional) para conectar cadastro operacional com login.
 
-Ajustes em tabelas existentes:
-- `ordens_servico`: adicionar `projeto_id` (1 OS principal por projeto)
-- `os_visitas`: já existe, manter (visitas vinculadas à OS principal)
-- `documentos_tecnicos`: adicionar `projeto_id` para vinculação direta
-- `financeiro_contratos`: adicionar `projeto_id`
-- `execucao_servicos`: marcar como legado (manter para compatibilidade, não usar em novos fluxos)
+### 2. Frontend — módulo Usuários (admin only)
 
-Funções/triggers:
-- `criar_projeto_da_proposta(_proposal_id)` — chamada quando proposta vira aprovada; cria projeto + projeto_servicos (a partir dos proposal_items) + 1 OS principal + vincula contrato financeiro
-- Substituir trigger `on_proposal_status_change` para chamar `criar_projeto_da_proposta` no lugar de `criar_execucoes_da_proposta`
-- `projeto_recalcular_progresso(_projeto_id)` — recalcula % com base em projeto_servicos
-- Trigger em `projeto_servicos` para recalcular progresso do projeto
-- Função `projetos_gerar_renovacoes()` — varre projetos concluídos e gera oportunidades CRM próximas do vencimento
+- Nova página `/usuarios` (`src/pages/Usuarios.tsx`):
+  - Lista de usuários (join `profiles` + `user_roles`).
+  - Criar usuário: chama edge function `admin-create-user` (usa `service_role`) — cria em `auth.users`, insere `profiles`, atribui papel.
+  - Editar: nome, telefone, cargo, área, registro, foto, status, papel.
+  - Status (`ativo`/`inativo`/`bloqueado`) armazenado em `profiles` (novas colunas).
+- Edge function `supabase/functions/admin-create-user/index.ts` protegida por checagem de papel admin do chamador.
 
-Sequence: `projeto_numero_seq`.
+### 3. Frontend — controle de acesso e navegação
 
-### Fase 2 — Páginas e rotas
+- `AuthProvider`: expor `isAdmin`, `isTecnico`.
+- `AppLayout`: filtrar itens do menu conforme papel. Técnico vê apenas: Dashboard, Projetos, Meu Perfil.
+- Novo componente `RequireRole` para proteger rotas admin (`/clientes`, `/servicos`, `/propostas*`, `/execucao*`, `/crm/*`, `/financeiro/*`, `/documentos*`, `/ia/*`, `/automacoes/*`, `/portal-cliente`, `/configuracoes`, `/profissionais`, `/usuarios`, `/agenda`, `/ordens-servico*`, `/planejamento`, `/notificacoes`, `/tarefas`).
+- `/` (Dashboard): renderizar `DashboardTecnico` quando papel = tecnico; senão o atual.
+- Nova página `DashboardTecnico`: cards (em andamento / concluídos / próximos do prazo / atrasados), últimos projetos atualizados, próximos prazos, checklists pendentes.
+- `Projetos` e `ProjetoEditor`: ocultar/omitir para técnico os campos e seções financeiras (`valor_contratado`, contratos, financeiro, valores em `projeto_servicos`). Bloquear edição de responsáveis (inputs somente-leitura).
+- Nova página `MeuPerfil` reutilizando parte de `Settings` (dados pessoais e foto), sem seções administrativas.
 
-Novo módulo **Projetos**:
-- `/projetos` — lista com KPIs (em planejamento, em execução, em revisão, concluídos, atrasados)
-- `/projetos/:id` — editor do projeto com abas:
-  - **Visão Geral**: dados, gestor, datas, progresso geral
-  - **Serviços Contratados**: tabela com status/progresso por serviço, responsável
-  - **Ordem de Serviço**: link para OS principal + visitas
-  - **Documentos**: todos documentos vinculados ao projeto
-  - **Financeiro**: contrato, parcelas, recebimentos
-  - **Timeline**: histórico
-  - **Renovações**: serviços com validade
+### 4. Storage
 
-Ajustes em páginas existentes:
-- `Dashboard.tsx`: adicionar KPIs de Projetos (Em Planejamento / Execução / Revisão / Concluídos / Atrasados)
-- `OrdensServico.tsx` / `OrdemServicoEditor.tsx`: mostrar `projeto_id` e link de volta
-- `Documentos.tsx`: filtro por projeto
-- `FinanceiroDashboard.tsx`: agrupar contratos por projeto
-- Sidebar: nova categoria **Operacional** com Projetos antes de OS
+- Bucket `avatares` (novo, público) para foto de perfil, com policies de upload restritas ao próprio usuário.
 
-Marcar como legado/secundário:
-- `Execucao.tsx` e `ExecucaoEditor.tsx` — manter rota mas tirar do menu principal (modelo antigo de 1 execução por item)
+## Fora de escopo desta fase
 
-### Fase 3 — Renovação automática
-
-- Edge function ou automação agendada `projetos-gerar-renovacoes`:
-  - 60 dias antes do `data_validade` de um `projeto_servicos`, criar `crm_oportunidades` automática com etapa `qualificado` e título "Renovação - {serviço} - {cliente}"
-- Adicionar configuração em `service_categories` ou `services` para `validade_padrao_meses`
-
-### Fase 4 — Migração de dados existentes
-
-Script para projetos já aprovados:
-- Para cada proposta aprovada sem projeto, criar projeto retroativo
-- Migrar OS existentes vinculando ao projeto criado
-- Vincular contratos financeiros existentes
+- Restringir projetos aos que o técnico participa (fica para fase futura, já indicado no requisito).
+- Perfis Comercial, Financeiro, etc. — arquitetura pronta via enum + policies, sem UI ainda.
 
 ## Detalhes técnicos
 
-- Numeração: `PRJ-YYYY-NNNNNN` via sequence
-- RLS: admin/comercial veem tudo; outros papéis filtram por `gestor_id` ou equipe
-- Progresso do projeto = média ponderada dos `percentual_progresso` dos `projeto_servicos`
-- Status do projeto auto-derivado:
-  - todos serviços `concluido` → projeto `concluido`
-  - algum serviço `em_andamento` → `em_execucao`
-  - data_fim_prevista < today e não concluído → `atrasado`
-- Manter compatibilidade: rotas `/execucao` continuam funcionando, mas projetos viram o caminho oficial
+```text
+Papéis (app_role)
+  admin      → tudo
+  comercial  → (reservado, sem UI de atribuição nesta fase)
+  tecnico    → SELECT em projetos/OS/execução/tarefas/documentos liberados
+             → SEM acesso a proposals/crm/financeiro/pricing/config
 
-## Ordem de execução proposta
+Policies-chave (padrão)
+  ADMIN ALL:      USING (public.is_admin())        WITH CHECK (public.is_admin())
+  INTERNAL READ:  USING (public.can_see_internal(auth.uid()))
+  TECNICO READ:   USING (auth.uid() IS NOT NULL)   -- em tabelas operacionais
+```
 
-1. Migration Fase 1 (modelo + funções + trigger novo)
-2. Página de Projetos (lista + editor com abas Visão Geral, Serviços, OS, Documentos, Financeiro, Timeline)
-3. Ajustes em Dashboard, OS, Documentos, Financeiro, Sidebar
-4. Renovação automática (Fase 3)
-5. Script de migração de dados existentes (Fase 4) — apenas se houver propostas aprovadas em produção
-
-## Decisões a confirmar
-
-1. **Migração retroativa**: criar projetos para propostas já aprovadas? (Sim/Não)
-2. **Renovação**: 60 dias de antecedência está bom, ou prefere outro prazo?
-3. **Módulo Execução antigo**: remover do menu ou manter como "Execução Legada"?
-4. **Validade padrão**: configurar por serviço (na tabela `services`) ou por categoria?
-
-Posso seguir com a Fase 1 (migration) assim que você confirmar essas 4 decisões — ou se preferir, sigo com defaults (Sim para retroativa, 60 dias, remover do menu, validade por serviço).
+Após aprovação eu executo migration + edge function + páginas em paralelo.

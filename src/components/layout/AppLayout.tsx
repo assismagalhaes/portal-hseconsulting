@@ -5,7 +5,7 @@ import {
   ClipboardList, CalendarDays, Activity, ListTodo, UserCircle, FileSignature, Target,
   KanbanSquare, PhoneCall, Bell, UserPlus, DollarSign, Receipt, Wallet, Building2,
   Globe, Sparkles, Zap, Briefcase as BriefcaseIcon, Search, Plus, ChevronDown,
-  ChevronsLeft, ChevronsRight, Menu, ShieldCheck, BookOpen, FolderOpen, Cpu, FolderKanban,
+  ChevronsLeft, ChevronsRight, Menu, ShieldCheck, BookOpen, FolderOpen, Cpu, FolderKanban, UserCog,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import logo from "@/assets/hse-logo-green.png";
@@ -102,10 +102,20 @@ const GROUPS: NavGroup[] = [
     items: [
       { to: "/notificacoes", label: "Alertas", icon: Bell },
       { to: "/tarefas", label: "Tarefas", icon: ListTodo },
+      { to: "/usuarios", label: "Usuários", icon: UserCog },
       { to: "/configuracoes", label: "Configurações", icon: Cog },
       { to: "/meu-painel", label: "Meu Painel", icon: UserCircle },
     ],
   },
+];
+
+const TECNICO_GROUPS: NavGroup[] = [
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard,
+    items: [{ to: "/", label: "Meus Projetos", icon: LayoutDashboard, end: true }] },
+  { id: "operacoes", label: "Projetos", icon: FolderKanban,
+    items: [{ to: "/projetos", label: "Projetos", icon: FolderKanban }] },
+  { id: "perfil", label: "Meu Perfil", icon: UserCircle,
+    items: [{ to: "/meu-perfil", label: "Meu Perfil", icon: UserCircle }] },
 ];
 
 const COLLAPSED_KEY = "hse.sidebar.collapsed";
@@ -126,12 +136,13 @@ function activeGroupForPath(pathname: string): string {
 }
 
 function SidebarBody({
-  collapsed, openGroup, setOpenGroup, onNavigate,
+  collapsed, openGroup, setOpenGroup, onNavigate, groups,
 }: {
   collapsed: boolean;
   openGroup: string;
   setOpenGroup: (id: string) => void;
   onNavigate?: () => void;
+  groups: NavGroup[];
 }) {
   const { pathname } = useLocation();
   const isItemActive = (it: NavItem) =>
@@ -142,7 +153,7 @@ function SidebarBody({
     return (
       <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-1">
         <TooltipProvider delayDuration={150}>
-          {GROUPS.map((g) => {
+          {groups.map((g) => {
             const Icon = g.icon;
             const active = isGroupActive(g);
             return (
@@ -204,7 +215,7 @@ function SidebarBody({
 
   return (
     <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
-      {GROUPS.map((g) => {
+      {groups.map((g) => {
         const Icon = g.icon;
         const active = isGroupActive(g);
         const open = openGroup === g.id;
@@ -294,7 +305,7 @@ function SidebarBody({
 }
 
 function SidebarShell({
-  collapsed, openGroup, setOpenGroup, user, roles, onSignOut,
+  collapsed, openGroup, setOpenGroup, user, roles, onSignOut, groups,
 }: any) {
   return (
     <aside
@@ -320,7 +331,7 @@ function SidebarShell({
         )}
       </Link>
 
-      <SidebarBody collapsed={collapsed} openGroup={openGroup} setOpenGroup={setOpenGroup} />
+      <SidebarBody collapsed={collapsed} openGroup={openGroup} setOpenGroup={setOpenGroup} groups={groups} />
 
       <div className="border-t border-sidebar-border p-2">
         {collapsed ? (
@@ -354,9 +365,10 @@ function SidebarShell({
 }
 
 export default function AppLayout() {
-  const { user, roles, signOut } = useAuth();
+  const { user, roles, signOut, isTecnico } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const groups = isTecnico ? TECNICO_GROUPS : GROUPS;
 
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
@@ -399,6 +411,7 @@ export default function AppLayout() {
         user={user}
         roles={roles}
         onSignOut={handleSignOut}
+        groups={groups}
       />
 
       {/* Mobile drawer */}
@@ -415,6 +428,7 @@ export default function AppLayout() {
             openGroup={openGroup}
             setOpenGroup={setOpenGroup}
             onNavigate={() => setMobileOpen(false)}
+            groups={groups}
           />
           <div className="border-t border-sidebar-border p-2">
             <Button variant="ghost" size="sm"
