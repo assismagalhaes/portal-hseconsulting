@@ -10,11 +10,13 @@ type AuthCtx = {
   roles: Role[];
   loading: boolean;
   isInternal: boolean; // admin || comercial — pode ver precificação
+  isAdmin: boolean;
+  isTecnico: boolean; // técnico puro (sem admin/comercial)
   signOut: () => Promise<void>;
 };
 
 const Ctx = createContext<AuthCtx>({
-  user: null, session: null, roles: [], loading: true, isInternal: false,
+  user: null, session: null, roles: [], loading: true, isInternal: false, isAdmin: false, isTecnico: false,
   signOut: async () => {},
 });
 
@@ -49,10 +51,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const isInternal = roles.includes("admin") || roles.includes("comercial");
+  const isAdmin = roles.includes("admin");
+  const isTecnico = roles.includes("tecnico") && !isInternal;
 
   return (
     <Ctx.Provider value={{
-      user, session, roles, loading, isInternal,
+      user, session, roles, loading, isInternal, isAdmin, isTecnico,
       signOut: async () => { await supabase.auth.signOut(); },
     }}>
       {children}

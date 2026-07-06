@@ -5,7 +5,7 @@ import {
   ClipboardList, CalendarDays, Activity, ListTodo, UserCircle, FileSignature, Target,
   KanbanSquare, PhoneCall, Bell, UserPlus, DollarSign, Receipt, Wallet, Building2,
   Globe, Sparkles, Zap, Briefcase as BriefcaseIcon, Search, Plus, ChevronDown,
-  ChevronsLeft, ChevronsRight, Menu, ShieldCheck, BookOpen, FolderOpen, Cpu, FolderKanban,
+  ChevronsLeft, ChevronsRight, Menu, ShieldCheck, BookOpen, FolderOpen, Cpu, FolderKanban, UserCog,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import logo from "@/assets/hse-logo-green.png";
@@ -102,10 +102,20 @@ const GROUPS: NavGroup[] = [
     items: [
       { to: "/notificacoes", label: "Alertas", icon: Bell },
       { to: "/tarefas", label: "Tarefas", icon: ListTodo },
+      { to: "/usuarios", label: "Usuários", icon: UserCog },
       { to: "/configuracoes", label: "Configurações", icon: Cog },
       { to: "/meu-painel", label: "Meu Painel", icon: UserCircle },
     ],
   },
+];
+
+const TECNICO_GROUPS: NavGroup[] = [
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard,
+    items: [{ to: "/", label: "Meus Projetos", icon: LayoutDashboard, end: true }] },
+  { id: "operacoes", label: "Projetos", icon: FolderKanban,
+    items: [{ to: "/projetos", label: "Projetos", icon: FolderKanban }] },
+  { id: "perfil", label: "Meu Perfil", icon: UserCircle,
+    items: [{ to: "/meu-perfil", label: "Meu Perfil", icon: UserCircle }] },
 ];
 
 const COLLAPSED_KEY = "hse.sidebar.collapsed";
