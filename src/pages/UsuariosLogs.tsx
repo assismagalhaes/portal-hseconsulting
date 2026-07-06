@@ -37,12 +37,18 @@ export default function UsuariosLogs() {
   useEffect(() => {
     document.title = "Trilha de acessos | Portal HSE Consulting";
     (async () => {
-      const { data } = await supabase
+      const { data: logs } = await supabase
         .from("internos_logs_acesso")
-        .select("*, profiles:profiles!internos_logs_acesso_user_id_fkey(nome, email)")
+        .select("*")
         .order("created_at", { ascending: false })
         .limit(500);
-      setRows((data as any) || []);
+      const uids = Array.from(new Set((logs || []).map((l: any) => l.user_id).filter(Boolean)));
+      const { data: profs } = uids.length
+        ? await supabase.from("profiles").select("id, nome, email").in("id", uids as string[])
+        : { data: [] as any[] };
+      const map = new Map<string, any>();
+      for (const p of profs || []) map.set((p as any).id, p);
+      setRows((logs || []).map((l: any) => ({ ...l, profiles: map.get(l.user_id) || null })));
     })();
   }, []);
 
