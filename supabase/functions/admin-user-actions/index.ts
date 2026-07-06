@@ -42,27 +42,20 @@ Deno.serve(async (req) => {
     let detalhe = email || user_id;
 
     switch (action) {
-      case "reset_password": {
-        const { error } = await admin.auth.admin.generateLink({
-          type: "recovery", email: email!,
-          options: { redirectTo: redirect_to || undefined },
-        });
-        // usa generateLink apenas para validar; envia via resetPasswordForEmail
-        if (error) return json({ error: error.message }, 400);
-        const { error: err2 } = await userClient.auth.resetPasswordForEmail(email!, {
-          redirectTo: redirect_to || undefined,
-        });
-        if (err2) return json({ error: err2.message }, 400);
-        detalhe = `Reset de senha enviado para ${email}`;
-        break;
-      }
+      case "reset_password":
       case "resend_invite": {
-        const { error } = await admin.auth.admin.inviteUserByEmail(email!, {
-          redirectTo: redirect_to || undefined,
-        });
+        // Gera nova senha provisória e marca profile
+        const senhaProvisoria = generatePassword(12);
+        const { error } = await admin.auth.admin.updateUserById(user_id, {
+          password: senhaProvisoria,
+        } as any);
         if (error) return json({ error: error.message }, 400);
-        detalhe = `Convite reenviado para ${email}`;
-        break;
+        await admin.from("profiles").update({ senha_provisoria: true }).eq("id", user_id);
+        detalhe = `Nova senha provisória gerada para ${email}`;
+        await admin.from("internos_logs_acesso").insert({
+          user_id: callerId, acao: `admin_${action}`, detalhe,
+        });
+        return json({ ok: true, email, senha_provisoria: senhaProvisoria });
       }
       case "block": {
         const { error } = await admin.auth.admin.updateUserById(user_id, {
@@ -107,4 +100,13 @@ function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status, headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+function generatePassword(len = 12) {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  const arr = new Uint32Array(len);
+  crypto.getRandomValues(arr);
+  let out = "";
+  for (let i = 0; i < len; i++) out += chars[arr[i] % chars.length];
+  return out + "!";
 }

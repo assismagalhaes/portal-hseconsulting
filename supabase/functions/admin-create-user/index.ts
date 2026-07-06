@@ -33,17 +33,24 @@ Deno.serve(async (req) => {
     if (!email || !nome) return json({ error: "email e nome são obrigatórios" }, 400);
     const perfil = ["admin", "comercial", "tecnico", "financeiro"].includes(role) ? role : "tecnico";
 
-    // cria usuário — senha aleatória; o convite é enviado por invite link
-    const { data: created, error: cErr } = await admin.auth.admin.inviteUserByEmail(email, {
-      data: { nome, role: perfil },
+    // Gera senha provisória (12 chars: letras + números + símbolo simples)
+    const senhaProvisoria = generatePassword(12);
+
+    // Cria usuário já confirmado com senha provisória — SEM convite por link
+    const { data: created, error: cErr } = await admin.auth.admin.createUser({
+      email,
+      password: senhaProvisoria,
+      email_confirm: true,
+      user_metadata: { nome, role: perfil },
     });
     if (cErr) return json({ error: cErr.message }, 400);
     const userId = created.user?.id;
     if (!userId) return json({ error: "Falha ao criar usuário" }, 500);
 
-    // upsert de profile
+    // upsert de profile — marca como senha provisória
     await admin.from("profiles").upsert({
-      id: userId, email, nome, telefone, cargo, area, registro_profissional, status: "ativo",
+      id: userId, email, nome, telefone, cargo, area, registro_profissional,
+      status: "ativo", senha_provisoria: true,
     }, { onConflict: "id" });
 
     // garante o papel (o trigger handle_new_user já insere, mas garantimos)
@@ -56,7 +63,7 @@ Deno.serve(async (req) => {
       detalhe: `${email} (${perfil})`,
     });
 
-    return json({ ok: true, user_id: userId });
+    return json({ ok: true, user_id: userId, email, senha_provisoria: senhaProvisoria });
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }
@@ -67,4 +74,14 @@ function json(body: unknown, status = 200) {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+function generatePassword(len = 12) {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  const arr = new Uint32Array(len);
+  crypto.getRandomValues(arr);
+  let out = "";
+  for (let i = 0; i < len; i++) out += chars[arr[i] % chars.length];
+  // garante ao menos um símbolo
+  return out + "!";
 }
