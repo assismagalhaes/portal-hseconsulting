@@ -139,13 +139,13 @@ const App = () => (
               <Route path="/crm/followups" element={<RequireRole><CrmFollowups /></RequireRole>} />
               <Route path="/crm/agenda" element={<RequireRole><CrmAgenda /></RequireRole>} />
               <Route path="/crm/alertas" element={<RequireRole><CrmAlertas /></RequireRole>} />
-              <Route path="/financeiro" element={<RequireRole><FinanceiroDashboard /></RequireRole>} />
-              <Route path="/financeiro/contratos" element={<RequireRole><FinContratos /></RequireRole>} />
-              <Route path="/financeiro/contratos/:id" element={<RequireRole><FinContratoEditor /></RequireRole>} />
-              <Route path="/financeiro/contas-receber" element={<RequireRole><FinContasReceber /></RequireRole>} />
-              <Route path="/financeiro/custos" element={<RequireRole><FinCustos /></RequireRole>} />
-              <Route path="/financeiro/alertas" element={<RequireRole><FinAlertas /></RequireRole>} />
-              <Route path="/financeiro/centros-custo" element={<RequireRole><FinCentrosCusto /></RequireRole>} />
+              <Route path="/financeiro" element={<RequireRole allow="financeiro"><FinanceiroDashboard /></RequireRole>} />
+              <Route path="/financeiro/contratos" element={<RequireRole allow="financeiro"><FinContratos /></RequireRole>} />
+              <Route path="/financeiro/contratos/:id" element={<RequireRole allow="financeiro"><FinContratoEditor /></RequireRole>} />
+              <Route path="/financeiro/contas-receber" element={<RequireRole allow="financeiro"><FinContasReceber /></RequireRole>} />
+              <Route path="/financeiro/custos" element={<RequireRole allow="financeiro"><FinCustos /></RequireRole>} />
+              <Route path="/financeiro/alertas" element={<RequireRole allow="financeiro"><FinAlertas /></RequireRole>} />
+              <Route path="/financeiro/centros-custo" element={<RequireRole allow="financeiro"><FinCentrosCusto /></RequireRole>} />
               <Route path="/portal-cliente" element={<RequireRole><PortalClienteConfig /></RequireRole>} />
               <Route path="/ia" element={<RequireRole><IaHub /></RequireRole>} />
               <Route path="/ia/chat" element={<RequireRole><IaChatPage /></RequireRole>} />

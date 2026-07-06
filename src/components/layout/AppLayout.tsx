@@ -118,6 +118,29 @@ const TECNICO_GROUPS: NavGroup[] = [
     items: [{ to: "/meu-perfil", label: "Meu Perfil", icon: UserCircle }] },
 ];
 
+// Grupos permitidos para papel Financeiro (sem admin/comercial)
+const FINANCEIRO_ONLY_GROUP_IDS = new Set(["dashboard", "operacoes", "documentacao", "financeiro", "perfil"]);
+// Grupos permitidos para papel Comercial (sem admin/financeiro)
+const COMERCIAL_ONLY_GROUP_IDS = new Set(["dashboard", "comercial", "operacoes", "cadastros", "documentacao", "inteligencia", "portal"]);
+
+function filterGroupsForRole(opts: { isAdmin: boolean; isFinanceiro: boolean; isComercial: boolean }) {
+  if (opts.isAdmin) return GROUPS;
+  const allowed = new Set<string>();
+  if (opts.isComercial) COMERCIAL_ONLY_GROUP_IDS.forEach((g) => allowed.add(g));
+  if (opts.isFinanceiro) FINANCEIRO_ONLY_GROUP_IDS.forEach((g) => allowed.add(g));
+  // sempre permite dashboard e perfil
+  allowed.add("dashboard");
+  const base = GROUPS.filter((g) => allowed.has(g.id));
+  // Meu Perfil não existe como grupo em GROUPS; adiciona no fim
+  if (!base.some((g) => g.id === "perfil")) {
+    base.push({
+      id: "perfil", label: "Meu Perfil", icon: UserCircle,
+      items: [{ to: "/meu-perfil", label: "Meu Perfil", icon: UserCircle }],
+    });
+  }
+  return base;
+}
+
 const COLLAPSED_KEY = "hse.sidebar.collapsed";
 const OPEN_GROUP_KEY = "hse.sidebar.openGroup";
 
@@ -365,10 +388,12 @@ function SidebarShell({
 }
 
 export default function AppLayout() {
-  const { user, roles, signOut, isTecnico } = useAuth();
+  const { user, roles, signOut, isTecnico, isAdmin, isComercial, isFinanceiro } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const groups = isTecnico ? TECNICO_GROUPS : GROUPS;
+  const groups = isTecnico
+    ? TECNICO_GROUPS
+    : filterGroupsForRole({ isAdmin, isComercial, isFinanceiro });
 
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;

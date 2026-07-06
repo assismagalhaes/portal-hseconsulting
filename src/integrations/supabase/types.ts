@@ -5538,6 +5538,8 @@ export type Database = {
         Args: { _descricao: string; _proposal_id: string; _titulo: string }
         Returns: string
       }
+      can_see_comercial: { Args: never; Returns: boolean }
+      can_see_financeiro: { Args: never; Returns: boolean }
       can_see_internal: { Args: { _user_id: string }; Returns: boolean }
       cliente_log: {
         Args: { _acao: string; _detalhe: string }
@@ -5606,6 +5608,8 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_client_user: { Args: never; Returns: boolean }
+      is_comercial: { Args: never; Returns: boolean }
+      is_financeiro: { Args: never; Returns: boolean }
       is_tecnico: { Args: never; Returns: boolean }
       projeto_recalcular_progresso: {
         Args: { _projeto_id: string }
@@ -5614,7 +5618,7 @@ export type Database = {
       projetos_gerar_renovacoes: { Args: never; Returns: number }
     }
     Enums: {
-      app_role: "admin" | "comercial" | "tecnico"
+      app_role: "admin" | "comercial" | "tecnico" | "financeiro"
       automacao_acao_tipo:
         | "criar_notificacao"
         | "criar_alerta"
@@ -6040,7 +6044,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "comercial", "tecnico"],
+      app_role: ["admin", "comercial", "tecnico", "financeiro"],
       automacao_acao_tipo: [
         "criar_notificacao",
         "criar_alerta",

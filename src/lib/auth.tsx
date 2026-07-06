@@ -2,21 +2,27 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-type Role = "admin" | "comercial" | "tecnico";
+type Role = "admin" | "comercial" | "tecnico" | "financeiro";
 
 type AuthCtx = {
   user: User | null;
   session: Session | null;
   roles: Role[];
   loading: boolean;
-  isInternal: boolean; // admin || comercial — pode ver precificação
+  isInternal: boolean;   // admin || comercial — CRM/propostas/precificação
   isAdmin: boolean;
-  isTecnico: boolean; // técnico puro (sem admin/comercial)
+  isComercial: boolean;
+  isFinanceiro: boolean;
+  isTecnico: boolean;    // técnico puro (sem admin/comercial/financeiro)
+  canSeeComercial: boolean;   // admin || comercial
+  canSeeFinanceiro: boolean;  // admin || financeiro
   signOut: () => Promise<void>;
 };
 
 const Ctx = createContext<AuthCtx>({
-  user: null, session: null, roles: [], loading: true, isInternal: false, isAdmin: false, isTecnico: false,
+  user: null, session: null, roles: [], loading: true,
+  isInternal: false, isAdmin: false, isComercial: false, isFinanceiro: false, isTecnico: false,
+  canSeeComercial: false, canSeeFinanceiro: false,
   signOut: async () => {},
 });
 
@@ -52,11 +58,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isInternal = roles.includes("admin") || roles.includes("comercial");
   const isAdmin = roles.includes("admin");
-  const isTecnico = roles.includes("tecnico") && !isInternal;
+  const isComercial = roles.includes("comercial");
+  const isFinanceiro = roles.includes("financeiro");
+  const isTecnico = roles.includes("tecnico") && !isInternal && !isFinanceiro;
+  const canSeeComercial = isAdmin || isComercial;
+  const canSeeFinanceiro = isAdmin || isFinanceiro;
 
   return (
     <Ctx.Provider value={{
-      user, session, roles, loading, isInternal, isAdmin, isTecnico,
+      user, session, roles, loading,
+      isInternal, isAdmin, isComercial, isFinanceiro, isTecnico,
+      canSeeComercial, canSeeFinanceiro,
       signOut: async () => { await supabase.auth.signOut(); },
     }}>
       {children}
