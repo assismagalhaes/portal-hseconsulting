@@ -239,11 +239,25 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   push("Investimento", "inv-totals", (
     <div style={{ marginTop: 22, display: "flex", justifyContent: "flex-end" }}>
       <div style={{ minWidth: 320 }}>
-        <Line label="Subtotal" value={brl(subtotal)} />
-        {desconto > 0 && <Line label="Descontos" value={"- " + brl(desconto)} />}
+        <Line label="Subtotal dos serviços" value={brl(subtotal)} />
+        {desconto > 0 && (
+          <>
+            <Line label={descontoLabel} value={"- " + brl(desconto)} />
+            {revVigente?.motivo && (
+              <div style={{ fontSize: 10.5, color: "#64748b", padding: "0 2px 6px", textAlign: "right", fontStyle: "italic" }}>
+                Motivo: {revVigente.motivo}
+              </div>
+            )}
+          </>
+        )}
         <div style={{ marginTop: 10, background: primary, color: "#fff", borderRadius: 12, padding: "18px 22px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: `0 12px 30px -10px ${primary}66` }}>
           <div>
             <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 2, opacity: 0.85 }}>Investimento total</div>
+            {desconto > 0 && (
+              <div style={{ fontSize: 10, opacity: 0.75, marginTop: 2 }}>
+                Já com desconto aplicado ({((desconto / subtotal) * 100).toFixed(1)}%)
+              </div>
+            )}
           </div>
           <div style={{ fontFamily: `${fontTitulo}, sans-serif`, fontSize: 28, fontWeight: 800, color: accent }}>{brl(valorFinal)}</div>
         </div>
