@@ -55,9 +55,15 @@ export default function Proposals() {
     const obsRetro = (newOrigem === "retroativa" || newOrigem === "importacao_manual")
       ? "Proposta cadastrada retroativamente para alimentação inicial do sistema. Data de emissão baseada no documento comercial original."
       : null;
+    const emissao = newDataEmissao || new Date().toISOString().slice(0,10);
+    // Validade padrão: 30 dias após a emissão.
+    const validade = new Date(emissao + "T00:00:00");
+    validade.setDate(validade.getDate() + 30);
+    const validadeStr = validade.toISOString().slice(0,10);
     const { data, error } = await supabase.from("proposals").insert({
       numero, client_id: newClientId || null, status: "rascunho",
-      data_emissao: newDataEmissao || new Date().toISOString().slice(0,10),
+      data_emissao: emissao,
+      validade: validadeStr,
       origem_cadastro: newOrigem,
       observacao_retroativa: obsRetro,
     }).select("id").single();
