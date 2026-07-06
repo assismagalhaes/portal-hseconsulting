@@ -5683,6 +5683,16 @@ export type Database = {
       is_comercial: { Args: never; Returns: boolean }
       is_financeiro: { Args: never; Returns: boolean }
       is_tecnico: { Args: never; Returns: boolean }
+      notificar_admins: {
+        Args: {
+          _entidade_id: string
+          _entidade_tipo: string
+          _link: string
+          _mensagem: string
+          _titulo: string
+        }
+        Returns: undefined
+      }
       projeto_recalcular_progresso: {
         Args: { _projeto_id: string }
         Returns: undefined
