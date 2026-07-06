@@ -27,29 +27,32 @@ export default function ProjetoEditor() {
   const [timeline, setTimeline] = useState<any[]>([]);
   const [renovacoes, setRenovacoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [usuarios, setUsuarios] = useState<any[]>([]);
 
   const load = async () => {
     if (!id) return;
     setLoading(true);
     const { data: p } = await supabase
       .from("projetos")
-      .select("*, clients(razao_social, nome_fantasia, cnpj_cpf, cidade, uf), proposals(numero)")
+      .select("*, clients(razao_social, nome_fantasia, cnpj_cpf, cidade, uf), proposals(numero), responsavel_execucao:profiles!projetos_responsavel_execucao_id_fkey(id, nome, email)")
       .eq("id", id).maybeSingle();
     setProjeto(p);
     document.title = `${p?.numero || "Projeto"} | HSE Consulting`;
 
-    const [s, o, d, t, ren] = await Promise.all([
+    const [s, o, d, t, ren, u] = await Promise.all([
       supabase.from("projeto_servicos").select("*").eq("projeto_id", id).order("created_at"),
       supabase.from("ordens_servico").select("id, numero, status, prioridade, titulo, data_prevista_conclusao").eq("projeto_id", id),
       supabase.from("documentos_tecnicos").select("id, numero, tipo, titulo, status, data_emissao, data_vencimento").eq("projeto_id", id),
       supabase.from("projeto_timeline").select("*").eq("projeto_id", id).order("created_at", { ascending: false }).limit(50),
       supabase.from("projeto_renovacoes").select("*, projeto_servicos(nome)").eq("projeto_id", id),
+      supabase.from("profiles").select("id, nome, email").eq("status", "ativo").order("nome"),
     ]);
     setServicos(s.data || []);
     setOs(o.data || []);
     setDocs(d.data || []);
     setTimeline(t.data || []);
     setRenovacoes(ren.data || []);
+    setUsuarios(u.data || []);
 
     if (p?.financeiro_contrato_id) {
       const { data: c } = await supabase.from("financeiro_contratos").select("*").eq("id", p.financeiro_contrato_id).maybeSingle();
@@ -153,6 +156,24 @@ export default function ProjetoEditor() {
                   <div>
                     <Label>Data prevista de conclusão</Label>
                     <Input type="date" defaultValue={projeto.data_fim_prevista || ""} onBlur={(e) => saveProjeto({ data_fim_prevista: e.target.value || null })} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Responsável de Execução</Label>
+                    <Select
+                      value={projeto.responsavel_execucao_id || "none"}
+                      onValueChange={(v) => saveProjeto({ responsavel_execucao_id: v === "none" ? null : v })}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Selecione um responsável" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— Sem responsável —</SelectItem>
+                        {usuarios.map((u) => (
+                          <SelectItem key={u.id} value={u.id}>{u.nome || u.email}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      O responsável de execução terá acesso a todo o projeto (serviços, OS, documentos) automaticamente.
+                    </p>
                   </div>
                 </div>
                 <div>
