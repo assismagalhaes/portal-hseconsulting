@@ -543,11 +543,11 @@ export default function ProposalEditor() {
               <Row label="Cliente">{client?.nome_fantasia || client?.razao_social || "—"}</Row>
               <Row label="Serviços">{items.length}</Row>
               <Row label="Qtd. total de itens">{totalItens}</Row>
-              <Row label="Valor total"><span className="font-mono font-semibold text-primary">{brl(total)}</span></Row>
+              <ResumoValor total={total} revisions={revisions} />
               {isInternal && !clientView && (
                 <>
                   <hr/>
-                  <InternalSummary items={items} pricings={pricings} />
+                  <InternalSummary items={items} pricings={pricings} descontoRevisao={calcDescontoRevisao(total, revisions)} />
                 </>
               )}
             </CardContent>
