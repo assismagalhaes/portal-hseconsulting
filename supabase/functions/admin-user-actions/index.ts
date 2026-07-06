@@ -76,10 +76,17 @@ Deno.serve(async (req) => {
         break;
       }
       case "delete": {
-        const { error } = await admin.auth.admin.deleteUser(user_id);
-        if (error) return json({ error: error.message }, 400);
-        await admin.from("profiles").delete().eq("id", user_id);
-        detalhe = `Usuário ${email || user_id} excluído`;
+        // Soft-delete: bane no auth, remove papéis/overrides e marca profile como excluído.
+        // Não fazemos hard-delete porque muitas tabelas de histórico referenciam auth.users
+        // com ON DELETE NO ACTION e a remoção física quebraria a integridade.
+        const { error: banErr } = await admin.auth.admin.updateUserById(user_id, {
+          ban_duration: "876000h",
+        } as any);
+        if (banErr) return json({ error: banErr.message }, 400);
+        await admin.from("user_roles").delete().eq("user_id", user_id);
+        await admin.from("user_permission_overrides").delete().eq("user_id", user_id);
+        await admin.from("profiles").update({ status: "excluido" }).eq("id", user_id);
+        detalhe = `Usuário ${email || user_id} excluído (soft-delete)`;
         break;
       }
       default:
