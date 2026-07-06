@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Pencil, Search } from "lucide-react";
 import { toast } from "sonner";
 
-type Role = "admin" | "comercial" | "tecnico";
+type Role = "admin" | "comercial" | "tecnico" | "financeiro";
 type Row = {
   id: string;
   nome: string | null;
@@ -34,7 +34,12 @@ const statusColor: Record<string, string> = {
   inativo: "bg-muted text-muted-foreground",
   bloqueado: "bg-danger/15 text-danger",
 };
-const roleLabel: Record<Role, string> = { admin: "Administrador", comercial: "Comercial", tecnico: "Profissional Técnico" };
+const roleLabel: Record<Role, string> = {
+  admin: "Administrador",
+  comercial: "Comercial",
+  financeiro: "Financeiro",
+  tecnico: "Profissional Técnico",
+};
 
 export default function Usuarios() {
   const [rows, setRows] = useState<Row[]>([]);
