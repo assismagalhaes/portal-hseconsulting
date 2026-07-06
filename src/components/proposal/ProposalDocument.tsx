@@ -88,8 +88,7 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   // e é do tipo "desconto". Evita falso desconto quando itens foram adicionados após a revisão
   // ou quando existe apenas a emissão inicial.
   const isDescontoReal =
-    revVigente &&
-    (revVigente.tipo === "desconto" || !revVigente.tipo === false) &&
+    !!revVigente &&
     revVigente.tipo === "desconto" &&
     revVigente.valor_anterior != null &&
     revVigente.valor_novo != null &&
