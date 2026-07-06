@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Search, MoreHorizontal, KeyRound, Send, Ban, Unlock, Trash2, History, ShieldCheck } from "lucide-react";
+import { Plus, Pencil, Search, MoreHorizontal, KeyRound, Send, Ban, Unlock, Trash2, History, ShieldCheck, Copy } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -52,6 +52,8 @@ export default function Usuarios() {
   const [editing, setEditing] = useState<any>(empty);
   const [permOpen, setPermOpen] = useState(false);
   const [permUser, setPermUser] = useState<Row | null>(null);
+  const [credOpen, setCredOpen] = useState(false);
+  const [cred, setCred] = useState<{ email: string; senha: string } | null>(null);
 
   const load = async () => {
     const { data: profiles, error } = await supabase
@@ -79,7 +81,12 @@ export default function Usuarios() {
       });
       if (error) return toast.error(error.message);
       if ((data as any)?.error) return toast.error((data as any).error);
-      toast.success("Usuário criado. Um e-mail de definição de senha foi enviado.");
+      const senha = (data as any)?.senha_provisoria;
+      if (senha) {
+        setCred({ email: (data as any).email, senha });
+        setCredOpen(true);
+      }
+      toast.success("Usuário criado com senha provisória.");
     } else {
       const payload: any = {
         nome: editing.nome, telefone: editing.telefone, cargo: editing.cargo,
@@ -105,8 +112,8 @@ export default function Usuarios() {
 
   async function runAction(action: string, r: Row) {
     const confirmMsg: Record<string, string> = {
-      reset_password: `Enviar link de redefinição de senha para ${r.email}?`,
-      resend_invite: `Reenviar convite de acesso para ${r.email}?`,
+      reset_password: `Gerar nova senha provisória para ${r.email}?`,
+      resend_invite: `Gerar nova senha provisória e reenviar credenciais para ${r.email}?`,
       block: `Bloquear ${r.nome || r.email}? O usuário não conseguirá mais entrar.`,
       unblock: `Desbloquear ${r.nome || r.email}?`,
       delete: `Excluir DEFINITIVAMENTE ${r.nome || r.email}? Esta ação não pode ser desfeita.`,
@@ -117,6 +124,11 @@ export default function Usuarios() {
     });
     if (error) return toast.error(error.message);
     if ((data as any)?.error) return toast.error((data as any).error);
+    const senha = (data as any)?.senha_provisoria;
+    if (senha) {
+      setCred({ email: (data as any).email, senha });
+      setCredOpen(true);
+    }
     toast.success("Ação executada");
     load();
   }
@@ -261,6 +273,46 @@ export default function Usuarios() {
         </div>
       </div>
       <PermissoesDialog open={permOpen} onOpenChange={setPermOpen} user={permUser} />
+      <Dialog open={credOpen} onOpenChange={setCredOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Credenciais de acesso</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <p className="text-muted-foreground">
+              Envie estas credenciais ao usuário. No primeiro acesso, ele será obrigado a definir uma nova senha pessoal.
+              <strong className="text-danger block mt-1">
+                Esta senha só é exibida uma vez — copie agora.
+              </strong>
+            </p>
+            <div className="rounded-md border bg-muted/40 p-3 space-y-2">
+              <div>
+                <div className="text-xs text-muted-foreground">E-mail</div>
+                <div className="font-mono text-sm">{cred?.email}</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">Senha provisória</div>
+                <div className="font-mono text-sm break-all">{cred?.senha}</div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (!cred) return;
+                navigator.clipboard.writeText(
+                  `Acesso Portal HSE Consulting\nURL: ${window.location.origin}/auth\nE-mail: ${cred.email}\nSenha provisória: ${cred.senha}\n\nNo primeiro acesso será solicitado que você defina uma nova senha.`
+                );
+                toast.success("Credenciais copiadas!");
+              }}
+            >
+              <Copy className="h-4 w-4 mr-2" /> Copiar tudo
+            </Button>
+            <Button onClick={() => setCredOpen(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
