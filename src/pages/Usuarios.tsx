@@ -213,9 +213,38 @@ export default function Usuarios() {
                   <TableCell><Badge variant="secondary">{roleLabel[r.role]}</Badge></TableCell>
                   <TableCell><Badge className={statusColor[r.status] + " border-0"}>{statusLabel[r.status] || r.status}</Badge></TableCell>
                   <TableCell>
-                    <Button size="sm" variant="ghost" onClick={() => { setEditing(r); setCreating(false); setOpen(true); }}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => { setEditing(r); setCreating(false); setOpen(true); }}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="sm" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => runAction("reset_password", r)}>
+                            <KeyRound className="h-4 w-4 mr-2" /> Redefinir senha
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => runAction("resend_invite", r)}>
+                            <Send className="h-4 w-4 mr-2" /> Reenviar convite
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {r.status === "bloqueado" ? (
+                            <DropdownMenuItem onClick={() => runAction("unblock", r)}>
+                              <Unlock className="h-4 w-4 mr-2" /> Desbloquear
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => runAction("block", r)}>
+                              <Ban className="h-4 w-4 mr-2" /> Bloquear
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-danger" onClick={() => runAction("delete", r)}>
+                            <Trash2 className="h-4 w-4 mr-2" /> Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
