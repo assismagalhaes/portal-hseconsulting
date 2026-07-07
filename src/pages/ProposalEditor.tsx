@@ -358,14 +358,20 @@ export default function ProposalEditor() {
     const numero = String(proposal.numero || "").trim();
     const numeroFmt = /^P-/i.test(numero) ? numero : (numero ? `P-${numero}` : "P-");
     const printTitle = `Proposta ${numeroFmt} - ${safe(clienteNome)}`;
+    const escapeHtml = (s: string) => s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
 
     // Abrir a janela imediatamente preserva o gesto do clique e evita bloqueio
     // de popup. Como ela é top-level, o Chrome usa este <title> como nome do PDF,
     // não o título do portal/preview onde o app está embutido.
-    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=980,height=1200");
+    const printWindow = window.open("", "_blank", "width=980,height=1200");
     if (printWindow) {
       printWindow.document.open();
-      printWindow.document.write(`<!doctype html><html><head><title>${printTitle}</title><style>body{margin:0;font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;color:#0f172a}p{font-size:14px}</style></head><body><p>Preparando PDF…</p></body></html>`);
+      printWindow.document.write(`<!doctype html><html><head><title>${escapeHtml(printTitle)}</title><style>body{margin:0;font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;color:#0f172a}p{font-size:14px}</style></head><body><p>Preparando PDF…</p></body></html>`);
       printWindow.document.close();
     }
 
@@ -408,7 +414,7 @@ export default function ProposalEditor() {
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>${printTitle}</title>
+          <title>${escapeHtml(printTitle)}</title>
           ${copiedHead}
           <style>
             @page { size: A4; margin: 0; }
