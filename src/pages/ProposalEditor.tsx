@@ -352,10 +352,28 @@ export default function ProposalEditor() {
   const errs = validate();
 
   async function handlePrint() {
+    // Padrão de nome do arquivo: "Proposta P-2026-51842 - Zanotti".
+    const clienteNome = client?.nome_fantasia || client?.razao_social || "Cliente";
+    const safe = (s: string) => (s || "").replace(/[\\/:*?"<>|]/g, "").trim();
+    const numero = String(proposal.numero || "").trim();
+    const numeroFmt = /^P-/i.test(numero) ? numero : (numero ? `P-${numero}` : "P-");
+    const printTitle = `Proposta ${numeroFmt} - ${safe(clienteNome)}`;
+
+    // Abrir a janela imediatamente preserva o gesto do clique e evita bloqueio
+    // de popup. Como ela é top-level, o Chrome usa este <title> como nome do PDF,
+    // não o título do portal/preview onde o app está embutido.
+    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=980,height=1200");
+    if (printWindow) {
+      printWindow.document.open();
+      printWindow.document.write(`<!doctype html><html><head><title>${printTitle}</title><style>body{margin:0;font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;color:#0f172a}p{font-size:14px}</style></head><body><p>Preparando PDF…</p></body></html>`);
+      printWindow.document.close();
+    }
+
     // Aguarda o documento estar totalmente montado (paginado + imagens carregadas).
     const t0 = Date.now();
     while (!docReady) {
       if (Date.now() - t0 > 8000) {
+        printWindow?.close();
         toast.error("Não foi possível preparar o documento para impressão.");
         return;
       }
@@ -370,53 +388,66 @@ export default function ProposalEditor() {
     await Promise.all(srcImgs.map(img => img.complete ? null : new Promise(res => {
       img.onload = img.onerror = () => res(null);
     })));
-    // Padrão de nome do arquivo: "Proposta P-2026-51842 - Zanotti".
-    const clienteNome = client?.nome_fantasia || client?.razao_social || "Cliente";
-    const safe = (s: string) => (s || "").replace(/[\\/:*?"<>|]/g, "").trim();
-    const numero = String(proposal.numero || "").trim();
-    const numeroFmt = /^P-/i.test(numero) ? numero : (numero ? `P-${numero}` : "P-");
-    const printTitle = `Proposta ${numeroFmt} - ${safe(clienteNome)}`;
 
-    // O Chrome usa o document.title da janela do TOPO para sugerir o nome do PDF.
-    // Quando o app roda dentro do preview do Lovable, a janela do topo é a página
-    // do editor — daí o nome "Portal HSE Consulting _ Lovable". Setamos o title
-    // em todos os níveis acessíveis (same-origin) antes de imprimir.
-    const savedTitles: Array<{ w: Window; title: string }> = [];
-    const setTitle = (w: Window | null) => {
-      if (!w) return;
-      try {
-        savedTitles.push({ w, title: w.document.title });
-        w.document.title = printTitle;
-      } catch {
-        /* cross-origin — ignora */
-      }
-    };
-    setTitle(window);
-    try {
-      let w: Window | null = window.parent;
-      const seen = new Set<Window>([window]);
-      while (w && !seen.has(w)) {
-        seen.add(w);
-        setTitle(w);
-        if (w === w.parent) break;
-        w = w.parent;
-      }
-      setTitle(window.top);
-    } catch { /* cross-origin */ }
-
-    // Aguarda o navegador registrar o novo title antes de abrir o diálogo.
-    await new Promise<void>((res) => requestAnimationFrame(() => requestAnimationFrame(() => res())));
-
-    try {
-      window.print();
-    } finally {
-      // Restaura títulos originais depois que o diálogo fechar.
-      setTimeout(() => {
-        savedTitles.forEach(({ w, title }) => {
-          try { w.document.title = title; } catch {}
-        });
-      }, 1500);
+    const sourceDoc = document.querySelector(".proposal-doc") as HTMLElement | null;
+    if (!sourceDoc) {
+      printWindow?.close();
+      toast.error("Documento da proposta não encontrado para impressão.");
+      return;
     }
+
+    if (!printWindow) {
+      toast.error("O navegador bloqueou a janela de impressão. Libere pop-ups para gerar o PDF com o nome correto.");
+      return;
+    }
+
+    const copiedHead = Array.from(document.head.querySelectorAll('style, link[rel="stylesheet"]'))
+      .map((node) => node.outerHTML)
+      .join("\n");
+    const html = `<!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>${printTitle}</title>
+          ${copiedHead}
+          <style>
+            @page { size: A4; margin: 0; }
+            html, body {
+              width: 210mm;
+              margin: 0;
+              padding: 0;
+              background: #fff !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            *, *::before, *::after {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            .proposal-doc { width: 210mm; margin: 0; padding: 0; }
+            .pdf-page { box-shadow: none !important; margin: 0 !important; page-break-after: always; break-after: page; }
+            .pdf-page:last-child { page-break-after: auto; break-after: auto; }
+            .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+            @media screen { body { margin: 0 auto; } }
+          </style>
+        </head>
+        <body>${sourceDoc.outerHTML}</body>
+      </html>`;
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.document.title = printTitle;
+
+    const targetImgs = Array.from(printWindow.document.images) as HTMLImageElement[];
+    await Promise.all(targetImgs.map(img => img.complete ? null : new Promise(res => {
+      img.onload = img.onerror = () => res(null);
+    })));
+    await printWindow.document.fonts?.ready.catch(() => undefined);
+    await new Promise<void>((res) => printWindow.requestAnimationFrame(() => printWindow.requestAnimationFrame(() => res())));
+
+    printWindow.focus();
+    printWindow.print();
   }
 
   return (
