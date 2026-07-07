@@ -37,13 +37,25 @@ Deno.serve(async (req) => {
     const senhaProvisoria = generatePassword(12);
 
     // Cria usuário já confirmado com senha provisória — SEM convite por link
+    // Verifica se já existe usuário com esse e-mail para dar mensagem clara
+    const { data: existingList } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
+    const jaExiste = existingList?.users?.find((u: any) => (u.email || "").toLowerCase() === String(email).toLowerCase());
+    if (jaExiste) {
+      return json({ error: `Já existe um usuário cadastrado com o e-mail ${email}. Use outro e-mail ou edite o usuário existente.` }, 409);
+    }
+
     const { data: created, error: cErr } = await admin.auth.admin.createUser({
       email,
       password: senhaProvisoria,
       email_confirm: true,
       user_metadata: { nome, role: perfil },
     });
-    if (cErr) return json({ error: cErr.message }, 400);
+    if (cErr) {
+      const msg = /already.*registered|email.*exists/i.test(cErr.message)
+        ? `Já existe um usuário cadastrado com o e-mail ${email}.`
+        : cErr.message;
+      return json({ error: msg }, 400);
+    }
     const userId = created.user?.id;
     if (!userId) return json({ error: "Falha ao criar usuário" }, 500);
 
