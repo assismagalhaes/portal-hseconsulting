@@ -28,6 +28,8 @@ type Props = {
   ultimaConsulta?: string | null;
   /** Marca se o campo é obrigatório. */
   required?: boolean;
+  /** ID do cliente atual — ignorado na checagem de duplicidade (permite re-consultar o próprio cadastro). */
+  ignoreClientId?: string | null;
   /** Label customizada. */
   label?: string;
   /** Classe adicional. */
@@ -38,7 +40,7 @@ type Props = {
 
 export default function CnpjLookupField({
   value, onChange, onAutofill, formSnapshot = {}, onExistingClient,
-  ultimaConsulta, required, label = "CNPJ", className, compact,
+  ultimaConsulta, required, label = "CNPJ", className, compact, ignoreClientId,
 }: Props) {
   const [loading, setLoading] = useState(false);
   const [pending, setPending] = useState<CnpjLookupData | null>(null);
@@ -56,7 +58,7 @@ export default function CnpjLookupField({
     try {
       // 1) Verifica duplicidade
       const existente = await buscarClienteExistentePorCnpj(digits);
-      if (existente && onExistingClient) {
+      if (existente && onExistingClient && existente.id !== ignoreClientId) {
         setExisting(existente);
         setLoading(false);
         return;

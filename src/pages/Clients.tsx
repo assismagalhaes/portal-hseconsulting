@@ -63,6 +63,7 @@ export default function Clients() {
                   formSnapshot={form}
                   onAutofill={(patch)=>setForm({...form, ...patch})}
                   onExistingClient={(c)=>{ setEditing(c); setForm({ ...empty, ...c }); toast.message("Cadastro existente carregado."); }}
+                  ignoreClientId={editing?.id || null}
                   ultimaConsulta={form.ultima_consulta_cnpj}
                   label="CNPJ / CPF"
                 />

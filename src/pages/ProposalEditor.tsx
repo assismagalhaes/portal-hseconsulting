@@ -777,6 +777,7 @@ function ClientCard({ client, setClient, onSave }: any) {
           formSnapshot={c}
           onAutofill={(patch) => setClient({ ...c, ...patch })}
           onExistingClient={(ex) => setClient({ ...ex })}
+          ignoreClientId={c.id || null}
           ultimaConsulta={c.ultima_consulta_cnpj}
           label="CNPJ / CPF"
           compact
