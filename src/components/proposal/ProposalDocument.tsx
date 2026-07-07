@@ -49,6 +49,7 @@ function TIPO_REVISAOLABELS_SAFE(t: string) { return TIPO_REVISAO_LABELS[t] || "
 export default function ProposalDocument({ proposal, client, items, revisions = [], onReady }: Props) {
   const [tpl, setTpl] = useState<any>(null);
   const [serviceNames, setServiceNames] = useState<Record<string, string>>({});
+  const [flowReady, setFlowReady] = useState(false);
   useEffect(() => {
     supabase.from("proposal_template").select("*").limit(1).maybeSingle()
       .then(({ data }) => setTpl(data || {}));
@@ -62,7 +63,7 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
       setServiceNames(map);
     });
   }, [items]);
-  useEffect(() => { if (tpl && onReady) onReady(); }, [tpl, onReady]);
+  useEffect(() => { if (tpl && flowReady && onReady) onReady(); }, [tpl, flowReady, onReady]);
   if (!tpl) return <div className="p-8 text-sm text-muted-foreground">Carregando modelo…</div>;
 
   const titleOf = (it: any) => it.nome || serviceNames[it.service_id] || it.descricao_comercial || "Serviço";
@@ -387,7 +388,7 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
       </section>
 
       {/* ============ APRESENTAÇÃO ============ */}
-      <FlowPages ctx={ctxHeader} blocks={bodyBlocks} />
+      <FlowPages ctx={ctxHeader} blocks={bodyBlocks} onReady={() => setFlowReady(true)} />
 
       {/* ============ CONTRACAPA ============ */}
       <section className="pdf-page" style={{ ...PAGE_STYLE, background: primary, color: "#fff" }}>
@@ -430,7 +431,7 @@ type Block = { key: string; label: string; node: React.ReactNode; keepWithNext?:
  *  - se um bloco não couber no restante da página, ele vai inteiro pra próxima;
  *  - se um bloco tem `keepWithNext`, tenta mantê-lo junto do próximo.
  */
-function FlowPages({ ctx, blocks }: { ctx: any; blocks: Block[] }) {
+function FlowPages({ ctx, blocks, onReady }: { ctx: any; blocks: Block[]; onReady?: () => void }) {
   const [pages, setPages] = useState<number[][] | null>(null);
   const measureRef = useRef<HTMLDivElement>(null);
 
@@ -479,7 +480,16 @@ function FlowPages({ ctx, blocks }: { ctx: any; blocks: Block[] }) {
     }
     if (result[result.length - 1].length === 0) result.pop();
     setPages(result);
-  }, [blocks]);
+  }, [blocks.length]);
+
+  // Notify parent when pages are actually rendered in the DOM, so printers
+  // can safely snapshot the full document (avoids missing middle pages).
+  useEffect(() => {
+    if (pages && onReady) {
+      // Two RAFs to ensure paint completed after the DocPages mount.
+      requestAnimationFrame(() => requestAnimationFrame(() => onReady()));
+    }
+  }, [pages, onReady]);
 
   // Rótulo de página = primeira label encontrada nos blocos da página
   const pageLabelFor = (idxs: number[]) => (idxs.length ? blocks[idxs[0]].label : "");
