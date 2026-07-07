@@ -5800,6 +5800,20 @@ export type Database = {
       gerar_numero_documento: { Args: never; Returns: string }
       gerar_numero_os: { Args: never; Returns: string }
       gerar_numero_projeto: { Args: never; Returns: string }
+      get_projeto_servicos_valores: {
+        Args: { _projeto_id: string }
+        Returns: {
+          id: string
+          valor: number
+        }[]
+      }
+      get_projetos_valores: {
+        Args: { _ids: string[] }
+        Returns: {
+          id: string
+          valor_contratado: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -5812,6 +5826,7 @@ export type Database = {
       is_comercial: { Args: never; Returns: boolean }
       is_financeiro: { Args: never; Returns: boolean }
       is_tecnico: { Args: never; Returns: boolean }
+      is_tecnico_only: { Args: never; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string
