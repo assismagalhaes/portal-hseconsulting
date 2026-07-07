@@ -350,12 +350,34 @@ export default function ProposalEditor() {
   const errs = validate();
 
   async function handlePrint() {
-    // Wait for the proposal document (with template) to be mounted
+    // Wait for the proposal document — including all FlowPages-computed pages —
+    // to be mounted. Otherwise we snapshot HTML with only cover/contracapa
+    // rendered and the middle pages get lost.
     const t0 = Date.now();
-    while (!document.querySelector(".proposal-doc .pdf-page")) {
-      if (Date.now() - t0 > 5000) { toast.error("Não foi possível preparar o documento para impressão."); return; }
-      await new Promise(r => setTimeout(r, 100));
+    let lastCount = -1;
+    let stable = 0;
+    while (true) {
+      const count = document.querySelectorAll(".proposal-doc .pdf-page").length;
+      // Need at least cover + 1 body + contracapa, and count must be stable
+      // for a few frames (no further page splitting in progress).
+      if (count >= 3 && count === lastCount) {
+        stable++;
+        if (stable >= 3) break;
+      } else {
+        stable = 0;
+      }
+      lastCount = count;
+      if (Date.now() - t0 > 8000) {
+        if (count < 3) { toast.error("Não foi possível preparar o documento para impressão."); return; }
+        break;
+      }
+      await new Promise(r => setTimeout(r, 120));
     }
+    // Wait for images in the source document to load before cloning.
+    const srcImgs = Array.from(document.querySelectorAll(".proposal-doc img")) as HTMLImageElement[];
+    await Promise.all(srcImgs.map(img => img.complete ? null : new Promise(res => {
+      img.onload = img.onerror = () => res(null);
+    })));
     const docNode = document.querySelector(".proposal-doc") as HTMLElement | null;
     if (!docNode) { toast.error("Documento não está pronto."); return; }
 
