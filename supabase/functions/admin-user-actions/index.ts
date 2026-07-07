@@ -55,7 +55,45 @@ Deno.serve(async (req) => {
         await admin.from("internos_logs_acesso").insert({
           user_id: callerId, acao: `admin_${action}`, detalhe,
         });
-        return json({ ok: true, email, senha_provisoria: senhaProvisoria });
+
+        // Busca o nome do usuário para personalizar o e-mail
+        const { data: prof } = await admin.from("profiles").select("nome").eq("id", user_id).maybeSingle();
+        const origin = req.headers.get("origin") || "https://portal-hseconsulting.lovable.app";
+        let emailEnviado = false;
+        let emailErro: string | null = null;
+        try {
+          const { error: mailErr } = await admin.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "credenciais-acesso",
+              recipientEmail: email,
+              idempotencyKey: `credenciais-${user_id}-${Date.now()}`,
+              templateData: {
+                nome: prof?.nome || "usuário",
+                email,
+                senhaProvisoria,
+                portalUrl: `${origin}/auth`,
+                reativado: false,
+              },
+            },
+          });
+          if (mailErr) {
+            emailErro = mailErr.message;
+            console.error("Falha ao enviar credenciais por e-mail:", mailErr);
+          } else {
+            emailEnviado = true;
+          }
+        } catch (e) {
+          emailErro = (e as Error).message;
+          console.error("Erro ao invocar send-transactional-email:", e);
+        }
+
+        return json({
+          ok: true,
+          email,
+          senha_provisoria: senhaProvisoria,
+          email_enviado: emailEnviado,
+          email_erro: emailErro,
+        });
       }
       case "block": {
         const { error } = await admin.auth.admin.updateUserById(user_id, {
