@@ -15,9 +15,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { brl, formatDate, formatDateTime } from "@/lib/format";
 import { projetoStatusColor, projetoStatusLabel, projetoServicoStatusColor, projetoServicoStatusLabel } from "@/lib/projetos";
 import { ArrowLeft, FileText, ClipboardList, FileSignature, DollarSign, History, RefreshCw, Save } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 
 export default function ProjetoEditor() {
   const { id } = useParams();
+  const { isTecnico } = useAuth();
   const [projeto, setProjeto] = useState<any>(null);
   const [servicos, setServicos] = useState<any[]>([]);
   const [os, setOs] = useState<any[]>([]);
@@ -28,6 +30,8 @@ export default function ProjetoEditor() {
   const [renovacoes, setRenovacoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [usuarios, setUsuarios] = useState<any[]>([]);
+  const [valorContratado, setValorContratado] = useState<number | null>(null);
+  const [valoresServicos, setValoresServicos] = useState<Record<string, number>>({});
 
   const load = async () => {
     if (!id) return;
@@ -54,16 +58,27 @@ export default function ProjetoEditor() {
     setRenovacoes(ren.data || []);
     setUsuarios(u.data || []);
 
-    if (p?.financeiro_contrato_id) {
+    if (!isTecnico && p?.financeiro_contrato_id) {
       const { data: c } = await supabase.from("financeiro_contratos").select("*").eq("id", p.financeiro_contrato_id).maybeSingle();
       setContrato(c);
       const { data: pa } = await supabase.from("financeiro_parcelas").select("*").eq("contrato_id", p.financeiro_contrato_id).order("numero");
       setParcelas(pa || []);
     }
+
+    if (!isTecnico && id) {
+      const [{ data: vp }, { data: vs }] = await Promise.all([
+        supabase.rpc("get_projetos_valores", { _ids: [id] }),
+        supabase.rpc("get_projeto_servicos_valores", { _projeto_id: id }),
+      ]);
+      setValorContratado(vp?.[0]?.valor_contratado ?? null);
+      const map: Record<string, number> = {};
+      (vs || []).forEach((r: any) => { map[r.id] = Number(r.valor || 0); });
+      setValoresServicos(map);
+    }
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [id, isTecnico]);
 
   const saveProjeto = async (patch: any) => {
     if (!id) return;
@@ -85,6 +100,13 @@ export default function ProjetoEditor() {
 
   const cliente = projeto.clients?.nome_fantasia || projeto.clients?.razao_social || "—";
 
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  const diasRestantes = projeto.data_fim_prevista
+    ? Math.round((new Date(projeto.data_fim_prevista).setHours(0, 0, 0, 0) - hoje.getTime()) / 86400000)
+    : null;
+  const drLabel = diasRestantes === null ? "—" : diasRestantes < 0 ? `${Math.abs(diasRestantes)}d atraso` : `${diasRestantes}d restantes`;
+  const pendencias = servicos.filter((s) => s.status !== "concluido" && s.status !== "cancelado").length;
+
   return (
     <div>
       <PageHeader
@@ -100,25 +122,56 @@ export default function ProjetoEditor() {
 
       <div className="p-6 space-y-6">
         {/* Header KPIs */}
-        <div className="grid gap-3 sm:grid-cols-4">
-          <Card className="shadow-elegant"><CardContent className="p-4">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Valor contratado</div>
-            <div className="font-display text-xl font-bold mt-1">{brl(projeto.valor_contratado)}</div>
-          </CardContent></Card>
-          <Card className="shadow-elegant"><CardContent className="p-4">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Recebido</div>
-            <div className="font-display text-xl font-bold mt-1">{brl(contrato?.valor_recebido || 0)}</div>
-          </CardContent></Card>
-          <Card className="shadow-elegant"><CardContent className="p-4">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Serviços</div>
-            <div className="font-display text-xl font-bold mt-1">{servicos.filter(s => s.status === "concluido").length}/{servicos.length}</div>
-          </CardContent></Card>
-          <Card className="shadow-elegant"><CardContent className="p-4">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Progresso</div>
-            <div className="font-display text-xl font-bold mt-1">{projeto.percentual_progresso || 0}%</div>
-            <Progress value={projeto.percentual_progresso || 0} className="h-1.5 mt-1.5" />
-          </CardContent></Card>
-        </div>
+        {isTecnico ? (
+          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <Card className="shadow-elegant"><CardContent className="p-4">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Serviços</div>
+              <div className="font-display text-xl font-bold mt-1">{servicos.filter(s => s.status === "concluido").length}/{servicos.length}</div>
+            </CardContent></Card>
+            <Card className="shadow-elegant"><CardContent className="p-4">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Ordens de Serviço</div>
+              <div className="font-display text-xl font-bold mt-1">{os.length}</div>
+            </CardContent></Card>
+            <Card className="shadow-elegant"><CardContent className="p-4">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Documentos</div>
+              <div className="font-display text-xl font-bold mt-1">{docs.length}</div>
+            </CardContent></Card>
+            <Card className="shadow-elegant"><CardContent className="p-4">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Progresso</div>
+              <div className="font-display text-xl font-bold mt-1">{projeto.percentual_progresso || 0}%</div>
+              <Progress value={projeto.percentual_progresso || 0} className="h-1.5 mt-1.5" />
+            </CardContent></Card>
+            <Card className="shadow-elegant"><CardContent className="p-4">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Prazo</div>
+              <div className="font-display text-sm font-bold mt-1">{formatDate(projeto.data_fim_prevista)}</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5">{drLabel}</div>
+            </CardContent></Card>
+            <Card className="shadow-elegant"><CardContent className="p-4">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Pendências</div>
+              <div className="font-display text-xl font-bold mt-1">{pendencias}</div>
+            </CardContent></Card>
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-4">
+            <Card className="shadow-elegant"><CardContent className="p-4">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Valor contratado</div>
+              <div className="font-display text-xl font-bold mt-1">{brl(valorContratado ?? 0)}</div>
+            </CardContent></Card>
+            <Card className="shadow-elegant"><CardContent className="p-4">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Recebido</div>
+              <div className="font-display text-xl font-bold mt-1">{brl(contrato?.valor_recebido || 0)}</div>
+            </CardContent></Card>
+            <Card className="shadow-elegant"><CardContent className="p-4">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Serviços</div>
+              <div className="font-display text-xl font-bold mt-1">{servicos.filter(s => s.status === "concluido").length}/{servicos.length}</div>
+            </CardContent></Card>
+            <Card className="shadow-elegant"><CardContent className="p-4">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Progresso</div>
+              <div className="font-display text-xl font-bold mt-1">{projeto.percentual_progresso || 0}%</div>
+              <Progress value={projeto.percentual_progresso || 0} className="h-1.5 mt-1.5" />
+            </CardContent></Card>
+          </div>
+        )}
 
         <Tabs defaultValue="visao">
           <TabsList>
@@ -126,8 +179,8 @@ export default function ProjetoEditor() {
             <TabsTrigger value="servicos">Serviços ({servicos.length})</TabsTrigger>
             <TabsTrigger value="os">Ordens de Serviço ({os.length})</TabsTrigger>
             <TabsTrigger value="docs">Documentos ({docs.length})</TabsTrigger>
-            <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
-            <TabsTrigger value="renovacoes">Renovações ({renovacoes.length})</TabsTrigger>
+            {!isTecnico && <TabsTrigger value="financeiro">Financeiro</TabsTrigger>}
+            {!isTecnico && <TabsTrigger value="renovacoes">Renovações ({renovacoes.length})</TabsTrigger>}
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
           </TabsList>
 
@@ -206,7 +259,9 @@ export default function ProjetoEditor() {
                             </SelectContent>
                           </Select>
                           <Badge className={projetoServicoStatusColor[s.status] + " border-0"}>{projetoServicoStatusLabel[s.status]}</Badge>
-                          <span className="font-mono text-sm w-24 text-right">{brl(s.valor)}</span>
+                          {!isTecnico && (
+                            <span className="font-mono text-sm w-24 text-right">{brl(valoresServicos[s.id] ?? 0)}</span>
+                          )}
                         </div>
                         <div className="flex items-center gap-3">
                           <Input
