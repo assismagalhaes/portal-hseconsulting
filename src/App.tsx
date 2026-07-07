@@ -11,6 +11,7 @@ import ClienteLayout from "./components/layout/ClienteLayout";
 import RequireCliente from "./components/layout/RequireCliente";
 import Auth from "./pages/Auth";
 import TrocarSenha from "./pages/TrocarSenha";
+import Unsubscribe from "./pages/Unsubscribe";
 import Dashboard from "./pages/Dashboard";
 import DashboardTecnico from "./pages/DashboardTecnico";
 import Usuarios from "./pages/Usuarios";
@@ -97,6 +98,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/trocar-senha" element={<TrocarSenha />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/proposta-exemplo" element={<ProposalExample />} />
             <Route path="/cliente/login" element={<ClienteLogin />} />
             <Route element={<RequireCliente><ClienteLayout /></RequireCliente>}>

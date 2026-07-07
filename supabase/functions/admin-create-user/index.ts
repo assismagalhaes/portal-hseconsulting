@@ -94,7 +94,45 @@ Deno.serve(async (req) => {
       detalhe: `${email} (${perfil})${reativado ? " — reativado" : ""}`,
     });
 
-    return json({ ok: true, user_id: userId, email, senha_provisoria: senhaProvisoria, reativado });
+    // Envia e-mail com credenciais (best-effort — não bloqueia a criação em caso de falha)
+    let emailEnviado = false;
+    let emailErro: string | null = null;
+    try {
+      const origin = req.headers.get("origin") || "https://portal-hseconsulting.lovable.app";
+      const { error: mailErr } = await admin.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "credenciais-acesso",
+          recipientEmail: email,
+          idempotencyKey: `credenciais-${userId}-${Date.now()}`,
+          templateData: {
+            nome,
+            email,
+            senhaProvisoria,
+            portalUrl: `${origin}/auth`,
+            reativado,
+          },
+        },
+      });
+      if (mailErr) {
+        emailErro = mailErr.message;
+        console.error("Falha ao enviar credenciais por e-mail:", mailErr);
+      } else {
+        emailEnviado = true;
+      }
+    } catch (e) {
+      emailErro = (e as Error).message;
+      console.error("Erro ao invocar send-transactional-email:", e);
+    }
+
+    return json({
+      ok: true,
+      user_id: userId,
+      email,
+      senha_provisoria: senhaProvisoria,
+      reativado,
+      email_enviado: emailEnviado,
+      email_erro: emailErro,
+    });
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }
