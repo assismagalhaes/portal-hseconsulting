@@ -68,10 +68,12 @@ export default function ProposalEditor() {
     ]);
     if (p.error) { toast.error(p.error.message); return; }
     const proposalData = p.data;
-    // Pré-popular condições padrão na primeira abertura
+    // Pré-popular condições padrão APENAS na primeira abertura (campo nunca preenchido).
+    // Usar == null evita re-preencher quando o usuário apagou o texto propositalmente
+    // (nesse caso o valor salvo é "" e deve ser respeitado).
     const patch: any = {};
-    if (!proposalData.condicoes_pagamento && pp.data?.condicoes_pagamento_default) patch.condicoes_pagamento = pp.data.condicoes_pagamento_default;
-    if (!proposalData.outras_condicoes && pp.data?.outras_condicoes_default) patch.outras_condicoes = pp.data.outras_condicoes_default;
+    if (proposalData.condicoes_pagamento == null && pp.data?.condicoes_pagamento_default) patch.condicoes_pagamento = pp.data.condicoes_pagamento_default;
+    if (proposalData.outras_condicoes == null && pp.data?.outras_condicoes_default) patch.outras_condicoes = pp.data.outras_condicoes_default;
     if (Object.keys(patch).length) {
       await supabase.from("proposals").update(patch).eq("id", proposalData.id);
       Object.assign(proposalData, patch);
