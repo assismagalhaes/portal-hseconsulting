@@ -376,14 +376,22 @@ export default function ProposalEditor() {
       img.onload = img.onerror = () => res(null);
     })));
     // Título temporário para virar o nome sugerido do PDF em "Salvar como PDF".
+    // Segue o padrão "Proposta P-2026-51842 - Zanotti".
     const clienteNome = client?.nome_fantasia || client?.razao_social || "Cliente";
     const safe = (s: string) => (s || "").replace(/[\\/:*?"<>|]/g, "").trim();
+    const numero = String(proposal.numero || "").trim();
+    // Garante o prefixo "P-" quando o número vier só como "2026-51842".
+    const numeroFmt = /^P-/i.test(numero) ? numero : (numero ? `P-${numero}` : "P-");
     const originalTitle = document.title;
-    document.title = `Proposta ${proposal.numero} - ${safe(clienteNome)}`;
+    const printTitle = `Proposta ${numeroFmt} - ${safe(clienteNome)}`;
+    document.title = printTitle;
+    // Aguarda o navegador registrar o novo title antes de abrir o diálogo de impressão
+    // (Chrome captura o title no momento em que print() é chamado).
+    await new Promise<void>((res) => requestAnimationFrame(() => requestAnimationFrame(() => res())));
     try {
       window.print();
     } finally {
-      setTimeout(() => { document.title = originalTitle; }, 500);
+      setTimeout(() => { document.title = originalTitle; }, 1000);
     }
   }
 
