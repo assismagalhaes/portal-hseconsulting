@@ -563,8 +563,20 @@ export default function ProposalEditor() {
                 </TabsContent>
               )}
             </Tabs>
-            {/* Documento sempre montado para impressão — oculto na tela quando não em modo cliente */}
-            <div className="hidden print:block" aria-hidden="true">
+            {/* Documento sempre montado para impressão. Precisa ficar com layout real
+                (não display:none) para o paginador dinâmico medir as alturas corretamente.
+                Fica posicionado fora da tela e é revelado apenas em @media print. */}
+            <div
+              className="print-doc-holder"
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                left: "-100vw",
+                top: 0,
+                width: "230mm",
+                pointerEvents: "none",
+              }}
+            >
               <ProposalDocument proposal={proposal} client={client} items={items} revisions={revisions} onReady={()=>setDocReady(true)} />
             </div>
             </>
