@@ -36,27 +36,46 @@ Deno.serve(async (req) => {
     // Gera senha provisória (12 chars: letras + números + símbolo simples)
     const senhaProvisoria = generatePassword(12);
 
-    // Cria usuário já confirmado com senha provisória — SEM convite por link
-    // Verifica se já existe usuário com esse e-mail para dar mensagem clara
-    const { data: existingList } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
-    const jaExiste = existingList?.users?.find((u: any) => (u.email || "").toLowerCase() === String(email).toLowerCase());
-    if (jaExiste) {
-      return json({ error: `Já existe um usuário cadastrado com o e-mail ${email}. Use outro e-mail ou edite o usuário existente.` }, 409);
-    }
+    // Verifica se já existe usuário com esse e-mail (pode ser um soft-delete)
+    let userId: string | undefined;
+    let reativado = false;
+    const emailLc = String(email).toLowerCase();
+    const { data: existingList } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const jaExiste: any = existingList?.users?.find((u: any) => (u.email || "").toLowerCase() === emailLc);
 
-    const { data: created, error: cErr } = await admin.auth.admin.createUser({
-      email,
-      password: senhaProvisoria,
-      email_confirm: true,
-      user_metadata: { nome, role: perfil },
-    });
-    if (cErr) {
-      const msg = /already.*registered|email.*exists/i.test(cErr.message)
-        ? `Já existe um usuário cadastrado com o e-mail ${email}.`
-        : cErr.message;
-      return json({ error: msg }, 400);
+    if (jaExiste) {
+      // Verifica se está marcado como excluído (soft-delete) para reativar
+      const { data: prof } = await admin.from("profiles").select("status").eq("id", jaExiste.id).maybeSingle();
+      const estaExcluido = prof?.status === "excluido" || !!jaExiste.banned_until;
+      if (!estaExcluido) {
+        return json({ error: `Já existe um usuário ativo cadastrado com o e-mail ${email}. Use outro e-mail ou edite o usuário existente.` }, 409);
+      }
+      // Reativa: remove ban e redefine senha
+      const { error: upErr } = await admin.auth.admin.updateUserById(jaExiste.id, {
+        password: senhaProvisoria,
+        ban_duration: "none",
+        email_confirm: true,
+        user_metadata: { nome, role: perfil },
+      } as any);
+      if (upErr) return json({ error: `Não foi possível reativar o usuário: ${upErr.message}` }, 400);
+      userId = jaExiste.id;
+      reativado = true;
+    } else {
+      // Cria usuário já confirmado com senha provisória — SEM convite por link
+      const { data: created, error: cErr } = await admin.auth.admin.createUser({
+        email,
+        password: senhaProvisoria,
+        email_confirm: true,
+        user_metadata: { nome, role: perfil },
+      });
+      if (cErr) {
+        const msg = /already.*registered|email.*exists/i.test(cErr.message)
+          ? `Já existe um usuário cadastrado com o e-mail ${email}.`
+          : cErr.message;
+        return json({ error: msg }, 400);
+      }
+      userId = created.user?.id;
     }
-    const userId = created.user?.id;
     if (!userId) return json({ error: "Falha ao criar usuário" }, 500);
 
     // upsert de profile — marca como senha provisória
@@ -71,11 +90,11 @@ Deno.serve(async (req) => {
 
     await admin.from("internos_logs_acesso").insert({
       user_id: callerId,
-      acao: "usuario_criado",
-      detalhe: `${email} (${perfil})`,
+      acao: reativado ? "usuario_reativado" : "usuario_criado",
+      detalhe: `${email} (${perfil})${reativado ? " — reativado" : ""}`,
     });
 
-    return json({ ok: true, user_id: userId, email, senha_provisoria: senhaProvisoria });
+    return json({ ok: true, user_id: userId, email, senha_provisoria: senhaProvisoria, reativado });
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }
