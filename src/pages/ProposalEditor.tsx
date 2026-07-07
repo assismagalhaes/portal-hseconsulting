@@ -370,9 +370,6 @@ export default function ProposalEditor() {
     await Promise.all(srcImgs.map(img => img.complete ? null : new Promise(res => {
       img.onload = img.onerror = () => res(null);
     })));
-    const docNode = document.querySelector(".proposal-doc") as HTMLElement | null;
-    if (!docNode) { toast.error("Documento não está pronto."); return; }
-
     // Padrão de nome do arquivo: "Proposta P-2026-51842 - Zanotti".
     const clienteNome = client?.nome_fantasia || client?.razao_social || "Cliente";
     const safe = (s: string) => (s || "").replace(/[\\/:*?"<>|]/g, "").trim();
@@ -380,62 +377,46 @@ export default function ProposalEditor() {
     const numeroFmt = /^P-/i.test(numero) ? numero : (numero ? `P-${numero}` : "P-");
     const printTitle = `Proposta ${numeroFmt} - ${safe(clienteNome)}`;
 
-    // Imprime a partir de um iframe dedicado — o Chrome usa o document.title
-    // do iframe como nome sugerido do PDF. Isso é independente do título da
-    // janela pai (evita casos como "Portal HSE Consulting _ Lovable" quando
-    // o app roda embutido em um preview).
-    const stylesHTML = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
-      .map(n => (n as HTMLElement).outerHTML).join("\n");
-
-    // Remove holder off-screen do clone (o próprio ProposalDocument já vai no body).
-    const cleanDoc = docNode.cloneNode(true) as HTMLElement;
-
-    const iframe = document.createElement("iframe");
-    iframe.setAttribute("aria-hidden", "true");
-    iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;";
-    document.body.appendChild(iframe);
-    const iDoc = iframe.contentDocument!;
-    iDoc.open();
-    iDoc.write(`<!doctype html><html><head><meta charset="utf-8"><title>${printTitle.replace(/[<>]/g, "")}</title>
-      ${stylesHTML}
-      <style>
-        @page { size: A4; margin: 0; }
-        html, body { margin: 0; padding: 0; background: #fff;
-          -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        *, *::before, *::after {
-          -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
-        }
-        .pdf-page { box-shadow: none !important; margin: 0 !important;
-          page-break-after: always; break-after: page; }
-        .pdf-page:last-child { page-break-after: auto; break-after: auto; }
-        .avoid-break { break-inside: avoid; page-break-inside: avoid; }
-        .no-print { display: none !important; }
-      </style>
-    </head><body></body></html>`);
-    iDoc.close();
-    iDoc.body.appendChild(cleanDoc);
-
-    // Espera imagens carregarem no iframe.
-    await new Promise<void>(res => {
-      const done = () => res();
-      if (iframe.contentDocument?.readyState === "complete") { done(); return; }
-      iframe.onload = done;
-      setTimeout(done, 1500);
-    });
-    const iImgs = Array.from(iDoc.images);
-    await Promise.all(iImgs.map(img => img.complete ? null : new Promise(res => {
-      img.onload = img.onerror = () => res(null);
-    })));
-    // Duplo RAF para garantir paint final.
-    await new Promise<void>(res => requestAnimationFrame(() => requestAnimationFrame(() => res())));
+    // O Chrome usa o document.title da janela do TOPO para sugerir o nome do PDF.
+    // Quando o app roda dentro do preview do Lovable, a janela do topo é a página
+    // do editor — daí o nome "Portal HSE Consulting _ Lovable". Setamos o title
+    // em todos os níveis acessíveis (same-origin) antes de imprimir.
+    const savedTitles: Array<{ w: Window; title: string }> = [];
+    const setTitle = (w: Window | null) => {
+      if (!w) return;
+      try {
+        savedTitles.push({ w, title: w.document.title });
+        w.document.title = printTitle;
+      } catch {
+        /* cross-origin — ignora */
+      }
+    };
+    setTitle(window);
     try {
-      iframe.contentWindow?.focus();
-      iframe.contentWindow?.print();
-    } catch (e) {
-      toast.error("Falha ao abrir o diálogo de impressão.");
+      let w: Window | null = window.parent;
+      const seen = new Set<Window>([window]);
+      while (w && !seen.has(w)) {
+        seen.add(w);
+        setTitle(w);
+        if (w === w.parent) break;
+        w = w.parent;
+      }
+      setTitle(window.top);
+    } catch { /* cross-origin */ }
+
+    // Aguarda o navegador registrar o novo title antes de abrir o diálogo.
+    await new Promise<void>((res) => requestAnimationFrame(() => requestAnimationFrame(() => res())));
+
+    try {
+      window.print();
+    } finally {
+      // Restaura títulos originais depois que o diálogo fechar.
+      setTimeout(() => {
+        savedTitles.forEach(({ w, title }) => {
+          try { w.document.title = title; } catch {}
+        });
+      }, 1500);
     }
-    // Remove o iframe depois de fechar o diálogo de impressão.
-    setTimeout(() => { try { document.body.removeChild(iframe); } catch {} }, 2000);
   }
 
   return (
