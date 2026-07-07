@@ -208,7 +208,6 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
     });
   }
 
-  // -------- Investimento --------
   // -------- Observações técnicas gerais (opcional) --------
   if (proposal.observacoes_tecnicas && String(proposal.observacoes_tecnicas).trim()) {
     push("Observações Técnicas", "ot-title",
