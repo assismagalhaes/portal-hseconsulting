@@ -352,73 +352,39 @@ export default function ProposalEditor() {
   const errs = validate();
 
   async function handlePrint() {
-    // Wait for the proposal document — including all FlowPages-computed pages —
-    // to be mounted. Otherwise we snapshot HTML with only cover/contracapa
-    // rendered and the middle pages get lost.
+    // Aguarda o documento estar totalmente montado (paginado + imagens carregadas)
+    // e imprime a própria janela — o CSS @media print em index.css esconde
+    // todo o resto e revela só .proposal-doc.
     const t0 = Date.now();
-    let lastCount = -1;
-    let stable = 0;
-    while (true) {
-      const count = document.querySelectorAll(".proposal-doc .pdf-page").length;
-      // Need at least cover + 1 body + contracapa, and count must be stable
-      // for a few frames (no further page splitting in progress).
-      if (count >= 3 && count === lastCount) {
-        stable++;
-        if (stable >= 3) break;
-      } else {
-        stable = 0;
-      }
-      lastCount = count;
+    while (!docReady) {
       if (Date.now() - t0 > 8000) {
-        if (count < 3) { toast.error("Não foi possível preparar o documento para impressão."); return; }
-        break;
+        toast.error("Não foi possível preparar o documento para impressão.");
+        return;
       }
-      await new Promise(r => setTimeout(r, 120));
+      await new Promise(r => setTimeout(r, 100));
     }
-    // Wait for images in the source document to load before cloning.
-    const srcImgs = Array.from(document.querySelectorAll(".proposal-doc img")) as HTMLImageElement[];
-    await Promise.all(srcImgs.map(img => img.complete ? null : new Promise(res => {
+    // Garante que capa + pelo menos 1 página de corpo + contracapa existam
+    // (evita imprimir com paginação inicial ainda incompleta).
+    const t1 = Date.now();
+    while (document.querySelectorAll(".proposal-doc .pdf-page").length < 3) {
+      if (Date.now() - t1 > 5000) break;
+      await new Promise(r => setTimeout(r, 100));
+    }
+    // Aguarda imagens (logo, capa, contracapa) carregarem.
+    const imgs = Array.from(document.querySelectorAll(".proposal-doc img")) as HTMLImageElement[];
+    await Promise.all(imgs.map(img => img.complete ? null : new Promise(res => {
       img.onload = img.onerror = () => res(null);
     })));
-    const docNode = document.querySelector(".proposal-doc") as HTMLElement | null;
-    if (!docNode) { toast.error("Documento não está pronto."); return; }
-
+    // Título temporário para virar o nome sugerido do PDF em "Salvar como PDF".
     const clienteNome = client?.nome_fantasia || client?.razao_social || "Cliente";
     const safe = (s: string) => (s || "").replace(/[\\/:*?"<>|]/g, "").trim();
-    const title = `Proposta ${proposal.numero} - ${safe(clienteNome)}`;
-
-    // Clone all stylesheets so the printed window matches the on-screen client view exactly
-    const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
-      .map(n => (n as HTMLElement).outerHTML).join("\n");
-
-    const w = window.open("", "_blank", "width=960,height=1200");
-    if (!w) { toast.error("Habilite pop-ups para gerar o PDF."); return; }
-    w.document.open();
-    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title>${styles}
-      <style>
-        @page { size: A4; margin: 0; }
-        html, body { margin: 0; padding: 0; background: #fff; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        .pdf-page { box-shadow: none !important; margin: 0 !important; page-break-after: always; break-after: page; }
-        .pdf-page:last-child { page-break-after: auto; break-after: auto; }
-        .avoid-break { break-inside: avoid; page-break-inside: avoid; }
-        @media print {
-          html, body { background: #fff !important; }
-        }
-      </style></head><body>${docNode.outerHTML}</body></html>`);
-    w.document.close();
-
-    // Wait for images (logo, capa) to load before printing
-    const waitImgs = async () => {
-      const imgs = Array.from(w.document.images);
-      await Promise.all(imgs.map(img => img.complete ? null : new Promise(res => {
-        img.onload = img.onerror = () => res(null);
-      })));
-    };
-    try { await waitImgs(); } catch {}
-    setTimeout(() => {
-      try { w.focus(); w.print(); } catch {}
-    }, 400);
+    const originalTitle = document.title;
+    document.title = `Proposta ${proposal.numero} - ${safe(clienteNome)}`;
+    try {
+      window.print();
+    } finally {
+      setTimeout(() => { document.title = originalTitle; }, 500);
+    }
   }
 
   return (
@@ -563,8 +529,20 @@ export default function ProposalEditor() {
                 </TabsContent>
               )}
             </Tabs>
-            {/* Documento sempre montado para impressão — oculto na tela quando não em modo cliente */}
-            <div className="hidden print:block" aria-hidden="true">
+            {/* Documento sempre montado para impressão. Precisa ficar com layout real
+                (não display:none) para o paginador dinâmico medir as alturas corretamente.
+                Fica posicionado fora da tela e é revelado apenas em @media print. */}
+            <div
+              className="print-doc-holder"
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                left: "-100vw",
+                top: 0,
+                width: "230mm",
+                pointerEvents: "none",
+              }}
+            >
               <ProposalDocument proposal={proposal} client={client} items={items} revisions={revisions} onReady={()=>setDocReady(true)} />
             </div>
             </>
