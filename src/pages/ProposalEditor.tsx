@@ -125,7 +125,8 @@ export default function ProposalEditor() {
     if (c.id) {
       const { error } = await supabase.from("clients").update({
         razao_social: c.razao_social, nome_fantasia: c.nome_fantasia, cnpj_cpf: c.cnpj_cpf,
-        qtd_funcionarios: Number(c.qtd_funcionarios)||0, endereco: c.endereco, cidade: c.cidade, uf: c.uf,
+        qtd_funcionarios: Number(c.qtd_funcionarios)||0, endereco: c.endereco,
+        bairro: c.bairro, cep: c.cep, cidade: c.cidade, uf: c.uf,
         solicitante: c.solicitante, cargo: c.cargo, telefone: c.telefone, whatsapp: c.whatsapp,
         email: c.email, observacoes: c.observacoes,
       }).eq("id", c.id);
@@ -146,7 +147,8 @@ export default function ProposalEditor() {
         const { data, error } = await supabase.from("clients").insert({
           razao_social: c.razao_social || "Cliente sem nome",
           nome_fantasia: c.nome_fantasia, cnpj_cpf: c.cnpj_cpf,
-          qtd_funcionarios: Number(c.qtd_funcionarios)||0, endereco: c.endereco, cidade: c.cidade, uf: c.uf,
+          qtd_funcionarios: Number(c.qtd_funcionarios)||0, endereco: c.endereco,
+          bairro: c.bairro, cep: c.cep, cidade: c.cidade, uf: c.uf,
           solicitante: c.solicitante, cargo: c.cargo, telefone: c.telefone, whatsapp: c.whatsapp,
           email: c.email, observacoes: c.observacoes,
         }).select("*").single();
