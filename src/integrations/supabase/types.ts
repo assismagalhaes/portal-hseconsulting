@@ -5017,6 +5017,7 @@ export type Database = {
           observacao_retroativa: string | null
           observacoes_comerciais: string | null
           observacoes_internas: string | null
+          observacoes_tecnicas: string | null
           origem_cadastro: Database["public"]["Enums"]["proposal_origem"]
           outras_condicoes: string | null
           proximo_followup: string | null
@@ -5046,6 +5047,7 @@ export type Database = {
           observacao_retroativa?: string | null
           observacoes_comerciais?: string | null
           observacoes_internas?: string | null
+          observacoes_tecnicas?: string | null
           origem_cadastro?: Database["public"]["Enums"]["proposal_origem"]
           outras_condicoes?: string | null
           proximo_followup?: string | null
@@ -5075,6 +5077,7 @@ export type Database = {
           observacao_retroativa?: string | null
           observacoes_comerciais?: string | null
           observacoes_internas?: string | null
+          observacoes_tecnicas?: string | null
           origem_cadastro?: Database["public"]["Enums"]["proposal_origem"]
           outras_condicoes?: string | null
           proximo_followup?: string | null

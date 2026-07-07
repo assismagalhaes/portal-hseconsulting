@@ -502,6 +502,18 @@ export default function ProposalEditor() {
                     selected={!!selected[it.id]}
                     onSelect={(v)=>setSelected(s=>({ ...s, [it.id]: v }))} />
                 ))}
+                <Card>
+                  <CardContent className="p-4 space-y-1.5">
+                    <Label>Observações técnicas gerais</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Informações técnicas gerais do serviço como um todo. Aparece no PDF do cliente, após o escopo dos serviços e antes do investimento. Opcional.
+                    </p>
+                    <Textarea rows={5}
+                      value={proposal.observacoes_tecnicas||""}
+                      onChange={e=>scheduleProposalSave({ observacoes_tecnicas: e.target.value })}
+                      placeholder="Ex.: metodologia adotada, normas de referência, premissas técnicas comuns a todos os itens, exclusões, condições de acesso ao campo…" />
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="datas" className="mt-4">

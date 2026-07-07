@@ -208,6 +208,20 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
     });
   }
 
+  // -------- Observações técnicas gerais (opcional) --------
+  if (proposal.observacoes_tecnicas && String(proposal.observacoes_tecnicas).trim()) {
+    push("Observações Técnicas", "ot-title",
+      <SectionTitle eyebrow="Notas do serviço" title="Observações técnicas" accent={accent} primary={primary} />,
+      true);
+    push("Observações Técnicas", "ot-body", (
+      <div style={{ padding: "16px 20px", background: neutral, borderLeft: `4px solid ${accent}`, borderRadius: 8 }}>
+        <p style={{ fontSize: 12.5, lineHeight: 1.7, color: "#334155", whiteSpace: "pre-line", margin: 0 }}>
+          {proposal.observacoes_tecnicas}
+        </p>
+      </div>
+    ));
+  }
+
   // -------- Investimento --------
   push("Investimento", "inv-title", <SectionTitle eyebrow="Resumo financeiro" title="Investimento" accent={accent} primary={primary} />, true);
   invChunks.forEach((chunk, idx) => {
