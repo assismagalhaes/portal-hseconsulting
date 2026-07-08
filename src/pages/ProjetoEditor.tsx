@@ -242,6 +242,9 @@ export default function ProjetoEditor() {
           </TabsContent>
 
           <TabsContent value="servicos" className="mt-4">
+
+          </TabsContent>
+          <TabsContent value="cliente-placeholder" className="mt-4"></TabsContent>
             <Card className="shadow-elegant">
               <CardContent className="p-0">
                 {servicos.length === 0 ? (
