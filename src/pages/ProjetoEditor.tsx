@@ -14,8 +14,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { brl, formatDate, formatDateTime } from "@/lib/format";
 import { projetoStatusColor, projetoStatusLabel, projetoServicoStatusColor, projetoServicoStatusLabel } from "@/lib/projetos";
-import { ArrowLeft, FileText, ClipboardList, FileSignature, DollarSign, History, RefreshCw, Save } from "lucide-react";
+import { ArrowLeft, FileText, ClipboardList, FileSignature, DollarSign, History, RefreshCw, Save, Building2, User, Mail, Phone, MapPin } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+
+function InfoRow({ label, value, mono, icon, href }: { label: string; value?: any; mono?: boolean; icon?: React.ReactNode; href?: string }) {
+  const display = value == null || value === "" ? "—" : String(value);
+  const content = href && display !== "—"
+    ? <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noreferrer" className="text-primary hover:underline break-all">{display}</a>
+    : <span className="break-all">{display}</span>;
+  return (
+    <div className="space-y-0.5">
+      <div className="text-[11px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">{icon}{label}</div>
+      <div className={`text-sm ${mono ? "font-mono" : ""}`}>{content}</div>
+    </div>
+  );
+}
 
 export default function ProjetoEditor() {
   const { id } = useParams();
@@ -38,7 +51,7 @@ export default function ProjetoEditor() {
     setLoading(true);
     const { data: p } = await supabase
       .from("projetos")
-      .select("*, clients(razao_social, nome_fantasia, cnpj_cpf, cidade, uf), proposals(numero)")
+      .select("*, clients(id, razao_social, nome_fantasia, cnpj_cpf, cidade, uf, endereco, bairro, cep, email, telefone, whatsapp, solicitante, cargo, qtd_funcionarios), proposals(numero)")
       .eq("id", id).maybeSingle();
     setProjeto(p);
     document.title = `${p?.numero || "Projeto"} | HSE Consulting`;
@@ -176,6 +189,7 @@ export default function ProjetoEditor() {
         <Tabs defaultValue="visao">
           <TabsList>
             <TabsTrigger value="visao">Visão Geral</TabsTrigger>
+            <TabsTrigger value="cliente">Cliente</TabsTrigger>
             <TabsTrigger value="servicos">Serviços ({servicos.length})</TabsTrigger>
             <TabsTrigger value="os">Ordens de Serviço ({os.length})</TabsTrigger>
             <TabsTrigger value="docs">Documentos ({docs.length})</TabsTrigger>
@@ -236,6 +250,63 @@ export default function ProjetoEditor() {
                 <div className="text-xs text-muted-foreground">
                   Origem: Proposta <Link className="underline" to={`/propostas/${projeto.proposal_id}`}>{projeto.proposals?.numero || "—"}</Link> · Cliente {cliente}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="cliente" className="mt-4">
+            <Card className="shadow-elegant">
+              <CardHeader>
+                <CardTitle className="font-display text-base flex items-center gap-2">
+                  <Building2 className="h-4 w-4" /> Dados do Cliente
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <InfoRow label="Razão Social" value={projeto.clients?.razao_social} />
+                  <InfoRow label="Nome Fantasia" value={projeto.clients?.nome_fantasia} />
+                  <InfoRow label="CNPJ / CPF" value={projeto.clients?.cnpj_cpf} mono />
+                  <InfoRow label="Funcionários" value={projeto.clients?.qtd_funcionarios || "—"} />
+                </div>
+
+                <div>
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> Endereço</div>
+                  <div className="grid gap-4 md:grid-cols-2 rounded-lg border p-4 bg-muted/30">
+                    <InfoRow label="Logradouro" value={projeto.clients?.endereco} />
+                    <InfoRow label="Bairro" value={projeto.clients?.bairro} />
+                    <InfoRow label="CEP" value={projeto.clients?.cep} />
+                    <InfoRow label="Cidade / UF" value={[projeto.clients?.cidade, projeto.clients?.uf].filter(Boolean).join(" / ") || "—"} />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5"><User className="h-3.5 w-3.5" /> Pessoa de Contato</div>
+                  <div className="grid gap-4 md:grid-cols-2 rounded-lg border p-4 bg-muted/30">
+                    <InfoRow label="Nome" value={projeto.clients?.solicitante} />
+                    <InfoRow label="Cargo" value={projeto.clients?.cargo} />
+                    <InfoRow
+                      label="E-mail"
+                      icon={<Mail className="h-3.5 w-3.5" />}
+                      value={projeto.clients?.email}
+                      href={projeto.clients?.email ? `mailto:${projeto.clients.email}` : undefined}
+                    />
+                    <InfoRow
+                      label="Telefone"
+                      icon={<Phone className="h-3.5 w-3.5" />}
+                      value={projeto.clients?.telefone}
+                      href={projeto.clients?.telefone ? `tel:${projeto.clients.telefone}` : undefined}
+                    />
+                    <InfoRow
+                      label="WhatsApp"
+                      value={projeto.clients?.whatsapp}
+                      href={projeto.clients?.whatsapp ? `https://wa.me/55${(projeto.clients.whatsapp || "").replace(/\D/g, "")}` : undefined}
+                    />
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-muted-foreground">
+                  Informações do cliente disponíveis para consulta. Alterações cadastrais devem ser feitas na tela de Clientes pelo perfil responsável.
+                </p>
               </CardContent>
             </Card>
           </TabsContent>
