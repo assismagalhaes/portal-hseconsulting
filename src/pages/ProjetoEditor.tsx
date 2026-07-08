@@ -17,6 +17,19 @@ import { projetoStatusColor, projetoStatusLabel, projetoServicoStatusColor, proj
 import { ArrowLeft, FileText, ClipboardList, FileSignature, DollarSign, History, RefreshCw, Save, Building2, User, Mail, Phone, MapPin } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
+function InfoRow({ label, value, mono, icon, href }: { label: string; value?: any; mono?: boolean; icon?: React.ReactNode; href?: string }) {
+  const display = value == null || value === "" ? "—" : String(value);
+  const content = href && display !== "—"
+    ? <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noreferrer" className="text-primary hover:underline break-all">{display}</a>
+    : <span className="break-all">{display}</span>;
+  return (
+    <div className="space-y-0.5">
+      <div className="text-[11px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">{icon}{label}</div>
+      <div className={`text-sm ${mono ? "font-mono" : ""}`}>{content}</div>
+    </div>
+  );
+}
+
 export default function ProjetoEditor() {
   const { id } = useParams();
   const { isTecnico } = useAuth();
