@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { brl, formatDate, formatDateTime } from "@/lib/format";
 import { projetoStatusColor, projetoStatusLabel, projetoServicoStatusColor, projetoServicoStatusLabel } from "@/lib/projetos";
-import { ArrowLeft, FileText, ClipboardList, FileSignature, DollarSign, History, RefreshCw, Save } from "lucide-react";
+import { ArrowLeft, FileText, ClipboardList, FileSignature, DollarSign, History, RefreshCw, Save, Building2, User, Mail, Phone, MapPin } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
 export default function ProjetoEditor() {
@@ -38,7 +38,7 @@ export default function ProjetoEditor() {
     setLoading(true);
     const { data: p } = await supabase
       .from("projetos")
-      .select("*, clients(razao_social, nome_fantasia, cnpj_cpf, cidade, uf), proposals(numero)")
+      .select("*, clients(id, razao_social, nome_fantasia, cnpj_cpf, cidade, uf, endereco, bairro, cep, email, telefone, whatsapp, solicitante, cargo, qtd_funcionarios), proposals(numero)")
       .eq("id", id).maybeSingle();
     setProjeto(p);
     document.title = `${p?.numero || "Projeto"} | HSE Consulting`;
