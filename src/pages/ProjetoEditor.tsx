@@ -176,6 +176,7 @@ export default function ProjetoEditor() {
         <Tabs defaultValue="visao">
           <TabsList>
             <TabsTrigger value="visao">Visão Geral</TabsTrigger>
+            <TabsTrigger value="cliente">Cliente</TabsTrigger>
             <TabsTrigger value="servicos">Serviços ({servicos.length})</TabsTrigger>
             <TabsTrigger value="os">Ordens de Serviço ({os.length})</TabsTrigger>
             <TabsTrigger value="docs">Documentos ({docs.length})</TabsTrigger>
