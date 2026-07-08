@@ -241,10 +241,64 @@ export default function ProjetoEditor() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="servicos" className="mt-4">
+          <TabsContent value="cliente" className="mt-4">
+            <Card className="shadow-elegant">
+              <CardHeader>
+                <CardTitle className="font-display text-base flex items-center gap-2">
+                  <Building2 className="h-4 w-4" /> Dados do Cliente
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <InfoRow label="Razão Social" value={projeto.clients?.razao_social} />
+                  <InfoRow label="Nome Fantasia" value={projeto.clients?.nome_fantasia} />
+                  <InfoRow label="CNPJ / CPF" value={projeto.clients?.cnpj_cpf} mono />
+                  <InfoRow label="Funcionários" value={projeto.clients?.qtd_funcionarios || "—"} />
+                </div>
 
+                <div>
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> Endereço</div>
+                  <div className="grid gap-4 md:grid-cols-2 rounded-lg border p-4 bg-muted/30">
+                    <InfoRow label="Logradouro" value={projeto.clients?.endereco} />
+                    <InfoRow label="Bairro" value={projeto.clients?.bairro} />
+                    <InfoRow label="CEP" value={projeto.clients?.cep} />
+                    <InfoRow label="Cidade / UF" value={[projeto.clients?.cidade, projeto.clients?.uf].filter(Boolean).join(" / ") || "—"} />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5"><User className="h-3.5 w-3.5" /> Pessoa de Contato</div>
+                  <div className="grid gap-4 md:grid-cols-2 rounded-lg border p-4 bg-muted/30">
+                    <InfoRow label="Nome" value={projeto.clients?.solicitante} />
+                    <InfoRow label="Cargo" value={projeto.clients?.cargo} />
+                    <InfoRow
+                      label="E-mail"
+                      icon={<Mail className="h-3.5 w-3.5" />}
+                      value={projeto.clients?.email}
+                      href={projeto.clients?.email ? `mailto:${projeto.clients.email}` : undefined}
+                    />
+                    <InfoRow
+                      label="Telefone"
+                      icon={<Phone className="h-3.5 w-3.5" />}
+                      value={projeto.clients?.telefone}
+                      href={projeto.clients?.telefone ? `tel:${projeto.clients.telefone}` : undefined}
+                    />
+                    <InfoRow
+                      label="WhatsApp"
+                      value={projeto.clients?.whatsapp}
+                      href={projeto.clients?.whatsapp ? `https://wa.me/55${(projeto.clients.whatsapp || "").replace(/\D/g, "")}` : undefined}
+                    />
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-muted-foreground">
+                  Informações do cliente disponíveis para consulta. Alterações cadastrais devem ser feitas na tela de Clientes pelo perfil responsável.
+                </p>
+              </CardContent>
+            </Card>
           </TabsContent>
-          <TabsContent value="cliente-placeholder" className="mt-4"></TabsContent>
+
+          <TabsContent value="servicos" className="mt-4">
             <Card className="shadow-elegant">
               <CardContent className="p-0">
                 {servicos.length === 0 ? (
