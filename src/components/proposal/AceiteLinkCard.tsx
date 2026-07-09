@@ -3,8 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Copy, Link2, Plus, ShieldCheck, XCircle, RefreshCw, Trash2, Eye } from "lucide-react";
+import { Copy, Link2, Plus, ShieldCheck, XCircle, Trash2, Eye, Mail, Loader2 } from "lucide-react";
+import { brl } from "@/lib/format";
 
 type Aceite = {
   id: string;
@@ -28,9 +33,34 @@ const STATUS_CFG: Record<string, { label: string; cls: string }> = {
   cancelado: { label: "Cancelado",           cls: "bg-muted text-muted-foreground" },
 };
 
-export default function AceiteLinkCard({ proposalId, revisaoAtual }: { proposalId: string; revisaoAtual: number | null }) {
+export default function AceiteLinkCard({
+  proposalId,
+  revisaoAtual,
+  proposalNumero,
+  proposalTitulo,
+  valorTotal,
+  validade,
+  clienteNome,
+  clienteEmail,
+  clienteSolicitante,
+}: {
+  proposalId: string;
+  revisaoAtual: number | null;
+  proposalNumero?: string | null;
+  proposalTitulo?: string | null;
+  valorTotal?: number | null;
+  validade?: string | null;
+  clienteNome?: string | null;
+  clienteEmail?: string | null;
+  clienteSolicitante?: string | null;
+}) {
   const [items, setItems] = useState<Aceite[]>([]);
   const [loading, setLoading] = useState(false);
+  const [emailOpen, setEmailOpen] = useState<Aceite | null>(null);
+  const [emailTo, setEmailTo] = useState("");
+  const [emailNome, setEmailNome] = useState("");
+  const [emailMsg, setEmailMsg] = useState("");
+  const [enviandoEmail, setEnviandoEmail] = useState(false);
 
   useEffect(() => { carregar(); }, [proposalId]);
 
@@ -83,6 +113,44 @@ export default function AceiteLinkCard({ proposalId, revisaoAtual }: { proposalI
     }
   }
 
+  function abrirEnvioEmail(it: Aceite) {
+    setEmailTo(clienteEmail || "");
+    setEmailNome(clienteSolicitante || "");
+    setEmailMsg("");
+    setEmailOpen(it);
+  }
+
+  async function enviarEmail() {
+    if (!emailOpen) return;
+    if (!emailTo.trim() || !/^\S+@\S+\.\S+$/.test(emailTo.trim())) {
+      return toast.error("Informe um e-mail válido.");
+    }
+    setEnviandoEmail(true);
+    const link = urlDe(emailOpen.token);
+    const { error } = await supabase.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: "proposta-aceite-link",
+        recipientEmail: emailTo.trim(),
+        idempotencyKey: `aceite-${emailOpen.id}-${Date.now()}`,
+        templateData: {
+          clienteNome: clienteNome || "",
+          destinatarioNome: emailNome.trim() || "",
+          propostaNumero: proposalNumero || "",
+          propostaTitulo: proposalTitulo || "",
+          valorTotal: valorTotal != null ? brl(valorTotal) : "",
+          validade: validade ? new Date(validade).toLocaleDateString("pt-BR") : "",
+          linkAceite: link,
+          remetenteNome: "Equipe HSE Consulting",
+          mensagemPersonalizada: emailMsg.trim(),
+        },
+      },
+    });
+    setEnviandoEmail(false);
+    if (error) return toast.error("Falha ao enviar e-mail: " + error.message);
+    toast.success(`E-mail enviado para ${emailTo}.`);
+    setEmailOpen(null);
+  }
+
   const temPendente = items.some(i => i.status === "pendente");
 
   return (
@@ -118,6 +186,9 @@ export default function AceiteLinkCard({ proposalId, revisaoAtual }: { proposalI
                     <>
                       <Button size="sm" variant="outline" onClick={() => copiar(it.token)}>
                         <Copy className="h-3.5 w-3.5 mr-1" /> Copiar link
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => abrirEnvioEmail(it)}>
+                        <Mail className="h-3.5 w-3.5 mr-1" /> Enviar por e-mail
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => window.open(urlDe(it.token), "_blank")}>
                         <Eye className="h-3.5 w-3.5 mr-1" /> Abrir
@@ -169,6 +240,39 @@ export default function AceiteLinkCard({ proposalId, revisaoAtual }: { proposalI
           </p>
         )}
       </CardContent>
+
+      <Dialog open={!!emailOpen} onOpenChange={(o) => !o && setEmailOpen(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Mail className="h-4 w-4" /> Enviar link por e-mail</DialogTitle>
+            <DialogDescription>
+              O cliente receberá um e-mail com o resumo da proposta e o botão para aceitar ou recusar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Destinatário *</Label>
+              <Input type="email" value={emailTo} onChange={e => setEmailTo(e.target.value)} placeholder="cliente@empresa.com" />
+            </div>
+            <div>
+              <Label>Nome do destinatário</Label>
+              <Input value={emailNome} onChange={e => setEmailNome(e.target.value)} placeholder="Nome de quem receberá" />
+            </div>
+            <div>
+              <Label>Mensagem personalizada (opcional)</Label>
+              <Textarea rows={3} value={emailMsg} onChange={e => setEmailMsg(e.target.value)}
+                placeholder="Ex.: Conforme conversado, segue proposta para sua análise…" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEmailOpen(null)}>Cancelar</Button>
+            <Button onClick={enviarEmail} disabled={enviandoEmail}>
+              {enviandoEmail ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Mail className="h-4 w-4 mr-1" />}
+              Enviar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
