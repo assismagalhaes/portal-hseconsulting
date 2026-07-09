@@ -4795,6 +4795,92 @@ export type Database = {
           },
         ]
       }
+      proposal_aceites: {
+        Row: {
+          aceito_em: string | null
+          aceito_por_cargo: string | null
+          aceito_por_cpf: string | null
+          aceito_por_email: string | null
+          aceito_por_nome: string | null
+          assinatura_base64: string | null
+          created_at: string
+          created_by: string | null
+          enviado_em: string | null
+          expires_at: string | null
+          hash_documento: string | null
+          id: string
+          ip: string | null
+          motivo_recusa: string | null
+          observacoes: string | null
+          proposal_id: string
+          recusado_em: string | null
+          revisao: number | null
+          status: string
+          token: string
+          updated_at: string
+          user_agent: string | null
+          visualizado_em: string | null
+        }
+        Insert: {
+          aceito_em?: string | null
+          aceito_por_cargo?: string | null
+          aceito_por_cpf?: string | null
+          aceito_por_email?: string | null
+          aceito_por_nome?: string | null
+          assinatura_base64?: string | null
+          created_at?: string
+          created_by?: string | null
+          enviado_em?: string | null
+          expires_at?: string | null
+          hash_documento?: string | null
+          id?: string
+          ip?: string | null
+          motivo_recusa?: string | null
+          observacoes?: string | null
+          proposal_id: string
+          recusado_em?: string | null
+          revisao?: number | null
+          status?: string
+          token?: string
+          updated_at?: string
+          user_agent?: string | null
+          visualizado_em?: string | null
+        }
+        Update: {
+          aceito_em?: string | null
+          aceito_por_cargo?: string | null
+          aceito_por_cpf?: string | null
+          aceito_por_email?: string | null
+          aceito_por_nome?: string | null
+          assinatura_base64?: string | null
+          created_at?: string
+          created_by?: string | null
+          enviado_em?: string | null
+          expires_at?: string | null
+          hash_documento?: string | null
+          id?: string
+          ip?: string | null
+          motivo_recusa?: string | null
+          observacoes?: string | null
+          proposal_id?: string
+          recusado_em?: string | null
+          revisao?: number | null
+          status?: string
+          token?: string
+          updated_at?: string
+          user_agent?: string | null
+          visualizado_em?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_aceites_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proposal_item_pricing: {
         Row: {
           aliquota_imposto: number
