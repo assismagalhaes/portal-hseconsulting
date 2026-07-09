@@ -28,6 +28,7 @@ import ProjetoEditor from "./pages/ProjetoEditor";
 import Profissionais from "./pages/Profissionais";
 import Settings from "./pages/Settings";
 import ProposalExample from "./pages/ProposalExample";
+import PropostaAceitePublica from "./pages/PropostaAceitePublica";
 import OrdensServico from "./pages/OrdensServico";
 import OrdemServicoEditor from "./pages/OrdemServicoEditor";
 import OrdemServicoPrint from "./pages/OrdemServicoPrint";
@@ -100,6 +101,7 @@ const App = () => (
             <Route path="/trocar-senha" element={<TrocarSenha />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/proposta-exemplo" element={<ProposalExample />} />
+            <Route path="/aceite/:token" element={<PropostaAceitePublica />} />
             <Route path="/cliente/login" element={<ClienteLogin />} />
             <Route element={<RequireCliente><ClienteLayout /></RequireCliente>}>
               <Route path="/cliente" element={<ClienteDashboard />} />
