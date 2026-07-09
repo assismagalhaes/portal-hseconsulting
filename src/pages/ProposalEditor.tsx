@@ -36,6 +36,7 @@ import CategoryCombobox from "@/components/CategoryCombobox";
 import { useIsMobile } from "@/hooks/use-mobile";
 import GroupPricingDrawer from "@/components/proposal/GroupPricingDrawer";
 import HistoricoPrecificacao from "@/components/proposal/HistoricoPrecificacao";
+import AceiteLinkCard from "@/components/proposal/AceiteLinkCard";
 
 const newId = () => Math.random().toString(36).slice(2, 10);
 
@@ -659,6 +660,8 @@ export default function ProposalEditor() {
               )}
             </CardContent>
           </Card>
+
+          {!clientView && <AceiteLinkCard proposalId={proposal.id} revisaoAtual={proposal.revisao_atual ?? null} />}
         </aside>
       </div>
 
