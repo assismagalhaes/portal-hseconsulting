@@ -363,7 +363,9 @@ export default function ProposalEditor() {
     const safe = (s: string) => (s || "").replace(/[\\/:*?"<>|]/g, "").trim();
     const numero = String(proposal.numero || "").trim();
     const numeroFmt = /^P-/i.test(numero) ? numero : (numero ? `P-${numero}` : "P-");
-    const printTitle = `Proposta ${numeroFmt} - ${safe(clienteNome)}`;
+    const revNum = Number(proposal.revisao_atual ?? 0);
+    const revSuffix = revNum > 0 ? `_Rev${String(revNum).padStart(2, "0")}` : "";
+    const printTitle = `Proposta ${numeroFmt} - ${safe(clienteNome)}${revSuffix}`;
     const escapeHtml = (s: string) => s
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
