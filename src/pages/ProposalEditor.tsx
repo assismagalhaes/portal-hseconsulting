@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Plus, Trash2, Calculator, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown, Users } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Calculator, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown, Users, Eye } from "lucide-react";
 import { brl, pct, proposalStatusLabel, proposalOrigemLabel, proposalOrigemColor, formatCnpjCpf, formatDate, formatDateTime } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
 import {
@@ -33,6 +33,7 @@ import logo from "@/assets/hse-logo-navy.png";
 import ProposalDocument from "@/components/proposal/ProposalDocument";
 import CnpjLookupField from "@/components/CnpjLookupField";
 import CategoryCombobox from "@/components/CategoryCombobox";
+import { useIsMobile } from "@/hooks/use-mobile";
 import GroupPricingDrawer from "@/components/proposal/GroupPricingDrawer";
 import HistoricoPrecificacao from "@/components/proposal/HistoricoPrecificacao";
 
@@ -42,6 +43,7 @@ export default function ProposalEditor() {
   const { id } = useParams<{id:string}>();
   const nav = useNavigate();
   const { isInternal } = useAuth();
+  const isMobile = useIsMobile();
   const [proposal, setProposal] = useState<any>(null);
   const [client, setClient] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
@@ -49,7 +51,9 @@ export default function ProposalEditor() {
   const [services, setServices] = useState<any[]>([]);
   const [params, setParams] = useState<any>(null);
   const [revisions, setRevisions] = useState<any[]>([]);
-  const [clientView, setClientView] = useState(false);
+  const [clientViewRaw, setClientView] = useState(false);
+  // No mobile a visão do cliente fica desligada (evita toque acidental no header)
+  const clientView = isMobile ? false : clientViewRaw;
   const [pricingOpen, setPricingOpen] = useState<string | null>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [groupOpen, setGroupOpen] = useState(false);
@@ -473,7 +477,7 @@ export default function ProposalEditor() {
               <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
               <SelectContent>{Object.entries(proposalStatusLabel).map(([k,v])=><SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
             </Select>
-            {isInternal && (
+            {isInternal && !isMobile && (
               <div className="flex items-center gap-2 ml-2 px-3 py-1.5 rounded-md bg-muted">
                 <Switch checked={clientView} onCheckedChange={setClientView} id="cv" />
                 <Label htmlFor="cv" className="text-xs cursor-pointer">Visão do cliente</Label>

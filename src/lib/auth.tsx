@@ -9,6 +9,7 @@ type AuthCtx = {
   session: Session | null;
   roles: Role[];
   loading: boolean;
+  senhaProvisoria: boolean;
   isInternal: boolean;   // admin || comercial — CRM/propostas/precificação
   isAdmin: boolean;
   isComercial: boolean;
@@ -21,6 +22,7 @@ type AuthCtx = {
 
 const Ctx = createContext<AuthCtx>({
   user: null, session: null, roles: [], loading: true,
+  senhaProvisoria: false,
   isInternal: false, isAdmin: false, isComercial: false, isFinanceiro: false, isTecnico: false,
   canSeeComercial: false, canSeeFinanceiro: false,
   signOut: async () => {},
@@ -31,13 +33,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
+  const [senhaProvisoria, setSenhaProvisoria] = useState(false);
 
   useEffect(() => {
+    let bootstrapped = false;
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
-        setTimeout(() => fetchRoles(s.user.id), 0);
+        // Only re-fetch on real sign-in/refresh, not on the initial event
+        // (initial roles/profile are loaded once by getSession below).
+        if (bootstrapped) setTimeout(() => bootstrap(s.user.id), 0);
         if (event === "SIGNED_IN") {
           setTimeout(() => {
             supabase.from("internos_logs_acesso").insert({
@@ -50,20 +56,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else {
         setRoles([]);
+        setSenhaProvisoria(false);
       }
     });
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
-      if (data.session?.user) fetchRoles(data.session.user.id);
+      if (data.session?.user) await bootstrap(data.session.user.id);
+      bootstrapped = true;
       setLoading(false);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  async function fetchRoles(uid: string) {
-    const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
-    setRoles((data || []).map((r: any) => r.role as Role));
+  async function bootstrap(uid: string) {
+    const [rolesRes, profRes] = await Promise.all([
+      supabase.from("user_roles").select("role").eq("user_id", uid),
+      supabase.from("profiles").select("senha_provisoria").eq("id", uid).maybeSingle(),
+    ]);
+    setRoles((rolesRes.data || []).map((r: any) => r.role as Role));
+    setSenhaProvisoria(!!(profRes.data as any)?.senha_provisoria);
   }
 
   const isInternal = roles.includes("admin") || roles.includes("comercial");
@@ -76,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <Ctx.Provider value={{
-      user, session, roles, loading,
+      user, session, roles, loading, senhaProvisoria,
       isInternal, isAdmin, isComercial, isFinanceiro, isTecnico,
       canSeeComercial, canSeeFinanceiro,
       signOut: async () => {
