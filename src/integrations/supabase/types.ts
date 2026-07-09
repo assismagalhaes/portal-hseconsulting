@@ -5900,6 +5900,7 @@ export type Database = {
           valor_contratado: number
         }[]
       }
+      get_proposta_para_aceite: { Args: { _token: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
