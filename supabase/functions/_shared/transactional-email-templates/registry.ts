@@ -1,4 +1,5 @@
 import { template as credenciaisAcesso } from './credenciais-acesso.tsx'
+import { template as propostaAceiteLink } from './proposta-aceite-link.tsx'
 
 export type TemplateEntry = {
   component: (props: any) => any
@@ -10,4 +11,5 @@ export type TemplateEntry = {
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'credenciais-acesso': credenciaisAcesso,
+  'proposta-aceite-link': propostaAceiteLink,
 }
