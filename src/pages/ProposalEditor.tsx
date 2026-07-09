@@ -51,11 +51,9 @@ export default function ProposalEditor() {
   const [services, setServices] = useState<any[]>([]);
   const [params, setParams] = useState<any>(null);
   const [revisions, setRevisions] = useState<any[]>([]);
-  const [clientView, setClientViewState] = useState(false);
-  // No mobile a visão do cliente é sempre desligada (evita toque acidental no header)
-  const clientView = isMobile ? false : clientViewInternal();
-  function clientViewInternal() { return clientViewRaw; }
-  const clientViewRaw = false; // placeholder to satisfy TS; real value below
+  const [clientViewRaw, setClientView] = useState(false);
+  // No mobile a visão do cliente fica desligada (evita toque acidental no header)
+  const clientView = isMobile ? false : clientViewRaw;
   const [pricingOpen, setPricingOpen] = useState<string | null>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [groupOpen, setGroupOpen] = useState(false);
