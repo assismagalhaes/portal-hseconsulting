@@ -661,7 +661,19 @@ export default function ProposalEditor() {
             </CardContent>
           </Card>
 
-          {!clientView && <AceiteLinkCard proposalId={proposal.id} revisaoAtual={proposal.revisao_atual ?? null} />}
+          {!clientView && (
+            <AceiteLinkCard
+              proposalId={proposal.id}
+              revisaoAtual={proposal.revisao_atual ?? null}
+              proposalNumero={proposal.numero}
+              proposalTitulo={proposal.titulo}
+              valorTotal={proposal.valor_total}
+              validade={proposal.validade}
+              clienteNome={client?.nome_fantasia || client?.razao_social}
+              clienteEmail={client?.email}
+              clienteSolicitante={client?.solicitante}
+            />
+          )}
         </aside>
       </div>
 
