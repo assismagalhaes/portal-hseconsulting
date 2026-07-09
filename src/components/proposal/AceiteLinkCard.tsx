@@ -110,11 +110,39 @@ export default function AceiteLinkCard({
   }
 
   async function copiar(token: string) {
+    const url = urlDe(token);
+    // 1) Tenta a Clipboard API moderna (requer contexto seguro + permissão)
     try {
-      await navigator.clipboard.writeText(urlDe(token));
-      toast.success("Link copiado para a área de transferência.");
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copiado para a área de transferência.");
+        return;
+      }
     } catch {
-      toast.error("Não foi possível copiar. Selecione e copie manualmente.");
+      // segue para o fallback
+    }
+    // 2) Fallback via textarea + execCommand (funciona em iframes sem permissão de clipboard)
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = url;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.top = "0";
+      ta.style.left = "0";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      if (ok) {
+        toast.success("Link copiado para a área de transferência.");
+        return;
+      }
+      throw new Error("execCommand copy retornou false");
+    } catch {
+      // 3) Último recurso: mostrar prompt para o usuário copiar manualmente
+      window.prompt("Copie o link abaixo (Ctrl+C / Cmd+C):", url);
     }
   }
 
