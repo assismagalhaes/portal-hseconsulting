@@ -101,7 +101,12 @@ export default function AceiteLinkCard({
   }
 
   function urlDe(token: string) {
-    return `${window.location.origin}/aceite/${token}`;
+    const origin = window.location.origin;
+    // Preview do Lovable exige login — sempre usar a URL publicada (pública) para o aceite.
+    const isPreview = /id-preview--.*\.lovable\.app$/i.test(window.location.hostname)
+      || /lovableproject\.com$/i.test(window.location.hostname);
+    const base = isPreview ? "https://portal-hseconsulting.lovable.app" : origin;
+    return `${base}/aceite/${token}`;
   }
 
   async function copiar(token: string) {
