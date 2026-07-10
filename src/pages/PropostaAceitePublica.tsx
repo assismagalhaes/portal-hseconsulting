@@ -272,6 +272,33 @@ export default function PropostaAceitePublica() {
               {proposta.outras_condicoes && <InfoRow label="Outras condições" value={proposta.outras_condicoes} full />}
             </div>
 
+            {coligadas.length > 0 && (
+              <div className="mt-2 border rounded-md p-3 bg-muted/40">
+                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                  Demais empresas contempladas ({coligadas.length})
+                </div>
+                <div className="grid md:grid-cols-2 gap-2">
+                  {coligadas.map((pc: any) => (
+                    <div key={pc.id} className="rounded border bg-white p-2">
+                      <div className="text-sm font-medium">
+                        {pc.clients?.nome_fantasia || pc.clients?.razao_social || "—"}
+                      </div>
+                      <div className="text-xs text-muted-foreground font-mono">
+                        {pc.clients?.cnpj_cpf || "—"}
+                        {pc.clients?.cidade ? ` · ${pc.clients.cidade}/${pc.clients.uf || ""}` : ""}
+                      </div>
+                      {pc.observacao && (
+                        <div className="text-xs text-muted-foreground italic mt-1">{pc.observacao}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[11px] text-muted-foreground italic mt-2">
+                  Esta proposta é válida para todas as empresas listadas. O faturamento será emitido em nome da empresa principal.
+                </p>
+              </div>
+            )}
+
             {itens.length > 0 && (
               <div className="border rounded-md overflow-hidden mt-2">
                 <table className="w-full text-sm">
