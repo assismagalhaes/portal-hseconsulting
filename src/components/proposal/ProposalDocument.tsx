@@ -224,7 +224,9 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
           })}
         </div>
         <p style={{ fontSize: 10.5, color: "#64748b", marginTop: 10, fontStyle: "italic" }}>
-          Esta proposta é válida para todas as empresas do grupo listadas acima. O faturamento e a nota fiscal serão emitidos em nome da empresa principal.
+          {proposal.modo_faturamento === "por_cnpj"
+            ? "Esta proposta contempla todas as empresas do grupo listadas acima. O faturamento e a nota fiscal serão emitidos separadamente por CNPJ, conforme indicado em cada item."
+            : "Esta proposta é válida para todas as empresas do grupo listadas acima. O faturamento e a nota fiscal serão emitidos em nome da empresa principal."}
         </p>
       </div>
     ));
