@@ -5041,6 +5041,7 @@ export type Database = {
           proposal_id: string
           quantidade: number
           quantidade_tecnica: string | null
+          rateado: boolean
           service_id: string | null
           unidade: string
           updated_at: string
@@ -5061,6 +5062,7 @@ export type Database = {
           proposal_id: string
           quantidade?: number
           quantidade_tecnica?: string | null
+          rateado?: boolean
           service_id?: string | null
           unidade?: string
           updated_at?: string
@@ -5081,6 +5083,7 @@ export type Database = {
           proposal_id?: string
           quantidade?: number
           quantidade_tecnica?: string | null
+          rateado?: boolean
           service_id?: string | null
           unidade?: string
           updated_at?: string

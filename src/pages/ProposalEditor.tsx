@@ -219,6 +219,7 @@ export default function ProposalEditor() {
       valor_unitario: merged.valor_unitario,
       valor_total: merged.valor_total,
       client_id: merged.client_id ?? null,
+      rateado: merged.rateado ?? false,
     }).eq("id", it.id);
     if (error) return toast.error(error.message);
     const next = items.map(x => x.id === it.id ? merged : x);
@@ -996,11 +997,16 @@ function ItemEditor({ item, pricing, onChange, onRemove, onOpenPricing, onSaveTo
           <div className="space-y-1 rounded-md bg-muted/40 p-2 border">
             <Label className="text-xs">CNPJ que fatura este item</Label>
             <Select
-              value={local.client_id || "__principal__"}
+              value={local.rateado ? "__rateado__" : (local.client_id || "__principal__")}
               onValueChange={(v) => {
-                const val = v === "__principal__" ? null : v;
-                setLocal({ ...local, client_id: val });
-                onChange({ client_id: val });
+                if (v === "__rateado__") {
+                  setLocal({ ...local, rateado: true, client_id: null });
+                  onChange({ rateado: true, client_id: null });
+                } else {
+                  const val = v === "__principal__" ? null : v;
+                  setLocal({ ...local, client_id: val, rateado: false });
+                  onChange({ client_id: val, rateado: false });
+                }
               }}
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -1012,10 +1018,13 @@ function ItemEditor({ item, pricing, onChange, onRemove, onOpenPricing, onSaveTo
                     {pc.papel === "principal" ? " (principal)" : ""}
                   </SelectItem>
                 ))}
+                <SelectItem value="__rateado__">Rateado entre todas as empresas</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-[11px] text-muted-foreground">
-              Ao aprovar, este item entra no contrato do CNPJ selecionado.
+              {local.rateado
+                ? `Ao aprovar, o valor deste item é dividido igualmente entre as ${proposalClients.length} empresas.`
+                : "Ao aprovar, este item entra no contrato do CNPJ selecionado."}
             </p>
           </div>
         )}
