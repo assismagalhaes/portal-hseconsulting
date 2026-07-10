@@ -293,6 +293,33 @@ export type Database = {
           },
         ]
       }
+      client_groups: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cliente_comunicacoes: {
         Row: {
           anexo_nome: string | null
@@ -659,6 +686,7 @@ export type Database = {
       }
       cliente_usuarios: {
         Row: {
+          acesso_grupo: boolean
           auth_user_id: string | null
           cargo: string | null
           client_id: string
@@ -677,6 +705,7 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          acesso_grupo?: boolean
           auth_user_id?: string | null
           cargo?: string | null
           client_id: string
@@ -695,6 +724,7 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          acesso_grupo?: boolean
           auth_user_id?: string | null
           cargo?: string | null
           client_id?: string
@@ -738,6 +768,7 @@ export type Database = {
           email: string | null
           endereco: string | null
           fonte_consulta_cnpj: string | null
+          group_id: string | null
           id: string
           natureza_juridica: string | null
           nome_fantasia: string | null
@@ -770,6 +801,7 @@ export type Database = {
           email?: string | null
           endereco?: string | null
           fonte_consulta_cnpj?: string | null
+          group_id?: string | null
           id?: string
           natureza_juridica?: string | null
           nome_fantasia?: string | null
@@ -802,6 +834,7 @@ export type Database = {
           email?: string | null
           endereco?: string | null
           fonte_consulta_cnpj?: string | null
+          group_id?: string | null
           id?: string
           natureza_juridica?: string | null
           nome_fantasia?: string | null
@@ -819,7 +852,15 @@ export type Database = {
           updated_at?: string
           whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "client_groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cnpj_consultas_log: {
         Row: {
@@ -4988,6 +5029,7 @@ export type Database = {
       proposal_items: {
         Row: {
           categoria: string | null
+          client_id: string | null
           created_at: string
           descricao_comercial: string
           entregaveis: string | null
@@ -5007,6 +5049,7 @@ export type Database = {
         }
         Insert: {
           categoria?: string | null
+          client_id?: string | null
           created_at?: string
           descricao_comercial: string
           entregaveis?: string | null
@@ -5026,6 +5069,7 @@ export type Database = {
         }
         Update: {
           categoria?: string | null
+          client_id?: string | null
           created_at?: string
           descricao_comercial?: string
           entregaveis?: string | null
@@ -5044,6 +5088,13 @@ export type Database = {
           valor_unitario?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "proposal_items_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "proposal_items_proposal_id_fkey"
             columns: ["proposal_id"]
@@ -5231,6 +5282,7 @@ export type Database = {
           data_recusa: string | null
           escopo_geral: string | null
           id: string
+          modo_faturamento: string
           numero: string
           observacao_retroativa: string | null
           observacoes_comerciais: string | null
@@ -5261,6 +5313,7 @@ export type Database = {
           data_recusa?: string | null
           escopo_geral?: string | null
           id?: string
+          modo_faturamento?: string
           numero?: string
           observacao_retroativa?: string | null
           observacoes_comerciais?: string | null
@@ -5291,6 +5344,7 @@ export type Database = {
           data_recusa?: string | null
           escopo_geral?: string | null
           id?: string
+          modo_faturamento?: string
           numero?: string
           observacao_retroativa?: string | null
           observacoes_comerciais?: string | null
@@ -5902,6 +5956,7 @@ export type Database = {
           }
       crm_converter_lead: { Args: { _lead_id: string }; Returns: string }
       current_client_id: { Args: never; Returns: string }
+      current_client_ids: { Args: never; Returns: string[] }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
