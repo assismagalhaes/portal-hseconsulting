@@ -530,6 +530,8 @@ export default function ProposalEditor() {
               <TabsContent value="empresas" className="mt-4">
                 <EmpresasProposta
                   proposalId={proposal.id}
+                  proposal={proposal}
+                  onProposalPatch={async (patch) => { await saveProposalField(patch); }}
                   onChange={load}
                 />
               </TabsContent>
@@ -561,6 +563,8 @@ export default function ProposalEditor() {
                     onOpenPricing={()=>setPricingOpen(it.id)}
                     onSaveToCatalog={()=>saveItemAsService(it)}
                     isInternal={isInternal}
+                    proposalClients={proposalClients}
+                    modoFaturamento={proposal.modo_faturamento}
                     selected={!!selected[it.id]}
                     onSelect={(v)=>setSelected(s=>({ ...s, [it.id]: v }))} />
                 ))}
