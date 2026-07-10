@@ -11,11 +11,13 @@ import { Plus } from "lucide-react";
 import { formatCnpjCpf } from "@/lib/format";
 import { toast } from "sonner";
 import CnpjLookupField from "@/components/CnpjLookupField";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const empty = { razao_social:"", nome_fantasia:"", cnpj_cpf:"", email:"", telefone:"", whatsapp:"", endereco:"", cidade:"", uf:"", solicitante:"", cargo:"", qtd_funcionarios:0, observacoes:"" };
 
 export default function Clients() {
   const [list, setList] = useState<any[]>([]);
+  const [groups, setGroups] = useState<any[]>([]);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
@@ -23,8 +25,22 @@ export default function Clients() {
 
   useEffect(() => { document.title = "Clientes | Portal HSE Consulting"; load(); }, []);
   async function load() {
-    const { data } = await supabase.from("clients").select("*").order("created_at",{ascending:false});
-    setList(data || []);
+    const [c, g] = await Promise.all([
+      supabase.from("clients").select("*, client_groups(id,nome)").order("created_at",{ascending:false}),
+      supabase.from("client_groups").select("id, nome").order("nome"),
+    ]);
+    setList(c.data || []);
+    setGroups(g.data || []);
+  }
+
+  async function criarGrupo() {
+    const nome = window.prompt("Nome do novo grupo econômico:");
+    if (!nome) return;
+    const { data, error } = await supabase.from("client_groups").insert({ nome }).select("id,nome").single();
+    if (error) return toast.error(error.message);
+    setGroups(g => [...g, data!].sort((a,b)=>a.nome.localeCompare(b.nome)));
+    setForm((f:any)=>({ ...f, group_id: data!.id }));
+    toast.success("Grupo criado");
   }
 
   function openNew() { setEditing(null); setForm(empty); setOpen(true); }
@@ -33,6 +49,8 @@ export default function Clients() {
   async function save(e: React.FormEvent) {
     e.preventDefault();
     const payload = { ...form, qtd_funcionarios: Number(form.qtd_funcionarios) || 0 };
+    // remover campo virtual injetado pelo select embed
+    delete (payload as any).client_groups;
     const { error } = editing
       ? await supabase.from("clients").update(payload).eq("id", editing.id)
       : await supabase.from("clients").insert(payload);
