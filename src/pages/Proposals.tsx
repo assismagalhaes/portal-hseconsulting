@@ -45,7 +45,20 @@ export default function Proposals() {
       supabase.from("proposals").select("*, clients(razao_social,nome_fantasia)").order("created_at",{ascending:false}),
       supabase.from("clients").select("id,razao_social,nome_fantasia").order("razao_social"),
     ]);
-    setList(p.data || []);
+    const propostas = p.data || [];
+    // Contagem de coligadas por proposta (multi-CNPJ)
+    if (propostas.length) {
+      const { data: pcs } = await supabase
+        .from("proposal_clients")
+        .select("proposal_id, papel")
+        .in("proposal_id", propostas.map((x: any) => x.id));
+      const counts: Record<string, number> = {};
+      (pcs || []).forEach((r: any) => {
+        if (r.papel === "coligada") counts[r.proposal_id] = (counts[r.proposal_id] || 0) + 1;
+      });
+      propostas.forEach((p: any) => { p._coligadas = counts[p.id] || 0; });
+    }
+    setList(propostas);
     setClients(c.data || []);
   }
 
@@ -220,7 +233,14 @@ export default function Proposals() {
               {filtered.map(p => (
                 <tr key={p.id} className="border-t border-border hover:bg-muted/30 cursor-pointer" onClick={()=>nav(`/propostas/${p.id}`)}>
                   <td className="px-4 py-3 font-mono text-xs">{p.numero}</td>
-                  <td className="px-4 py-3 font-medium">{p.clients?.nome_fantasia || p.clients?.razao_social || "—"}</td>
+                  <td className="px-4 py-3 font-medium">
+                    {p.clients?.nome_fantasia || p.clients?.razao_social || "—"}
+                    {p._coligadas > 0 && (
+                      <Badge variant="secondary" className="ml-2 text-[10px] border-0">
+                        +{p._coligadas} coligada{p._coligadas > 1 ? "s" : ""}
+                      </Badge>
+                    )}
+                  </td>
                   <td className="px-4 py-3"><Badge className={statusColor[p.status] + " border-0"}>{proposalStatusLabel[p.status]}</Badge></td>
                   <td className="px-4 py-3">
                     <Badge className={(proposalOrigemColor[p.origem_cadastro]||"") + " border-0"} variant="secondary">

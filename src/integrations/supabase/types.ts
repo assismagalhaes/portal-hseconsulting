@@ -4881,6 +4881,51 @@ export type Database = {
           },
         ]
       }
+      proposal_clients: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          observacao: string | null
+          ordem: number
+          papel: string
+          proposal_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          ordem?: number
+          papel?: string
+          proposal_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          ordem?: number
+          papel?: string
+          proposal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_clients_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposal_clients_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proposal_item_pricing: {
         Row: {
           aliquota_imposto: number
