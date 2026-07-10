@@ -37,6 +37,7 @@ export default function PropostaAceitePublica() {
   const [proposta, setProposta] = useState<any>(null);
   const [cliente, setCliente] = useState<any>(null);
   const [itens, setItens] = useState<any[]>([]);
+  const [coligadas, setColigadas] = useState<any[]>([]);
 
   // form
   const [nome, setNome] = useState("");
@@ -68,6 +69,16 @@ export default function PropostaAceitePublica() {
     setProposta(d.proposta);
     setCliente(d.cliente);
     setItens(d.itens || []);
+    // Coligadas (multi-CNPJ) — leitura pública autorizada pela policy do proposal_clients
+    if (d.proposta?.id) {
+      const { data: pcs } = await supabase
+        .from("proposal_clients")
+        .select("id, papel, ordem, observacao, clients(razao_social, nome_fantasia, cnpj_cpf, cidade, uf)")
+        .eq("proposal_id", d.proposta.id)
+        .eq("papel", "coligada")
+        .order("ordem", { ascending: true });
+      setColigadas(pcs || []);
+    }
     setNome(d.aceite?.aceito_por_nome || d.cliente?.solicitante || "");
     setEmail(d.aceite?.aceito_por_email || d.cliente?.email || "");
     setCpf(d.aceite?.aceito_por_cpf || "");
