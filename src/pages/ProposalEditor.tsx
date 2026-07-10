@@ -37,6 +37,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import GroupPricingDrawer from "@/components/proposal/GroupPricingDrawer";
 import HistoricoPrecificacao from "@/components/proposal/HistoricoPrecificacao";
 import AceiteLinkCard from "@/components/proposal/AceiteLinkCard";
+import EmpresasProposta from "@/components/proposal/EmpresasProposta";
 
 const newId = () => Math.random().toString(36).slice(2, 10);
 
@@ -49,6 +50,7 @@ export default function ProposalEditor() {
   const [client, setClient] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [pricings, setPricings] = useState<Record<string, any>>({});
+  const [proposalClients, setProposalClients] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
   const [params, setParams] = useState<any>(null);
   const [revisions, setRevisions] = useState<any[]>([]);
@@ -100,6 +102,12 @@ export default function ProposalEditor() {
       (pr.data || []).forEach(r => { map[r.proposal_item_id] = r; });
       setPricings(map);
     }
+    const { data: pcs } = await supabase.from("proposal_clients")
+      .select("*, clients(id,razao_social,nome_fantasia,cnpj_cpf,cidade,uf,endereco,solicitante,cargo,telefone,email)")
+      .eq("proposal_id", id)
+      .order("papel", { ascending: true })
+      .order("ordem", { ascending: true });
+    setProposalClients(pcs || []);
   }
 
   const total = items.reduce((a,b)=>a+Number(b.valor_total||0), 0);
@@ -500,12 +508,13 @@ export default function ProposalEditor() {
             </div>
           )}
           {clientView ? (
-            <ProposalDocument proposal={proposal} client={client} items={items} revisions={revisions} onReady={()=>setDocReady(true)} />
+            <ProposalDocument proposal={proposal} client={client} items={items} revisions={revisions} proposalClients={proposalClients} onReady={()=>setDocReady(true)} />
           ) : (
             <>
             <Tabs defaultValue="cliente">
               <TabsList>
                 <TabsTrigger value="cliente">Cliente</TabsTrigger>
+                <TabsTrigger value="empresas"><Users className="h-3.5 w-3.5 mr-1" /> Empresas</TabsTrigger>
                 <TabsTrigger value="itens">Itens & escopo</TabsTrigger>
                 <TabsTrigger value="datas">Datas & origem</TabsTrigger>
                 <TabsTrigger value="comerciais">Condições</TabsTrigger>
@@ -516,6 +525,13 @@ export default function ProposalEditor() {
 
               <TabsContent value="cliente" className="mt-4">
                 <ClientCard client={client} setClient={setClient} onSave={persistClient} />
+              </TabsContent>
+
+              <TabsContent value="empresas" className="mt-4">
+                <EmpresasProposta
+                  proposalId={proposal.id}
+                  onChange={load}
+                />
               </TabsContent>
 
               <TabsContent value="itens" className="space-y-4 mt-4">
@@ -621,7 +637,7 @@ export default function ProposalEditor() {
                 pointerEvents: "none",
               }}
             >
-              <ProposalDocument proposal={proposal} client={client} items={items} revisions={revisions} onReady={()=>setDocReady(true)} />
+              <ProposalDocument proposal={proposal} client={client} items={items} revisions={revisions} proposalClients={proposalClients} onReady={()=>setDocReady(true)} />
             </div>
             </>
           )}
