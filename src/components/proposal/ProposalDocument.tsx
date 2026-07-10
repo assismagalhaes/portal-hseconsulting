@@ -21,6 +21,7 @@ type Props = {
   client: any;
   items: any[];
   revisions?: any[];
+  proposalClients?: any[];
   onReady?: () => void;
 };
 
@@ -46,7 +47,7 @@ const TIPO_REVISAO_LABELS: Record<string, string> = {
 const tipoRevisaoLabel = (t?: string) => (t ? TIPO_REVISAOLABELS_SAFE(t) : "—");
 function TIPO_REVISAOLABELS_SAFE(t: string) { return TIPO_REVISAO_LABELS[t] || "Revisão"; }
 
-export default function ProposalDocument({ proposal, client, items, revisions = [], onReady }: Props) {
+export default function ProposalDocument({ proposal, client, items, revisions = [], proposalClients = [], onReady }: Props) {
   const [tpl, setTpl] = useState<any>(null);
   const [serviceNames, setServiceNames] = useState<Record<string, string>>({});
   const [flowReady, setFlowReady] = useState(false);
@@ -158,6 +159,10 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
 
   // -------- Dados do Cliente --------
   push("Dados do Cliente", "dc-title", <SectionTitle eyebrow="Identificação" title="Dados do cliente" accent={accent} primary={primary} />, true);
+  const coligadas = (proposalClients || [])
+    .filter((pc: any) => pc.papel === "coligada" && pc.clients)
+    .sort((a: any, b: any) => Number(a.ordem || 0) - Number(b.ordem || 0));
+
   push("Dados do Cliente", "dc-card", (
     <div style={{ border: `1px solid ${neutral}`, borderRadius: 14, overflow: "hidden" }}>
       <div style={{ background: primary, color: "#fff", padding: "16px 22px", display: "flex", alignItems: "center", gap: 12 }}>
@@ -165,6 +170,11 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
         <div>
           <div style={{ fontSize: 18, fontWeight: 700 }}>{client?.razao_social || "—"}</div>
           {client?.nome_fantasia && <div style={{ fontSize: 12, opacity: 0.85 }}>{client.nome_fantasia}</div>}
+          {coligadas.length > 0 && (
+            <div style={{ fontSize: 11, opacity: 0.85, marginTop: 4 }}>
+              Empresa principal — proposta emitida para grupo com {coligadas.length + 1} empresas
+            </div>
+          )}
         </div>
       </div>
       <div style={{ padding: 22, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 28px" }}>
@@ -179,6 +189,46 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
       </div>
     </div>
   ));
+  if (coligadas.length > 0) {
+    push("Dados do Cliente", "dc-coligadas", (
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1.2, color: primary, fontWeight: 700, marginBottom: 8 }}>
+          Demais empresas contempladas nesta proposta
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          {coligadas.map((pc: any) => {
+            const cc = pc.clients || {};
+            return (
+              <div key={pc.id} style={{ border: `1px solid ${neutral}`, borderRadius: 10, padding: "12px 14px", background: "#fff" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>
+                  {cc.nome_fantasia || cc.razao_social || "—"}
+                </div>
+                {cc.nome_fantasia && cc.razao_social && (
+                  <div style={{ fontSize: 10.5, color: "#64748b" }}>{cc.razao_social}</div>
+                )}
+                <div style={{ fontSize: 11, color: "#334155", marginTop: 6, fontFamily: "monospace" }}>
+                  {formatCnpjCpf(cc.cnpj_cpf || "—")}
+                </div>
+                {(cc.cidade || cc.uf) && (
+                  <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
+                    {[cc.cidade, cc.uf].filter(Boolean).join("/")}
+                  </div>
+                )}
+                {pc.observacao && (
+                  <div style={{ fontSize: 10.5, color: "#64748b", marginTop: 6, fontStyle: "italic" }}>
+                    {pc.observacao}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <p style={{ fontSize: 10.5, color: "#64748b", marginTop: 10, fontStyle: "italic" }}>
+          Esta proposta é válida para todas as empresas do grupo listadas acima. O faturamento e a nota fiscal serão emitidos em nome da empresa principal.
+        </p>
+      </div>
+    ));
+  }
   if (proposal.observacoes_comerciais) {
     push("Dados do Cliente", "dc-obs", (
       <div style={{ marginTop: 18, padding: "14px 18px", background: `${accent}14`, borderLeft: `4px solid ${accent}`, borderRadius: 6 }}>
