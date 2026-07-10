@@ -96,6 +96,22 @@ export default function Clients() {
                 <Field label="Solicitante" value={form.solicitante} onChange={v=>setForm({...form,solicitante:v})} />
                 <Field label="Cargo" value={form.cargo} onChange={v=>setForm({...form,cargo:v})} />
                 <Field label="Qtd. funcionários" type="number" value={String(form.qtd_funcionarios)} onChange={v=>setForm({...form,qtd_funcionarios:v})} />
+                <div className="space-y-1.5 sm:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Grupo econômico (holding)</Label>
+                    <Button type="button" size="sm" variant="ghost" onClick={criarGrupo}>+ Criar novo</Button>
+                  </div>
+                  <Select value={form.group_id || "__none__"} onValueChange={(v)=>setForm({ ...form, group_id: v === "__none__" ? null : v })}>
+                    <SelectTrigger><SelectValue placeholder="Sem grupo" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Sem grupo</SelectItem>
+                      {groups.map(g => <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[11px] text-muted-foreground">
+                    Vincule empresas do mesmo grupo econômico. Usa nos orçamentos multi-CNPJ e no acesso do portal por grupo.
+                  </p>
+                </div>
                 <div className="sm:col-span-2 space-y-1.5">
                   <Label>Observações</Label>
                   <Textarea rows={3} value={form.observacoes||""} onChange={e=>setForm({...form,observacoes:e.target.value})} />
