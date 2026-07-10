@@ -27,10 +27,12 @@ type ProposalClient = {
 
 type Props = {
   proposalId: string;
+  proposal?: any;
+  onProposalPatch?: (patch: any) => Promise<void> | void;
   onChange?: () => void;
 };
 
-export default function EmpresasProposta({ proposalId, onChange }: Props) {
+export default function EmpresasProposta({ proposalId, proposal, onProposalPatch, onChange }: Props) {
   const [rows, setRows] = useState<ProposalClient[]>([]);
   const [allClients, setAllClients] = useState<any[]>([]);
   const [query, setQuery] = useState("");
@@ -153,6 +155,46 @@ export default function EmpresasProposta({ proposalId, onChange }: Props) {
           </PopoverContent>
         </Popover>
       </div>
+
+      {proposal && onProposalPatch && (
+        <div className="rounded-md border p-3 bg-muted/30 space-y-2">
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">Modo de faturamento ao aprovar</Label>
+          <div className="grid sm:grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => onProposalPatch({ modo_faturamento: "unico" })}
+              className={`text-left rounded-md border p-3 transition ${
+                (proposal.modo_faturamento || "unico") === "unico"
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:bg-muted"
+              }`}
+            >
+              <div className="font-medium text-sm">Único contrato no principal</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5">
+                A empresa principal fatura tudo. NF única. Coligadas aparecem só no PDF.
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => onProposalPatch({ modo_faturamento: "por_cnpj" })}
+              className={`text-left rounded-md border p-3 transition ${
+                proposal.modo_faturamento === "por_cnpj"
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:bg-muted"
+              }`}
+              disabled={rows.filter(r => r.papel === "coligada").length === 0}
+            >
+              <div className="font-medium text-sm">Um contrato por CNPJ</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5">
+                Cada empresa recebe seu contrato/NF. Defina o CNPJ que fatura em cada item.
+              </div>
+              {rows.filter(r => r.papel === "coligada").length === 0 && (
+                <div className="text-[10px] text-warning mt-1">Adicione ao menos uma coligada.</div>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-2">
         {rows.length === 0 && (
