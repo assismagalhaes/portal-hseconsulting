@@ -129,7 +129,7 @@ export default function Clients() {
         <Card className="overflow-hidden shadow-elegant">
           <table className="w-full text-sm">
             <thead className="bg-muted/60 text-xs uppercase tracking-wider text-muted-foreground">
-              <tr><th className="text-left px-4 py-2">Razão Social</th><th className="text-left px-4 py-2">CNPJ/CPF</th><th className="text-left px-4 py-2">Cidade</th><th className="text-left px-4 py-2">Funcionários</th><th></th></tr>
+              <tr><th className="text-left px-4 py-2">Razão Social</th><th className="text-left px-4 py-2">CNPJ/CPF</th><th className="text-left px-4 py-2">Cidade</th><th className="text-left px-4 py-2">Grupo</th><th className="text-left px-4 py-2">Func.</th><th></th></tr>
             </thead>
             <tbody>
               {filtered.map(c => (
@@ -137,11 +137,12 @@ export default function Clients() {
                   <td className="px-4 py-3"><div className="font-medium">{c.razao_social}</div><div className="text-xs text-muted-foreground">{c.nome_fantasia}</div></td>
                   <td className="px-4 py-3 font-mono text-xs">{c.cnpj_cpf || "—"}</td>
                   <td className="px-4 py-3">{[c.cidade, c.uf].filter(Boolean).join(" / ") || "—"}</td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">{c.client_groups?.nome || "—"}</td>
                   <td className="px-4 py-3">{c.qtd_funcionarios || 0}</td>
                   <td className="px-4 py-3 text-right"><Button variant="ghost" size="sm" onClick={()=>openEdit(c)}>Editar</Button></td>
                 </tr>
               ))}
-              {filtered.length === 0 && <tr><td colSpan={5} className="text-center py-10 text-muted-foreground">Nenhum cliente.</td></tr>}
+              {filtered.length === 0 && <tr><td colSpan={6} className="text-center py-10 text-muted-foreground">Nenhum cliente.</td></tr>}
             </tbody>
           </table>
         </Card>
