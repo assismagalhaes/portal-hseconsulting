@@ -218,6 +218,7 @@ export default function ProposalEditor() {
       quantidade: merged.quantidade,
       valor_unitario: merged.valor_unitario,
       valor_total: merged.valor_total,
+      client_id: merged.client_id ?? null,
     }).eq("id", it.id);
     if (error) return toast.error(error.message);
     const next = items.map(x => x.id === it.id ? merged : x);
@@ -932,11 +933,12 @@ function DatesCard({ proposal, onSave }: any) {
 }
 
 /* ---------------- Item Editor ---------------- */
-function ItemEditor({ item, pricing, onChange, onRemove, onOpenPricing, onSaveToCatalog, isInternal, selected, onSelect }: any) {
+function ItemEditor({ item, pricing, onChange, onRemove, onOpenPricing, onSaveToCatalog, isInternal, selected, onSelect, proposalClients, modoFaturamento }: any) {
   const [local, setLocal] = useState(item);
   useEffect(()=>setLocal(item), [item.id, item.valor_unitario, item.valor_total]);
   const margem = pricing?.indicadores?.status_margem;
   const meta = margem ? statusMargemMeta[margem as keyof typeof statusMargemMeta] : null;
+  const showCnpjPicker = modoFaturamento === "por_cnpj" && Array.isArray(proposalClients) && proposalClients.length > 1;
   return (
     <Card className="shadow-elegant">
       <CardContent className="p-4 space-y-3">
@@ -990,6 +992,33 @@ function ItemEditor({ item, pricing, onChange, onRemove, onOpenPricing, onSaveTo
           <div className="space-y-1"><Label className="text-xs">Total</Label>
             <Input disabled value={brl(Number(local.quantidade||0)*Number(local.valor_unitario||0))} className="font-mono" /></div>
         </div>
+        {showCnpjPicker && (
+          <div className="space-y-1 rounded-md bg-muted/40 p-2 border">
+            <Label className="text-xs">CNPJ que fatura este item</Label>
+            <Select
+              value={local.client_id || "__principal__"}
+              onValueChange={(v) => {
+                const val = v === "__principal__" ? null : v;
+                setLocal({ ...local, client_id: val });
+                onChange({ client_id: val });
+              }}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__principal__">Empresa principal (padrão)</SelectItem>
+                {proposalClients.map((pc: any) => (
+                  <SelectItem key={pc.client_id} value={pc.client_id}>
+                    {pc.clients?.nome_fantasia || pc.clients?.razao_social}
+                    {pc.papel === "principal" ? " (principal)" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[11px] text-muted-foreground">
+              Ao aprovar, este item entra no contrato do CNPJ selecionado.
+            </p>
+          </div>
+        )}
         {isInternal && (
           <div className="flex justify-end gap-2">
             {!item.service_id && (
