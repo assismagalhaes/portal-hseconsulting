@@ -70,6 +70,13 @@ export default function PortalClienteConfig() {
     loadClient();
   }
 
+  async function setAcessoGrupo(id: string, val: boolean) {
+    const { error } = await supabase.from("cliente_usuarios").update({ acesso_grupo: val }).eq("id", id);
+    if (error) return toast.error(error.message);
+    setUsuarios(us => us.map(u => u.id === id ? { ...u, acesso_grupo: val } : u));
+    toast.success(val ? "Acesso ao grupo habilitado" : "Acesso ao grupo removido");
+  }
+
   async function setPerm(uid: string, campo: string, val: boolean) {
     const atual = permMap[uid] || { cliente_usuario_id: uid };
     const next = { ...atual, [campo]: val };
@@ -163,6 +170,9 @@ export default function PortalClienteConfig() {
                   <div>
                     <div className="font-medium">{u.nome} <span className="text-xs text-muted-foreground">({u.email})</span></div>
                     <div className="text-xs text-muted-foreground">{CLIENTE_PERFIL_LABEL[u.perfil]} • {u.cargo || "—"}</div>
+                    {u.acesso_grupo && (
+                      <Badge variant="secondary" className="mt-1 text-[10px]">Acesso ao grupo econômico</Badge>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant={u.status === "ativo" ? "default" : "outline"}>{CLIENTE_STATUS_LABEL[u.status]}</Badge>
@@ -174,6 +184,16 @@ export default function PortalClienteConfig() {
                     <Button size="sm" variant="ghost" onClick={() => setStatusUsuario(u.id, "convite_pendente")}><RotateCcw className="h-3 w-3 mr-1" />Resetar convite</Button>
                   </div>
                 </div>
+                <label className="flex items-center justify-between gap-2 text-xs border rounded px-3 py-2 bg-muted/40">
+                  <div>
+                    <div className="font-medium">Acesso ao grupo econômico</div>
+                    <div className="text-[11px] text-muted-foreground">
+                      Quando ativado, este usuário vê e opera todas as empresas do mesmo grupo econômico do cliente atual.
+                      Exige que o cliente esteja vinculado a um grupo em <em>Clientes</em>.
+                    </div>
+                  </div>
+                  <Switch checked={!!u.acesso_grupo} onCheckedChange={v => setAcessoGrupo(u.id, v)} />
+                </label>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-1 pt-2 border-t">
                   {permCampos.map(([k, l]) => (
                     <label key={k} className="flex items-center justify-between gap-2 text-xs border rounded px-2 py-1">
