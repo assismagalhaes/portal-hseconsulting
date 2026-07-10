@@ -219,6 +219,7 @@ export default function ProposalEditor() {
       valor_unitario: merged.valor_unitario,
       valor_total: merged.valor_total,
       client_id: merged.client_id ?? null,
+      rateado: merged.rateado ?? false,
     }).eq("id", it.id);
     if (error) return toast.error(error.message);
     const next = items.map(x => x.id === it.id ? merged : x);
