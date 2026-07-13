@@ -38,10 +38,25 @@ export default function OrdemServicoEditor() {
     if (!id) return;
     const { data, error } = await supabase
       .from("ordens_servico")
-      .select("*, clients(*), execucao_servicos(numero_interno, titulo), services(nome), projetos(id, numero, titulo, responsavel_execucao_id, data_fim_real, projeto_servicos(nome)), execucao_profissionais!ordens_servico_responsavel_tecnico_id_fkey(*)")
+      .select("*, clients(*), execucao_servicos(numero_interno, titulo), services(nome), projetos(id, numero, titulo, responsavel_execucao_id, data_inicio, data_fim_prevista, data_fim_real, projeto_servicos(nome)), execucao_profissionais!ordens_servico_responsavel_tecnico_id_fkey(*)")
       .eq("id", id).maybeSingle();
     if (error) return toast.error(error.message);
-    setOs(data);
+    // Herda datas do projeto quando ainda não estão preenchidas na OS
+    let osData: any = data;
+    if (osData?.projetos) {
+      const patch: any = {};
+      if (!osData.data_prevista_inicio && osData.projetos.data_inicio) {
+        patch.data_prevista_inicio = osData.projetos.data_inicio;
+      }
+      if (!osData.data_prevista_conclusao && osData.projetos.data_fim_prevista) {
+        patch.data_prevista_conclusao = osData.projetos.data_fim_prevista;
+      }
+      if (Object.keys(patch).length) {
+        const { error: upErr } = await supabase.from("ordens_servico").update(patch).eq("id", osData.id);
+        if (!upErr) osData = { ...osData, ...patch };
+      }
+    }
+    setOs(osData);
     if (data?.projetos?.responsavel_execucao_id) {
       const respId = data.projetos.responsavel_execucao_id;
       const { data: pr } = await supabase.from("profiles")
