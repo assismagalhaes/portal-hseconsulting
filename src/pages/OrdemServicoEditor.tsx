@@ -24,6 +24,7 @@ export default function OrdemServicoEditor() {
   const navigate = useNavigate();
   const [os, setOs] = useState<any>(null);
   const [profs, setProfs] = useState<any[]>([]);
+  const [projResp, setProjResp] = useState<any>(null);
   const [equipe, setEquipe] = useState<any[]>([]);
   const [recursos, setRecursos] = useState<any[]>([]);
   const [checklist, setChecklist] = useState<any[]>([]);
@@ -37,10 +38,18 @@ export default function OrdemServicoEditor() {
     if (!id) return;
     const { data, error } = await supabase
       .from("ordens_servico")
-      .select("*, clients(*), execucao_servicos(numero_interno, titulo), services(nome), projetos(id, numero, titulo), execucao_profissionais!ordens_servico_responsavel_tecnico_id_fkey(*)")
+      .select("*, clients(*), execucao_servicos(numero_interno, titulo), services(nome), projetos(id, numero, titulo, responsavel_execucao_id), execucao_profissionais!ordens_servico_responsavel_tecnico_id_fkey(*)")
       .eq("id", id).maybeSingle();
     if (error) return toast.error(error.message);
     setOs(data);
+    if (data?.projetos?.responsavel_execucao_id) {
+      const { data: pr } = await supabase.from("profiles")
+        .select("id, nome, email, cargo, area, registro_profissional, telefone")
+        .eq("id", data.projetos.responsavel_execucao_id).maybeSingle();
+      setProjResp(pr || null);
+    } else {
+      setProjResp(null);
+    }
     const [pp, eq, rec, ck, vi, lo, dc, ev, tl] = await Promise.all([
       supabase.from("execucao_profissionais").select("*").order("nome"),
       supabase.from("os_equipe").select("*, execucao_profissionais(*)").eq("os_id", id),
@@ -144,13 +153,32 @@ export default function OrdemServicoEditor() {
               <KV k="Início real" v={formatDate(os.data_real_inicio)} />
               <KV k="Conclusão real" v={formatDate(os.data_real_conclusao)} />
               <KV k="Responsável técnico" v={
-                <Select value={os.responsavel_tecnico_id || ""} onValueChange={v => save({ responsavel_tecnico_id: v || null })}>
-                  <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
-                  <SelectContent>{profs.map(p => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
-                </Select>
+                projResp ? (
+                  <div className="text-sm">
+                    <div className="font-medium">{projResp.nome || projResp.email}</div>
+                    <div className="text-xs text-muted-foreground">Herdado do projeto {os.projetos?.numero}</div>
+                  </div>
+                ) : (
+                  <Select value={os.responsavel_tecnico_id || ""} onValueChange={v => save({ responsavel_tecnico_id: v || null })}>
+                    <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                    <SelectContent>{profs.map(p => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
+                  </Select>
+                )
               } />
             </CardContent></Card>
-            {os.execucao_profissionais && (
+            {projResp ? (
+              <Card><CardContent className="p-4">
+                <div className="text-sm font-semibold mb-2">Responsável técnico (do projeto)</div>
+                <div className="grid md:grid-cols-3 gap-2 text-sm">
+                  <KV k="Nome" v={projResp.nome || "—"} />
+                  <KV k="Cargo" v={projResp.cargo || "—"} />
+                  <KV k="Área" v={projResp.area || "—"} />
+                  <KV k="Registro" v={projResp.registro_profissional || "—"} />
+                  <KV k="Telefone" v={projResp.telefone || "—"} />
+                  <KV k="E-mail" v={projResp.email || "—"} />
+                </div>
+              </CardContent></Card>
+            ) : os.execucao_profissionais && (
               <Card><CardContent className="p-4">
                 <div className="text-sm font-semibold mb-2">Responsável técnico</div>
                 <div className="grid md:grid-cols-3 gap-2 text-sm">
