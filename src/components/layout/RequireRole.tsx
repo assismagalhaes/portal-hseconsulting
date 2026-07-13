@@ -11,9 +11,9 @@ export default function RequireRole({
   allow = "internal",
 }: {
   children: ReactNode;
-  allow?: "admin" | "internal" | "comercial" | "financeiro" | "operacional";
+  allow?: "admin" | "internal" | "comercial" | "financeiro" | "operacional" | "operacional_tecnico";
 }) {
-  const { loading, isAdmin, isInternal, canSeeComercial, canSeeFinanceiro } = useAuth();
+  const { loading, isAdmin, isInternal, isTecnico, canSeeComercial, canSeeFinanceiro } = useAuth();
   if (loading) return null;
   let ok = false;
   switch (allow) {
@@ -22,6 +22,7 @@ export default function RequireRole({
     case "comercial":   ok = canSeeComercial; break;
     case "financeiro":  ok = canSeeFinanceiro; break;
     case "operacional": ok = isInternal || canSeeFinanceiro; break; // qualquer perfil interno
+    case "operacional_tecnico": ok = isInternal || canSeeFinanceiro || isTecnico; break; // + técnicos
   }
   if (!ok) return <Navigate to="/" replace />;
   return <>{children}</>;
