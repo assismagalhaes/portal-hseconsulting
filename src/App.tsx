@@ -127,12 +127,12 @@ const App = () => (
               <Route path="/execucao/:id" element={<RequireRole><ExecucaoEditor /></RequireRole>} />
               <Route path="/projetos" element={<Projetos />} />
               <Route path="/projetos/:id" element={<ProjetoEditor />} />
-              <Route path="/ordens-servico" element={<RequireRole><OrdensServico /></RequireRole>} />
-              <Route path="/ordens-servico/:id" element={<RequireRole><OrdemServicoEditor /></RequireRole>} />
-              <Route path="/ordens-servico/:id/imprimir" element={<RequireRole><OrdemServicoPrint /></RequireRole>} />
-              <Route path="/agenda" element={<RequireRole><Agenda /></RequireRole>} />
+              <Route path="/ordens-servico" element={<RequireRole allow="operacional_tecnico"><OrdensServico /></RequireRole>} />
+              <Route path="/ordens-servico/:id" element={<RequireRole allow="operacional_tecnico"><OrdemServicoEditor /></RequireRole>} />
+              <Route path="/ordens-servico/:id/imprimir" element={<RequireRole allow="operacional_tecnico"><OrdemServicoPrint /></RequireRole>} />
+              <Route path="/agenda" element={<RequireRole allow="operacional_tecnico"><Agenda /></RequireRole>} />
               <Route path="/planejamento" element={<RequireRole><Planejamento /></RequireRole>} />
-              <Route path="/meu-painel" element={<RequireRole><MeuPainel /></RequireRole>} />
+              <Route path="/meu-painel" element={<RequireRole allow="operacional_tecnico"><MeuPainel /></RequireRole>} />
               <Route path="/profissionais" element={<RequireRole allow="admin"><Profissionais /></RequireRole>} />
               <Route path="/documentos" element={<RequireRole><Documentos /></RequireRole>} />
               <Route path="/documentos/modelos" element={<RequireRole><DocumentosModelos /></RequireRole>} />
