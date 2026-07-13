@@ -4141,13 +4141,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "os_eventos_agenda_profissional_id_fkey"
-            columns: ["profissional_id"]
-            isOneToOne: false
-            referencedRelation: "execucao_profissionais"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "os_eventos_agenda_visita_id_fkey"
             columns: ["visita_id"]
             isOneToOne: false
@@ -4450,13 +4443,6 @@ export type Database = {
             columns: ["os_id"]
             isOneToOne: false
             referencedRelation: "ordens_servico"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "os_visitas_responsavel_id_fkey"
-            columns: ["responsavel_id"]
-            isOneToOne: false
-            referencedRelation: "execucao_profissionais"
             referencedColumns: ["id"]
           },
         ]

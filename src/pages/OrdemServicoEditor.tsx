@@ -63,13 +63,39 @@ export default function OrdemServicoEditor() {
       supabase.from("os_equipe").select("*, execucao_profissionais(*)").eq("os_id", id),
       supabase.from("os_recursos").select("*").eq("os_id", id).order("tipo"),
       supabase.from("os_checklist").select("*").eq("os_id", id).order("ordem").order("created_at"),
-      supabase.from("os_visitas").select("*, execucao_profissionais(nome)").eq("os_id", id).order("data").order("hora_inicio"),
+      supabase.from("os_visitas").select("*").eq("os_id", id).order("data").order("hora_inicio"),
       supabase.from("os_logistica").select("*").eq("os_id", id).maybeSingle(),
       supabase.from("os_documentos").select("*").eq("os_id", id).order("created_at", { ascending: false }),
       supabase.from("os_evidencias").select("*").eq("os_id", id).order("created_at", { ascending: false }),
       supabase.from("os_timeline").select("*").eq("os_id", id).order("created_at", { ascending: false }),
     ]);
-    setProfs((pp.data as any) || []); setEquipe((eq.data as any) || []);
+    // Combina profissionais do cadastro (execucao_profissionais) com usuários
+    // internos que têm papel técnico/admin/coordenador — assim ambos podem ser
+    // escolhidos como responsáveis por uma visita técnica.
+    const execList = ((pp.data as any) || []).map((p: any) => ({
+      id: p.id, nome: p.nome, cargo: p.cargo || null, source: "prof" as const,
+    }));
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("user_id, role")
+      .in("role", ["admin", "tecnico", "comercial"] as any);
+    const userIds = Array.from(new Set((roles || []).map((r: any) => r.user_id))) as string[];
+    let usersList: any[] = [];
+    if (userIds.length) {
+      const { data: pr } = await supabase
+        .from("profiles")
+        .select("id, nome, email")
+        .in("id", userIds);
+      usersList = (pr || []).map((u: any) => ({
+        id: u.id, nome: u.nome || u.email, cargo: null, source: "user" as const,
+      }));
+    }
+    // Dedup por id (execucao_profissionais tem prioridade quando coincidir).
+    const seen = new Set<string>();
+    const combined = [...execList, ...usersList].filter((x) => {
+      if (seen.has(x.id)) return false; seen.add(x.id); return true;
+    }).sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
+    setProfs(combined); setEquipe((eq.data as any) || []);
     setRecursos((rec.data as any) || []); setChecklist((ck.data as any) || []);
     setVisitas((vi.data as any) || []); setLogistica(lo.data || null);
     setDocumentos((dc.data as any) || []); setEvidencias((ev.data as any) || []);
@@ -434,6 +460,7 @@ function ChecklistCard({ osId, items, onChange }: any) {
 function VisitasCard({ osId, visitas, profs, projRespId, onChange }: any) {
   const [open, setOpen] = useState(false);
   const today = () => new Date().toISOString().slice(0, 10);
+  const respName = (id: string) => profs.find((p: any) => p.id === id)?.nome || "—";
   const defaultResp = () => (projRespId && profs.some((p: any) => p.id === projRespId) ? projRespId : "");
   const initial = () => ({ data: today(), hora_inicio: "08:00", hora_fim: "17:00", dia_inteiro: false, objetivo: "", local: "", responsavel_id: defaultResp() });
   const [v, setV] = useState<any>(initial());
@@ -494,7 +521,7 @@ function VisitasCard({ osId, visitas, profs, projRespId, onChange }: any) {
             <TableRow key={vi.id}>
               <TableCell>{formatDate(vi.data)}</TableCell>
               <TableCell className="font-mono text-xs">{vi.hora_inicio?.slice(0, 5)}–{vi.hora_fim?.slice(0, 5)}</TableCell>
-              <TableCell>{vi.execucao_profissionais?.nome || "—"}</TableCell>
+              <TableCell>{vi.responsavel_id ? respName(vi.responsavel_id) : "—"}</TableCell>
               <TableCell className="text-sm">{vi.objetivo || "—"}</TableCell>
               <TableCell><Badge variant="secondary">{osVisitaSituacaoLabel[vi.situacao]}</Badge></TableCell>
               <TableCell className="flex gap-1">
