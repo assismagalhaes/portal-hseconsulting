@@ -112,8 +112,13 @@ const GROUPS: NavGroup[] = [
 const TECNICO_GROUPS: NavGroup[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard,
     items: [{ to: "/", label: "Meus Projetos", icon: LayoutDashboard, end: true }] },
-  { id: "operacoes", label: "Projetos", icon: FolderKanban,
-    items: [{ to: "/projetos", label: "Projetos", icon: FolderKanban }] },
+  { id: "operacoes", label: "Operações", icon: FolderKanban,
+    items: [
+      { to: "/projetos", label: "Projetos", icon: FolderKanban },
+      { to: "/ordens-servico", label: "Ordens de Serviço", icon: ListTodo },
+      { to: "/agenda", label: "Agenda Técnica", icon: CalendarDays },
+      { to: "/meu-painel", label: "Meu Painel", icon: UserCircle },
+    ] },
   { id: "perfil", label: "Meu Perfil", icon: UserCircle,
     items: [{ to: "/meu-perfil", label: "Meu Perfil", icon: UserCircle }] },
 ];
