@@ -48,9 +48,14 @@ export default function Projetos() {
 
         const respIds = Array.from(new Set(list.map((r: any) => r.responsavel_execucao_id).filter(Boolean)));
         if (respIds.length) {
-          const { data: profs } = await supabase.from("profiles").select("id, nome, email").in("id", respIds);
           const rmap: Record<string, string> = {};
+          const { data: profs } = await supabase.from("profiles").select("id, nome, email").in("id", respIds);
           (profs || []).forEach((p: any) => { rmap[p.id] = p.nome || p.email; });
+          const faltantes = respIds.filter((i) => !rmap[i]);
+          if (faltantes.length) {
+            const { data: pros } = await supabase.from("execucao_profissionais").select("id, nome").in("id", faltantes);
+            (pros || []).forEach((p: any) => { rmap[p.id] = p.nome; });
+          }
           setRespByProjeto(rmap);
         }
 

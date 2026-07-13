@@ -43,6 +43,7 @@ export default function ProjetoEditor() {
   const [renovacoes, setRenovacoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [usuarios, setUsuarios] = useState<any[]>([]);
+  const [profissionais, setProfissionais] = useState<any[]>([]);
   const [valorContratado, setValorContratado] = useState<number | null>(null);
   const [valoresServicos, setValoresServicos] = useState<Record<string, number>>({});
 
@@ -56,13 +57,14 @@ export default function ProjetoEditor() {
     setProjeto(p);
     document.title = `${p?.numero || "Projeto"} | HSE Consulting`;
 
-    const [s, o, d, t, ren, u] = await Promise.all([
+    const [s, o, d, t, ren, u, pr] = await Promise.all([
       supabase.from("projeto_servicos").select("*").eq("projeto_id", id).order("created_at"),
       supabase.from("ordens_servico").select("id, numero, status, prioridade, titulo, data_prevista_conclusao").eq("projeto_id", id),
       supabase.from("documentos_tecnicos").select("id, numero, tipo, titulo, status, data_emissao, data_vencimento").eq("projeto_id", id),
       supabase.from("projeto_timeline").select("*").eq("projeto_id", id).order("created_at", { ascending: false }).limit(50),
       supabase.from("projeto_renovacoes").select("*, projeto_servicos(nome)").eq("projeto_id", id),
       supabase.from("profiles").select("id, nome, email").eq("status", "ativo").order("nome"),
+      supabase.from("execucao_profissionais").select("id, nome, cargo").order("nome"),
     ]);
     setServicos(s.data || []);
     setOs(o.data || []);
@@ -70,6 +72,7 @@ export default function ProjetoEditor() {
     setTimeline(t.data || []);
     setRenovacoes(ren.data || []);
     setUsuarios(u.data || []);
+    setProfissionais(pr.data || []);
 
     if (!isTecnico && p?.financeiro_contrato_id) {
       const { data: c } = await supabase.from("financeiro_contratos").select("*").eq("id", p.financeiro_contrato_id).maybeSingle();
@@ -233,8 +236,17 @@ export default function ProjetoEditor() {
                       <SelectTrigger><SelectValue placeholder="Selecione um responsável" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">— Sem responsável —</SelectItem>
+                        {usuarios.length > 0 && (
+                          <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">Usuários internos</div>
+                        )}
                         {usuarios.map((u) => (
                           <SelectItem key={u.id} value={u.id}>{u.nome || u.email}</SelectItem>
+                        ))}
+                        {profissionais.length > 0 && (
+                          <div className="px-2 py-1 mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">Profissionais</div>
+                        )}
+                        {profissionais.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>{p.nome}{p.cargo ? ` — ${p.cargo}` : ""}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
