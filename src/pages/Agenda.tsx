@@ -43,10 +43,10 @@ export default function Agenda() {
         .lt("start_at", range.end.toISOString())
         .order("start_at"),
       supabase.from("execucao_profissionais").select("id, nome").order("nome"),
-      supabase.from("user_roles").select("user_id, role").in("role", ["admin","tecnico","comercial"]),
+      supabase.from("user_roles").select("user_id, role").in("role", ["admin","tecnico","comercial"] as any),
     ]);
     const execList = ((p as any) || []).map((x: any) => ({ id: x.id, nome: x.nome }));
-    const userIds = Array.from(new Set(((roles as any) || []).map((r: any) => r.user_id)));
+    const userIds = Array.from(new Set(((roles as any) || []).map((r: any) => r.user_id))) as string[];
     let userList: any[] = [];
     if (userIds.length) {
       const { data: pr } = await supabase.from("profiles").select("id, nome, email").in("id", userIds);
