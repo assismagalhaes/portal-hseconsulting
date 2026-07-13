@@ -375,20 +375,26 @@ function EquipeCard({ osId, equipe, profs, onChange }: any) {
 function ChecklistCard({ osId, items, onChange }: any) {
   const [desc, setDesc] = useState("");
   const [obrig, setObrig] = useState(true);
-  const PRESETS = [
-    "Agendamento de visita técnica",
-    "Agendamento do treinamento",
-    "Emissão da ART",
-    "Emissão de certificados",
-    "Emissão de procuração eletrônica",
-    "Fichas de registro",
-    "Impressão e entrega dos documentos/certificados",
-    "Logomarca do cliente",
-    "Questionário dos riscos psicossociais",
-    "Realização de visita técnica",
-    "Recebimento de ASOs",
-    "Revisão/Validação do Coordenador Técnico",
-  ];
+  const [presets, setPresets] = useState<string[]>([]);
+  const [newPresetOpen, setNewPresetOpen] = useState(false);
+  const [newPreset, setNewPreset] = useState("");
+  const loadPresets = async () => {
+    const { data } = await supabase
+      .from("os_checklist_sugestoes" as any)
+      .select("descricao")
+      .eq("ativo", true)
+      .order("descricao");
+    setPresets(((data as any[]) || []).map((r) => r.descricao));
+  };
+  useEffect(() => { loadPresets(); }, []);
+  const savePreset = async () => {
+    const d = newPreset.trim();
+    if (!d) return;
+    const { error } = await supabase.from("os_checklist_sugestoes" as any).insert({ descricao: d });
+    if (error) return toast.error(error.message);
+    toast.success("Item sugerido cadastrado");
+    setNewPreset(""); setNewPresetOpen(false); await loadPresets();
+  };
   const add = async () => {
     if (!desc) return;
     const ord = (items[items.length - 1]?.ordem || 0) + 1;
@@ -407,7 +413,7 @@ function ChecklistCard({ osId, items, onChange }: any) {
   };
   const addAllPresets = async () => {
     const existing = new Set(items.map((i: any) => (i.descricao || "").trim().toLowerCase()));
-    const toInsert = PRESETS.filter(p => !existing.has(p.toLowerCase()));
+    const toInsert = presets.filter(p => !existing.has(p.toLowerCase()));
     if (!toInsert.length) return toast.info("Todos os itens sugeridos já estão no checklist");
     let ord = (items[items.length - 1]?.ordem || 0);
     const rows = toInsert.map(descricao => ({ os_id: osId, descricao, obrigatorio: true, ordem: ++ord }));
@@ -430,12 +436,31 @@ function ChecklistCard({ osId, items, onChange }: any) {
         <Select value="" onValueChange={(v) => v && addPreset(v)}>
           <SelectTrigger className="h-9 w-[280px]"><SelectValue placeholder="Adicionar item sugerido…" /></SelectTrigger>
           <SelectContent>
-            {PRESETS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+            {presets.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
           </SelectContent>
         </Select>
         <Button type="button" size="sm" variant="secondary" onClick={addAllPresets}>
           <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar todos
         </Button>
+        <Dialog open={newPresetOpen} onOpenChange={setNewPresetOpen}>
+          <DialogTrigger asChild>
+            <Button type="button" size="sm" variant="outline">
+              <Plus className="h-3.5 w-3.5 mr-1" /> Cadastrar novo item sugerido
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Novo item sugerido</DialogTitle></DialogHeader>
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Input value={newPreset} onChange={(e) => setNewPreset(e.target.value)} placeholder="Ex.: Envio do relatório final" autoFocus />
+              <p className="text-xs text-muted-foreground">O item ficará disponível na lista de sugestões para todas as OS.</p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setNewPresetOpen(false)}>Cancelar</Button>
+              <Button onClick={savePreset}>Salvar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
       <div className="flex gap-2">
         <Input placeholder="Item do checklist" value={desc} onChange={e => setDesc(e.target.value)} />
