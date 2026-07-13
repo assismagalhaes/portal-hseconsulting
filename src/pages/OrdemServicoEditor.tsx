@@ -24,6 +24,7 @@ export default function OrdemServicoEditor() {
   const navigate = useNavigate();
   const [os, setOs] = useState<any>(null);
   const [profs, setProfs] = useState<any[]>([]);
+  const [projResp, setProjResp] = useState<any>(null);
   const [equipe, setEquipe] = useState<any[]>([]);
   const [recursos, setRecursos] = useState<any[]>([]);
   const [checklist, setChecklist] = useState<any[]>([]);
@@ -37,10 +38,18 @@ export default function OrdemServicoEditor() {
     if (!id) return;
     const { data, error } = await supabase
       .from("ordens_servico")
-      .select("*, clients(*), execucao_servicos(numero_interno, titulo), services(nome), projetos(id, numero, titulo), execucao_profissionais!ordens_servico_responsavel_tecnico_id_fkey(*)")
+      .select("*, clients(*), execucao_servicos(numero_interno, titulo), services(nome), projetos(id, numero, titulo, responsavel_execucao_id), execucao_profissionais!ordens_servico_responsavel_tecnico_id_fkey(*)")
       .eq("id", id).maybeSingle();
     if (error) return toast.error(error.message);
     setOs(data);
+    if (data?.projetos?.responsavel_execucao_id) {
+      const { data: pr } = await supabase.from("profiles")
+        .select("id, nome, email, cargo, area, registro_profissional, telefone")
+        .eq("id", data.projetos.responsavel_execucao_id).maybeSingle();
+      setProjResp(pr || null);
+    } else {
+      setProjResp(null);
+    }
     const [pp, eq, rec, ck, vi, lo, dc, ev, tl] = await Promise.all([
       supabase.from("execucao_profissionais").select("*").order("nome"),
       supabase.from("os_equipe").select("*, execucao_profissionais(*)").eq("os_id", id),
