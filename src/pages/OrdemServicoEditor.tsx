@@ -38,7 +38,7 @@ export default function OrdemServicoEditor() {
     if (!id) return;
     const { data, error } = await supabase
       .from("ordens_servico")
-      .select("*, clients(*), execucao_servicos(numero_interno, titulo), services(nome), projetos(id, numero, titulo, responsavel_execucao_id, data_fim_real), execucao_profissionais!ordens_servico_responsavel_tecnico_id_fkey(*)")
+      .select("*, clients(*), execucao_servicos(numero_interno, titulo), services(nome), projetos(id, numero, titulo, responsavel_execucao_id, data_fim_real, projeto_servicos(nome)), execucao_profissionais!ordens_servico_responsavel_tecnico_id_fkey(*)")
       .eq("id", id).maybeSingle();
     if (error) return toast.error(error.message);
     setOs(data);
@@ -143,9 +143,17 @@ export default function OrdemServicoEditor() {
 
           <TabsContent value="overview" className="space-y-3">
             <Card><CardContent className="p-4 grid md:grid-cols-2 gap-4">
-              <KV k="Cliente" v={os.cliente_nome || os.clients?.razao_social || "—"} />
-              <KV k="Cidade" v={os.cidade || "—"} />
-              <KV k="Serviço" v={os.servico_nome || os.services?.nome || "—"} />
+              <KV k="Cliente" v={os.cliente_nome || os.clients?.nome_fantasia || os.clients?.razao_social || "—"} />
+              <KV k="Cidade" v={
+                os.cidade || [os.clients?.cidade, os.clients?.uf].filter(Boolean).join(" / ") || "—"
+              } />
+              <KV k="Serviço" v={
+                os.servico_nome
+                || os.services?.nome
+                || os.projetos?.projeto_servicos?.map((s: any) => s.nome).filter(Boolean).join(", ")
+                || os.projetos?.titulo
+                || "—"
+              } />
               <KV k="QR Token" v={<span className="font-mono text-xs flex items-center gap-1"><QrCode className="h-3 w-3" />{os.qr_token}</span>} />
               <KV k="Abertura" v={formatDate(os.data_abertura)} />
               <KV k="Previsão início" v={
