@@ -202,7 +202,7 @@ export default function OrdemServicoEditor() {
           </TabsContent>
 
           <TabsContent value="visitas">
-            <VisitasCard osId={os.id} visitas={visitas} profs={profs} onChange={reload} />
+            <VisitasCard osId={os.id} visitas={visitas} profs={profs} projRespId={projResp?.id} onChange={reload} />
           </TabsContent>
 
           <TabsContent value="evidencias">
@@ -372,14 +372,27 @@ function ChecklistCard({ osId, items, onChange }: any) {
   );
 }
 
-function VisitasCard({ osId, visitas, profs, onChange }: any) {
+function VisitasCard({ osId, visitas, profs, projRespId, onChange }: any) {
   const [open, setOpen] = useState(false);
-  const [v, setV] = useState<any>({ data: "", hora_inicio: "08:00", hora_fim: "12:00", objetivo: "", local: "", responsavel_id: "" });
+  const today = () => new Date().toISOString().slice(0, 10);
+  const defaultResp = () => (projRespId && profs.some((p: any) => p.id === projRespId) ? projRespId : "");
+  const initial = () => ({ data: today(), hora_inicio: "08:00", hora_fim: "17:00", dia_inteiro: false, objetivo: "", local: "", responsavel_id: defaultResp() });
+  const [v, setV] = useState<any>(initial());
+  useEffect(() => { if (open) setV(initial()); /* eslint-disable-next-line */ }, [open, projRespId]);
   const add = async () => {
     if (!v.data) return toast.error("Informe a data");
-    const { error } = await supabase.from("os_visitas").insert({ os_id: osId, ...v, responsavel_id: v.responsavel_id || null });
+    const payload = {
+      os_id: osId,
+      data: v.data,
+      hora_inicio: v.dia_inteiro ? "00:00" : v.hora_inicio,
+      hora_fim: v.dia_inteiro ? "23:59" : v.hora_fim,
+      objetivo: v.objetivo,
+      local: v.local,
+      responsavel_id: v.responsavel_id || null,
+    };
+    const { error } = await supabase.from("os_visitas").insert(payload);
     if (error) return toast.error(error.message);
-    toast.success("Visita registrada"); setOpen(false); setV({ data: "", hora_inicio: "08:00", hora_fim: "12:00", objetivo: "", local: "", responsavel_id: "" }); onChange();
+    toast.success("Visita registrada"); setOpen(false); onChange();
   };
   const concluir = async (id: string) => {
     await supabase.from("os_visitas").update({ situacao: "realizada", concluida_em: new Date().toISOString() }).eq("id", id);
@@ -402,8 +415,12 @@ function VisitasCard({ osId, visitas, profs, onChange }: any) {
                   <SelectContent>{profs.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
                 </Select>
               </Field>
-              <Field label="Hora início"><Input type="time" value={v.hora_inicio} onChange={e => setV({ ...v, hora_inicio: e.target.value })} /></Field>
-              <Field label="Hora fim"><Input type="time" value={v.hora_fim} onChange={e => setV({ ...v, hora_fim: e.target.value })} /></Field>
+              <div className="col-span-2 flex items-center gap-2">
+                <input id="dia-inteiro" type="checkbox" className="h-4 w-4" checked={!!v.dia_inteiro} onChange={e => setV({ ...v, dia_inteiro: e.target.checked })} />
+                <label htmlFor="dia-inteiro" className="text-sm cursor-pointer select-none">Dia inteiro</label>
+              </div>
+              {!v.dia_inteiro && <Field label="Hora início"><Input type="time" value={v.hora_inicio} onChange={e => setV({ ...v, hora_inicio: e.target.value })} /></Field>}
+              {!v.dia_inteiro && <Field label="Hora fim"><Input type="time" value={v.hora_fim} onChange={e => setV({ ...v, hora_fim: e.target.value })} /></Field>}
               <Field label="Local"><Input value={v.local} onChange={e => setV({ ...v, local: e.target.value })} /></Field>
               <div className="col-span-2"><Field label="Objetivo"><Textarea value={v.objetivo} onChange={e => setV({ ...v, objetivo: e.target.value })} /></Field></div>
             </div>
