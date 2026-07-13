@@ -349,12 +349,45 @@ function EquipeCard({ osId, equipe, profs, onChange }: any) {
 function ChecklistCard({ osId, items, onChange }: any) {
   const [desc, setDesc] = useState("");
   const [obrig, setObrig] = useState(true);
+  const PRESETS = [
+    "Fichas de registro",
+    "Logomarca do cliente",
+    "Emissão de procuração eletrônica",
+    "Agendamento de visita técnica",
+    "Realização de visita técnica",
+    "Emissão da ART",
+    "Questionário dos riscos psicossociais",
+    "Emissão de certificados",
+    "Agendamento do treinamento",
+    "Recebimento de ASOs",
+    "Impressão e entrega dos documentos/certificados",
+    "Revisão/Validação do Coordenador Técnico",
+  ];
   const add = async () => {
     if (!desc) return;
     const ord = (items[items.length - 1]?.ordem || 0) + 1;
     const { error } = await supabase.from("os_checklist").insert({ os_id: osId, descricao: desc, obrigatorio: obrig, ordem: ord });
     if (error) return toast.error(error.message);
     setDesc(""); onChange();
+  };
+  const addPreset = async (descricao: string) => {
+    if (items.some((i: any) => (i.descricao || "").trim().toLowerCase() === descricao.trim().toLowerCase())) {
+      return toast.info("Item já adicionado");
+    }
+    const ord = (items[items.length - 1]?.ordem || 0) + 1;
+    const { error } = await supabase.from("os_checklist").insert({ os_id: osId, descricao, obrigatorio: true, ordem: ord });
+    if (error) return toast.error(error.message);
+    toast.success("Item adicionado"); onChange();
+  };
+  const addAllPresets = async () => {
+    const existing = new Set(items.map((i: any) => (i.descricao || "").trim().toLowerCase()));
+    const toInsert = PRESETS.filter(p => !existing.has(p.toLowerCase()));
+    if (!toInsert.length) return toast.info("Todos os itens sugeridos já estão no checklist");
+    let ord = (items[items.length - 1]?.ordem || 0);
+    const rows = toInsert.map(descricao => ({ os_id: osId, descricao, obrigatorio: true, ordem: ++ord }));
+    const { error } = await supabase.from("os_checklist").insert(rows);
+    if (error) return toast.error(error.message);
+    toast.success(`${rows.length} itens adicionados`); onChange();
   };
   const toggle = async (it: any) => {
     await supabase.from("os_checklist").update({ concluido: !it.concluido, concluido_em: !it.concluido ? new Date().toISOString() : null }).eq("id", it.id);
@@ -366,6 +399,18 @@ function ChecklistCard({ osId, items, onChange }: any) {
     <Card><CardContent className="p-4 space-y-3">
       <div className="flex items-center justify-between"><div className="text-sm font-semibold">Checklist obrigatório</div><div className="text-sm text-muted-foreground">{done}/{total}</div></div>
       <Progress value={total ? (done / total) * 100 : 0} />
+      <div className="flex flex-wrap items-center gap-2 rounded-md border border-dashed p-2">
+        <span className="text-xs text-muted-foreground">Itens sugeridos:</span>
+        <Select value="" onValueChange={(v) => v && addPreset(v)}>
+          <SelectTrigger className="h-9 w-[280px]"><SelectValue placeholder="Adicionar item sugerido…" /></SelectTrigger>
+          <SelectContent>
+            {PRESETS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Button type="button" size="sm" variant="secondary" onClick={addAllPresets}>
+          <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar todos
+        </Button>
+      </div>
       <div className="flex gap-2">
         <Input placeholder="Item do checklist" value={desc} onChange={e => setDesc(e.target.value)} />
         <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={obrig} onChange={e => setObrig(e.target.checked)} />Obrigatório</label>
