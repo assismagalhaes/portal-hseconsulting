@@ -22,6 +22,9 @@ export default function Clients() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState<any>(empty);
+  const [groupOpen, setGroupOpen] = useState(false);
+  const [groupNome, setGroupNome] = useState("");
+  const [creatingGroup, setCreatingGroup] = useState(false);
 
   useEffect(() => { document.title = "Clientes | Portal HSE Consulting"; load(); }, []);
   async function load() {
@@ -33,14 +36,19 @@ export default function Clients() {
     setGroups(g.data || []);
   }
 
-  async function criarGrupo() {
-    const nome = window.prompt("Nome do novo grupo econômico:");
-    if (!nome) return;
+  async function criarGrupo(e?: React.FormEvent) {
+    e?.preventDefault();
+    const nome = groupNome.trim();
+    if (!nome) return toast.error("Informe o nome do grupo.");
+    setCreatingGroup(true);
     const { data, error } = await supabase.from("client_groups").insert({ nome }).select("id,nome").single();
+    setCreatingGroup(false);
     if (error) return toast.error(error.message);
     setGroups(g => [...g, data!].sort((a,b)=>a.nome.localeCompare(b.nome)));
     setForm((f:any)=>({ ...f, group_id: data!.id }));
-    toast.success("Grupo criado");
+    setGroupNome("");
+    setGroupOpen(false);
+    toast.success("Grupo econômico criado e vinculado.");
   }
 
   function openNew() { setEditing(null); setForm(empty); setOpen(true); }
@@ -99,7 +107,9 @@ export default function Clients() {
                 <div className="space-y-1.5 sm:col-span-2">
                   <div className="flex items-center justify-between">
                     <Label>Grupo econômico (holding)</Label>
-                    <Button type="button" size="sm" variant="ghost" onClick={criarGrupo}>+ Criar novo</Button>
+                    <Button type="button" size="sm" variant="ghost" onClick={()=>{ setGroupNome(""); setGroupOpen(true); }}>
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Criar novo
+                    </Button>
                   </div>
                   <Select value={form.group_id || "__none__"} onValueChange={(v)=>setForm({ ...form, group_id: v === "__none__" ? null : v })}>
                     <SelectTrigger><SelectValue placeholder="Sem grupo" /></SelectTrigger>
@@ -124,6 +134,33 @@ export default function Clients() {
             </DialogContent>
           </Dialog>
         } />
+      <Dialog open={groupOpen} onOpenChange={setGroupOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Novo grupo econômico</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={criarGrupo} className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Nome do grupo (holding) <span className="text-danger">*</span></Label>
+              <Input
+                autoFocus
+                value={groupNome}
+                onChange={e=>setGroupNome(e.target.value)}
+                placeholder="Ex.: Grupo Alfa Participações"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Este nome aparecerá no seletor de grupo econômico e agrupará as empresas coligadas no portal do cliente.
+              </p>
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button type="button" variant="outline" onClick={()=>setGroupOpen(false)} disabled={creatingGroup}>Cancelar</Button>
+              <Button type="submit" disabled={creatingGroup || !groupNome.trim()}>
+                {creatingGroup ? "Criando…" : "Criar grupo"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
       <div className="p-6 space-y-4">
         <Input placeholder="Buscar por razão social, CNPJ, cidade…" value={q} onChange={e=>setQ(e.target.value)} className="max-w-md" />
         <Card className="overflow-hidden shadow-elegant">
