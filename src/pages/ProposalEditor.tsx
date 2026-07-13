@@ -493,14 +493,14 @@ export default function ProposalEditor() {
             {isInternal && !isMobile && (
               <div className="flex items-center gap-2 ml-2 px-3 py-1.5 rounded-md bg-muted">
                 <Switch checked={clientView} onCheckedChange={setClientView} id="cv" />
-                <Label htmlFor="cv" className="text-xs cursor-pointer">Visão do cliente</Label>
+              <Label htmlFor="cv" className="text-xs cursor-pointer">Visualizar Proposta</Label>
               </div>
             )}
           </>
         } />
 
-      <div className="p-6 grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6 min-w-0">
+      <div className={`p-6 grid gap-6 ${clientView ? "" : "lg:grid-cols-3"}`}>
+        <div className={`${clientView ? "" : "lg:col-span-2"} space-y-6 min-w-0`}>
           {proposal.bloqueada_edicao && (
             <div className="rounded-md border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900 flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4" />
@@ -649,7 +649,7 @@ export default function ProposalEditor() {
           )}
         </div>
 
-        <aside className="space-y-4">
+        {!clientView && (<aside className="space-y-4">
           <Card className="shadow-elegant">
             <CardHeader><CardTitle className="text-base font-display flex items-center gap-2"><FileText className="h-4 w-4 text-primary" /> Resumo</CardTitle></CardHeader>
             <CardContent className="space-y-3 text-sm">
@@ -696,7 +696,7 @@ export default function ProposalEditor() {
               clienteSolicitante={client?.solicitante}
             />
           )}
-        </aside>
+        </aside>)}
       </div>
 
       <Sheet open={!!pricingOpen} onOpenChange={(o)=>!o && setPricingOpen(null)}>
