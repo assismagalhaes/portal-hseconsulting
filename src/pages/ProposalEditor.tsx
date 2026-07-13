@@ -514,7 +514,7 @@ export default function ProposalEditor() {
           ) : (
             <>
             <Tabs defaultValue="cliente">
-              <TabsList>
+              <TabsList className="flex flex-wrap h-auto justify-start gap-1">
                 <TabsTrigger value="cliente">Cliente</TabsTrigger>
                 <TabsTrigger value="empresas"><Users className="h-3.5 w-3.5 mr-1" /> Empresas</TabsTrigger>
                 <TabsTrigger value="itens">Itens & escopo</TabsTrigger>
