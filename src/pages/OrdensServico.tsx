@@ -27,7 +27,7 @@ export default function OrdensServico() {
   const [fProjeto, setFProjeto] = useState("all");
   const [fCidade, setFCidade] = useState("");
   const [open, setOpen] = useState(false);
-  const [novo, setNovo] = useState<any>({ execucao_id: "", titulo: "", prioridade: "media" });
+  const [novo, setNovo] = useState<any>({ execucao_id: "", projeto_id: "", titulo: "", prioridade: "media", data_prevista_inicio: "", data_prevista_conclusao: "" });
 
   const load = async () => {
     const [{ data }, { data: p }, { data: e }, { data: pj }] = await Promise.all([
@@ -36,7 +36,7 @@ export default function OrdensServico() {
         .order("created_at", { ascending: false }),
       supabase.from("execucao_profissionais").select("id, nome").order("nome"),
       supabase.from("execucao_servicos").select("id, titulo, numero_interno, client_id, proposal_id, service_id, responsavel_comercial").order("created_at", { ascending: false }),
-      supabase.from("projetos").select("id, numero, titulo").order("created_at", { ascending: false }),
+      supabase.from("projetos").select("id, numero, titulo, data_inicio, data_fim_prevista").order("created_at", { ascending: false }),
     ]);
     setRows((data as any) || []); setProfs((p as any) || []); setExecs((e as any) || []); setProjetos((pj as any) || []);
   };
@@ -60,8 +60,11 @@ export default function OrdensServico() {
     const ex = execs.find(e => e.id === novo.execucao_id);
     const { data, error } = await supabase.from("ordens_servico").insert({
       execucao_id: novo.execucao_id,
+      projeto_id: novo.projeto_id || null,
       titulo: novo.titulo,
       prioridade: novo.prioridade,
+      data_prevista_inicio: novo.data_prevista_inicio || null,
+      data_prevista_conclusao: novo.data_prevista_conclusao || null,
       client_id: ex?.client_id, proposal_id: ex?.proposal_id, service_id: ex?.service_id,
       responsavel_comercial: ex?.responsavel_comercial,
     }).select("id").single();
@@ -86,8 +89,40 @@ export default function OrdensServico() {
                     <SelectContent>{execs.map(e => <SelectItem key={e.id} value={e.id}>{e.numero_interno} — {e.titulo}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
+                <div><Label>Projeto (opcional)</Label>
+                  <Select value={novo.projeto_id || "none"} onValueChange={v => {
+                    if (v === "none") {
+                      setNovo({ ...novo, projeto_id: "" });
+                    } else {
+                      const p = projetos.find(pp => pp.id === v);
+                      setNovo({
+                        ...novo,
+                        projeto_id: v,
+                        data_prevista_inicio: novo.data_prevista_inicio || p?.data_inicio || "",
+                        data_prevista_conclusao: novo.data_prevista_conclusao || p?.data_fim_prevista || "",
+                      });
+                    }
+                  }}>
+                    <SelectTrigger><SelectValue placeholder="Vincular a um projeto" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sem projeto</SelectItem>
+                      {projetos.map(p => <SelectItem key={p.id} value={p.id}>{p.numero} — {p.titulo}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  {novo.projeto_id && (
+                    <p className="text-[11px] text-muted-foreground mt-1">Datas preenchidas automaticamente a partir do projeto (editáveis).</p>
+                  )}
+                </div>
                 <div><Label>Título da OS</Label>
                   <Input value={novo.titulo} onChange={e => setNovo({ ...novo, titulo: e.target.value })} placeholder="Ex.: Visita técnica preliminar" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Previsão de início</Label>
+                    <Input type="date" value={novo.data_prevista_inicio} onChange={e => setNovo({ ...novo, data_prevista_inicio: e.target.value })} />
+                  </div>
+                  <div><Label>Previsão de conclusão</Label>
+                    <Input type="date" value={novo.data_prevista_conclusao} onChange={e => setNovo({ ...novo, data_prevista_conclusao: e.target.value })} />
+                  </div>
                 </div>
                 <div><Label>Prioridade</Label>
                   <Select value={novo.prioridade} onValueChange={v => setNovo({ ...novo, prioridade: v })}>
