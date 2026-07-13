@@ -493,7 +493,7 @@ export default function ProposalEditor() {
             {isInternal && !isMobile && (
               <div className="flex items-center gap-2 ml-2 px-3 py-1.5 rounded-md bg-muted">
                 <Switch checked={clientView} onCheckedChange={setClientView} id="cv" />
-                <Label htmlFor="cv" className="text-xs cursor-pointer">Visão do cliente</Label>
+              <Label htmlFor="cv" className="text-xs cursor-pointer">Visualizar Proposta</Label>
               </div>
             )}
           </>
