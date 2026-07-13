@@ -153,13 +153,32 @@ export default function OrdemServicoEditor() {
               <KV k="Início real" v={formatDate(os.data_real_inicio)} />
               <KV k="Conclusão real" v={formatDate(os.data_real_conclusao)} />
               <KV k="Responsável técnico" v={
-                <Select value={os.responsavel_tecnico_id || ""} onValueChange={v => save({ responsavel_tecnico_id: v || null })}>
-                  <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
-                  <SelectContent>{profs.map(p => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
-                </Select>
+                projResp ? (
+                  <div className="text-sm">
+                    <div className="font-medium">{projResp.nome || projResp.email}</div>
+                    <div className="text-xs text-muted-foreground">Herdado do projeto {os.projetos?.numero}</div>
+                  </div>
+                ) : (
+                  <Select value={os.responsavel_tecnico_id || ""} onValueChange={v => save({ responsavel_tecnico_id: v || null })}>
+                    <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                    <SelectContent>{profs.map(p => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent>
+                  </Select>
+                )
               } />
             </CardContent></Card>
-            {os.execucao_profissionais && (
+            {projResp ? (
+              <Card><CardContent className="p-4">
+                <div className="text-sm font-semibold mb-2">Responsável técnico (do projeto)</div>
+                <div className="grid md:grid-cols-3 gap-2 text-sm">
+                  <KV k="Nome" v={projResp.nome || "—"} />
+                  <KV k="Cargo" v={projResp.cargo || "—"} />
+                  <KV k="Área" v={projResp.area || "—"} />
+                  <KV k="Registro" v={projResp.registro_profissional || "—"} />
+                  <KV k="Telefone" v={projResp.telefone || "—"} />
+                  <KV k="E-mail" v={projResp.email || "—"} />
+                </div>
+              </CardContent></Card>
+            ) : os.execucao_profissionais && (
               <Card><CardContent className="p-4">
                 <div className="text-sm font-semibold mb-2">Responsável técnico</div>
                 <div className="grid md:grid-cols-3 gap-2 text-sm">
