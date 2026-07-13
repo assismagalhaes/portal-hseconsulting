@@ -5394,6 +5394,16 @@ export type Database = {
           id: string
           nome: string
           observacoes_escopo: string | null
+          pricing_aliquota_imposto: number | null
+          pricing_configurada: boolean
+          pricing_custos: Json
+          pricing_desconto_comercial: number
+          pricing_horas: Json
+          pricing_indicadores: Json
+          pricing_lucro_desejado: number
+          pricing_margem_desejada: number | null
+          pricing_preco_arredondado: number | null
+          pricing_preco_sugerido: number | null
           quantidade_tecnica: string | null
           unidade_padrao: string | null
           updated_at: string
@@ -5410,6 +5420,16 @@ export type Database = {
           id?: string
           nome: string
           observacoes_escopo?: string | null
+          pricing_aliquota_imposto?: number | null
+          pricing_configurada?: boolean
+          pricing_custos?: Json
+          pricing_desconto_comercial?: number
+          pricing_horas?: Json
+          pricing_indicadores?: Json
+          pricing_lucro_desejado?: number
+          pricing_margem_desejada?: number | null
+          pricing_preco_arredondado?: number | null
+          pricing_preco_sugerido?: number | null
           quantidade_tecnica?: string | null
           unidade_padrao?: string | null
           updated_at?: string
@@ -5426,6 +5446,16 @@ export type Database = {
           id?: string
           nome?: string
           observacoes_escopo?: string | null
+          pricing_aliquota_imposto?: number | null
+          pricing_configurada?: boolean
+          pricing_custos?: Json
+          pricing_desconto_comercial?: number
+          pricing_horas?: Json
+          pricing_indicadores?: Json
+          pricing_lucro_desejado?: number
+          pricing_margem_desejada?: number | null
+          pricing_preco_arredondado?: number | null
+          pricing_preco_sugerido?: number | null
           quantidade_tecnica?: string | null
           unidade_padrao?: string | null
           updated_at?: string

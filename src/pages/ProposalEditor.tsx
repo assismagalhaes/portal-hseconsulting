@@ -184,6 +184,10 @@ export default function ProposalEditor() {
 
   async function addItem(fromService?: any) {
     const numero_item = (items[items.length-1]?.numero_item || 0) + 1;
+    const hasPricingTemplate = !!(fromService?.pricing_configurada);
+    const valorUnit = hasPricingTemplate
+      ? Number(fromService?.pricing_preco_arredondado || fromService?.valor_referencia || 0)
+      : Number(fromService?.valor_referencia || 0);
     const payload = {
       proposal_id: proposal.id, numero_item,
       service_id: fromService?.id || null,
@@ -195,13 +199,32 @@ export default function ProposalEditor() {
       observacoes_escopo: fromService?.observacoes_escopo || "",
       quantidade_tecnica: fromService?.quantidade_tecnica || "",
       quantidade: 1,
-      valor_unitario: Number(fromService?.valor_referencia || 0),
-      valor_total: Number(fromService?.valor_referencia || 0),
+      valor_unitario: valorUnit,
+      valor_total: valorUnit,
     };
     const { data, error } = await supabase.from("proposal_items").insert(payload).select("*").single();
     if (error) return toast.error(error.message);
     const next = [...items, data!];
     setItems(next); updateTotal(next);
+
+    // Se o serviço tem template de precificação, cria proposal_item_pricing automaticamente
+    if (hasPricingTemplate && data) {
+      const pricingPayload = {
+        proposal_item_id: data.id,
+        custos: fromService.pricing_custos || [],
+        horas: fromService.pricing_horas || [],
+        aliquota_imposto: Number(fromService.pricing_aliquota_imposto ?? params?.aliquota_imposto ?? 0.10),
+        margem_desejada: Number(fromService.pricing_margem_desejada ?? params?.margem_minima ?? 0.20),
+        lucro_desejado: Number(fromService.pricing_lucro_desejado || 0),
+        desconto_comercial: Number(fromService.pricing_desconto_comercial || 0),
+        preco_sugerido: Number(fromService.pricing_preco_sugerido || 0),
+        preco_arredondado: Number(fromService.pricing_preco_arredondado || valorUnit),
+        preco_aprovado: Number(fromService.pricing_preco_arredondado || valorUnit),
+        indicadores: fromService.pricing_indicadores || {},
+      };
+      const { data: pr } = await supabase.from("proposal_item_pricing").insert(pricingPayload).select("*").single();
+      if (pr) setPricings((prev) => ({ ...prev, [data.id]: pr }));
+    }
   }
 
   async function updateItem(it: any, patch: any) {
