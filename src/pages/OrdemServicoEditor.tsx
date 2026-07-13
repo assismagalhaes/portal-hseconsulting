@@ -202,7 +202,7 @@ export default function OrdemServicoEditor() {
           </TabsContent>
 
           <TabsContent value="visitas">
-            <VisitasCard osId={os.id} visitas={visitas} profs={profs} onChange={reload} />
+            <VisitasCard osId={os.id} visitas={visitas} profs={profs} projRespId={projResp?.id} onChange={reload} />
           </TabsContent>
 
           <TabsContent value="evidencias">
