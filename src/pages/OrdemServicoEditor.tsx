@@ -460,6 +460,7 @@ function ChecklistCard({ osId, items, onChange }: any) {
 function VisitasCard({ osId, visitas, profs, projRespId, onChange }: any) {
   const [open, setOpen] = useState(false);
   const today = () => new Date().toISOString().slice(0, 10);
+  const respName = (id: string) => profs.find((p: any) => p.id === id)?.nome || "—";
   const defaultResp = () => (projRespId && profs.some((p: any) => p.id === projRespId) ? projRespId : "");
   const initial = () => ({ data: today(), hora_inicio: "08:00", hora_fim: "17:00", dia_inteiro: false, objetivo: "", local: "", responsavel_id: defaultResp() });
   const [v, setV] = useState<any>(initial());
@@ -520,7 +521,7 @@ function VisitasCard({ osId, visitas, profs, projRespId, onChange }: any) {
             <TableRow key={vi.id}>
               <TableCell>{formatDate(vi.data)}</TableCell>
               <TableCell className="font-mono text-xs">{vi.hora_inicio?.slice(0, 5)}–{vi.hora_fim?.slice(0, 5)}</TableCell>
-              <TableCell>{vi.execucao_profissionais?.nome || "—"}</TableCell>
+              <TableCell>{vi.responsavel_id ? respName(vi.responsavel_id) : "—"}</TableCell>
               <TableCell className="text-sm">{vi.objetivo || "—"}</TableCell>
               <TableCell><Badge variant="secondary">{osVisitaSituacaoLabel[vi.situacao]}</Badge></TableCell>
               <TableCell className="flex gap-1">
