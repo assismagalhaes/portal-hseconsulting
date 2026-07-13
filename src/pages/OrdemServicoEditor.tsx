@@ -78,8 +78,8 @@ export default function OrdemServicoEditor() {
     const { data: roles } = await supabase
       .from("user_roles")
       .select("user_id, role")
-      .in("role", ["admin", "tecnico", "comercial"]);
-    const userIds = Array.from(new Set((roles || []).map((r: any) => r.user_id)));
+      .in("role", ["admin", "tecnico", "comercial"] as any);
+    const userIds = Array.from(new Set((roles || []).map((r: any) => r.user_id))) as string[];
     let usersList: any[] = [];
     if (userIds.length) {
       const { data: pr } = await supabase
