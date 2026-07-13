@@ -4003,6 +4003,33 @@ export type Database = {
           },
         ]
       }
+      os_checklist_sugestoes: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          descricao: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       os_documentos: {
         Row: {
           anexo_path: string | null
