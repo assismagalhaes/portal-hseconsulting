@@ -9,9 +9,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Popover, PopoverContent, PopoverTrigger,
-} from "@/components/ui/popover";
-import { Building2, Plus, Trash2, Star, ArrowUpDown, Search } from "lucide-react";
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter,
+} from "@/components/ui/dialog";
+import { Building2, Plus, Trash2, Star, ArrowUpDown, Search, Check, X } from "lucide-react";
 import { formatCnpjCpf } from "@/lib/format";
 import { toast } from "sonner";
 
@@ -38,6 +38,7 @@ export default function EmpresasProposta({ proposalId, proposal, onProposalPatch
   const [query, setQuery] = useState("");
   const [pickerOpen, setPickerOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   async function load() {
     const [pc, cl] = await Promise.all([
@@ -60,20 +61,36 @@ export default function EmpresasProposta({ proposalId, proposal, onProposalPatch
       if (!query) return true;
       const q = query.toLowerCase();
       return [c.razao_social, c.nome_fantasia, c.cnpj_cpf].some(v => (v || "").toLowerCase().includes(q));
-    })
-    .slice(0, 40);
-
-  async function addColigada(client_id: string) {
-    setBusy(true);
-    const nextOrdem = (rows.filter(r => r.papel === "coligada").length) + 1;
-    const { error } = await supabase.from("proposal_clients").insert({
-      proposal_id: proposalId, client_id, papel: "coligada", ordem: nextOrdem,
     });
+
+  function toggleSelect(id: string) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  async function addColigadasSelecionadas() {
+    if (selected.size === 0) return;
+    setBusy(true);
+    const baseOrdem = rows.filter(r => r.papel === "coligada").length;
+    const ids = Array.from(selected);
+    const payload = ids.map((client_id, i) => ({
+      proposal_id: proposalId, client_id, papel: "coligada" as const, ordem: baseOrdem + i + 1,
+    }));
+    const { error } = await supabase.from("proposal_clients").insert(payload);
     setBusy(false);
     if (error) return toast.error(error.message);
+    setSelected(new Set());
     setPickerOpen(false); setQuery("");
     await load(); onChange?.();
-    toast.success("Empresa coligada adicionada");
+    toast.success(ids.length > 1 ? `${ids.length} empresas coligadas adicionadas` : "Empresa coligada adicionada");
+  }
+
+  function handlePickerOpen(o: boolean) {
+    setPickerOpen(o);
+    if (!o) { setSelected(new Set()); setQuery(""); }
   }
 
   async function remove(row: ProposalClient) {
@@ -123,37 +140,98 @@ export default function EmpresasProposta({ proposalId, proposal, onProposalPatch
             A empresa <strong>principal</strong> responde pelo faturamento — as coligadas aparecem no cabeçalho do PDF e do aceite.
           </p>
         </div>
-        <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
-          <PopoverTrigger asChild>
+        <Dialog open={pickerOpen} onOpenChange={handlePickerOpen}>
+          <DialogTrigger asChild>
             <Button size="sm" variant="outline"><Plus className="h-4 w-4 mr-1" /> Adicionar coligada</Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-96 p-0" align="end">
-            <div className="p-2 border-b flex items-center gap-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <Input value={query} onChange={e => setQuery(e.target.value)} placeholder="Buscar por razão social, fantasia ou CNPJ…" className="h-8 border-0 focus-visible:ring-0" />
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
+            <DialogHeader className="px-6 pt-6 pb-4 border-b">
+              <DialogTitle className="flex items-center gap-2 font-display">
+                <Building2 className="h-5 w-5 text-primary" /> Adicionar empresas ao grupo econômico
+              </DialogTitle>
+              <DialogDescription>
+                Selecione uma ou mais empresas coligadas já cadastradas. A empresa principal permanece como responsável pelo faturamento.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="px-6 py-3 border-b bg-muted/30">
+              <div className="relative">
+                <Search className="h-4 w-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                <Input
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  placeholder="Buscar por razão social, nome fantasia ou CNPJ…"
+                  className="pl-9 h-10"
+                  autoFocus
+                />
+              </div>
+              <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+                <span>{filtered.length} {filtered.length === 1 ? "empresa disponível" : "empresas disponíveis"}</span>
+                {selected.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSelected(new Set())}
+                    className="text-primary hover:underline flex items-center gap-1"
+                  >
+                    <X className="h-3 w-3" /> Limpar seleção ({selected.size})
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="max-h-72 overflow-y-auto">
+
+            <div className="max-h-[420px] overflow-y-auto">
               {filtered.length === 0 && (
-                <div className="p-4 text-sm text-muted-foreground text-center">
-                  Nenhum cliente encontrado. Cadastre-o antes em <span className="font-medium">Clientes</span>.
+                <div className="px-6 py-12 text-sm text-muted-foreground text-center">
+                  <Building2 className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                  {query
+                    ? <>Nenhuma empresa encontrada para <span className="font-medium">"{query}"</span>.</>
+                    : <>Nenhuma empresa disponível. Cadastre em <span className="font-medium">Clientes</span> antes de vincular.</>}
                 </div>
               )}
-              {filtered.map(c => (
-                <button
-                  key={c.id}
-                  disabled={busy}
-                  onClick={() => addColigada(c.id)}
-                  className="w-full text-left px-3 py-2 hover:bg-muted border-b last:border-0"
-                >
-                  <div className="text-sm font-medium">{c.nome_fantasia || c.razao_social}</div>
-                  <div className="text-xs text-muted-foreground font-mono">
-                    {formatCnpjCpf(c.cnpj_cpf || "")} {c.cidade ? `· ${c.cidade}/${c.uf || ""}` : ""}
-                  </div>
-                </button>
-              ))}
+              <div className="divide-y">
+                {filtered.map(c => {
+                  const isSel = selected.has(c.id);
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => toggleSelect(c.id)}
+                      className={`w-full text-left px-6 py-3 flex items-center gap-3 transition ${
+                        isSel ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-muted/50"
+                      }`}
+                    >
+                      <div className={`h-5 w-5 shrink-0 rounded border flex items-center justify-center transition ${
+                        isSel ? "bg-primary border-primary text-primary-foreground" : "border-border bg-background"
+                      }`}>
+                        {isSel && <Check className="h-3.5 w-3.5" />}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium truncate">{c.nome_fantasia || c.razao_social}</div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {c.nome_fantasia && c.razao_social ? c.razao_social + " · " : ""}
+                          <span className="font-mono">{formatCnpjCpf(c.cnpj_cpf || "")}</span>
+                          {c.cidade ? ` · ${c.cidade}/${c.uf || ""}` : ""}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </PopoverContent>
-        </Popover>
+
+            <DialogFooter className="px-6 py-3 border-t bg-muted/30 gap-2 sm:justify-between">
+              <Button variant="ghost" onClick={() => handlePickerOpen(false)} disabled={busy}>Cancelar</Button>
+              <Button onClick={addColigadasSelecionadas} disabled={busy || selected.size === 0}>
+                <Plus className="h-4 w-4 mr-1" />
+                {selected.size === 0
+                  ? "Selecione ao menos uma empresa"
+                  : selected.size === 1
+                    ? "Adicionar 1 empresa"
+                    : `Adicionar ${selected.size} empresas`}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {proposal && onProposalPatch && (
