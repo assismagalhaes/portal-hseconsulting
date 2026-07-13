@@ -38,7 +38,7 @@ export default function OrdemServicoEditor() {
     if (!id) return;
     const { data, error } = await supabase
       .from("ordens_servico")
-      .select("*, clients(*), execucao_servicos(numero_interno, titulo), services(nome), projetos(id, numero, titulo, responsavel_execucao_id), execucao_profissionais!ordens_servico_responsavel_tecnico_id_fkey(*)")
+      .select("*, clients(*), execucao_servicos(numero_interno, titulo), services(nome), projetos(id, numero, titulo, responsavel_execucao_id, data_fim_real), execucao_profissionais!ordens_servico_responsavel_tecnico_id_fkey(*)")
       .eq("id", id).maybeSingle();
     if (error) return toast.error(error.message);
     setOs(data);
@@ -154,8 +154,14 @@ export default function OrdemServicoEditor() {
               <KV k="Previsão conclusão" v={
                 <Input type="date" defaultValue={os.data_prevista_conclusao || ""} onBlur={e => save({ data_prevista_conclusao: e.target.value || null })} />
               } />
-              <KV k="Início real" v={formatDate(os.data_real_inicio)} />
-              <KV k="Conclusão real" v={formatDate(os.data_real_conclusao)} />
+              <KV k="Conclusão real" v={
+                os.projetos?.data_fim_real ? (
+                  <div className="text-sm">
+                    <div>{formatDate(os.projetos.data_fim_real)}</div>
+                    <div className="text-xs text-muted-foreground">Herdado do projeto {os.projetos.numero}</div>
+                  </div>
+                ) : formatDate(os.data_real_conclusao)
+              } />
               <KV k="Responsável técnico" v={
                 projResp ? (
                   <div className="text-sm">
