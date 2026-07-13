@@ -43,10 +43,18 @@ export default function OrdemServicoEditor() {
     if (error) return toast.error(error.message);
     setOs(data);
     if (data?.projetos?.responsavel_execucao_id) {
+      const respId = data.projetos.responsavel_execucao_id;
       const { data: pr } = await supabase.from("profiles")
         .select("id, nome, email, cargo, area, registro_profissional, telefone")
-        .eq("id", data.projetos.responsavel_execucao_id).maybeSingle();
-      setProjResp(pr || null);
+        .eq("id", respId).maybeSingle();
+      if (pr) {
+        setProjResp(pr);
+      } else {
+        const { data: pro } = await supabase.from("execucao_profissionais")
+          .select("id, nome, email, cargo, area, registro_profissional, telefone")
+          .eq("id", respId).maybeSingle();
+        setProjResp(pro || null);
+      }
     } else {
       setProjResp(null);
     }
