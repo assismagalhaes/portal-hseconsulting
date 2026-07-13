@@ -236,8 +236,17 @@ export default function ProjetoEditor() {
                       <SelectTrigger><SelectValue placeholder="Selecione um responsável" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">— Sem responsável —</SelectItem>
+                        {usuarios.length > 0 && (
+                          <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">Usuários internos</div>
+                        )}
                         {usuarios.map((u) => (
                           <SelectItem key={u.id} value={u.id}>{u.nome || u.email}</SelectItem>
+                        ))}
+                        {profissionais.length > 0 && (
+                          <div className="px-2 py-1 mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">Profissionais</div>
+                        )}
+                        {profissionais.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>{p.nome}{p.cargo ? ` — ${p.cargo}` : ""}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
