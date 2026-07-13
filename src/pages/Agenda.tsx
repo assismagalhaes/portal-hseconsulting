@@ -16,6 +16,10 @@ function addDays(d: Date, n: number) { const x = new Date(d); x.setDate(x.getDat
 function startOfMonth(d: Date) { return new Date(d.getFullYear(), d.getMonth(), 1); }
 function endOfMonth(d: Date) { return new Date(d.getFullYear(), d.getMonth() + 1, 0); }
 function ymd(d: Date) { return d.toISOString().slice(0, 10); }
+function ymdLocal(d: Date) {
+  const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, "0"); const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
 
 export default function Agenda() {
   const [view, setView] = useState<View>("semana");
@@ -49,13 +53,19 @@ export default function Agenda() {
 
   const onDropDate = async (newDate: Date, evId: string) => {
     const ev = eventos.find(e => e.id === evId); if (!ev) return;
-    const dur = new Date(ev.end_at).getTime() - new Date(ev.start_at).getTime();
-    const start = new Date(newDate); start.setHours(new Date(ev.start_at).getHours(), new Date(ev.start_at).getMinutes(), 0, 0);
-    const end = new Date(start.getTime() + dur);
+    // Desloca o evento por dias inteiros, preservando o horário original (evita problemas de fuso).
+    const evStart = new Date(ev.start_at);
+    const evEnd = new Date(ev.end_at);
+    const currentDayUtc = Date.UTC(evStart.getUTCFullYear(), evStart.getUTCMonth(), evStart.getUTCDate());
+    const targetDayUtc = Date.UTC(newDate.getFullYear(), newDate.getMonth(), newDate.getDate());
+    const diffMs = targetDayUtc - currentDayUtc;
+    if (diffMs === 0) return;
+    const start = new Date(evStart.getTime() + diffMs);
+    const end = new Date(evEnd.getTime() + diffMs);
     const { error } = await supabase.from("os_eventos_agenda").update({ start_at: start.toISOString(), end_at: end.toISOString() }).eq("id", evId);
     if (error) return toast.error(error.message);
     if (ev.visita_id) {
-      await supabase.from("os_visitas").update({ data: ymd(start) }).eq("id", ev.visita_id);
+      await supabase.from("os_visitas").update({ data: ymdLocal(newDate) }).eq("id", ev.visita_id);
     }
     toast.success("Evento movido"); load();
   };
