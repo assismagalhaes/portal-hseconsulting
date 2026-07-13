@@ -36,15 +36,26 @@ export default function Agenda() {
   }, [view, cursor]);
 
   const load = async () => {
-    const [{ data }, { data: p }] = await Promise.all([
+    const [{ data }, { data: p }, { data: roles }] = await Promise.all([
       supabase.from("os_eventos_agenda")
         .select("*, ordens_servico(numero, titulo, cliente_nome, cidade)")
         .gte("start_at", range.start.toISOString())
         .lt("start_at", range.end.toISOString())
         .order("start_at"),
       supabase.from("execucao_profissionais").select("id, nome").order("nome"),
+      supabase.from("user_roles").select("user_id, role").in("role", ["admin","tecnico","comercial"]),
     ]);
-    setEventos((data as any) || []); setProfs((p as any) || []);
+    const execList = ((p as any) || []).map((x: any) => ({ id: x.id, nome: x.nome }));
+    const userIds = Array.from(new Set(((roles as any) || []).map((r: any) => r.user_id)));
+    let userList: any[] = [];
+    if (userIds.length) {
+      const { data: pr } = await supabase.from("profiles").select("id, nome, email").in("id", userIds);
+      userList = (pr || []).map((u: any) => ({ id: u.id, nome: u.nome || u.email }));
+    }
+    const seen = new Set<string>();
+    const combined = [...execList, ...userList].filter(x => { if (seen.has(x.id)) return false; seen.add(x.id); return true; })
+      .sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
+    setEventos((data as any) || []); setProfs(combined);
   };
   useEffect(() => { load(); }, [range.start.getTime(), range.end.getTime()]);
 
