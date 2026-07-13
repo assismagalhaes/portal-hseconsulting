@@ -18,10 +18,12 @@ export default function MeuPainel() {
     if (!user) return;
     const { data: p } = await supabase.from("execucao_profissionais").select("*").eq("user_id", user.id).maybeSingle();
     setProf(p);
-    if (!p) return;
+    // Um profissional técnico pode estar registrado apenas como usuário do
+    // sistema (profiles) sem cadastro em execucao_profissionais. Aceita ambos.
+    const ids = [user.id, p?.id].filter(Boolean) as string[];
     const [{ data: os1 }, { data: v1 }] = await Promise.all([
-      supabase.from("ordens_servico").select("*").eq("responsavel_tecnico_id", p.id).order("data_prevista_conclusao"),
-      supabase.from("os_visitas").select("*, ordens_servico(numero, titulo, cliente_nome)").eq("responsavel_id", p.id).gte("data", new Date().toISOString().slice(0,10)).order("data"),
+      supabase.from("ordens_servico").select("*").in("responsavel_tecnico_id", ids).order("data_prevista_conclusao"),
+      supabase.from("os_visitas").select("*, ordens_servico(numero, titulo, cliente_nome)").in("responsavel_id", ids).gte("data", new Date().toISOString().slice(0,10)).order("data"),
     ]);
     setOs((os1 as any) || []); setVisitas((v1 as any) || []);
   })(); }, [user?.id]);
@@ -33,18 +35,12 @@ export default function MeuPainel() {
   }), [os, visitas]);
 
   if (!user) return null;
-  if (!prof) return (
-    <>
-      <PageHeader title="Meu Painel" />
-      <div className="p-10 text-muted-foreground">
-        Seu usuário ainda não está vinculado a um cadastro de profissional. Peça ao administrador para vinculá-lo em <strong>Profissionais</strong>.
-      </div>
-    </>
-  );
+  const displayName = prof?.nome || user.email || "";
+  const displaySub = prof?.cargo ? `${prof.cargo}${prof.area ? " • " + prof.area : ""}` : undefined;
 
   return (
     <>
-      <PageHeader title={`Painel — ${prof.nome}`} subtitle={prof.cargo ? `${prof.cargo}${prof.area ? " • " + prof.area : ""}` : undefined} />
+      <PageHeader title={`Painel — ${displayName}`} subtitle={displaySub} />
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Kpi label="OS em andamento" value={stats.andamento} />
