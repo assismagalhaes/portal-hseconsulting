@@ -8,8 +8,18 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { brl, formatDate, proposalStatusLabel, proposalOrigemLabel, proposalOrigemColor } from "@/lib/format";
 import { toast } from "sonner";
 
@@ -38,6 +48,19 @@ export default function Proposals() {
   const [newOrigem, setNewOrigem] = useState<"nova_proposta"|"retroativa"|"importacao_manual"|"importacao_planilha">("nova_proposta");
   const [newDataEmissao, setNewDataEmissao] = useState<string>(() => new Date().toISOString().slice(0,10));
   const [creating, setCreating] = useState(false);
+  const [toDelete, setToDelete] = useState<any>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function deleteProposal() {
+    if (!toDelete) return;
+    setDeleting(true);
+    const { error } = await supabase.from("proposals").delete().eq("id", toDelete.id);
+    setDeleting(false);
+    if (error) return toast.error(error.message);
+    toast.success(`Proposta ${toDelete.numero} excluída.`);
+    setToDelete(null);
+    load();
+  }
 
   useEffect(() => { document.title = "Propostas | Portal HSE Consulting"; load(); }, []);
   async function load() {
@@ -227,6 +250,7 @@ export default function Proposals() {
                 <th className="text-left px-4 py-2">Aprovação</th>
                 <th className="text-left px-4 py-2">Cadastro</th>
                 <th className="text-right px-4 py-2">Valor</th>
+                <th className="px-4 py-2 w-10"></th>
               </tr>
             </thead>
             <tbody>
@@ -252,13 +276,44 @@ export default function Proposals() {
                   <td className="px-4 py-3 text-xs text-muted-foreground">{formatDate(p.data_aprovacao)}</td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
                   <td className="px-4 py-3 text-right font-mono">{brl(p.valor_total)}</td>
+                  <td className="px-4 py-3 text-right" onClick={(e)=>e.stopPropagation()}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-danger"
+                      onClick={()=>setToDelete(p)}
+                      title="Excluir proposta"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </td>
                 </tr>
               ))}
-              {filtered.length === 0 && <tr><td colSpan={9} className="text-center py-10 text-muted-foreground">Nenhuma proposta.</td></tr>}
+              {filtered.length === 0 && <tr><td colSpan={10} className="text-center py-10 text-muted-foreground">Nenhuma proposta.</td></tr>}
             </tbody>
           </table></div>
         </Card>
       </div>
+      <AlertDialog open={!!toDelete} onOpenChange={(o)=>!o && setToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir proposta {toDelete?.numero}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação é permanente e removerá também itens, precificações, empresas vinculadas e aceites relacionados a esta proposta. Não é possível desfazer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              onClick={(e)=>{ e.preventDefault(); deleteProposal(); }}
+              className="bg-danger text-danger-foreground hover:bg-danger/90"
+            >
+              {deleting ? "Excluindo…" : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
