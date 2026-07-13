@@ -350,17 +350,17 @@ function ChecklistCard({ osId, items, onChange }: any) {
   const [desc, setDesc] = useState("");
   const [obrig, setObrig] = useState(true);
   const PRESETS = [
-    "Fichas de registro",
-    "Logomarca do cliente",
-    "Emissão de procuração eletrônica",
     "Agendamento de visita técnica",
-    "Realização de visita técnica",
-    "Emissão da ART",
-    "Questionário dos riscos psicossociais",
-    "Emissão de certificados",
     "Agendamento do treinamento",
-    "Recebimento de ASOs",
+    "Emissão da ART",
+    "Emissão de certificados",
+    "Emissão de procuração eletrônica",
+    "Fichas de registro",
     "Impressão e entrega dos documentos/certificados",
+    "Logomarca do cliente",
+    "Questionário dos riscos psicossociais",
+    "Realização de visita técnica",
+    "Recebimento de ASOs",
     "Revisão/Validação do Coordenador Técnico",
   ];
   const add = async () => {
