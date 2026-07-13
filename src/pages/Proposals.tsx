@@ -250,7 +250,7 @@ export default function Proposals() {
                 <th className="text-left px-4 py-2">Aprovação</th>
                 <th className="text-left px-4 py-2">Cadastro</th>
                 <th className="text-right px-4 py-2">Valor</th>
-                <th className="px-4 py-2 w-10"></th>
+                <th className="text-center px-4 py-2 w-16">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -276,11 +276,11 @@ export default function Proposals() {
                   <td className="px-4 py-3 text-xs text-muted-foreground">{formatDate(p.data_aprovacao)}</td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
                   <td className="px-4 py-3 text-right font-mono">{brl(p.valor_total)}</td>
-                  <td className="px-4 py-3 text-right" onClick={(e)=>e.stopPropagation()}>
+                  <td className="px-4 py-3 text-center" onClick={(e)=>e.stopPropagation()}>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-danger"
+                      className="h-8 w-8 text-danger hover:text-danger hover:bg-danger/10"
                       onClick={()=>setToDelete(p)}
                       title="Excluir proposta"
                     >
