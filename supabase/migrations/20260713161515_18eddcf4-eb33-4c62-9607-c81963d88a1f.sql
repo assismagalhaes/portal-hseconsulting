@@ -1,0 +1,1 @@
+ALTER TABLE public.projetos DROP CONSTRAINT IF EXISTS projetos_responsavel_execucao_id_fkey;
