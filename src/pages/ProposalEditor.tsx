@@ -696,7 +696,7 @@ export default function ProposalEditor() {
               clienteSolicitante={client?.solicitante}
             />
           )}
-        </aside>
+        </aside>)}
       </div>
 
       <Sheet open={!!pricingOpen} onOpenChange={(o)=>!o && setPricingOpen(null)}>
