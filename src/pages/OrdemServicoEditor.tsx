@@ -73,7 +73,7 @@ export default function OrdemServicoEditor() {
     // internos que têm papel técnico/admin/coordenador — assim ambos podem ser
     // escolhidos como responsáveis por uma visita técnica.
     const execList = ((pp.data as any) || []).map((p: any) => ({
-      id: p.id, nome: p.nome, source: "prof" as const,
+      id: p.id, nome: p.nome, cargo: p.cargo || null, source: "prof" as const,
     }));
     const { data: roles } = await supabase
       .from("user_roles")
@@ -87,7 +87,7 @@ export default function OrdemServicoEditor() {
         .select("id, nome, email")
         .in("id", userIds);
       usersList = (pr || []).map((u: any) => ({
-        id: u.id, nome: u.nome || u.email, source: "user" as const,
+        id: u.id, nome: u.nome || u.email, cargo: null, source: "user" as const,
       }));
     }
     // Dedup por id (execucao_profissionais tem prioridade quando coincidir).
