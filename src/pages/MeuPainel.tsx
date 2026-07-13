@@ -16,7 +16,11 @@ export default function MeuPainel() {
 
   useEffect(() => { (async () => {
     if (!user) return;
-    const { data: p } = await supabase.from("execucao_profissionais").select("*").eq("user_id", user.id).maybeSingle();
+    const { data: p } = await supabase
+      .from("execucao_profissionais")
+      .select("*")
+      .or(`auth_user_id.eq.${user.id},user_id.eq.${user.id}`)
+      .maybeSingle();
     setProf(p);
     // Um profissional técnico pode estar registrado apenas como usuário do
     // sistema (profiles) sem cadastro em execucao_profissionais. Aceita ambos.
