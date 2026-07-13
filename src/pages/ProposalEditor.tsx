@@ -649,7 +649,7 @@ export default function ProposalEditor() {
           )}
         </div>
 
-        <aside className="space-y-4">
+        {!clientView && (<aside className="space-y-4">
           <Card className="shadow-elegant">
             <CardHeader><CardTitle className="text-base font-display flex items-center gap-2"><FileText className="h-4 w-4 text-primary" /> Resumo</CardTitle></CardHeader>
             <CardContent className="space-y-3 text-sm">
