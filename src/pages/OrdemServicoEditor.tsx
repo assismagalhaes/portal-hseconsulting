@@ -127,12 +127,8 @@ export default function OrdemServicoEditor() {
         <Tabs defaultValue="overview">
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="overview"><Eye className="h-4 w-4 mr-1.5" />Visão geral</TabsTrigger>
-            <TabsTrigger value="planejamento"><ListTree className="h-4 w-4 mr-1.5" />Planejamento</TabsTrigger>
-            <TabsTrigger value="equipe"><UsersIcon className="h-4 w-4 mr-1.5" />Equipe</TabsTrigger>
             <TabsTrigger value="checklist"><ClipboardCheck className="h-4 w-4 mr-1.5" />Checklist <span className="ml-1 text-xs text-muted-foreground">({checklistProgress}%)</span></TabsTrigger>
             <TabsTrigger value="visitas"><MapPin className="h-4 w-4 mr-1.5" />Visitas</TabsTrigger>
-            <TabsTrigger value="logistica"><Truck className="h-4 w-4 mr-1.5" />Logística</TabsTrigger>
-            <TabsTrigger value="documentos"><FileIcon className="h-4 w-4 mr-1.5" />Documentos</TabsTrigger>
             <TabsTrigger value="evidencias"><Camera className="h-4 w-4 mr-1.5" />Evidências</TabsTrigger>
             <TabsTrigger value="historico"><History className="h-4 w-4 mr-1.5" />Histórico</TabsTrigger>
           </TabsList>
@@ -193,34 +189,12 @@ export default function OrdemServicoEditor() {
             )}
           </TabsContent>
 
-          <TabsContent value="planejamento" className="space-y-3">
-            <Card><CardContent className="p-4 space-y-3">
-              <Field label="Objetivo do serviço"><Textarea defaultValue={os.objetivo || ""} onBlur={e => save({ objetivo: e.target.value })} /></Field>
-              <Field label="Descrição completa"><Textarea rows={3} defaultValue={os.descricao || ""} onBlur={e => save({ descricao: e.target.value })} /></Field>
-              <Field label="Escopo contratado"><Textarea rows={3} defaultValue={os.escopo_contratado || ""} onBlur={e => save({ escopo_contratado: e.target.value })} /></Field>
-              <Field label="Observações técnicas"><Textarea defaultValue={os.observacoes_tecnicas || ""} onBlur={e => save({ observacoes_tecnicas: e.target.value })} /></Field>
-            </CardContent></Card>
-            <RecursosCard osId={os.id} recursos={recursos} onChange={reload} />
-          </TabsContent>
-
-          <TabsContent value="equipe">
-            <EquipeCard osId={os.id} equipe={equipe} profs={profs} onChange={reload} />
-          </TabsContent>
-
           <TabsContent value="checklist">
             <ChecklistCard osId={os.id} items={checklist} onChange={reload} />
           </TabsContent>
 
           <TabsContent value="visitas">
             <VisitasCard osId={os.id} visitas={visitas} profs={profs} onChange={reload} />
-          </TabsContent>
-
-          <TabsContent value="logistica">
-            <LogisticaCard osId={os.id} logistica={logistica} onChange={reload} />
-          </TabsContent>
-
-          <TabsContent value="documentos">
-            <DocumentosCard osId={os.id} documentos={documentos} onChange={reload} />
           </TabsContent>
 
           <TabsContent value="evidencias">
