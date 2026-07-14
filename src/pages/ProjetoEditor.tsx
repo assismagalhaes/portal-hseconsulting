@@ -365,13 +365,13 @@ export default function ProjetoEditor() {
           </TabsContent>
 
           <TabsContent value="checklist" className="mt-4">
-            <AtividadePainel projeto={projeto} />
+            <AtividadePainel projeto={projeto} secao="checklist" />
           </TabsContent>
           <TabsContent value="visitas" className="mt-4">
-            <AtividadePainel projeto={projeto} />
+            <AtividadePainel projeto={projeto} secao="visitas" />
           </TabsContent>
           <TabsContent value="evidencias" className="mt-4">
-            <AtividadePainel projeto={projeto} />
+            <AtividadePainel projeto={projeto} secao="evidencias" />
           </TabsContent>
 
           <TabsContent value="docs" className="mt-4">
