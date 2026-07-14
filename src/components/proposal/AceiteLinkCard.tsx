@@ -67,7 +67,7 @@ export default function AceiteLinkCard({
   async function carregar() {
     const { data } = await supabase
       .from("proposal_aceites")
-      .select("id, token, status, revisao, aceito_em, recusado_em, visualizado_em, aceito_por_nome, aceito_por_email, motivo_recusa, created_at")
+      .select("id, token, status, revisao, aceito_em, recusado_em, visualizado_em, aceito_por_nome, aceito_por_email, motivo_recusa, created_at, expires_at")
       .eq("proposal_id", proposalId)
       .order("created_at", { ascending: false });
     setItems((data as any) || []);
