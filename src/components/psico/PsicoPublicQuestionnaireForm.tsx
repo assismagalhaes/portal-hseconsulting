@@ -62,8 +62,8 @@ export default function PsicoPublicQuestionnaireForm({
         return;
       }
     }
-    if (etapaIdx < ETAPAS.length - 1) { setEtapaIdx(etapaIdx + 1); window.scrollTo({ top: 0 }); }
-    else setFase("review");
+    if (etapaIdx < ETAPAS.length - 1) { setEtapaIdx(etapaIdx + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }
+    else { setFase("review"); window.scrollTo({ top: 0, behavior: "smooth" }); }
   }
 
   async function enviar() {
@@ -264,12 +264,12 @@ function PerguntaCard({ p, opcoes, valor, onChange, destacado }: { p: Pergunta; 
           <div className="text-sm font-medium mt-1">{p.texto}</div>
           {p.exemplo && <div id={descId} className="text-xs text-muted-foreground mt-1">{p.exemplo}</div>}
         </div>
-        <RadioGroup value={valor || ""} onValueChange={onChange} aria-describedby={descId} className="grid gap-2 sm:grid-cols-5">
+        <RadioGroup value={valor || ""} onValueChange={onChange} aria-describedby={descId} className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
           {opcoes.map((o) => (
             <Label key={o.codigo} htmlFor={`p${p.numero}-${o.codigo}`}
-              className={`flex items-center gap-2 rounded border px-3 py-2 cursor-pointer text-sm ${valor === o.codigo ? "border-primary bg-primary/5" : "border-input"}`}>
-              <RadioGroupItem value={o.codigo} id={`p${p.numero}-${o.codigo}`} />
-              <span>{o.rotulo}</span>
+              className={`flex items-center gap-2 rounded border px-3 py-2 cursor-pointer text-sm min-w-0 ${valor === o.codigo ? "border-primary bg-primary/5" : "border-input"}`}>
+              <RadioGroupItem value={o.codigo} id={`p${p.numero}-${o.codigo}`} className="shrink-0" />
+              <span className="leading-tight break-words">{o.rotulo}</span>
             </Label>
           ))}
         </RadioGroup>
