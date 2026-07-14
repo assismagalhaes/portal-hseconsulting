@@ -5532,6 +5532,7 @@ export type Database = {
           id: string
           nome: string
           ordem: number
+          quantidade_perguntas_prevista: number
           questionario_versao_id: string
           updated_at: string
         }
@@ -5543,6 +5544,7 @@ export type Database = {
           id?: string
           nome: string
           ordem?: number
+          quantidade_perguntas_prevista?: number
           questionario_versao_id: string
           updated_at?: string
         }
@@ -5554,6 +5556,7 @@ export type Database = {
           id?: string
           nome?: string
           ordem?: number
+          quantidade_perguntas_prevista?: number
           questionario_versao_id?: string
           updated_at?: string
         }
@@ -5657,6 +5660,53 @@ export type Database = {
         }
         Relationships: []
       }
+      psico_opcoes_resposta: {
+        Row: {
+          ativo: boolean
+          codigo: string
+          created_at: string
+          id: string
+          metodologia_versao_id: string
+          ordem: number
+          peso_direta: number
+          peso_invertida: number
+          rotulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          codigo: string
+          created_at?: string
+          id?: string
+          metodologia_versao_id: string
+          ordem: number
+          peso_direta: number
+          peso_invertida: number
+          rotulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string
+          created_at?: string
+          id?: string
+          metodologia_versao_id?: string
+          ordem?: number
+          peso_direta?: number
+          peso_invertida?: number
+          rotulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_opcoes_resposta_metodologia_versao_id_fkey"
+            columns: ["metodologia_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_metodologias_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psico_perguntas: {
         Row: {
           ativa: boolean
@@ -5665,7 +5715,9 @@ export type Database = {
           id: string
           numero: number
           obrigatoria: boolean
+          observacao_tecnica: string | null
           ordem: number
+          origem_referencia: string | null
           questionario_versao_id: string
           sentido_pontuacao: Database["public"]["Enums"]["psico_sentido_pontuacao"]
           texto: string
@@ -5679,7 +5731,9 @@ export type Database = {
           id?: string
           numero: number
           obrigatoria?: boolean
+          observacao_tecnica?: string | null
           ordem?: number
+          origem_referencia?: string | null
           questionario_versao_id: string
           sentido_pontuacao?: Database["public"]["Enums"]["psico_sentido_pontuacao"]
           texto: string
@@ -5693,7 +5747,9 @@ export type Database = {
           id?: string
           numero?: number
           obrigatoria?: boolean
+          observacao_tecnica?: string | null
           ordem?: number
+          origem_referencia?: string | null
           questionario_versao_id?: string
           sentido_pontuacao?: Database["public"]["Enums"]["psico_sentido_pontuacao"]
           texto?: string
@@ -5725,17 +5781,25 @@ export type Database = {
           codigo: string
           created_at: string
           criado_por: string | null
+          fonte_referencia: string | null
           id: string
+          metadados: Json | null
           metodologia_versao_id: string | null
           nome: string
+          nota_metodologica: string | null
           orientacao_periodo_referencia: string | null
           publicado_em: string | null
+          publicado_por: string | null
           quantidade_perguntas_prevista: number
+          quantidade_perguntas_publicada: number | null
           status: Database["public"]["Enums"]["psico_questionario_status"]
           subtitulo: string | null
           texto_abertura: string | null
           updated_at: string
+          validado_em: string | null
+          validado_por: string | null
           versao: string
+          vigente: boolean
         }
         Insert: {
           arquivado_em?: string | null
@@ -5744,17 +5808,25 @@ export type Database = {
           codigo: string
           created_at?: string
           criado_por?: string | null
+          fonte_referencia?: string | null
           id?: string
+          metadados?: Json | null
           metodologia_versao_id?: string | null
           nome: string
+          nota_metodologica?: string | null
           orientacao_periodo_referencia?: string | null
           publicado_em?: string | null
+          publicado_por?: string | null
           quantidade_perguntas_prevista?: number
+          quantidade_perguntas_publicada?: number | null
           status?: Database["public"]["Enums"]["psico_questionario_status"]
           subtitulo?: string | null
           texto_abertura?: string | null
           updated_at?: string
+          validado_em?: string | null
+          validado_por?: string | null
           versao: string
+          vigente?: boolean
         }
         Update: {
           arquivado_em?: string | null
@@ -5763,17 +5835,25 @@ export type Database = {
           codigo?: string
           created_at?: string
           criado_por?: string | null
+          fonte_referencia?: string | null
           id?: string
+          metadados?: Json | null
           metodologia_versao_id?: string | null
           nome?: string
+          nota_metodologica?: string | null
           orientacao_periodo_referencia?: string | null
           publicado_em?: string | null
+          publicado_por?: string | null
           quantidade_perguntas_prevista?: number
+          quantidade_perguntas_publicada?: number | null
           status?: Database["public"]["Enums"]["psico_questionario_status"]
           subtitulo?: string | null
           texto_abertura?: string | null
           updated_at?: string
+          validado_em?: string | null
+          validado_por?: string | null
           versao?: string
+          vigente?: boolean
         }
         Relationships: [
           {
@@ -6483,7 +6563,28 @@ export type Database = {
         Returns: undefined
       }
       projetos_gerar_renovacoes: { Args: never; Returns: number }
+      psico_duplicar_questionario: {
+        Args: {
+          _nova_versao: string
+          _novo_codigo: string
+          _novo_nome?: string
+          _questionario_id: string
+        }
+        Returns: string
+      }
       psico_gerar_codigo_avaliacao: { Args: never; Returns: string }
+      psico_publicar_questionario: {
+        Args: { _confirmacao: string; _questionario_id: string }
+        Returns: Json
+      }
+      psico_validar_questionario: {
+        Args: { _questionario_id: string }
+        Returns: Json
+      }
+      psico_vincular_versao_vigente: {
+        Args: { _avaliacao_id: string }
+        Returns: Json
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {

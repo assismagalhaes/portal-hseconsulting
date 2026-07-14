@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
+const sb: any = supabase;
+
 export type PsicoAvaliacaoStatus =
   | "rascunho"
   | "coleta_em_andamento"
@@ -63,3 +65,45 @@ export async function contarPorStatus(): Promise<Record<PsicoAvaliacaoStatus, nu
 
 export function statusLabel(s: string) { return PSICO_STATUS_LABEL[s as PsicoAvaliacaoStatus] || s; }
 export function statusColor(s: string) { return PSICO_STATUS_COLOR[s as PsicoAvaliacaoStatus] || "bg-muted"; }
+
+// ============ Fase 2: configuração ============
+
+export async function getVersaoVigente() {
+  return sb.from("psico_questionarios_versoes").select("*").eq("vigente", true).maybeSingle();
+}
+
+export async function getQuestionarioConfig(codigo = "QPPOT-2.0") {
+  const { data: quest } = await sb.from("psico_questionarios_versoes").select("*").eq("codigo", codigo).maybeSingle();
+  if (!quest) return { quest: null, metod: null, fatores: [], perguntas: [], opcoes: [] };
+  const { data: metod } = await sb.from("psico_metodologias_versoes").select("*").eq("id", quest.metodologia_versao_id).maybeSingle();
+  const [{ data: fatores }, { data: perguntas }, { data: opcoes }] = await Promise.all([
+    sb.from("psico_fatores").select("*").eq("questionario_versao_id", quest.id).order("ordem"),
+    sb.from("psico_perguntas").select("*").eq("questionario_versao_id", quest.id).order("numero"),
+    sb.from("psico_opcoes_resposta").select("*").eq("metodologia_versao_id", quest.metodologia_versao_id).order("ordem"),
+  ]);
+  return { quest, metod, fatores: fatores || [], perguntas: perguntas || [], opcoes: opcoes || [] };
+}
+
+export async function validarQuestionario(id: string) {
+  return sb.rpc("psico_validar_questionario", { _questionario_id: id });
+}
+
+export async function publicarQuestionario(id: string, confirmacao: string) {
+  return sb.rpc("psico_publicar_questionario", { _questionario_id: id, _confirmacao: confirmacao });
+}
+
+export async function duplicarQuestionario(id: string, novoCodigo: string, novaVersao: string, novoNome?: string) {
+  return sb.rpc("psico_duplicar_questionario", { _questionario_id: id, _novo_codigo: novoCodigo, _nova_versao: novaVersao, _novo_nome: novoNome ?? null });
+}
+
+export async function vincularVersaoVigente(avaliacaoId: string) {
+  return sb.rpc("psico_vincular_versao_vigente", { _avaliacao_id: avaliacaoId });
+}
+
+export async function atualizarFator(id: string, patch: Record<string, any>) {
+  return sb.from("psico_fatores").update(patch).eq("id", id);
+}
+
+export async function atualizarPergunta(id: string, patch: Record<string, any>) {
+  return sb.from("psico_perguntas").update(patch).eq("id", id);
+}
