@@ -16,6 +16,7 @@ import { statusColor, statusLabel, vincularVersaoVigente, getVersaoVigente } fro
 import { formatDate, formatDateTime } from "@/lib/format";
 import PsicoParticipantes from "@/components/psico/PsicoParticipantes";
 import PsicoColetaTab from "@/components/psico/PsicoColetaTab";
+import PsicoResultadosTab from "@/components/psico/PsicoResultadosTab";
 
 const BASE = "/operacoes/avaliacao-fatores-psicossociais";
 
@@ -268,7 +269,7 @@ export default function PsicoAvaliacaoDetalhes() {
             <PsicoColetaTab av={av} onReload={load} />
           </TabsContent>
           <TabsContent value="resultados">
-            <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">Os resultados serão apresentados após o encerramento e processamento da coleta.</CardContent></Card>
+            <PsicoResultadosTab av={av} onReload={load} />
           </TabsContent>
           <TabsContent value="revisao">
             <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">A revisão técnica será disponibilizada após o cálculo dos resultados.</CardContent></Card>
