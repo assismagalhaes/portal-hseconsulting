@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ClipboardCheck, MapPin, Camera } from "lucide-react";
 import { ChecklistCard, VisitasCard, EvidenciasCard } from "@/pages/OrdemServicoEditor";
 
 /**
@@ -10,7 +8,7 @@ import { ChecklistCard, VisitasCard, EvidenciasCard } from "@/pages/OrdemServico
  * Consolida Checklist / Visitas / Evidências como abas do próprio projeto,
  * usando uma única "OS" implícita por projeto (criada sob demanda).
  */
-export default function AtividadePainel({ projeto }: { projeto: any }) {
+export default function AtividadePainel({ projeto, secao }: { projeto: any; secao: "checklist" | "visitas" | "evidencias" }) {
   const [osId, setOsId] = useState<string | null>(null);
   const [checklist, setChecklist] = useState<any[]>([]);
   const [visitas, setVisitas] = useState<any[]>([]);
@@ -98,22 +96,7 @@ export default function AtividadePainel({ projeto }: { projeto: any }) {
     return <div className="p-10 text-center text-muted-foreground">Carregando atividade…</div>;
   }
 
-  return (
-    <Tabs defaultValue="checklist">
-      <TabsList>
-        <TabsTrigger value="checklist"><ClipboardCheck className="h-4 w-4 mr-1.5" />Checklist</TabsTrigger>
-        <TabsTrigger value="visitas"><MapPin className="h-4 w-4 mr-1.5" />Visitas</TabsTrigger>
-        <TabsTrigger value="evidencias"><Camera className="h-4 w-4 mr-1.5" />Evidências</TabsTrigger>
-      </TabsList>
-      <TabsContent value="checklist" className="mt-4">
-        <ChecklistCard osId={osId} items={checklist} onChange={reload} />
-      </TabsContent>
-      <TabsContent value="visitas" className="mt-4">
-        <VisitasCard osId={osId} visitas={visitas} profs={profs} projRespId={projeto.responsavel_execucao_id} onChange={reload} />
-      </TabsContent>
-      <TabsContent value="evidencias" className="mt-4">
-        <EvidenciasCard osId={osId} evidencias={evidencias} visitas={visitas} onChange={reload} />
-      </TabsContent>
-    </Tabs>
-  );
+  if (secao === "checklist") return <ChecklistCard osId={osId} items={checklist} onChange={reload} />;
+  if (secao === "visitas") return <VisitasCard osId={osId} visitas={visitas} profs={profs} projRespId={projeto.responsavel_execucao_id} onChange={reload} />;
+  return <EvidenciasCard osId={osId} evidencias={evidencias} visitas={visitas} onChange={reload} />;
 }
