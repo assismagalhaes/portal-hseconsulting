@@ -19,8 +19,9 @@ import { ArrowLeft, Save, Plus, Trash2, Printer, QrCode, Upload, MapPin, Clipboa
 import { formatDate, formatDateTime } from "@/lib/format";
 import { osStatusLabel, osStatusColor, osPrioridadeLabel, osPrioridadeColor, osRecursoTipoLabel, osVisitaSituacaoLabel, osDocCategoriaLabel, osEvidenciaTipoLabel } from "@/lib/os";
 
-export default function OrdemServicoEditor() {
-  const { id } = useParams();
+export default function OrdemServicoEditor({ id: idProp, embedded }: { id?: string; embedded?: boolean } = {}) {
+  const params = useParams();
+  const id = idProp ?? params.id;
   const navigate = useNavigate();
   const [os, setOs] = useState<any>(null);
   const [profs, setProfs] = useState<any[]>([]);
@@ -133,18 +134,19 @@ export default function OrdemServicoEditor() {
 
   return (
     <>
-      <PageHeader title={`${os.numero} — ${os.titulo}`} subtitle={os.projetos ? `Projeto ${os.projetos.numero} • ${os.projetos.titulo}` : os.execucao_servicos ? `Execução ${os.execucao_servicos.numero_interno} • ${os.execucao_servicos.titulo}` : undefined}
-        actions={
-          <>
-            <Button variant="outline" size="sm" onClick={() => navigate("/ordens-servico")}><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>
-            {os.projetos && (
-              <Button variant="outline" size="sm" onClick={() => navigate(`/projetos/${os.projetos.id}`)}>Ver projeto</Button>
-            )}
-            <Button variant="outline" size="sm" onClick={() => window.open(`/ordens-servico/${os.id}/imprimir`, "_blank")}><Printer className="h-4 w-4 mr-2" />Imprimir OS</Button>
-          </>
-        } />
+      {!embedded && (
+        <PageHeader title={`${os.numero} — ${os.titulo}`} subtitle={os.projetos ? `Projeto ${os.projetos.numero} • ${os.projetos.titulo}` : os.execucao_servicos ? `Execução ${os.execucao_servicos.numero_interno} • ${os.execucao_servicos.titulo}` : undefined}
+          actions={
+            <>
+              {os.projetos && (
+                <Button variant="outline" size="sm" onClick={() => navigate(`/projetos/${os.projetos.id}`)}><ArrowLeft className="h-4 w-4 mr-2" />Ver projeto</Button>
+              )}
+              <Button variant="outline" size="sm" onClick={() => window.open(`/ordens-servico/${os.id}/imprimir`, "_blank")}><Printer className="h-4 w-4 mr-2" />Imprimir</Button>
+            </>
+          } />
+      )}
 
-      <div className="p-6 space-y-4">
+      <div className={embedded ? "space-y-4" : "p-6 space-y-4"}>
         {/* Barra de status */}
         <Card><CardContent className="p-4 flex flex-wrap gap-6 items-center">
           <div className="flex items-center gap-2">
