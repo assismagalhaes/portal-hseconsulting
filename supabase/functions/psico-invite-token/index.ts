@@ -51,8 +51,13 @@ Deno.serve(async (req) => {
       .in('id', conviteIds)
     if (error) throw error
 
-    const base = PUBLIC_BASE || new URL(req.url).origin.replace(/\/functions.*$/, '')
-    const origin = req.headers.get('origin') || base
+    // Preferir SEMPRE a URL pública publicada (evita gerar links apontando
+    // para o preview privado do Lovable, que exige login do Lovable).
+    const reqOrigin = req.headers.get('origin') || ''
+    const isPreviewOrigin = /id-preview--.*\.lovable\.app$/i.test(reqOrigin) || /localhost(:\d+)?$/i.test(reqOrigin)
+    const origin = PUBLIC_BASE
+      || (reqOrigin && !isPreviewOrigin ? reqOrigin : '')
+      || new URL(req.url).origin.replace(/\/functions.*$/, '')
 
     const result = [] as any[]
     for (const r of data || []) {
