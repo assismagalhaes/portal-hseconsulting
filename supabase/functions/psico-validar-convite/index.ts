@@ -6,6 +6,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const SECRET = Deno.env.get('PSICO_INVITE_SIGNING_SECRET') || ''
+const SESSION_SECRET = Deno.env.get('PSICO_FORM_SESSION_SECRET') || ''
 const RL_SECRET = Deno.env.get('PSICO_RATE_LIMIT_SECRET') || SECRET
 const ALLOWED = (Deno.env.get('PSICO_PUBLIC_ALLOWED_ORIGINS') ||
   'https://portal.hseconsulting.com.br,https://portal-hseconsulting.lovable.app')
@@ -66,6 +67,17 @@ async function verify(token: string): Promise<{ publicId: string; ver: number } 
   return diff === 0 ? { publicId, ver } : null
 }
 
+async function signSession(payload: Record<string, unknown>): Promise<string> {
+  const header = { alg: 'HS256', typ: 'JWT' }
+  const b64 = (o: unknown) =>
+    btoa(JSON.stringify(o)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+  const h = b64(header)
+  const p = b64(payload)
+  const msg = `${h}.${p}`
+  const sig = await hmacB64(SESSION_SECRET, msg)
+  return `${msg}.${sig}`
+}
+
 function invalid(origin: string | null): Response {
   return new Response(
     JSON.stringify({ valido: false, estado: 'invalido', mensagem: 'Não foi possível validar este acesso.' }),
@@ -120,7 +132,7 @@ Deno.serve(async (req) => {
 
     const { data: conv } = await admin
       .from('psico_convites')
-      .select('id, status, token_version, avaliacao_id')
+      .select('id, status, token_version, avaliacao_id, expira_em')
       .eq('public_id', parsed.publicId)
       .maybeSingle()
     if (!conv || conv.token_version !== parsed.ver) return invalid(origin)
@@ -132,11 +144,17 @@ Deno.serve(async (req) => {
 
     const { data: av } = await admin
       .from('psico_avaliacoes')
-      .select('id, titulo, status, cliente_id')
+      .select('id, titulo, status, cliente_id, questionario_versao_id, metodologia_versao_id, coleta_expira_em')
       .eq('id', conv.avaliacao_id)
       .maybeSingle()
     if (!av) return invalid(origin)
     if (av.status === 'cancelada') estado = 'cancelado'
+    else if (conv.status === 'ativo' && av.status === 'coleta_em_andamento') {
+      const now = Date.now()
+      const prazo = av.coleta_expira_em ? new Date(av.coleta_expira_em).getTime() : null
+      if (prazo && now > prazo) estado = 'prazo_encerrado'
+      else estado = 'disponivel'
+    }
 
     let empresa: string | null = null
     if (av.cliente_id) {
@@ -151,9 +169,57 @@ Deno.serve(async (req) => {
     const mensagemPorEstado: Record<string, string> = {
       aguardando_abertura: 'Seu acesso individual foi validado. Esta avaliação ainda não está aberta para preenchimento.',
       ja_respondido: 'Este convite já foi utilizado.',
+      disponivel: 'Sua avaliação está disponível.',
+      prazo_encerrado: 'O prazo desta avaliação foi encerrado.',
       expirado: 'Este convite expirou.',
       revogado: 'Este convite foi cancelado. Solicite um novo link.',
       cancelado: 'Esta avaliação foi cancelada.',
+    }
+
+    // Estado disponível: gerar sessão e conteúdo público do questionário
+    if (estado === 'disponivel' && SESSION_SECRET) {
+      await admin.rpc('psico_registrar_acesso_convite', {
+        p_public_id: parsed.publicId, p_token_version: parsed.ver,
+      })
+      const nonce = crypto.getRandomValues(new Uint8Array(16))
+      const nonceStr = btoa(String.fromCharCode(...nonce)).replace(/=+$/, '')
+      const nowSec = Math.floor(Date.now() / 1000)
+      const sessao = await signSession({
+        v: 1,
+        pid: parsed.publicId,
+        tv: parsed.ver,
+        av: av.id,
+        qv: av.questionario_versao_id,
+        iat: nowSec,
+        exp: nowSec + 4 * 3600,
+        n: nonceStr,
+      })
+      const [{ data: perguntas }, { data: opcoes }] = await Promise.all([
+        admin.from('psico_perguntas')
+          .select('numero, texto, texto_apoio_exemplo')
+          .eq('questionario_versao_id', av.questionario_versao_id)
+          .eq('ativa', true).order('numero'),
+        admin.from('psico_opcoes_resposta')
+          .select('codigo, rotulo, ordem')
+          .eq('metodologia_versao_id', av.metodologia_versao_id)
+          .eq('ativo', true).order('ordem'),
+      ])
+      return new Response(JSON.stringify({
+        valido: true,
+        estado: 'disponivel',
+        sessao,
+        empresa,
+        questionario: {
+          nome: 'Questionário de Percepção Psicoorganizacional no Trabalho',
+          subtitulo: 'Instrumento coletivo de percepção sobre fatores psicossociais relacionados às condições e à organização do trabalho.',
+          quantidade_perguntas: 35,
+          tempo_estimado_minutos: 10,
+          perguntas: (perguntas || []).map((p: any) => ({
+            numero: p.numero, texto: p.texto, exemplo: p.texto_apoio_exemplo || null,
+          })),
+          opcoes: (opcoes || []).map((o: any) => ({ codigo: o.codigo, rotulo: o.rotulo })),
+        },
+      }), { status: 200, headers: baseHeaders(origin) })
     }
 
     return new Response(

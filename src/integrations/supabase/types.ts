@@ -5430,6 +5430,13 @@ export type Database = {
           cancelado_por: string | null
           cliente_id: string
           codigo: string
+          coleta_aberta_em: string | null
+          coleta_aberta_por: string | null
+          coleta_encerrada_em: string | null
+          coleta_encerrada_por: string | null
+          coleta_expira_em: string | null
+          coleta_prorrogada_em: string | null
+          coleta_prorrogada_por: string | null
           created_at: string
           criado_por: string | null
           data_fim_prevista: string | null
@@ -5438,9 +5445,13 @@ export type Database = {
           mensagem_convite: string | null
           metodologia_versao_id: string | null
           motivo_cancelamento: string | null
+          motivo_encerramento: string | null
+          motivo_prorrogacao: string | null
           observacoes_internas: string | null
           participantes_configurados_em: string | null
           participantes_configurados_por: string | null
+          quantidade_convites_abertura: number | null
+          quantidade_participantes_abertura: number | null
           quantidade_participantes_prevista: number
           questionario_versao_id: string | null
           responsavel_hse_id: string | null
@@ -5457,6 +5468,13 @@ export type Database = {
           cancelado_por?: string | null
           cliente_id: string
           codigo?: string
+          coleta_aberta_em?: string | null
+          coleta_aberta_por?: string | null
+          coleta_encerrada_em?: string | null
+          coleta_encerrada_por?: string | null
+          coleta_expira_em?: string | null
+          coleta_prorrogada_em?: string | null
+          coleta_prorrogada_por?: string | null
           created_at?: string
           criado_por?: string | null
           data_fim_prevista?: string | null
@@ -5465,9 +5483,13 @@ export type Database = {
           mensagem_convite?: string | null
           metodologia_versao_id?: string | null
           motivo_cancelamento?: string | null
+          motivo_encerramento?: string | null
+          motivo_prorrogacao?: string | null
           observacoes_internas?: string | null
           participantes_configurados_em?: string | null
           participantes_configurados_por?: string | null
+          quantidade_convites_abertura?: number | null
+          quantidade_participantes_abertura?: number | null
           quantidade_participantes_prevista?: number
           questionario_versao_id?: string | null
           responsavel_hse_id?: string | null
@@ -5484,6 +5506,13 @@ export type Database = {
           cancelado_por?: string | null
           cliente_id?: string
           codigo?: string
+          coleta_aberta_em?: string | null
+          coleta_aberta_por?: string | null
+          coleta_encerrada_em?: string | null
+          coleta_encerrada_por?: string | null
+          coleta_expira_em?: string | null
+          coleta_prorrogada_em?: string | null
+          coleta_prorrogada_por?: string | null
           created_at?: string
           criado_por?: string | null
           data_fim_prevista?: string | null
@@ -5492,9 +5521,13 @@ export type Database = {
           mensagem_convite?: string | null
           metodologia_versao_id?: string | null
           motivo_cancelamento?: string | null
+          motivo_encerramento?: string | null
+          motivo_prorrogacao?: string | null
           observacoes_internas?: string | null
           participantes_configurados_em?: string | null
           participantes_configurados_por?: string | null
+          quantidade_convites_abertura?: number | null
+          quantidade_participantes_abertura?: number | null
           quantidade_participantes_prevista?: number
           questionario_versao_id?: string | null
           responsavel_hse_id?: string | null
@@ -6172,6 +6205,119 @@ export type Database = {
           window_start?: string
         }
         Relationships: []
+      }
+      psico_respostas: {
+        Row: {
+          avaliacao_id: string
+          data_resposta: string
+          funcao: string | null
+          funcao_normalizada: string | null
+          id: string
+          metodologia_versao_id: string
+          quantidade_itens: number
+          questionario_versao_id: string
+          setor: string | null
+          setor_normalizado: string | null
+          unidade: string | null
+          unidade_normalizada: string | null
+          versao_aviso_confidencialidade: string | null
+        }
+        Insert: {
+          avaliacao_id: string
+          data_resposta: string
+          funcao?: string | null
+          funcao_normalizada?: string | null
+          id?: string
+          metodologia_versao_id: string
+          quantidade_itens?: number
+          questionario_versao_id: string
+          setor?: string | null
+          setor_normalizado?: string | null
+          unidade?: string | null
+          unidade_normalizada?: string | null
+          versao_aviso_confidencialidade?: string | null
+        }
+        Update: {
+          avaliacao_id?: string
+          data_resposta?: string
+          funcao?: string | null
+          funcao_normalizada?: string | null
+          id?: string
+          metodologia_versao_id?: string
+          quantidade_itens?: number
+          questionario_versao_id?: string
+          setor?: string | null
+          setor_normalizado?: string | null
+          unidade?: string | null
+          unidade_normalizada?: string | null
+          versao_aviso_confidencialidade?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_respostas_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_respostas_metodologia_versao_id_fkey"
+            columns: ["metodologia_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_metodologias_versoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_respostas_questionario_versao_id_fkey"
+            columns: ["questionario_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_questionarios_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_respostas_itens: {
+        Row: {
+          id: string
+          opcao_resposta_id: string
+          pergunta_id: string
+          resposta_id: string
+        }
+        Insert: {
+          id?: string
+          opcao_resposta_id: string
+          pergunta_id: string
+          resposta_id: string
+        }
+        Update: {
+          id?: string
+          opcao_resposta_id?: string
+          pergunta_id?: string
+          resposta_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_respostas_itens_opcao_resposta_id_fkey"
+            columns: ["opcao_resposta_id"]
+            isOneToOne: false
+            referencedRelation: "psico_opcoes_resposta"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_respostas_itens_pergunta_id_fkey"
+            columns: ["pergunta_id"]
+            isOneToOne: false
+            referencedRelation: "psico_perguntas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_respostas_itens_resposta_id_fkey"
+            columns: ["resposta_id"]
+            isOneToOne: false
+            referencedRelation: "psico_respostas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       service_categories: {
         Row: {
@@ -6871,6 +7017,10 @@ export type Database = {
         Returns: undefined
       }
       projetos_gerar_renovacoes: { Args: never; Returns: number }
+      psico_abrir_coleta: {
+        Args: { p_avaliacao_id: string; p_confirmacao: string }
+        Returns: Json
+      }
       psico_atualizar_participante: {
         Args: {
           _email: string
@@ -6893,10 +7043,34 @@ export type Database = {
         }
         Returns: string
       }
+      psico_encerrar_coleta: {
+        Args: {
+          p_avaliacao_id: string
+          p_confirmacao: string
+          p_motivo?: string
+        }
+        Returns: Json
+      }
+      psico_finalizar_submissao: {
+        Args: {
+          p_public_id: string
+          p_respostas: Json
+          p_token_version: number
+        }
+        Returns: Json
+      }
       psico_gerar_codigo_avaliacao: { Args: never; Returns: string }
       psico_norm_email: { Args: { v: string }; Returns: string }
       psico_norm_fone: { Args: { v: string }; Returns: string }
       psico_norm_texto: { Args: { v: string }; Returns: string }
+      psico_prorrogar_coleta: {
+        Args: {
+          p_avaliacao_id: string
+          p_motivo: string
+          p_nova_data_fim: string
+        }
+        Returns: Json
+      }
       psico_publicar_questionario: {
         Args: { _confirmacao: string; _questionario_id: string }
         Returns: Json
@@ -6910,6 +7084,11 @@ export type Database = {
         }
         Returns: boolean
       }
+      psico_registrar_acesso_convite: {
+        Args: { p_public_id: string; p_token_version: number }
+        Returns: undefined
+      }
+      psico_resumo_coleta: { Args: { p_avaliacao_id: string }; Returns: Json }
       psico_validar_questionario: {
         Args: { _questionario_id: string }
         Returns: Json

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import PsicoPublicQuestionnaireForm, { QuestionarioPublico } from "@/components/psico/PsicoPublicQuestionnaireForm";
 
 type Resultado = {
   valido: boolean;
@@ -7,6 +8,8 @@ type Resultado = {
   titulo_avaliacao?: string;
   empresa?: string | null;
   mensagem?: string;
+  sessao?: string;
+  questionario?: QuestionarioPublico;
 };
 
 export default function PsicoConvitePublico() {
@@ -54,7 +57,7 @@ export default function PsicoConvitePublico() {
         </div>
         {loading ? (
           <p className="text-sm text-muted-foreground">Validando seu acesso…</p>
-        ) : res?.valido ? (
+        ) : res?.valido && res.estado === "disponivel" && res.sessao && res.questionario ? null : res?.valido ? (
           <div className="space-y-4 rounded-lg border p-6 bg-card">
             <div className="text-emerald-600 text-sm font-medium">Seu acesso individual foi validado.</div>
             <p className="text-sm">{res.mensagem}</p>
@@ -76,6 +79,11 @@ export default function PsicoConvitePublico() {
           A empresa recebe somente resultados coletivos consolidados.
         </p>
       </div>
+      {!loading && res?.valido && res.estado === "disponivel" && res.sessao && res.questionario && (
+        <div className="fixed inset-0 overflow-auto bg-background z-10">
+          <PsicoPublicQuestionnaireForm questionario={res.questionario} sessao={res.sessao} empresa={res.empresa || null} />
+        </div>
+      )}
     </div>
   );
 }
