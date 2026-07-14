@@ -119,7 +119,7 @@ export const template = {
     propostaTitulo: 'Elaboração de PGR e PCMSO',
     valorTotal: 'R$ 24.800,00',
     validade: '31/12/2026',
-    linkAceite: 'https://portal-hseconsulting.lovable.app/aceite/exemplo-token',
+    linkAceite: 'https://portal.hseconsulting.com.br/aceite/exemplo-token',
     remetenteNome: 'Equipe HSE Consulting',
     mensagemPersonalizada: 'Segue conforme conversado. Fico à disposição.',
   },
