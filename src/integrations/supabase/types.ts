@@ -5450,16 +5450,20 @@ export type Database = {
           observacoes_internas: string | null
           participantes_configurados_em: string | null
           participantes_configurados_por: string | null
+          processamento_resultado_ativo_id: string | null
           quantidade_convites_abertura: number | null
           quantidade_participantes_abertura: number | null
           quantidade_participantes_prevista: number
           questionario_versao_id: string | null
           responsavel_hse_id: string | null
+          resultado_processado_em: string | null
+          resultado_processado_por: string | null
           servico_execucao_id: string | null
           status: Database["public"]["Enums"]["psico_avaliacao_status"]
           titulo: string
           unidade: string
           updated_at: string
+          versao_motor_resultado: string | null
         }
         Insert: {
           assunto_convite?: string | null
@@ -5488,16 +5492,20 @@ export type Database = {
           observacoes_internas?: string | null
           participantes_configurados_em?: string | null
           participantes_configurados_por?: string | null
+          processamento_resultado_ativo_id?: string | null
           quantidade_convites_abertura?: number | null
           quantidade_participantes_abertura?: number | null
           quantidade_participantes_prevista?: number
           questionario_versao_id?: string | null
           responsavel_hse_id?: string | null
+          resultado_processado_em?: string | null
+          resultado_processado_por?: string | null
           servico_execucao_id?: string | null
           status?: Database["public"]["Enums"]["psico_avaliacao_status"]
           titulo: string
           unidade?: string
           updated_at?: string
+          versao_motor_resultado?: string | null
         }
         Update: {
           assunto_convite?: string | null
@@ -5526,18 +5534,29 @@ export type Database = {
           observacoes_internas?: string | null
           participantes_configurados_em?: string | null
           participantes_configurados_por?: string | null
+          processamento_resultado_ativo_id?: string | null
           quantidade_convites_abertura?: number | null
           quantidade_participantes_abertura?: number | null
           quantidade_participantes_prevista?: number
           questionario_versao_id?: string | null
           responsavel_hse_id?: string | null
+          resultado_processado_em?: string | null
+          resultado_processado_por?: string | null
           servico_execucao_id?: string | null
           status?: Database["public"]["Enums"]["psico_avaliacao_status"]
           titulo?: string
           unidade?: string
           updated_at?: string
+          versao_motor_resultado?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "psico_aval_proc_ativo_fk"
+            columns: ["processamento_resultado_ativo_id"]
+            isOneToOne: false
+            referencedRelation: "psico_resultado_processamentos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "psico_avaliacoes_cliente_id_fkey"
             columns: ["cliente_id"]
@@ -6319,6 +6338,409 @@ export type Database = {
           },
         ]
       }
+      psico_resultado_escopos: {
+        Row: {
+          amostra_reduzida: boolean
+          chave_normalizada: string | null
+          classificacao_indice_geral: Database["public"]["Enums"]["psico_classificacao_risco"]
+          created_at: string
+          fatores_significativos: number
+          id: string
+          indice_geral_descritivo: number
+          minimo_aplicado: number
+          participantes_elegiveis: number | null
+          percentual_participacao: number | null
+          prioridade_maxima: Database["public"]["Enums"]["psico_prioridade_fator"]
+          processamento_id: string
+          respondentes: number
+          rotulo: string
+          tipo: Database["public"]["Enums"]["psico_resultado_escopo_tipo"]
+          total_itens: number
+        }
+        Insert: {
+          amostra_reduzida?: boolean
+          chave_normalizada?: string | null
+          classificacao_indice_geral: Database["public"]["Enums"]["psico_classificacao_risco"]
+          created_at?: string
+          fatores_significativos?: number
+          id?: string
+          indice_geral_descritivo: number
+          minimo_aplicado: number
+          participantes_elegiveis?: number | null
+          percentual_participacao?: number | null
+          prioridade_maxima?: Database["public"]["Enums"]["psico_prioridade_fator"]
+          processamento_id: string
+          respondentes: number
+          rotulo: string
+          tipo: Database["public"]["Enums"]["psico_resultado_escopo_tipo"]
+          total_itens: number
+        }
+        Update: {
+          amostra_reduzida?: boolean
+          chave_normalizada?: string | null
+          classificacao_indice_geral?: Database["public"]["Enums"]["psico_classificacao_risco"]
+          created_at?: string
+          fatores_significativos?: number
+          id?: string
+          indice_geral_descritivo?: number
+          minimo_aplicado?: number
+          participantes_elegiveis?: number | null
+          percentual_participacao?: number | null
+          prioridade_maxima?: Database["public"]["Enums"]["psico_prioridade_fator"]
+          processamento_id?: string
+          respondentes?: number
+          rotulo?: string
+          tipo?: Database["public"]["Enums"]["psico_resultado_escopo_tipo"]
+          total_itens?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_resultado_escopos_processamento_id_fkey"
+            columns: ["processamento_id"]
+            isOneToOne: false
+            referencedRelation: "psico_resultado_processamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_resultado_processamentos: {
+        Row: {
+          ativo: boolean
+          avaliacao_id: string
+          concluido_em: string | null
+          created_at: string
+          erro_codigo: string | null
+          escopos_funcao_elegiveis: number
+          escopos_setor_elegiveis: number
+          escopos_suprimidos: number
+          escopos_unidade_elegiveis: number
+          hash_entrada: string
+          id: string
+          iniciado_em: string
+          iniciado_por: string | null
+          metadados: Json | null
+          metodologia_versao_id: string
+          questionario_versao_id: string
+          status: Database["public"]["Enums"]["psico_resultado_proc_status"]
+          substituido_em: string | null
+          total_escopos: number
+          total_itens: number
+          total_respondentes: number
+          updated_at: string
+          versao_motor: string
+        }
+        Insert: {
+          ativo?: boolean
+          avaliacao_id: string
+          concluido_em?: string | null
+          created_at?: string
+          erro_codigo?: string | null
+          escopos_funcao_elegiveis?: number
+          escopos_setor_elegiveis?: number
+          escopos_suprimidos?: number
+          escopos_unidade_elegiveis?: number
+          hash_entrada: string
+          id?: string
+          iniciado_em?: string
+          iniciado_por?: string | null
+          metadados?: Json | null
+          metodologia_versao_id: string
+          questionario_versao_id: string
+          status?: Database["public"]["Enums"]["psico_resultado_proc_status"]
+          substituido_em?: string | null
+          total_escopos?: number
+          total_itens?: number
+          total_respondentes?: number
+          updated_at?: string
+          versao_motor: string
+        }
+        Update: {
+          ativo?: boolean
+          avaliacao_id?: string
+          concluido_em?: string | null
+          created_at?: string
+          erro_codigo?: string | null
+          escopos_funcao_elegiveis?: number
+          escopos_setor_elegiveis?: number
+          escopos_suprimidos?: number
+          escopos_unidade_elegiveis?: number
+          hash_entrada?: string
+          id?: string
+          iniciado_em?: string
+          iniciado_por?: string | null
+          metadados?: Json | null
+          metodologia_versao_id?: string
+          questionario_versao_id?: string
+          status?: Database["public"]["Enums"]["psico_resultado_proc_status"]
+          substituido_em?: string | null
+          total_escopos?: number
+          total_itens?: number
+          total_respondentes?: number
+          updated_at?: string
+          versao_motor?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_resultado_processamentos_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_resultado_processamentos_metodologia_versao_id_fkey"
+            columns: ["metodologia_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_metodologias_versoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_resultado_processamentos_questionario_versao_id_fkey"
+            columns: ["questionario_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_questionarios_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_resultados_fatores: {
+        Row: {
+          classificacao_media: Database["public"]["Enums"]["psico_classificacao_risco"]
+          created_at: string
+          criterio_agravamento: boolean
+          criterio_critico_automatico: boolean
+          criterio_principal: boolean
+          criterios_acionados: string[]
+          escopo_id: string
+          fator_id: string
+          id: string
+          ordem: number
+          percentual_alto: number
+          percentual_alto_critico: number
+          percentual_baixo: number
+          percentual_critico: number
+          percentual_irrelevante: number
+          percentual_medio: number
+          percentual_medio_alto_critico: number
+          prioridade: Database["public"]["Enums"]["psico_prioridade_fator"]
+          quantidade_alto: number
+          quantidade_baixo: number
+          quantidade_critico: number
+          quantidade_irrelevante: number
+          quantidade_medio: number
+          quantidade_perguntas: number
+          score_medio: number
+          significativo: boolean
+          soma_pesos: number
+          total_respostas_validas: number
+        }
+        Insert: {
+          classificacao_media: Database["public"]["Enums"]["psico_classificacao_risco"]
+          created_at?: string
+          criterio_agravamento?: boolean
+          criterio_critico_automatico?: boolean
+          criterio_principal?: boolean
+          criterios_acionados?: string[]
+          escopo_id: string
+          fator_id: string
+          id?: string
+          ordem: number
+          percentual_alto?: number
+          percentual_alto_critico?: number
+          percentual_baixo?: number
+          percentual_critico?: number
+          percentual_irrelevante?: number
+          percentual_medio?: number
+          percentual_medio_alto_critico?: number
+          prioridade?: Database["public"]["Enums"]["psico_prioridade_fator"]
+          quantidade_alto?: number
+          quantidade_baixo?: number
+          quantidade_critico?: number
+          quantidade_irrelevante?: number
+          quantidade_medio?: number
+          quantidade_perguntas: number
+          score_medio: number
+          significativo?: boolean
+          soma_pesos: number
+          total_respostas_validas: number
+        }
+        Update: {
+          classificacao_media?: Database["public"]["Enums"]["psico_classificacao_risco"]
+          created_at?: string
+          criterio_agravamento?: boolean
+          criterio_critico_automatico?: boolean
+          criterio_principal?: boolean
+          criterios_acionados?: string[]
+          escopo_id?: string
+          fator_id?: string
+          id?: string
+          ordem?: number
+          percentual_alto?: number
+          percentual_alto_critico?: number
+          percentual_baixo?: number
+          percentual_critico?: number
+          percentual_irrelevante?: number
+          percentual_medio?: number
+          percentual_medio_alto_critico?: number
+          prioridade?: Database["public"]["Enums"]["psico_prioridade_fator"]
+          quantidade_alto?: number
+          quantidade_baixo?: number
+          quantidade_critico?: number
+          quantidade_irrelevante?: number
+          quantidade_medio?: number
+          quantidade_perguntas?: number
+          score_medio?: number
+          significativo?: boolean
+          soma_pesos?: number
+          total_respostas_validas?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_resultados_fatores_escopo_id_fkey"
+            columns: ["escopo_id"]
+            isOneToOne: false
+            referencedRelation: "psico_resultado_escopos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_resultados_fatores_fator_id_fkey"
+            columns: ["fator_id"]
+            isOneToOne: false
+            referencedRelation: "psico_fatores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_resultados_perguntas: {
+        Row: {
+          classificacao_media: Database["public"]["Enums"]["psico_classificacao_risco"]
+          created_at: string
+          escopo_id: string
+          fator_id: string | null
+          id: string
+          numero: number
+          percentual_alto_critico: number
+          percentual_as_vezes: number
+          percentual_critico: number
+          percentual_desfavoravel: number
+          percentual_frequentemente: number
+          percentual_nunca: number
+          percentual_peso_0: number
+          percentual_peso_1: number
+          percentual_peso_2: number
+          percentual_peso_3: number
+          percentual_peso_4: number
+          percentual_raramente: number
+          percentual_sempre: number
+          pergunta_id: string
+          quantidade_as_vezes: number
+          quantidade_frequentemente: number
+          quantidade_nunca: number
+          quantidade_peso_0: number
+          quantidade_peso_1: number
+          quantidade_peso_2: number
+          quantidade_peso_3: number
+          quantidade_peso_4: number
+          quantidade_raramente: number
+          quantidade_sempre: number
+          score_medio: number
+          soma_pesos: number
+          total_respostas_validas: number
+        }
+        Insert: {
+          classificacao_media: Database["public"]["Enums"]["psico_classificacao_risco"]
+          created_at?: string
+          escopo_id: string
+          fator_id?: string | null
+          id?: string
+          numero: number
+          percentual_alto_critico?: number
+          percentual_as_vezes?: number
+          percentual_critico?: number
+          percentual_desfavoravel?: number
+          percentual_frequentemente?: number
+          percentual_nunca?: number
+          percentual_peso_0?: number
+          percentual_peso_1?: number
+          percentual_peso_2?: number
+          percentual_peso_3?: number
+          percentual_peso_4?: number
+          percentual_raramente?: number
+          percentual_sempre?: number
+          pergunta_id: string
+          quantidade_as_vezes?: number
+          quantidade_frequentemente?: number
+          quantidade_nunca?: number
+          quantidade_peso_0?: number
+          quantidade_peso_1?: number
+          quantidade_peso_2?: number
+          quantidade_peso_3?: number
+          quantidade_peso_4?: number
+          quantidade_raramente?: number
+          quantidade_sempre?: number
+          score_medio: number
+          soma_pesos: number
+          total_respostas_validas: number
+        }
+        Update: {
+          classificacao_media?: Database["public"]["Enums"]["psico_classificacao_risco"]
+          created_at?: string
+          escopo_id?: string
+          fator_id?: string | null
+          id?: string
+          numero?: number
+          percentual_alto_critico?: number
+          percentual_as_vezes?: number
+          percentual_critico?: number
+          percentual_desfavoravel?: number
+          percentual_frequentemente?: number
+          percentual_nunca?: number
+          percentual_peso_0?: number
+          percentual_peso_1?: number
+          percentual_peso_2?: number
+          percentual_peso_3?: number
+          percentual_peso_4?: number
+          percentual_raramente?: number
+          percentual_sempre?: number
+          pergunta_id?: string
+          quantidade_as_vezes?: number
+          quantidade_frequentemente?: number
+          quantidade_nunca?: number
+          quantidade_peso_0?: number
+          quantidade_peso_1?: number
+          quantidade_peso_2?: number
+          quantidade_peso_3?: number
+          quantidade_peso_4?: number
+          quantidade_raramente?: number
+          quantidade_sempre?: number
+          score_medio?: number
+          soma_pesos?: number
+          total_respostas_validas?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_resultados_perguntas_escopo_id_fkey"
+            columns: ["escopo_id"]
+            isOneToOne: false
+            referencedRelation: "psico_resultado_escopos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_resultados_perguntas_fator_id_fkey"
+            columns: ["fator_id"]
+            isOneToOne: false
+            referencedRelation: "psico_fatores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_resultados_perguntas_pergunta_id_fkey"
+            columns: ["pergunta_id"]
+            isOneToOne: false
+            referencedRelation: "psico_perguntas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_categories: {
         Row: {
           created_at: string
@@ -7039,6 +7461,10 @@ export type Database = {
         Args: { _avaliacao_id: string }
         Returns: boolean
       }
+      psico_classificar_score: {
+        Args: { p_metodologia_versao_id: string; p_score: number }
+        Returns: Database["public"]["Enums"]["psico_classificacao_risco"]
+      }
       psico_corrigir_participante_pos_coleta: {
         Args: {
           p_email: string
@@ -7443,6 +7869,12 @@ export type Database = {
         | "resultado_pronto"
         | "relatorio_emitido"
         | "cancelada"
+      psico_classificacao_risco:
+        | "Risco Irrelevante"
+        | "Risco Baixo"
+        | "Risco Médio"
+        | "Risco Alto"
+        | "Risco Crítico"
       psico_convite_canal:
         | "whatsapp"
         | "email"
@@ -7464,7 +7896,14 @@ export type Database = {
         | "cancelada"
       psico_metodologia_status: "em_configuracao" | "ativa" | "arquivada"
       psico_participante_origem: "manual" | "importacao"
+      psico_prioridade_fator: "Monitoramento" | "Média" | "Alta" | "Crítica"
       psico_questionario_status: "em_configuracao" | "publicada" | "arquivada"
+      psico_resultado_escopo_tipo: "global" | "funcao" | "setor" | "unidade"
+      psico_resultado_proc_status:
+        | "processando"
+        | "concluido"
+        | "falhou"
+        | "substituido"
       psico_sentido_pontuacao: "direta" | "invertida"
       psico_unidade_calculo: "quantidade_respostas"
       rateio_regra:
@@ -7939,6 +8378,13 @@ export const Constants = {
         "relatorio_emitido",
         "cancelada",
       ],
+      psico_classificacao_risco: [
+        "Risco Irrelevante",
+        "Risco Baixo",
+        "Risco Médio",
+        "Risco Alto",
+        "Risco Crítico",
+      ],
       psico_convite_canal: ["whatsapp", "email", "impresso", "manual", "outro"],
       psico_convite_status: [
         "preparado",
@@ -7957,7 +8403,15 @@ export const Constants = {
       ],
       psico_metodologia_status: ["em_configuracao", "ativa", "arquivada"],
       psico_participante_origem: ["manual", "importacao"],
+      psico_prioridade_fator: ["Monitoramento", "Média", "Alta", "Crítica"],
       psico_questionario_status: ["em_configuracao", "publicada", "arquivada"],
+      psico_resultado_escopo_tipo: ["global", "funcao", "setor", "unidade"],
+      psico_resultado_proc_status: [
+        "processando",
+        "concluido",
+        "falhou",
+        "substituido",
+      ],
       psico_sentido_pontuacao: ["direta", "invertida"],
       psico_unidade_calculo: ["quantidade_respostas"],
       rateio_regra: [
