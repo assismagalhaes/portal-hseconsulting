@@ -12,14 +12,11 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { brl, formatDate, formatDateTime } from "@/lib/format";
 import { projetoStatusColor, projetoStatusLabel, projetoServicoStatusColor, projetoServicoStatusLabel } from "@/lib/projetos";
-import { ArrowLeft, FileText, ClipboardList, FileSignature, DollarSign, History, RefreshCw, Save, Building2, User, Mail, Phone, MapPin, Plus, Printer } from "lucide-react";
+import { ArrowLeft, FileSignature, DollarSign, History, RefreshCw, Building2, User, Mail, Phone, MapPin, ClipboardCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { osStatusLabel, osStatusColor, osPrioridadeLabel } from "@/lib/os";
-import OrdemServicoEditor from "@/pages/OrdemServicoEditor";
+import AtividadePainel from "@/components/projeto/AtividadePainel";
 
 function InfoRow({ label, value, mono, icon, href }: { label: string; value?: any; mono?: boolean; icon?: React.ReactNode; href?: string }) {
   const display = value == null || value === "" ? "—" : String(value);
@@ -39,7 +36,6 @@ export default function ProjetoEditor() {
   const { isTecnico } = useAuth();
   const [projeto, setProjeto] = useState<any>(null);
   const [servicos, setServicos] = useState<any[]>([]);
-  const [os, setOs] = useState<any[]>([]);
   const [docs, setDocs] = useState<any[]>([]);
   const [contrato, setContrato] = useState<any>(null);
   const [parcelas, setParcelas] = useState<any[]>([]);
@@ -50,9 +46,6 @@ export default function ProjetoEditor() {
   const [profissionais, setProfissionais] = useState<any[]>([]);
   const [valorContratado, setValorContratado] = useState<number | null>(null);
   const [valoresServicos, setValoresServicos] = useState<Record<string, number>>({});
-  const [atividadeAberta, setAtividadeAberta] = useState<string | null>(null);
-  const [novaOpen, setNovaOpen] = useState(false);
-  const [nova, setNova] = useState<any>({ titulo: "", prioridade: "media", data_prevista_inicio: "", data_prevista_conclusao: "" });
 
   const load = async () => {
     if (!id) return;
@@ -64,9 +57,8 @@ export default function ProjetoEditor() {
     setProjeto(p);
     document.title = `${p?.numero || "Projeto"} | HSE Consulting`;
 
-    const [s, o, d, t, ren, u, pr] = await Promise.all([
+    const [s, d, t, ren, u, pr] = await Promise.all([
       supabase.from("projeto_servicos").select("*").eq("projeto_id", id).order("created_at"),
-      supabase.from("ordens_servico").select("id, numero, status, prioridade, titulo, data_prevista_conclusao").eq("projeto_id", id),
       supabase.from("documentos_tecnicos").select("id, numero, tipo, titulo, status, data_emissao, data_vencimento").eq("projeto_id", id),
       supabase.from("projeto_timeline").select("*").eq("projeto_id", id).order("created_at", { ascending: false }).limit(50),
       supabase.from("projeto_renovacoes").select("*, projeto_servicos(nome)").eq("projeto_id", id),
@@ -74,7 +66,6 @@ export default function ProjetoEditor() {
       supabase.from("execucao_profissionais").select("id, nome, cargo").order("nome"),
     ]);
     setServicos(s.data || []);
-    setOs(o.data || []);
     setDocs(d.data || []);
     setTimeline(t.data || []);
     setRenovacoes(ren.data || []);
@@ -115,30 +106,6 @@ export default function ProjetoEditor() {
     const { error } = await supabase.from("projeto_servicos").update(patch).eq("id", sid);
     if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
     await load();
-  };
-
-  const criarAtividade = async () => {
-    if (!id || !projeto) return;
-    if (!nova.titulo) { toast({ title: "Informe o título da atividade", variant: "destructive" }); return; }
-    const payload: any = {
-      projeto_id: id,
-      titulo: nova.titulo,
-      prioridade: nova.prioridade,
-      data_prevista_inicio: nova.data_prevista_inicio || projeto.data_inicio || null,
-      data_prevista_conclusao: nova.data_prevista_conclusao || projeto.data_fim_prevista || null,
-      client_id: projeto.client_id,
-      cliente_nome: projeto.clients?.nome_fantasia || projeto.clients?.razao_social,
-      cidade: projeto.clients?.cidade,
-      endereco: projeto.clients?.endereco,
-      responsavel_tecnico_id: projeto.responsavel_execucao_id || null,
-    };
-    const { data, error } = await supabase.from("ordens_servico").insert(payload).select("id").single();
-    if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Atividade criada" });
-    setNovaOpen(false);
-    setNova({ titulo: "", prioridade: "media", data_prevista_inicio: "", data_prevista_conclusao: "" });
-    await load();
-    setAtividadeAberta(data!.id);
   };
 
   if (loading || !projeto) {
