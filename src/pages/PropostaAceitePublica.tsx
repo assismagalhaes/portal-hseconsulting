@@ -232,6 +232,8 @@ export default function PropostaAceitePublica() {
   );
 
   const jaResolvido = aceite.status === "aceito" || aceite.status === "recusado";
+  const expirado = aceite.status === "expirado";
+  const cancelado = aceite.status === "cancelado";
 
   return (
     <div className="min-h-screen bg-slate-50">
