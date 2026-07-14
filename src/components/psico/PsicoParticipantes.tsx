@@ -18,6 +18,7 @@ import {
   atualizarParticipante,
   criarParticipante,
   csvSafe,
+  editarParticipanteSeguro,
   gerarLinksAssinados,
   inativarParticipante,
   isEmailValido,
@@ -32,8 +33,9 @@ import {
   regenerarConvite,
   revogarConvite,
 } from "@/lib/psicoParticipantes";
-import { Copy, Download, FileUp, Link as LinkIcon, MoreHorizontal, Plus, RefreshCw, Ban, UserX, UserCheck } from "lucide-react";
+import { Copy, Download, FileUp, Link as LinkIcon, MoreHorizontal, Pencil, Plus, RefreshCw, Ban, UserX, UserCheck } from "lucide-react";
 import { PsicoImportWizard } from "./PsicoImportWizard";
+import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 
 interface Props {
@@ -60,6 +62,8 @@ export default function PsicoParticipantes(props: Props) {
   const [showDistribuir, setShowDistribuir] = useState<{ ids: string[] } | null>(null);
   const [showRevogar, setShowRevogar] = useState<string | null>(null);
   const [showInativar, setShowInativar] = useState<string | null>(null);
+  const [showEditar, setShowEditar] = useState<ParticipanteRow | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [busca, setBusca] = useState("");
 
   const podeCadastrar = props.status !== "cancelada" && props.temVersaoPublicada;
@@ -75,6 +79,17 @@ export default function PsicoParticipantes(props: Props) {
     setLoading(false);
   }
   useEffect(() => { load(); }, [props.avaliacaoId]);
+
+  useEffect(() => {
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u?.user?.id;
+      if (!uid) return;
+      const { data } = await (supabase as any)
+        .from("user_roles").select("role").eq("user_id", uid).eq("role", "admin").maybeSingle();
+      setIsAdmin(!!data);
+    })();
+  }, []);
 
   const conviteAtivoPorPart = useMemo(() => {
     const m = new Map<string, ConviteRow>();
@@ -366,9 +381,17 @@ export default function PsicoParticipantes(props: Props) {
                               </>
                             )}
                             {p.ativo ? (
+                              <>
+                              <DropdownMenuItem onClick={() => setShowEditar(p)}>
+                                <Pencil className="h-4 w-4 mr-2" />
+                                {conviteAtivoPorPart.get(p.id)?.status === "respondido" || conviteAtivoPorPart.get(p.id)?.respondido_em
+                                  ? "Corrigir cadastro"
+                                  : "Editar participante"}
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => setShowInativar(p.id)}>
                                 <UserX className="h-4 w-4 mr-2" /> Inativar participante
                               </DropdownMenuItem>
+                              </>
                             ) : (
                               <DropdownMenuItem onClick={async () => {
                                 const { error } = await reativarParticipante(p.id);
@@ -454,6 +477,15 @@ export default function PsicoParticipantes(props: Props) {
           />
         </DialogContent>
       </Dialog>
+
+      <EditarDialog
+        participante={showEditar}
+        onOpenChange={(v) => !v && setShowEditar(null)}
+        onSaved={() => { setShowEditar(null); load(); }}
+        respondido={showEditar ? !!(conviteAtivoPorPart.get(showEditar.id)?.status === "respondido" || conviteAtivoPorPart.get(showEditar.id)?.respondido_em) : false}
+        distribuido={showEditar ? !!conviteAtivoPorPart.get(showEditar.id)?.distribuido_em : false}
+        isAdmin={isAdmin}
+      />
     </div>
   );
 }
