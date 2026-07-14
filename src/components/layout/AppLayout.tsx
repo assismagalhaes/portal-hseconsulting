@@ -53,6 +53,7 @@ const GROUPS: NavGroup[] = [
       { to: "/projetos", label: "Projetos", icon: FolderKanban },
       { to: "/agenda", label: "Agenda Técnica", icon: CalendarDays },
       { to: "/planejamento", label: "Planejamento", icon: Activity },
+      { to: "/operacoes/avaliacao-fatores-psicossociais", label: "Avaliação de Fatores Psicossociais", icon: ClipboardList },
     ],
   },
   {
