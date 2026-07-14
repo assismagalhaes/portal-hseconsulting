@@ -329,7 +329,24 @@ export default function PropostaAceitePublica() {
         </Card>
 
         {/* Estado atual */}
-        {jaResolvido ? (
+        {expirado || cancelado ? (
+          <Card className="border-amber-300 bg-amber-50">
+            <CardContent className="p-6 text-center space-y-2">
+              <XCircle className="h-12 w-12 text-amber-600 mx-auto" />
+              <div className="font-bold text-amber-800 text-lg">
+                {expirado ? "Link expirado" : "Link cancelado"}
+              </div>
+              <p className="text-sm text-amber-900">
+                {expirado
+                  ? <>Este link de aceite expirou {aceite.expires_at ? <>em <strong>{new Date(aceite.expires_at).toLocaleString("pt-BR")}</strong></> : null} e não pode mais ser utilizado.</>
+                  : <>Este link foi cancelado e não pode mais ser utilizado.</>}
+              </p>
+              <p className="text-sm text-amber-900 mt-2">
+                Entre em contato com o responsável comercial para receber um novo link.
+              </p>
+            </CardContent>
+          </Card>
+        ) : jaResolvido ? (
           <Card className={aceite.status === "aceito" ? "border-emerald-300 bg-emerald-50" : "border-red-300 bg-red-50"}>
             <CardContent className="p-6 text-center space-y-2">
               {aceite.status === "aceito" ? (
