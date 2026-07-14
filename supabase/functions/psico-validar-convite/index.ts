@@ -135,7 +135,12 @@ Deno.serve(async (req) => {
       .select('id, status, token_version, avaliacao_id, expira_em')
       .eq('public_id', parsed.publicId)
       .maybeSingle()
-    if (!conv || conv.token_version !== parsed.ver) return invalid(origin)
+    if (!conv || conv.token_version !== parsed.ver) {
+      console.log('validar-convite: convite não encontrado ou token_version diverge', {
+        publicId: parsed.publicId, ver: parsed.ver, found: !!conv, tv: conv?.token_version,
+      })
+      return invalid(origin)
+    }
 
     let estado = 'aguardando_abertura'
     if (conv.status === 'revogado') estado = 'revogado'
@@ -155,6 +160,14 @@ Deno.serve(async (req) => {
       if (prazo && now > prazo) estado = 'prazo_encerrado'
       else estado = 'disponivel'
     }
+    console.log('validar-convite: estado calculado', {
+      publicId: parsed.publicId,
+      conv_status: conv.status,
+      av_status: av.status,
+      coleta_expira_em: av.coleta_expira_em,
+      estado,
+      has_session_secret: !!SESSION_SECRET,
+    })
 
     let empresa: string | null = null
     if (av.cliente_id) {
