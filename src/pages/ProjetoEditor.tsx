@@ -12,10 +12,14 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { brl, formatDate, formatDateTime } from "@/lib/format";
 import { projetoStatusColor, projetoStatusLabel, projetoServicoStatusColor, projetoServicoStatusLabel } from "@/lib/projetos";
-import { ArrowLeft, FileText, ClipboardList, FileSignature, DollarSign, History, RefreshCw, Save, Building2, User, Mail, Phone, MapPin } from "lucide-react";
+import { ArrowLeft, FileText, ClipboardList, FileSignature, DollarSign, History, RefreshCw, Save, Building2, User, Mail, Phone, MapPin, Plus, Printer } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { osStatusLabel, osStatusColor, osPrioridadeLabel } from "@/lib/os";
+import OrdemServicoEditor from "@/pages/OrdemServicoEditor";
 
 function InfoRow({ label, value, mono, icon, href }: { label: string; value?: any; mono?: boolean; icon?: React.ReactNode; href?: string }) {
   const display = value == null || value === "" ? "—" : String(value);
@@ -46,6 +50,9 @@ export default function ProjetoEditor() {
   const [profissionais, setProfissionais] = useState<any[]>([]);
   const [valorContratado, setValorContratado] = useState<number | null>(null);
   const [valoresServicos, setValoresServicos] = useState<Record<string, number>>({});
+  const [atividadeAberta, setAtividadeAberta] = useState<string | null>(null);
+  const [novaOpen, setNovaOpen] = useState(false);
+  const [nova, setNova] = useState<any>({ titulo: "", prioridade: "media", data_prevista_inicio: "", data_prevista_conclusao: "" });
 
   const load = async () => {
     if (!id) return;
@@ -110,6 +117,30 @@ export default function ProjetoEditor() {
     await load();
   };
 
+  const criarAtividade = async () => {
+    if (!id || !projeto) return;
+    if (!nova.titulo) { toast({ title: "Informe o título da atividade", variant: "destructive" }); return; }
+    const payload: any = {
+      projeto_id: id,
+      titulo: nova.titulo,
+      prioridade: nova.prioridade,
+      data_prevista_inicio: nova.data_prevista_inicio || projeto.data_inicio || null,
+      data_prevista_conclusao: nova.data_prevista_conclusao || projeto.data_fim_prevista || null,
+      client_id: projeto.client_id,
+      cliente_nome: projeto.clients?.nome_fantasia || projeto.clients?.razao_social,
+      cidade: projeto.clients?.cidade,
+      endereco: projeto.clients?.endereco,
+      responsavel_tecnico_id: projeto.responsavel_execucao_id || null,
+    };
+    const { data, error } = await supabase.from("ordens_servico").insert(payload).select("id").single();
+    if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Atividade criada" });
+    setNovaOpen(false);
+    setNova({ titulo: "", prioridade: "media", data_prevista_inicio: "", data_prevista_conclusao: "" });
+    await load();
+    setAtividadeAberta(data!.id);
+  };
+
   if (loading || !projeto) {
     return <div className="p-10 text-center text-muted-foreground">Carregando…</div>;
   }
@@ -145,7 +176,7 @@ export default function ProjetoEditor() {
               <div className="font-display text-xl font-bold mt-1">{servicos.filter(s => s.status === "concluido").length}/{servicos.length}</div>
             </CardContent></Card>
             <Card className="shadow-elegant"><CardContent className="p-4">
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Ordens de Serviço</div>
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Atividades</div>
               <div className="font-display text-xl font-bold mt-1">{os.length}</div>
             </CardContent></Card>
             <Card className="shadow-elegant"><CardContent className="p-4">
@@ -194,7 +225,7 @@ export default function ProjetoEditor() {
             <TabsTrigger value="visao">Visão Geral</TabsTrigger>
             <TabsTrigger value="cliente">Cliente</TabsTrigger>
             <TabsTrigger value="servicos">Serviços ({servicos.length})</TabsTrigger>
-            <TabsTrigger value="os">Ordens de Serviço ({os.length})</TabsTrigger>
+            <TabsTrigger value="os">Atividades ({os.length})</TabsTrigger>
             <TabsTrigger value="docs">Documentos ({docs.length})</TabsTrigger>
             {!isTecnico && <TabsTrigger value="financeiro">Financeiro</TabsTrigger>}
             {!isTecnico && <TabsTrigger value="renovacoes">Renovações ({renovacoes.length})</TabsTrigger>}
@@ -371,19 +402,57 @@ export default function ProjetoEditor() {
           <TabsContent value="os" className="mt-4">
             <Card className="shadow-elegant">
               <CardContent className="p-0">
+                <div className="flex items-center justify-between p-4 border-b bg-muted/30">
+                  <div className="text-sm text-muted-foreground">
+                    Atividades operacionais do projeto (visitas, inspeções, entregas em campo).
+                  </div>
+                  <Dialog open={novaOpen} onOpenChange={setNovaOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm"><Plus className="h-4 w-4 mr-1.5" /> Nova atividade</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader><DialogTitle>Nova atividade</DialogTitle></DialogHeader>
+                      <div className="space-y-3">
+                        <div>
+                          <Label>Título</Label>
+                          <Input value={nova.titulo} onChange={(e) => setNova({ ...nova, titulo: e.target.value })} placeholder="Ex.: Visita técnica preliminar" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label>Previsão de início</Label>
+                            <Input type="date" value={nova.data_prevista_inicio} onChange={(e) => setNova({ ...nova, data_prevista_inicio: e.target.value })} />
+                          </div>
+                          <div>
+                            <Label>Previsão de conclusão</Label>
+                            <Input type="date" value={nova.data_prevista_conclusao} onChange={(e) => setNova({ ...nova, data_prevista_conclusao: e.target.value })} />
+                          </div>
+                        </div>
+                        <div>
+                          <Label>Prioridade</Label>
+                          <Select value={nova.prioridade} onValueChange={(v) => setNova({ ...nova, prioridade: v })}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>{Object.entries(osPrioridadeLabel).map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">Cliente, endereço, cidade e responsável são herdados do projeto automaticamente.</p>
+                      </div>
+                      <DialogFooter><Button onClick={criarAtividade}>Criar atividade</Button></DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
                 {os.length === 0 ? (
-                  <div className="p-10 text-center text-muted-foreground">Nenhuma OS vinculada.</div>
+                  <div className="p-10 text-center text-muted-foreground">Nenhuma atividade cadastrada. Clique em "Nova atividade".</div>
                 ) : (
                   <ul className="divide-y">
                     {os.map((o) => (
-                      <li key={o.id} className="p-4 hover:bg-muted/40">
-                        <Link to={`/ordens-servico/${o.id}`} className="flex items-center gap-3">
+                      <li key={o.id} className="p-4 hover:bg-muted/40 cursor-pointer" onClick={() => setAtividadeAberta(o.id)}>
+                        <div className="flex items-center gap-3">
                           <ClipboardList className="h-4 w-4 text-muted-foreground" />
                           <span className="font-mono text-xs">{o.numero}</span>
                           <span className="flex-1 truncate">{o.titulo}</span>
-                          <Badge variant="outline" className="text-[10px]">{o.status}</Badge>
+                          <Badge className={(osStatusColor[o.status] || "") + " border-0 text-[10px]"}>{osStatusLabel[o.status] || o.status}</Badge>
                           <span className="text-xs text-muted-foreground">{formatDate(o.data_prevista_conclusao)}</span>
-                        </Link>
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -504,6 +573,22 @@ export default function ProjetoEditor() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Sheet open={!!atividadeAberta} onOpenChange={(v) => { if (!v) { setAtividadeAberta(null); load(); } }}>
+        <SheetContent side="right" className="w-full sm:max-w-5xl overflow-y-auto p-6">
+          <SheetHeader className="mb-4">
+            <SheetTitle className="flex items-center gap-3">
+              Atividade
+              {atividadeAberta && (
+                <Button size="sm" variant="outline" onClick={() => window.open(`/ordens-servico/${atividadeAberta}/imprimir`, "_blank")}>
+                  <Printer className="h-3.5 w-3.5 mr-1.5" /> Imprimir
+                </Button>
+              )}
+            </SheetTitle>
+          </SheetHeader>
+          {atividadeAberta && <OrdemServicoEditor id={atividadeAberta} embedded />}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

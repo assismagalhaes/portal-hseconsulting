@@ -29,7 +29,6 @@ import Profissionais from "./pages/Profissionais";
 import Settings from "./pages/Settings";
 import ProposalExample from "./pages/ProposalExample";
 import PropostaAceitePublica from "./pages/PropostaAceitePublica";
-import OrdensServico from "./pages/OrdensServico";
 import OrdemServicoEditor from "./pages/OrdemServicoEditor";
 import OrdemServicoPrint from "./pages/OrdemServicoPrint";
 import Agenda from "./pages/Agenda";
@@ -72,7 +71,6 @@ import ClienteLogin from "./pages/cliente/ClienteLogin";
 import ClienteDashboard from "./pages/cliente/ClienteDashboard";
 import ClientePropostas from "./pages/cliente/ClientePropostas";
 import ClienteServicos from "./pages/cliente/ClienteServicos";
-import ClienteOS from "./pages/cliente/ClienteOS";
 import ClienteDocumentos from "./pages/cliente/ClienteDocumentos";
 import ClientePendencias from "./pages/cliente/ClientePendencias";
 import ClienteComunicacoes from "./pages/cliente/ClienteComunicacoes";
@@ -108,7 +106,6 @@ const App = () => (
               <Route path="/cliente/dashboard" element={<ClienteDashboard />} />
               <Route path="/cliente/propostas" element={<ClientePropostas />} />
               <Route path="/cliente/servicos" element={<ClienteServicos />} />
-              <Route path="/cliente/ordens-servico" element={<ClienteOS />} />
               <Route path="/cliente/documentos" element={<ClienteDocumentos />} />
               <Route path="/cliente/pendencias" element={<ClientePendencias />} />
               <Route path="/cliente/comunicacoes" element={<ClienteComunicacoes />} />
@@ -127,7 +124,6 @@ const App = () => (
               <Route path="/execucao/:id" element={<RequireRole><ExecucaoEditor /></RequireRole>} />
               <Route path="/projetos" element={<Projetos />} />
               <Route path="/projetos/:id" element={<ProjetoEditor />} />
-              <Route path="/ordens-servico" element={<RequireRole allow="operacional_tecnico"><OrdensServico /></RequireRole>} />
               <Route path="/ordens-servico/:id" element={<RequireRole allow="operacional_tecnico"><OrdemServicoEditor /></RequireRole>} />
               <Route path="/ordens-servico/:id/imprimir" element={<RequireRole allow="operacional_tecnico"><OrdemServicoPrint /></RequireRole>} />
               <Route path="/agenda" element={<RequireRole allow="operacional_tecnico"><Agenda /></RequireRole>} />

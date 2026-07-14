@@ -44,7 +44,7 @@ export default function ClienteDashboard() {
   const cards = [
     { label: "Propostas", icon: FileText, value: kpis.propostas, to: "/cliente/propostas" },
     { label: "Serviços em andamento", icon: Briefcase, value: kpis.servicos, to: "/cliente/servicos" },
-    { label: "OS agendadas", icon: ClipboardList, value: kpis.os, to: "/cliente/ordens-servico" },
+    { label: "Atividades agendadas", icon: ClipboardList, value: kpis.os, to: "/cliente/servicos" },
     { label: "Documentos liberados", icon: FileSignature, value: kpis.docs, to: "/cliente/documentos" },
     { label: "Pendências", icon: AlertCircle, value: kpis.pendencias, to: "/cliente/pendencias", warn: kpis.pendencias > 0 },
     { label: "Próximos do vencimento", icon: Clock, value: kpis.docsVencendo, to: "/cliente/documentos" },

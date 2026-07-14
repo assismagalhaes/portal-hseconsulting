@@ -47,8 +47,8 @@ export default function MeuPainel() {
       <PageHeader title={`Painel — ${displayName}`} subtitle={displaySub} />
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Kpi label="OS em andamento" value={stats.andamento} />
-          <Kpi label="OS pendentes" value={stats.pendentes} />
+          <Kpi label="Atividades em andamento" value={stats.andamento} />
+          <Kpi label="Atividades pendentes" value={stats.pendentes} />
           <Kpi label="Próximas visitas" value={stats.visitas} />
           <Kpi label="Checklists pendentes" value="—" />
         </div>
@@ -71,7 +71,7 @@ export default function MeuPainel() {
         </CardContent></Card>
 
         <Card><CardContent className="p-4">
-          <div className="text-sm font-semibold mb-3">Minhas OS</div>
+          <div className="text-sm font-semibold mb-3">Minhas atividades</div>
           <div className="space-y-2">
             {os.map(o => (
               <Link key={o.id} to={`/ordens-servico/${o.id}`} className="flex items-center gap-3 p-2 rounded hover:bg-muted/40 text-sm">
@@ -81,7 +81,7 @@ export default function MeuPainel() {
                 <div className="text-xs text-muted-foreground w-24 text-right">{formatDate(o.data_prevista_conclusao)}</div>
               </Link>
             ))}
-            {!os.length && <p className="text-sm text-muted-foreground">Nenhuma OS vinculada.</p>}
+            {!os.length && <p className="text-sm text-muted-foreground">Nenhuma atividade vinculada.</p>}
           </div>
         </CardContent></Card>
       </div>

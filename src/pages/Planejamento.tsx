@@ -56,7 +56,7 @@ export default function Planejamento() {
 
   return (
     <>
-      <PageHeader title="Centro de Planejamento" subtitle="Visão operacional consolidada das ordens de serviço" />
+      <PageHeader title="Centro de Planejamento" subtitle="Visão operacional consolidada das atividades dos projetos" />
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
           <Kpi icon={<Calendar className="h-5 w-5 text-primary" />} label="Serviços hoje" value={k.hojeC} />

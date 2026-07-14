@@ -51,7 +51,6 @@ const GROUPS: NavGroup[] = [
     id: "operacoes", label: "Operações", icon: ClipboardList,
     items: [
       { to: "/projetos", label: "Projetos", icon: FolderKanban },
-      { to: "/ordens-servico", label: "Ordens de Serviço", icon: ListTodo },
       { to: "/agenda", label: "Agenda Técnica", icon: CalendarDays },
       { to: "/planejamento", label: "Planejamento", icon: Activity },
     ],
@@ -115,7 +114,6 @@ const TECNICO_GROUPS: NavGroup[] = [
   { id: "operacoes", label: "Operações", icon: FolderKanban,
     items: [
       { to: "/projetos", label: "Projetos", icon: FolderKanban },
-      { to: "/ordens-servico", label: "Ordens de Serviço", icon: ListTodo },
       { to: "/agenda", label: "Agenda Técnica", icon: CalendarDays },
       { to: "/meu-painel", label: "Meu Painel", icon: UserCircle },
     ] },
