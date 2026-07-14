@@ -70,6 +70,7 @@ import Tarefas from "./pages/Tarefas";
 import { PsicoModuloRedirect, PsicoAvaliacoesLista, PsicoResultados, PsicoRelatorios, PsicoConfiguracoes } from "./pages/psico/PsicoModulo";
 import PsicoAvaliacaoNova from "./pages/psico/PsicoAvaliacaoNova";
 import PsicoAvaliacaoDetalhes from "./pages/psico/PsicoAvaliacaoDetalhes";
+import PsicoQuestionarioPreview from "./pages/psico/PsicoQuestionarioPreview";
 import ClienteLogin from "./pages/cliente/ClienteLogin";
 import ClienteDashboard from "./pages/cliente/ClienteDashboard";
 import ClientePropostas from "./pages/cliente/ClientePropostas";
@@ -173,6 +174,7 @@ const App = () => (
               <Route path="/operacoes/avaliacao-fatores-psicossociais/resultados" element={<RequireRole><PsicoResultados /></RequireRole>} />
               <Route path="/operacoes/avaliacao-fatores-psicossociais/relatorios" element={<RequireRole><PsicoRelatorios /></RequireRole>} />
               <Route path="/operacoes/avaliacao-fatores-psicossociais/configuracoes" element={<RequireRole><PsicoConfiguracoes /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais/configuracoes/preview/:id" element={<RequireRole><PsicoQuestionarioPreview /></RequireRole>} />
               <Route path="/configuracoes" element={<RequireRole allow="admin"><Settings /></RequireRole>} />
             </Route>
             <Route path="*" element={<NotFound />} />
