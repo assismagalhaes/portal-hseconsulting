@@ -23,6 +23,7 @@ type Aceite = {
   aceito_por_email: string | null;
   motivo_recusa: string | null;
   created_at: string;
+  expires_at: string | null;
 };
 
 const STATUS_CFG: Record<string, { label: string; cls: string }> = {
