@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft, AlertTriangle } from "lucide-react";
+import { ArrowLeft, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 
 const BASE = "/operacoes/avaliacao-fatores-psicossociais";
@@ -37,6 +38,7 @@ export default function PsicoAvaliacaoNova() {
   const [saving, setSaving] = useState(false);
   const [metodId, setMetodId] = useState<string | null>(null);
   const [questId, setQuestId] = useState<string | null>(null);
+  const [vigente, setVigente] = useState<any>(null);
 
   const [form, setForm] = useState({
     cliente_id: "",
@@ -52,16 +54,16 @@ export default function PsicoAvaliacaoNova() {
   useEffect(() => {
     document.title = "Nova Avaliação Psicossocial | Portal HSE";
     (async () => {
-      const [c, p, m, q] = await Promise.all([
+      const [c, p, v] = await Promise.all([
         supabase.from("clients").select("id, razao_social, nome_fantasia").order("razao_social"),
         supabase.from("profiles").select("id, nome, email").order("nome"),
-        supabase.from("psico_metodologias_versoes").select("id").eq("codigo", "HSE-PSICO-2.0").maybeSingle(),
-        supabase.from("psico_questionarios_versoes").select("id").eq("codigo", "QPPOT-2.0").maybeSingle(),
+        (supabase as any).from("psico_questionarios_versoes").select("id, codigo, nome, versao, vigente, metodologia_versao_id").eq("vigente", true).maybeSingle(),
       ]);
       setClientes(c.data || []);
       setResps(p.data || []);
-      setMetodId(m.data?.id || null);
-      setQuestId(q.data?.id || null);
+      setVigente(v.data || null);
+      setMetodId(v.data?.metodologia_versao_id || null);
+      setQuestId(v.data?.id || null);
     })();
   }, []);
 
@@ -122,6 +124,24 @@ export default function PsicoAvaliacaoNova() {
         }
       />
       <div className="p-6 max-w-3xl">
+        {vigente ? (
+          <Card className="mb-4 border-emerald-300 bg-emerald-50 dark:bg-emerald-900/10">
+            <CardContent className="py-4 text-sm flex items-start gap-3">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <div><strong>Questionário:</strong> {vigente.codigo} — {vigente.nome}</div>
+                <div className="text-xs text-muted-foreground mt-1">Versão vigente vinculada automaticamente à nova avaliação.</div>
+              </div>
+              <Badge className="bg-emerald-100 text-emerald-800">Vigente</Badge>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="mb-4 border-amber-300 bg-amber-50 dark:bg-amber-900/10">
+            <CardContent className="py-4 text-sm">
+              Nenhuma versão do questionário está vigente. Publique a versão em Configurações antes de coletar respostas.
+            </CardContent>
+          </Card>
+        )}
         <Card>
           <CardContent className="py-6">
             <form onSubmit={salvar} className="space-y-5">
