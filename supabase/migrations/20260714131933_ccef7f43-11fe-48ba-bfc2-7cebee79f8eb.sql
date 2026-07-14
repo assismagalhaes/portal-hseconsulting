@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.gerar_numero_os() TO authenticated;
