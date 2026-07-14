@@ -192,14 +192,26 @@ export default function PsicoParticipantes(props: Props) {
       ["Maria da Silva", "maria@empresa.com.br", "11999999999", "Assistente Administrativo", "Administrativo", "Matriz"],
       ["João de Souza", "joao@empresa.com.br", "11988888888", "Auxiliar de Produção", "Produção", "Matriz"],
     ];
-    const csv = [header, ...linhas].map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "modelo-participantes-psicossocial.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+    const instrucoes = [
+      ["Modelo de importação de participantes — Avaliação de Fatores Psicossociais"],
+      [""],
+      ["Instruções de preenchimento:"],
+      ["1. Preencha uma linha por participante na aba \"Participantes\"."],
+      ["2. Não altere, remova ou reordene os títulos das colunas."],
+      ["3. Nome é obrigatório. E-mail ou Telefone: pelo menos um deve estar preenchido."],
+      ["4. Telefone: informe apenas números com DDD (ex.: 11999999999)."],
+      ["5. Função, Setor e Unidade são opcionais, mas ajudam na segmentação dos resultados."],
+      ["6. Remova as linhas de exemplo antes de importar."],
+      ["7. Salve o arquivo em formato .xlsx e faça o upload em \"Importar planilha\"."],
+    ];
+    const wb = XLSX.utils.book_new();
+    const wsDados = XLSX.utils.aoa_to_sheet([header, ...linhas]);
+    (wsDados as any)["!cols"] = [{ wch: 28 }, { wch: 28 }, { wch: 16 }, { wch: 28 }, { wch: 20 }, { wch: 18 }];
+    XLSX.utils.book_append_sheet(wb, wsDados, "Participantes");
+    const wsInstr = XLSX.utils.aoa_to_sheet(instrucoes);
+    (wsInstr as any)["!cols"] = [{ wch: 100 }];
+    XLSX.utils.book_append_sheet(wb, wsInstr, "Instruções");
+    XLSX.writeFile(wb, "modelo-participantes-psicossocial.xlsx");
   }
 
   if (!podeCadastrar) {
