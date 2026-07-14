@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { ArrowLeft, Ban, Pencil, Save, X, Link2 } from "lucide-react";
-import { statusColor, statusLabel, vincularVersaoVigente } from "@/lib/psico";
+import { statusColor, statusLabel, vincularVersaoVigente, getVersaoVigente } from "@/lib/psico";
 import { formatDate, formatDateTime } from "@/lib/format";
 
 const BASE = "/operacoes/avaliacao-fatores-psicossociais";
@@ -39,6 +39,7 @@ export default function PsicoAvaliacaoDetalhes() {
   const [form, setForm] = useState<any>({});
   const [motivo, setMotivo] = useState("");
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [vigente, setVigente] = useState<any>(null);
 
   useEffect(() => { document.title = "Avaliação Psicossocial | Portal HSE"; load(); }, [id]);
 
@@ -55,6 +56,8 @@ export default function PsicoAvaliacaoDetalhes() {
       supabase.from("psico_auditoria").select("*").eq("entidade", "avaliacao").eq("entidade_id", id!).order("created_at", { ascending: false }),
     ]);
     setCli(c.data); setResp(r.data); setMetod(m.data); setQuest(q.data); setAuditoria(aud.data || []);
+    const { data: v } = await getVersaoVigente();
+    setVigente(v);
   }
 
   async function salvarEdicao() {
@@ -142,14 +145,25 @@ export default function PsicoAvaliacaoDetalhes() {
         {av.status === "rascunho" && !av.questionario_versao_id && (
           <Card className="border-amber-300 bg-amber-50 dark:bg-amber-900/10">
             <CardContent className="py-4 flex items-center justify-between gap-3 text-sm">
-              <span>Esta avaliação ainda não possui uma versão de questionário vinculada.</span>
-              <Button size="sm" onClick={async () => {
-                const { error } = await vincularVersaoVigente(id!);
-                if (error) return toast.error(error.message);
-                toast.success("Versão vigente vinculada"); load();
-              }}>
-                <Link2 className="h-4 w-4 mr-2" /> Vincular versão vigente
-              </Button>
+              {vigente ? (
+                <>
+                  <span>Esta avaliação ainda não possui uma versão de questionário vinculada.</span>
+                  <Button size="sm" onClick={async () => {
+                    const { error } = await vincularVersaoVigente(id!);
+                    if (error) return toast.error(error.message);
+                    toast.success("Versão vigente vinculada"); load();
+                  }}>
+                    <Link2 className="h-4 w-4 mr-2" /> Vincular versão vigente
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <span>Nenhuma versão de questionário publicada ainda. Publique uma versão em Configurações antes de vincular.</span>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to={`${BASE}?tab=config`}>Ir para Configurações</Link>
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
         )}
