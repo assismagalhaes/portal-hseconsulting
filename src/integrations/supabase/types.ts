@@ -5386,6 +5386,405 @@ export type Database = {
           },
         ]
       }
+      psico_auditoria: {
+        Row: {
+          acao: string
+          created_at: string
+          dados_anteriores: Json | null
+          dados_novos: Json | null
+          entidade: string
+          entidade_id: string | null
+          id: string
+          metadados: Json | null
+          usuario_id: string | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          entidade: string
+          entidade_id?: string | null
+          id?: string
+          metadados?: Json | null
+          usuario_id?: string | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          entidade?: string
+          entidade_id?: string | null
+          id?: string
+          metadados?: Json | null
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
+      psico_avaliacoes: {
+        Row: {
+          atualizado_por: string | null
+          cancelado_em: string | null
+          cancelado_por: string | null
+          cliente_id: string
+          codigo: string
+          created_at: string
+          criado_por: string | null
+          data_fim_prevista: string | null
+          data_inicio_prevista: string | null
+          id: string
+          metodologia_versao_id: string | null
+          motivo_cancelamento: string | null
+          observacoes_internas: string | null
+          quantidade_participantes_prevista: number
+          questionario_versao_id: string | null
+          responsavel_hse_id: string | null
+          servico_execucao_id: string | null
+          status: Database["public"]["Enums"]["psico_avaliacao_status"]
+          titulo: string
+          unidade: string
+          updated_at: string
+        }
+        Insert: {
+          atualizado_por?: string | null
+          cancelado_em?: string | null
+          cancelado_por?: string | null
+          cliente_id: string
+          codigo?: string
+          created_at?: string
+          criado_por?: string | null
+          data_fim_prevista?: string | null
+          data_inicio_prevista?: string | null
+          id?: string
+          metodologia_versao_id?: string | null
+          motivo_cancelamento?: string | null
+          observacoes_internas?: string | null
+          quantidade_participantes_prevista?: number
+          questionario_versao_id?: string | null
+          responsavel_hse_id?: string | null
+          servico_execucao_id?: string | null
+          status?: Database["public"]["Enums"]["psico_avaliacao_status"]
+          titulo: string
+          unidade?: string
+          updated_at?: string
+        }
+        Update: {
+          atualizado_por?: string | null
+          cancelado_em?: string | null
+          cancelado_por?: string | null
+          cliente_id?: string
+          codigo?: string
+          created_at?: string
+          criado_por?: string | null
+          data_fim_prevista?: string | null
+          data_inicio_prevista?: string | null
+          id?: string
+          metodologia_versao_id?: string | null
+          motivo_cancelamento?: string | null
+          observacoes_internas?: string | null
+          quantidade_participantes_prevista?: number
+          questionario_versao_id?: string | null
+          responsavel_hse_id?: string | null
+          servico_execucao_id?: string | null
+          status?: Database["public"]["Enums"]["psico_avaliacao_status"]
+          titulo?: string
+          unidade?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_avaliacoes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_avaliacoes_metodologia_versao_id_fkey"
+            columns: ["metodologia_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_metodologias_versoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_avaliacoes_questionario_versao_id_fkey"
+            columns: ["questionario_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_questionarios_versoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_avaliacoes_servico_execucao_id_fkey"
+            columns: ["servico_execucao_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_fatores: {
+        Row: {
+          ativo: boolean
+          codigo: string
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          ordem: number
+          questionario_versao_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          codigo: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+          questionario_versao_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          questionario_versao_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_fatores_questionario_versao_id_fkey"
+            columns: ["questionario_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_questionarios_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_metodologias_versoes: {
+        Row: {
+          arquivado_em: string | null
+          atualizado_por: string | null
+          codigo: string
+          created_at: string
+          criado_por: string | null
+          criterio_agravamento_operador: string | null
+          criterio_agravamento_percentual: number | null
+          criterio_critico_operador: string | null
+          criterio_critico_percentual: number | null
+          criterio_principal_operador: string | null
+          criterio_principal_percentual: number | null
+          descricao: string | null
+          faixa_alto_max: number | null
+          faixa_baixo_max: number | null
+          faixa_critico_max: number | null
+          faixa_irrelevante_max: number | null
+          faixa_medio_max: number | null
+          id: string
+          minimo_respondentes_global: number | null
+          minimo_respondentes_segmentacao: number | null
+          nome: string
+          observacoes: string | null
+          publicado_em: string | null
+          status: Database["public"]["Enums"]["psico_metodologia_status"]
+          unidade_calculo: Database["public"]["Enums"]["psico_unidade_calculo"]
+          updated_at: string
+          versao: string
+        }
+        Insert: {
+          arquivado_em?: string | null
+          atualizado_por?: string | null
+          codigo: string
+          created_at?: string
+          criado_por?: string | null
+          criterio_agravamento_operador?: string | null
+          criterio_agravamento_percentual?: number | null
+          criterio_critico_operador?: string | null
+          criterio_critico_percentual?: number | null
+          criterio_principal_operador?: string | null
+          criterio_principal_percentual?: number | null
+          descricao?: string | null
+          faixa_alto_max?: number | null
+          faixa_baixo_max?: number | null
+          faixa_critico_max?: number | null
+          faixa_irrelevante_max?: number | null
+          faixa_medio_max?: number | null
+          id?: string
+          minimo_respondentes_global?: number | null
+          minimo_respondentes_segmentacao?: number | null
+          nome: string
+          observacoes?: string | null
+          publicado_em?: string | null
+          status?: Database["public"]["Enums"]["psico_metodologia_status"]
+          unidade_calculo?: Database["public"]["Enums"]["psico_unidade_calculo"]
+          updated_at?: string
+          versao: string
+        }
+        Update: {
+          arquivado_em?: string | null
+          atualizado_por?: string | null
+          codigo?: string
+          created_at?: string
+          criado_por?: string | null
+          criterio_agravamento_operador?: string | null
+          criterio_agravamento_percentual?: number | null
+          criterio_critico_operador?: string | null
+          criterio_critico_percentual?: number | null
+          criterio_principal_operador?: string | null
+          criterio_principal_percentual?: number | null
+          descricao?: string | null
+          faixa_alto_max?: number | null
+          faixa_baixo_max?: number | null
+          faixa_critico_max?: number | null
+          faixa_irrelevante_max?: number | null
+          faixa_medio_max?: number | null
+          id?: string
+          minimo_respondentes_global?: number | null
+          minimo_respondentes_segmentacao?: number | null
+          nome?: string
+          observacoes?: string | null
+          publicado_em?: string | null
+          status?: Database["public"]["Enums"]["psico_metodologia_status"]
+          unidade_calculo?: Database["public"]["Enums"]["psico_unidade_calculo"]
+          updated_at?: string
+          versao?: string
+        }
+        Relationships: []
+      }
+      psico_perguntas: {
+        Row: {
+          ativa: boolean
+          created_at: string
+          fator_id: string | null
+          id: string
+          numero: number
+          obrigatoria: boolean
+          ordem: number
+          questionario_versao_id: string
+          sentido_pontuacao: Database["public"]["Enums"]["psico_sentido_pontuacao"]
+          texto: string
+          texto_apoio_exemplo: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativa?: boolean
+          created_at?: string
+          fator_id?: string | null
+          id?: string
+          numero: number
+          obrigatoria?: boolean
+          ordem?: number
+          questionario_versao_id: string
+          sentido_pontuacao?: Database["public"]["Enums"]["psico_sentido_pontuacao"]
+          texto: string
+          texto_apoio_exemplo?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativa?: boolean
+          created_at?: string
+          fator_id?: string | null
+          id?: string
+          numero?: number
+          obrigatoria?: boolean
+          ordem?: number
+          questionario_versao_id?: string
+          sentido_pontuacao?: Database["public"]["Enums"]["psico_sentido_pontuacao"]
+          texto?: string
+          texto_apoio_exemplo?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_perguntas_fator_id_fkey"
+            columns: ["fator_id"]
+            isOneToOne: false
+            referencedRelation: "psico_fatores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_perguntas_questionario_versao_id_fkey"
+            columns: ["questionario_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_questionarios_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_questionarios_versoes: {
+        Row: {
+          arquivado_em: string | null
+          atualizado_por: string | null
+          aviso_nao_avaliacao_psicologica: string | null
+          codigo: string
+          created_at: string
+          criado_por: string | null
+          id: string
+          metodologia_versao_id: string | null
+          nome: string
+          orientacao_periodo_referencia: string | null
+          publicado_em: string | null
+          quantidade_perguntas_prevista: number
+          status: Database["public"]["Enums"]["psico_questionario_status"]
+          subtitulo: string | null
+          texto_abertura: string | null
+          updated_at: string
+          versao: string
+        }
+        Insert: {
+          arquivado_em?: string | null
+          atualizado_por?: string | null
+          aviso_nao_avaliacao_psicologica?: string | null
+          codigo: string
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          metodologia_versao_id?: string | null
+          nome: string
+          orientacao_periodo_referencia?: string | null
+          publicado_em?: string | null
+          quantidade_perguntas_prevista?: number
+          status?: Database["public"]["Enums"]["psico_questionario_status"]
+          subtitulo?: string | null
+          texto_abertura?: string | null
+          updated_at?: string
+          versao: string
+        }
+        Update: {
+          arquivado_em?: string | null
+          atualizado_por?: string | null
+          aviso_nao_avaliacao_psicologica?: string | null
+          codigo?: string
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          metodologia_versao_id?: string | null
+          nome?: string
+          orientacao_periodo_referencia?: string | null
+          publicado_em?: string | null
+          quantidade_perguntas_prevista?: number
+          status?: Database["public"]["Enums"]["psico_questionario_status"]
+          subtitulo?: string | null
+          texto_abertura?: string | null
+          updated_at?: string
+          versao?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_questionarios_versoes_metodologia_versao_id_fkey"
+            columns: ["metodologia_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_metodologias_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_categories: {
         Row: {
           created_at: string
@@ -6084,6 +6483,7 @@ export type Database = {
         Returns: undefined
       }
       projetos_gerar_renovacoes: { Args: never; Returns: number }
+      psico_gerar_codigo_avaliacao: { Args: never; Returns: string }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -6407,6 +6807,17 @@ export type Database = {
         | "recusada"
         | "expirada"
         | "cancelada"
+      psico_avaliacao_status:
+        | "rascunho"
+        | "coleta_em_andamento"
+        | "coleta_encerrada"
+        | "resultado_pronto"
+        | "relatorio_emitido"
+        | "cancelada"
+      psico_metodologia_status: "em_configuracao" | "ativa" | "arquivada"
+      psico_questionario_status: "em_configuracao" | "publicada" | "arquivada"
+      psico_sentido_pontuacao: "direta" | "invertida"
+      psico_unidade_calculo: "quantidade_respostas"
       rateio_regra:
         | "igual"
         | "proporcional_venda"
@@ -6871,6 +7282,18 @@ export const Constants = {
         "expirada",
         "cancelada",
       ],
+      psico_avaliacao_status: [
+        "rascunho",
+        "coleta_em_andamento",
+        "coleta_encerrada",
+        "resultado_pronto",
+        "relatorio_emitido",
+        "cancelada",
+      ],
+      psico_metodologia_status: ["em_configuracao", "ativa", "arquivada"],
+      psico_questionario_status: ["em_configuracao", "publicada", "arquivada"],
+      psico_sentido_pontuacao: ["direta", "invertida"],
+      psico_unidade_calculo: ["quantidade_respostas"],
       rateio_regra: [
         "igual",
         "proporcional_venda",
