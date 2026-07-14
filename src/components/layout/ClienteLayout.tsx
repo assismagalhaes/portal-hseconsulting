@@ -10,7 +10,6 @@ const nav = [
   { to: "/cliente/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/cliente/propostas", label: "Propostas", icon: FileText },
   { to: "/cliente/servicos", label: "Serviços", icon: Briefcase },
-  { to: "/cliente/ordens-servico", label: "Ordens de Serviço", icon: ClipboardList },
   { to: "/cliente/documentos", label: "Documentos", icon: FileSignature },
   { to: "/cliente/pendencias", label: "Pendências", icon: AlertCircle },
   { to: "/cliente/comunicacoes", label: "Comunicações", icon: MessageSquare },
