@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Ban, Pencil, Save, X, Link2 } from "lucide-react";
 import { statusColor, statusLabel, vincularVersaoVigente, getVersaoVigente } from "@/lib/psico";
 import { formatDate, formatDateTime } from "@/lib/format";
+import PsicoParticipantes from "@/components/psico/PsicoParticipantes";
 
 const BASE = "/operacoes/avaliacao-fatores-psicossociais";
 
@@ -248,10 +249,35 @@ export default function PsicoAvaliacaoDetalhes() {
           </TabsContent>
 
           <TabsContent value="participantes">
-            <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">O cadastro e a importação dos participantes serão habilitados na próxima etapa.</CardContent></Card>
+            <PsicoParticipantes
+              avaliacaoId={av.id}
+              clienteNome={clienteNome}
+              tituloAvaliacao={av.titulo}
+              mensagemConvite={av.mensagem_convite || ""}
+              assuntoConvite={av.assunto_convite || ""}
+              dataInicio={av.data_inicio_prevista}
+              dataFim={av.data_fim_prevista}
+              quantidadePrevista={av.quantidade_participantes_prevista}
+              status={av.status}
+              temVersaoPublicada={!!av.questionario_versao_id}
+              codigoAvaliacao={av.codigo}
+            />
           </TabsContent>
           <TabsContent value="coleta">
-            <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">A coleta poderá ser aberta após a publicação do questionário e o cadastro dos participantes.</CardContent></Card>
+            <Card>
+              <CardHeader><CardTitle>Preparação da coleta</CardTitle></CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded border p-3">Questionário vinculado: <strong>{quest ? `${quest.codigo} v${quest.versao}` : "—"}</strong></div>
+                  <div className="rounded border p-3">Metodologia vinculada: <strong>{metod ? `${metod.codigo} v${metod.versao}` : "—"}</strong></div>
+                  <div className="rounded border p-3">Status da avaliação: <strong>{statusLabel(av.status)}</strong></div>
+                </div>
+                <div className="p-3 rounded bg-amber-50 dark:bg-amber-900/10 border border-amber-300 text-amber-900 dark:text-amber-200">
+                  A abertura e o preenchimento do questionário serão habilitados na próxima fase.
+                </div>
+                <Button disabled title="Disponível após a implementação do formulário público.">Abrir coleta</Button>
+              </CardContent>
+            </Card>
           </TabsContent>
           <TabsContent value="resultados">
             <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">Os resultados serão apresentados após o encerramento e processamento da coleta.</CardContent></Card>
