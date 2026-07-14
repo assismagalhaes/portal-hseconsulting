@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
   const origin = req.headers.get('origin')
   if (req.method === 'OPTIONS') {
     const ok = pickOrigin(origin)
-    return new Response('ok', { status: ok ? 204 : 403, headers: baseHeaders(origin) })
+    return new Response(ok ? null : 'forbidden', { status: ok ? 204 : 403, headers: baseHeaders(origin) })
   }
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'method_not_allowed' }), { status: 405, headers: baseHeaders(origin) })
