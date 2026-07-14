@@ -249,14 +249,16 @@ export function aplicarPlaceholders(
   tpl: string,
   ctx: { nome: string; cliente?: string; titulo?: string; link: string; dataInicio?: string; dataFim?: string },
 ) {
-  return tpl
-    .replaceAll("{{primeiro_nome}}", primeiroNome(ctx.nome))
-    .replaceAll("{{nome}}", ctx.nome)
-    .replaceAll("{{cliente}}", ctx.cliente || "")
-    .replaceAll("{{titulo_avaliacao}}", ctx.titulo || "")
-    .replaceAll("{{link}}", ctx.link)
-    .replaceAll("{{data_inicio}}", ctx.dataInicio || "")
-    .replaceAll("{{data_fim}}", ctx.dataFim || "");
+  const map: Record<string, string> = {
+    "{{primeiro_nome}}": primeiroNome(ctx.nome),
+    "{{nome}}": ctx.nome,
+    "{{cliente}}": ctx.cliente || "",
+    "{{titulo_avaliacao}}": ctx.titulo || "",
+    "{{link}}": ctx.link,
+    "{{data_inicio}}": ctx.dataInicio || "",
+    "{{data_fim}}": ctx.dataFim || "",
+  };
+  return tpl.replace(/\{\{[a-z_]+\}\}/g, (m) => (m in map ? map[m] : m));
 }
 
 /** Protege células contra CSV injection */
