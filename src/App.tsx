@@ -67,6 +67,9 @@ import AutomacoesDashboard from "./pages/automacoes/AutomacoesDashboard";
 import AutomacoesExecucoes from "./pages/automacoes/AutomacoesExecucoes";
 import Notificacoes from "./pages/Notificacoes";
 import Tarefas from "./pages/Tarefas";
+import { PsicoModuloRedirect, PsicoAvaliacoesLista, PsicoResultados, PsicoRelatorios, PsicoConfiguracoes } from "./pages/psico/PsicoModulo";
+import PsicoAvaliacaoNova from "./pages/psico/PsicoAvaliacaoNova";
+import PsicoAvaliacaoDetalhes from "./pages/psico/PsicoAvaliacaoDetalhes";
 import ClienteLogin from "./pages/cliente/ClienteLogin";
 import ClienteDashboard from "./pages/cliente/ClienteDashboard";
 import ClientePropostas from "./pages/cliente/ClientePropostas";
@@ -163,6 +166,13 @@ const App = () => (
               <Route path="/automacoes/execucoes" element={<RequireRole><AutomacoesExecucoes /></RequireRole>} />
               <Route path="/notificacoes" element={<RequireRole><Notificacoes /></RequireRole>} />
               <Route path="/tarefas" element={<RequireRole><Tarefas /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais" element={<RequireRole><PsicoModuloRedirect /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais/avaliacoes" element={<RequireRole><PsicoAvaliacoesLista /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais/avaliacoes/nova" element={<RequireRole><PsicoAvaliacaoNova /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais/avaliacoes/:id" element={<RequireRole><PsicoAvaliacaoDetalhes /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais/resultados" element={<RequireRole><PsicoResultados /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais/relatorios" element={<RequireRole><PsicoRelatorios /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais/configuracoes" element={<RequireRole><PsicoConfiguracoes /></RequireRole>} />
               <Route path="/configuracoes" element={<RequireRole allow="admin"><Settings /></RequireRole>} />
             </Route>
             <Route path="*" element={<NotFound />} />
