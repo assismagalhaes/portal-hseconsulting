@@ -105,7 +105,7 @@ export default function AceiteLinkCard({
     // Preview do Lovable exige login — sempre usar a URL publicada (pública) para o aceite.
     const isPreview = /id-preview--.*\.lovable\.app$/i.test(window.location.hostname)
       || /lovableproject\.com$/i.test(window.location.hostname);
-    const base = isPreview ? "https://portal-hseconsulting.lovable.app" : origin;
+    const base = isPreview ? "https://portal.hseconsulting.com.br" : origin;
     return `${base}/aceite/${token}`;
   }
 
