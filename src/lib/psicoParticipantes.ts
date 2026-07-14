@@ -122,6 +122,32 @@ export async function atualizarParticipante(id: string, patch: Record<string, an
   return sb.from("psico_participantes").update(patch).eq("id", id).select().single();
 }
 
+/**
+ * Edição segura via RPC no backend. Aplica normalização, duplicidade,
+ * bloqueio pós-resposta e auditoria sanitizada.
+ */
+export async function editarParticipanteSeguro(input: {
+  participante_id: string;
+  nome: string;
+  email?: string | null;
+  telefone?: string | null;
+  funcao?: string | null;
+  setor?: string | null;
+  unidade?: string | null;
+  justificativa?: string | null;
+}) {
+  return sb.rpc("psico_atualizar_participante", {
+    _participante_id: input.participante_id,
+    _nome: input.nome,
+    _email: input.email ?? null,
+    _telefone: input.telefone ?? null,
+    _funcao: input.funcao ?? null,
+    _setor: input.setor ?? null,
+    _unidade: input.unidade ?? null,
+    _justificativa: input.justificativa ?? null,
+  });
+}
+
 export async function inativarParticipante(id: string, motivo: string) {
   return sb
     .from("psico_participantes")

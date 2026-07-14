@@ -1,60 +1,129 @@
-// Valida convite público sem autenticação. Retorna apenas informações mínimas.
+// Valida convite público sem autenticação.
+// - Retorna respostas genéricas para tokens inválidos
+// - CORS restrito por PSICO_PUBLIC_ALLOWED_ORIGINS
+// - Cabeçalhos de segurança e no-store
+// - Rate limiting por origem e por fingerprint do token
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
 const SECRET = Deno.env.get('PSICO_INVITE_SIGNING_SECRET') || ''
+const RL_SECRET = Deno.env.get('PSICO_RATE_LIMIT_SECRET') || SECRET
+const ALLOWED = (Deno.env.get('PSICO_PUBLIC_ALLOWED_ORIGINS') ||
+  'https://portal.hseconsulting.com.br,https://portal-hseconsulting.lovable.app')
+  .split(',').map((s) => s.trim()).filter(Boolean)
+const IS_DEV = (Deno.env.get('DENO_ENV') || '') === 'development'
+
+function pickOrigin(origin: string | null): string | null {
+  if (!origin) return null
+  if (ALLOWED.includes(origin)) return origin
+  if (IS_DEV && /^http:\/\/localhost(:\d+)?$/.test(origin)) return origin
+  return null
+}
+
+function baseHeaders(origin: string | null): HeadersInit {
+  const h: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-store, no-cache, must-revalidate, private',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Referrer-Policy': 'no-referrer',
+    'X-Content-Type-Options': 'nosniff',
+    'Permissions-Policy': 'geolocation=(), camera=(), microphone=(), interest-cohort=()',
+    'Vary': 'Origin',
+  }
+  const ok = pickOrigin(origin)
+  if (ok) {
+    h['Access-Control-Allow-Origin'] = ok
+    h['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+    h['Access-Control-Allow-Headers'] = 'authorization, x-client-info, apikey, content-type'
+    h['Access-Control-Max-Age'] = '3600'
+  }
+  return h
+}
+
+async function hmacB64(secret: string, msg: string): Promise<string> {
+  const enc = new TextEncoder()
+  const key = await crypto.subtle.importKey(
+    'raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
+  )
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(msg))
+  return btoa(String.fromCharCode(...new Uint8Array(sig)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
 
 async function verify(token: string): Promise<{ publicId: string; ver: number } | null> {
-  if (!token || token.length > 500) return null
+  if (!token || typeof token !== 'string' || token.length > 512) return null
   const parts = token.split('.')
   if (parts.length !== 4 || parts[0] !== 'v1') return null
   const [, publicId, verStr, sig] = parts
   const ver = Number(verStr)
-  if (!/^[0-9a-f-]{36}$/i.test(publicId) || !Number.isInteger(ver)) return null
-  const enc = new TextEncoder()
-  const key = await crypto.subtle.importKey(
-    'raw', enc.encode(SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-  )
-  const expected = await crypto.subtle.sign('HMAC', key, enc.encode(`v1.${publicId}.${ver}`))
-  const b64 = btoa(String.fromCharCode(...new Uint8Array(expected)))
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-  // constant-time compare
-  if (b64.length !== sig.length) return null
+  if (!/^[0-9a-f-]{36}$/i.test(publicId)) return null
+  if (!Number.isInteger(ver) || ver < 0 || ver > 1_000_000) return null
+  if (!/^[A-Za-z0-9_-]{20,64}$/.test(sig)) return null
+  const expected = await hmacB64(SECRET, `v1.${publicId}.${ver}`)
+  if (expected.length !== sig.length) return null
   let diff = 0
-  for (let i = 0; i < b64.length; i++) diff |= b64.charCodeAt(i) ^ sig.charCodeAt(i)
+  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ sig.charCodeAt(i)
   return diff === 0 ? { publicId, ver } : null
 }
 
-const invalid = () =>
-  new Response(JSON.stringify({ valido: false, estado: 'invalido', mensagem: 'Link inválido ou expirado.' }), {
-    status: 200,
-    headers: {
-      ...corsHeaders,
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-store',
-      'Referrer-Policy': 'no-referrer',
-    },
-  })
+function invalid(origin: string | null): Response {
+  return new Response(
+    JSON.stringify({ valido: false, estado: 'invalido', mensagem: 'Não foi possível validar este acesso.' }),
+    { status: 200, headers: baseHeaders(origin) },
+  )
+}
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  const origin = req.headers.get('origin')
+  if (req.method === 'OPTIONS') {
+    const ok = pickOrigin(origin)
+    return new Response('ok', { status: ok ? 204 : 403, headers: baseHeaders(origin) })
+  }
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'method_not_allowed' }), { status: 405, headers: baseHeaders(origin) })
+  }
+  if (origin && !pickOrigin(origin)) {
+    return new Response(JSON.stringify({ error: 'origin_not_allowed' }), { status: 403, headers: baseHeaders(origin) })
+  }
   try {
-    const body = await req.json().catch(() => ({}))
+    // Limita payload
+    const raw = await req.text()
+    if (raw.length > 2048) return invalid(origin)
+    let body: any = {}
+    try { body = JSON.parse(raw) } catch { return invalid(origin) }
     const token = String(body?.token || '')
-    const parsed = await verify(token)
-    if (!parsed) return invalid()
+    if (!token || token.length > 512) return invalid(origin)
 
     const admin = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
+
+    // Rate limit por origem derivada (não armazena IP bruto)
+    const originIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || req.headers.get('cf-connecting-ip') || 'unknown'
+    const originHash = await hmacB64(RL_SECRET, `origin:${originIp}`)
+    const tokenHash = await hmacB64(RL_SECRET, `token:${token.slice(0, 128)}`)
+    const [{ data: okOrigin }, { data: okToken }] = await Promise.all([
+      admin.rpc('psico_rate_limit_hit', { _bucket: 'validar_origin', _key_hash: originHash.slice(0, 24), _window_seconds: 600, _max: 60 }),
+      admin.rpc('psico_rate_limit_hit', { _bucket: 'validar_token', _key_hash: tokenHash.slice(0, 24), _window_seconds: 600, _max: 12 }),
+    ])
+    if (okOrigin === false || okToken === false) {
+      return new Response(
+        JSON.stringify({ valido: false, estado: 'rate_limited', mensagem: 'Muitas tentativas. Tente novamente em instantes.' }),
+        { status: 429, headers: baseHeaders(origin) },
+      )
+    }
+
+    const parsed = await verify(token)
+    if (!parsed) return invalid(origin)
+
     const { data: conv } = await admin
       .from('psico_convites')
       .select('id, status, token_version, avaliacao_id')
       .eq('public_id', parsed.publicId)
       .maybeSingle()
-    if (!conv) return invalid()
-    if (conv.token_version !== parsed.ver) return invalid()
+    if (!conv || conv.token_version !== parsed.ver) return invalid(origin)
 
     let estado = 'aguardando_abertura'
     if (conv.status === 'revogado') estado = 'revogado'
@@ -66,7 +135,7 @@ Deno.serve(async (req) => {
       .select('id, titulo, status, cliente_id')
       .eq('id', conv.avaliacao_id)
       .maybeSingle()
-    if (!av) return invalid()
+    if (!av) return invalid(origin)
     if (av.status === 'cancelada') estado = 'cancelado'
 
     let empresa: string | null = null
@@ -80,7 +149,7 @@ Deno.serve(async (req) => {
     }
 
     const mensagemPorEstado: Record<string, string> = {
-      aguardando_abertura: 'Esta avaliação ainda não está aberta para preenchimento.',
+      aguardando_abertura: 'Seu acesso individual foi validado. Esta avaliação ainda não está aberta para preenchimento.',
       ja_respondido: 'Este convite já foi utilizado.',
       expirado: 'Este convite expirou.',
       revogado: 'Este convite foi cancelado. Solicite um novo link.',
@@ -89,24 +158,15 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        valido: estado === 'aguardando_abertura' || estado === 'disponivel',
+        valido: estado === 'aguardando_abertura',
         estado,
         titulo_avaliacao: 'Questionário de Percepção Psicoorganizacional no Trabalho',
-        titulo_interno: av.titulo,
         empresa,
         mensagem: mensagemPorEstado[estado] || 'Convite indisponível.',
       }),
-      {
-        status: 200,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-store',
-          'Referrer-Policy': 'no-referrer',
-        },
-      },
+      { status: 200, headers: baseHeaders(origin) },
     )
   } catch {
-    return invalid()
+    return invalid(origin)
   }
 })
