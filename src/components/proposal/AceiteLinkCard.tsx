@@ -250,6 +250,10 @@ export default function AceiteLinkCard({
                 <p className="text-xs text-muted-foreground">👁 Cliente visualizou em {new Date(it.visualizado_em).toLocaleString("pt-BR")}</p>
               )}
 
+              {it.status === "pendente" && it.expires_at && (
+                <p className="text-xs text-muted-foreground">⏱ Expira em {new Date(it.expires_at).toLocaleString("pt-BR")}</p>
+              )}
+
               {it.status === "aceito" && (
                 <p className="text-xs text-emerald-800">
                   Aceito em {new Date(it.aceito_em!).toLocaleString("pt-BR")} por <strong>{it.aceito_por_nome}</strong>
