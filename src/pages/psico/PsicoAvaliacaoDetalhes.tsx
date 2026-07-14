@@ -11,8 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Ban, Pencil, Save, X } from "lucide-react";
-import { statusColor, statusLabel } from "@/lib/psico";
+import { ArrowLeft, Ban, Pencil, Save, X, Link2 } from "lucide-react";
+import { statusColor, statusLabel, vincularVersaoVigente } from "@/lib/psico";
 import { formatDate, formatDateTime } from "@/lib/format";
 
 const BASE = "/operacoes/avaliacao-fatores-psicossociais";
@@ -138,6 +138,21 @@ export default function PsicoAvaliacaoDetalhes() {
             <span className="text-sm text-muted-foreground">Motivo: {av.motivo_cancelamento}</span>
           )}
         </div>
+
+        {av.status === "rascunho" && !av.questionario_versao_id && (
+          <Card className="border-amber-300 bg-amber-50 dark:bg-amber-900/10">
+            <CardContent className="py-4 flex items-center justify-between gap-3 text-sm">
+              <span>Esta avaliação ainda não possui uma versão de questionário vinculada.</span>
+              <Button size="sm" onClick={async () => {
+                const { error } = await vincularVersaoVigente(id!);
+                if (error) return toast.error(error.message);
+                toast.success("Versão vigente vinculada"); load();
+              }}>
+                <Link2 className="h-4 w-4 mr-2" /> Vincular versão vigente
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Card><CardContent className="py-4"><Field label="Cliente" value={clienteNome} /></CardContent></Card>
