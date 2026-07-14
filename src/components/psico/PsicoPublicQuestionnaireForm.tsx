@@ -11,7 +11,13 @@ type Pergunta = { numero: number; texto: string; exemplo: string | null };
 type Opcao = { codigo: string; rotulo: string };
 
 export type QuestionarioPublico = {
-  nome: string; subtitulo: string;
+  nome: string;
+  subtitulo: string | null;
+  texto_abertura: string | null;
+  aviso_nao_avaliacao_psicologica: string | null;
+  orientacao_periodo_referencia: string | null;
+  fonte_referencia: string | null;
+  nota_metodologica: string | null;
   quantidade_perguntas: number; tempo_estimado_minutos: number;
   perguntas: Pergunta[]; opcoes: Opcao[];
 };
@@ -95,20 +101,29 @@ export default function PsicoPublicQuestionnaireForm({
       <Layout>
         <Header empresa={empresa} />
         <h1 className="text-xl font-semibold">{questionario.nome}</h1>
-        <p className="text-sm text-muted-foreground">{questionario.subtitulo}</p>
-        <div className="text-sm space-y-3 text-left bg-card border rounded p-4">
-          <p>Este questionário tem como objetivo conhecer a percepção dos trabalhadores sobre as condições e a organização do trabalho, identificando pontos positivos e situações que possam necessitar de melhoria.</p>
-          <p>A avaliação possui caráter <strong>coletivo e preventivo</strong>. Ela não constitui avaliação psicológica, diagnóstico clínico ou avaliação individual da saúde mental.</p>
-          <p>Sua identificação é utilizada exclusivamente para controle de participação e permanece <strong>tecnicamente separada</strong> do conteúdo das respostas. A empresa receberá somente resultados coletivos consolidados.</p>
-          <p>Considere principalmente sua experiência de trabalho nos <strong>últimos seis meses</strong>. Caso trabalhe na empresa há menos tempo, considere o período desde sua admissão.</p>
-        </div>
+        {questionario.subtitulo && (
+          <p className="text-sm text-muted-foreground">{questionario.subtitulo}</p>
+        )}
+        {(questionario.texto_abertura || questionario.aviso_nao_avaliacao_psicologica || questionario.orientacao_periodo_referencia) && (
+          <div className="text-sm space-y-3 text-left bg-card border rounded p-4 whitespace-pre-line">
+            {questionario.texto_abertura && <p>{questionario.texto_abertura}</p>}
+            {questionario.aviso_nao_avaliacao_psicologica && <p>{questionario.aviso_nao_avaliacao_psicologica}</p>}
+            {questionario.orientacao_periodo_referencia && <p>{questionario.orientacao_periodo_referencia}</p>}
+          </div>
+        )}
         <ul className="text-xs text-muted-foreground list-disc list-inside text-left">
-          <li>35 perguntas — aproximadamente {questionario.tempo_estimado_minutos} minutos</li>
+          <li>{questionario.quantidade_perguntas} perguntas — aproximadamente {questionario.tempo_estimado_minutos} minutos</li>
           <li>Todas as perguntas são obrigatórias</li>
           <li>Não há respostas certas ou erradas</li>
           <li>Após o envio não será possível alterar</li>
           <li>Não há salvamento parcial</li>
         </ul>
+        {(questionario.fonte_referencia || questionario.nota_metodologica) && (
+          <div className="text-[11px] text-muted-foreground text-left border-t pt-3 space-y-1 whitespace-pre-line">
+            {questionario.fonte_referencia && <div><strong>Fonte:</strong> {questionario.fonte_referencia}</div>}
+            {questionario.nota_metodologica && <div>{questionario.nota_metodologica}</div>}
+          </div>
+        )}
         <Button onClick={iniciar} className="w-full">Iniciar questionário</Button>
       </Layout>
     );

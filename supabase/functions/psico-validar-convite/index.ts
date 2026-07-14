@@ -207,7 +207,11 @@ Deno.serve(async (req) => {
         exp: nowSec + 4 * 3600,
         n: nonceStr,
       })
-      const [{ data: perguntas }, { data: opcoes }] = await Promise.all([
+      const [{ data: quest }, { data: perguntas }, { data: opcoes }] = await Promise.all([
+        admin.from('psico_questionarios_versoes')
+          .select('nome, subtitulo, texto_abertura, aviso_nao_avaliacao_psicologica, orientacao_periodo_referencia, fonte_referencia, nota_metodologica, quantidade_perguntas_publicada, quantidade_perguntas_prevista')
+          .eq('id', av.questionario_versao_id)
+          .maybeSingle(),
         admin.from('psico_perguntas')
           .select('numero, texto, texto_apoio_exemplo')
           .eq('questionario_versao_id', av.questionario_versao_id)
@@ -217,15 +221,21 @@ Deno.serve(async (req) => {
           .eq('metodologia_versao_id', av.metodologia_versao_id)
           .eq('ativo', true).order('ordem'),
       ])
+      const qtdPerguntas = quest?.quantidade_perguntas_publicada || quest?.quantidade_perguntas_prevista || (perguntas || []).length || 35
       return new Response(JSON.stringify({
         valido: true,
         estado: 'disponivel',
         sessao,
         empresa,
         questionario: {
-          nome: 'Questionário de Percepção Psicoorganizacional no Trabalho',
-          subtitulo: 'Instrumento coletivo de percepção sobre fatores psicossociais relacionados às condições e à organização do trabalho.',
-          quantidade_perguntas: 35,
+          nome: quest?.nome || 'Questionário de Percepção Psicoorganizacional no Trabalho',
+          subtitulo: quest?.subtitulo || null,
+          texto_abertura: quest?.texto_abertura || null,
+          aviso_nao_avaliacao_psicologica: quest?.aviso_nao_avaliacao_psicologica || null,
+          orientacao_periodo_referencia: quest?.orientacao_periodo_referencia || null,
+          fonte_referencia: quest?.fonte_referencia || null,
+          nota_metodologica: quest?.nota_metodologica || null,
+          quantidade_perguntas: qtdPerguntas,
           tempo_estimado_minutos: 10,
           perguntas: (perguntas || []).map((p: any) => ({
             numero: p.numero, texto: p.texto, exemplo: p.texto_apoio_exemplo || null,
