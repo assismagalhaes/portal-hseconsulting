@@ -7501,9 +7501,132 @@ export type Database = {
         Returns: Json
       }
       psico_gerar_codigo_avaliacao: { Args: never; Returns: string }
+      psico_hash_entrada_resultado: {
+        Args: { p_avaliacao_id: string }
+        Returns: string
+      }
+      psico_listar_escopos_resultado: {
+        Args: { p_avaliacao_id: string }
+        Returns: {
+          amostra_reduzida: boolean
+          chave_normalizada: string
+          classificacao_indice_geral: Database["public"]["Enums"]["psico_classificacao_risco"]
+          fatores_significativos: number
+          id: string
+          indice_geral_descritivo: number
+          minimo_aplicado: number
+          prioridade_maxima: Database["public"]["Enums"]["psico_prioridade_fator"]
+          respondentes: number
+          rotulo: string
+          tipo: Database["public"]["Enums"]["psico_resultado_escopo_tipo"]
+          total_itens: number
+        }[]
+      }
       psico_norm_email: { Args: { v: string }; Returns: string }
       psico_norm_fone: { Args: { v: string }; Returns: string }
       psico_norm_texto: { Args: { v: string }; Returns: string }
+      psico_obter_resultado_resumo: {
+        Args: { p_avaliacao_id: string }
+        Returns: Json
+      }
+      psico_obter_resultados_fatores: {
+        Args: { p_avaliacao_id: string; p_escopo_id: string }
+        Returns: {
+          classificacao_media: Database["public"]["Enums"]["psico_classificacao_risco"]
+          created_at: string
+          criterio_agravamento: boolean
+          criterio_critico_automatico: boolean
+          criterio_principal: boolean
+          criterios_acionados: string[]
+          escopo_id: string
+          fator_id: string
+          id: string
+          ordem: number
+          percentual_alto: number
+          percentual_alto_critico: number
+          percentual_baixo: number
+          percentual_critico: number
+          percentual_irrelevante: number
+          percentual_medio: number
+          percentual_medio_alto_critico: number
+          prioridade: Database["public"]["Enums"]["psico_prioridade_fator"]
+          quantidade_alto: number
+          quantidade_baixo: number
+          quantidade_critico: number
+          quantidade_irrelevante: number
+          quantidade_medio: number
+          quantidade_perguntas: number
+          score_medio: number
+          significativo: boolean
+          soma_pesos: number
+          total_respostas_validas: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "psico_resultados_fatores"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      psico_obter_resultados_perguntas: {
+        Args: {
+          p_avaliacao_id: string
+          p_escopo_id: string
+          p_fator_id?: string
+        }
+        Returns: {
+          classificacao_media: Database["public"]["Enums"]["psico_classificacao_risco"]
+          created_at: string
+          escopo_id: string
+          fator_id: string | null
+          id: string
+          numero: number
+          percentual_alto_critico: number
+          percentual_as_vezes: number
+          percentual_critico: number
+          percentual_desfavoravel: number
+          percentual_frequentemente: number
+          percentual_nunca: number
+          percentual_peso_0: number
+          percentual_peso_1: number
+          percentual_peso_2: number
+          percentual_peso_3: number
+          percentual_peso_4: number
+          percentual_raramente: number
+          percentual_sempre: number
+          pergunta_id: string
+          quantidade_as_vezes: number
+          quantidade_frequentemente: number
+          quantidade_nunca: number
+          quantidade_peso_0: number
+          quantidade_peso_1: number
+          quantidade_peso_2: number
+          quantidade_peso_3: number
+          quantidade_peso_4: number
+          quantidade_raramente: number
+          quantidade_sempre: number
+          score_medio: number
+          soma_pesos: number
+          total_respostas_validas: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "psico_resultados_perguntas"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      psico_prioridade_max: {
+        Args: {
+          a: Database["public"]["Enums"]["psico_prioridade_fator"]
+          b: Database["public"]["Enums"]["psico_prioridade_fator"]
+        }
+        Returns: Database["public"]["Enums"]["psico_prioridade_fator"]
+      }
+      psico_processar_resultados: {
+        Args: { p_avaliacao_id: string; p_confirmacao: string }
+        Returns: Json
+      }
       psico_prorrogar_coleta: {
         Args: {
           p_avaliacao_id: string
@@ -7530,6 +7653,10 @@ export type Database = {
         Returns: undefined
       }
       psico_resumo_coleta: { Args: { p_avaliacao_id: string }; Returns: Json }
+      psico_validar_processamento_resultados: {
+        Args: { p_avaliacao_id: string }
+        Returns: Json
+      }
       psico_validar_questionario: {
         Args: { _questionario_id: string }
         Returns: Json
