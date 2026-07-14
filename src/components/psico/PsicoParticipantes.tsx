@@ -704,7 +704,7 @@ function EditarDialog({ participante, onOpenChange, onSaved, respondido, distrib
             O acesso já foi marcado como distribuído. Confirme se será necessário enviar novamente o link ao participante.
           </div>
         )}
-        <div className="grid gap-3 sm:grid-cols-2" autoComplete="off">
+        <div className="grid gap-3 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Label>Nome completo *</Label>
             <Input autoComplete="off" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
