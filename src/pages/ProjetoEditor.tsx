@@ -137,14 +137,10 @@ export default function ProjetoEditor() {
       <div className="p-6 space-y-6">
         {/* Header KPIs */}
         {isTecnico ? (
-          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
             <Card className="shadow-elegant"><CardContent className="p-4">
               <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Serviços</div>
               <div className="font-display text-xl font-bold mt-1">{servicos.filter(s => s.status === "concluido").length}/{servicos.length}</div>
-            </CardContent></Card>
-            <Card className="shadow-elegant"><CardContent className="p-4">
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Atividades</div>
-              <div className="font-display text-xl font-bold mt-1">{os.length}</div>
             </CardContent></Card>
             <Card className="shadow-elegant"><CardContent className="p-4">
               <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Documentos</div>
@@ -192,7 +188,9 @@ export default function ProjetoEditor() {
             <TabsTrigger value="visao">Visão Geral</TabsTrigger>
             <TabsTrigger value="cliente">Cliente</TabsTrigger>
             <TabsTrigger value="servicos">Serviços ({servicos.length})</TabsTrigger>
-            <TabsTrigger value="os">Atividades ({os.length})</TabsTrigger>
+            <TabsTrigger value="checklist"><ClipboardCheck className="h-4 w-4 mr-1.5" />Checklist</TabsTrigger>
+            <TabsTrigger value="visitas"><MapPin className="h-4 w-4 mr-1.5" />Visitas</TabsTrigger>
+            <TabsTrigger value="evidencias">Evidências</TabsTrigger>
             <TabsTrigger value="docs">Documentos ({docs.length})</TabsTrigger>
             {!isTecnico && <TabsTrigger value="financeiro">Financeiro</TabsTrigger>}
             {!isTecnico && <TabsTrigger value="renovacoes">Renovações ({renovacoes.length})</TabsTrigger>}
@@ -366,66 +364,14 @@ export default function ProjetoEditor() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="os" className="mt-4">
-            <Card className="shadow-elegant">
-              <CardContent className="p-0">
-                <div className="flex items-center justify-between p-4 border-b bg-muted/30">
-                  <div className="text-sm text-muted-foreground">
-                    Atividades operacionais do projeto (visitas, inspeções, entregas em campo).
-                  </div>
-                  <Dialog open={novaOpen} onOpenChange={setNovaOpen}>
-                    <DialogTrigger asChild>
-                      <Button size="sm"><Plus className="h-4 w-4 mr-1.5" /> Nova atividade</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader><DialogTitle>Nova atividade</DialogTitle></DialogHeader>
-                      <div className="space-y-3">
-                        <div>
-                          <Label>Título</Label>
-                          <Input value={nova.titulo} onChange={(e) => setNova({ ...nova, titulo: e.target.value })} placeholder="Ex.: Visita técnica preliminar" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label>Previsão de início</Label>
-                            <Input type="date" value={nova.data_prevista_inicio} onChange={(e) => setNova({ ...nova, data_prevista_inicio: e.target.value })} />
-                          </div>
-                          <div>
-                            <Label>Previsão de conclusão</Label>
-                            <Input type="date" value={nova.data_prevista_conclusao} onChange={(e) => setNova({ ...nova, data_prevista_conclusao: e.target.value })} />
-                          </div>
-                        </div>
-                        <div>
-                          <Label>Prioridade</Label>
-                          <Select value={nova.prioridade} onValueChange={(v) => setNova({ ...nova, prioridade: v })}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>{Object.entries(osPrioridadeLabel).map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}</SelectContent>
-                          </Select>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground">Cliente, endereço, cidade e responsável são herdados do projeto automaticamente.</p>
-                      </div>
-                      <DialogFooter><Button onClick={criarAtividade}>Criar atividade</Button></DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-                {os.length === 0 ? (
-                  <div className="p-10 text-center text-muted-foreground">Nenhuma atividade cadastrada. Clique em "Nova atividade".</div>
-                ) : (
-                  <ul className="divide-y">
-                    {os.map((o) => (
-                      <li key={o.id} className="p-4 hover:bg-muted/40 cursor-pointer" onClick={() => setAtividadeAberta(o.id)}>
-                        <div className="flex items-center gap-3">
-                          <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-mono text-xs">{o.numero}</span>
-                          <span className="flex-1 truncate">{o.titulo}</span>
-                          <Badge className={(osStatusColor[o.status] || "") + " border-0 text-[10px]"}>{osStatusLabel[o.status] || o.status}</Badge>
-                          <span className="text-xs text-muted-foreground">{formatDate(o.data_prevista_conclusao)}</span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
+          <TabsContent value="checklist" className="mt-4">
+            <AtividadePainel projeto={projeto} />
+          </TabsContent>
+          <TabsContent value="visitas" className="mt-4">
+            <AtividadePainel projeto={projeto} />
+          </TabsContent>
+          <TabsContent value="evidencias" className="mt-4">
+            <AtividadePainel projeto={projeto} />
           </TabsContent>
 
           <TabsContent value="docs" className="mt-4">
@@ -540,22 +486,6 @@ export default function ProjetoEditor() {
           </TabsContent>
         </Tabs>
       </div>
-
-      <Sheet open={!!atividadeAberta} onOpenChange={(v) => { if (!v) { setAtividadeAberta(null); load(); } }}>
-        <SheetContent side="right" className="w-full sm:max-w-5xl overflow-y-auto p-6">
-          <SheetHeader className="mb-4">
-            <SheetTitle className="flex items-center gap-3">
-              Atividade
-              {atividadeAberta && (
-                <Button size="sm" variant="outline" onClick={() => window.open(`/ordens-servico/${atividadeAberta}/imprimir`, "_blank")}>
-                  <Printer className="h-3.5 w-3.5 mr-1.5" /> Imprimir
-                </Button>
-              )}
-            </SheetTitle>
-          </SheetHeader>
-          {atividadeAberta && <OrdemServicoEditor id={atividadeAberta} embedded />}
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }
