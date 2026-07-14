@@ -6146,6 +6146,33 @@ export type Database = {
           },
         ]
       }
+      psico_rate_limits: {
+        Row: {
+          bucket: string
+          count: number
+          id: number
+          key_hash: string
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          count?: number
+          id?: number
+          key_hash: string
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          bucket?: string
+          count?: number
+          id?: number
+          key_hash?: string
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       service_categories: {
         Row: {
           created_at: string
@@ -6844,6 +6871,19 @@ export type Database = {
         Returns: undefined
       }
       projetos_gerar_renovacoes: { Args: never; Returns: number }
+      psico_atualizar_participante: {
+        Args: {
+          _email: string
+          _funcao: string
+          _justificativa?: string
+          _nome: string
+          _participante_id: string
+          _setor: string
+          _telefone: string
+          _unidade: string
+        }
+        Returns: Json
+      }
       psico_duplicar_questionario: {
         Args: {
           _nova_versao: string
@@ -6860,6 +6900,15 @@ export type Database = {
       psico_publicar_questionario: {
         Args: { _confirmacao: string; _questionario_id: string }
         Returns: Json
+      }
+      psico_rate_limit_hit: {
+        Args: {
+          _bucket: string
+          _key_hash: string
+          _max: number
+          _window_seconds: number
+        }
+        Returns: boolean
       }
       psico_validar_questionario: {
         Args: { _questionario_id: string }
