@@ -389,7 +389,7 @@ function EquipeCard({ osId, equipe, profs, onChange }: any) {
   );
 }
 
-function ChecklistCard({ osId, items, onChange }: any) {
+export function ChecklistCard({ osId, items, onChange }: any) {
   const [desc, setDesc] = useState("");
   const [obrig, setObrig] = useState(true);
   const [presets, setPresets] = useState<string[]>([]);
@@ -499,7 +499,7 @@ function ChecklistCard({ osId, items, onChange }: any) {
   );
 }
 
-function VisitasCard({ osId, visitas, profs, projRespId, onChange }: any) {
+export function VisitasCard({ osId, visitas, profs, projRespId, onChange }: any) {
   const [open, setOpen] = useState(false);
   const today = () => new Date().toISOString().slice(0, 10);
   const respName = (id: string) => profs.find((p: any) => p.id === id)?.nome || "—";
@@ -664,7 +664,7 @@ function DocumentosCard({ osId, documentos, onChange }: any) {
   );
 }
 
-function EvidenciasCard({ osId, evidencias, visitas, onChange }: any) {
+export function EvidenciasCard({ osId, evidencias, visitas, onChange }: any) {
   const [tipo, setTipo] = useState("foto");
   const [visitaId, setVisitaId] = useState("");
   const [legenda, setLegenda] = useState("");
