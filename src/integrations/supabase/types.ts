@@ -7021,6 +7021,7 @@ export type Database = {
         Args: { p_avaliacao_id: string; p_confirmacao: string }
         Returns: Json
       }
+      psico_admin_correcao_ativa: { Args: never; Returns: boolean }
       psico_atualizar_participante: {
         Args: {
           _email: string
@@ -7031,6 +7032,20 @@ export type Database = {
           _setor: string
           _telefone: string
           _unidade: string
+        }
+        Returns: Json
+      }
+      psico_avaliacao_bloqueada: {
+        Args: { _avaliacao_id: string }
+        Returns: boolean
+      }
+      psico_corrigir_participante_pos_coleta: {
+        Args: {
+          p_email: string
+          p_justificativa: string
+          p_nome: string
+          p_participante_id: string
+          p_telefone: string
         }
         Returns: Json
       }
