@@ -23,6 +23,7 @@ type Aceite = {
   aceito_por_email: string | null;
   motivo_recusa: string | null;
   created_at: string;
+  expires_at: string | null;
 };
 
 const STATUS_CFG: Record<string, { label: string; cls: string }> = {
@@ -67,7 +68,7 @@ export default function AceiteLinkCard({
   async function carregar() {
     const { data } = await supabase
       .from("proposal_aceites")
-      .select("id, token, status, revisao, aceito_em, recusado_em, visualizado_em, aceito_por_nome, aceito_por_email, motivo_recusa, created_at")
+      .select("id, token, status, revisao, aceito_em, recusado_em, visualizado_em, aceito_por_nome, aceito_por_email, motivo_recusa, created_at, expires_at")
       .eq("proposal_id", proposalId)
       .order("created_at", { ascending: false });
     setItems((data as any) || []);
@@ -248,6 +249,10 @@ export default function AceiteLinkCard({
 
               {it.visualizado_em && it.status === "pendente" && (
                 <p className="text-xs text-muted-foreground">👁 Cliente visualizou em {new Date(it.visualizado_em).toLocaleString("pt-BR")}</p>
+              )}
+
+              {it.status === "pendente" && it.expires_at && (
+                <p className="text-xs text-muted-foreground">⏱ Expira em {new Date(it.expires_at).toLocaleString("pt-BR")}</p>
               )}
 
               {it.status === "aceito" && (
