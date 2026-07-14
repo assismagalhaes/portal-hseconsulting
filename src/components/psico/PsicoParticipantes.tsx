@@ -34,6 +34,7 @@ import {
 } from "@/lib/psicoParticipantes";
 import { Copy, Download, FileUp, Link as LinkIcon, MoreHorizontal, Plus, RefreshCw, Ban, UserX, UserCheck } from "lucide-react";
 import { PsicoImportWizard } from "./PsicoImportWizard";
+import * as XLSX from "xlsx";
 
 interface Props {
   avaliacaoId: string;
