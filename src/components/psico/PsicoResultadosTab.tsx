@@ -302,7 +302,9 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
             <CardHeader className="flex flex-row items-center justify-between gap-3">
               <div>
                 <CardTitle className="text-base">Escopo analisado</CardTitle>
-                <div className="text-xs text-muted-foreground mt-1">Selecione um recorte para inspecionar os resultados.</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Selecione um recorte para inspecionar os resultados. Recortes por função, setor e unidade só aparecem quando há respondentes suficientes em cada segmento.
+                </div>
               </div>
               <div className="w-full max-w-xs">
                 <Select value={escopoSel ?? undefined} onValueChange={(v) => setEscopoSel(v)}>
@@ -367,70 +369,64 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
             </CardContent>
           </Card>
 
-          {/* Tabela de fatores */}
+          {/* Fatores — cards com distribuição de risco */}
           <Card>
-            <CardHeader><CardTitle className="text-base">Fatores</CardTitle></CardHeader>
-            <CardContent className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left border-b text-xs uppercase text-muted-foreground">
-                    <th className="py-2 pr-2">Fator</th>
-                    <th className="py-2 pr-2">Score</th>
-                    <th className="py-2 pr-2">Classificação</th>
-                    <th className="py-2 pr-2">% Alto+Crítico</th>
-                    <th className="py-2 pr-2">% Crítico</th>
-                    <th className="py-2 pr-2">Critérios</th>
-                    <th className="py-2 pr-2">Signif.</th>
-                    <th className="py-2 pr-2">Prioridade</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <CardHeader>
+              <CardTitle className="text-base">Fatores</CardTitle>
+              <div className="text-xs text-muted-foreground mt-1">
+                Distribuição percentual das respostas em cada faixa de risco, classificação final e critérios de significância acionados.
+              </div>
+            </CardHeader>
+            <CardContent>
+              {fatores.length === 0 ? (
+                <div className="py-6 text-center text-muted-foreground text-sm">Sem fatores neste escopo.</div>
+              ) : (
+                <div className="grid gap-3">
                   {fatores.map((f) => {
                     const meta = fatoresMap[f.fator_id];
                     const criterios = [
                       f.criterio_principal && "Principal",
                       f.criterio_agravamento && "Agravamento",
-                      f.criterio_critico_automatico && "Crítico Auto",
-                    ].filter(Boolean).join(", ") || "—";
-                    return (
-                      <tr key={f.id} className="border-b last:border-0">
-                        <td className="py-2 pr-2">
-                          <div className="font-medium">{meta?.nome || f.fator_id}</div>
-                          <div className="text-xs text-muted-foreground">{meta?.codigo}</div>
-                        </td>
-                        <td className="py-2 pr-2 font-mono">{Number(f.score_medio).toFixed(2)}</td>
-                        <td className="py-2 pr-2"><Badge className={classBadge(f.classificacao_media)}>{f.classificacao_media}</Badge></td>
-                        <td className="py-2 pr-2 font-mono">{Number(f.percentual_alto_critico).toFixed(1)}%</td>
-                        <td className="py-2 pr-2 font-mono">{Number(f.percentual_critico).toFixed(1)}%</td>
-                        <td className="py-2 pr-2 text-xs">{criterios}</td>
-                        <td className="py-2 pr-2">{f.significativo ? <Badge>Sim</Badge> : <span className="text-muted-foreground">—</span>}</td>
-                        <td className="py-2 pr-2"><Badge className={prioBadge(f.prioridade)}>{f.prioridade}</Badge></td>
-                      </tr>
-                    );
+                      f.criterio_critico_automatico && "Crítico automático",
+                    ].filter(Boolean) as string[];
+                    return <FatorCard key={f.id} f={f} meta={meta} criterios={criterios} />;
                   })}
-                  {fatores.length === 0 && (
-                    <tr><td colSpan={8} className="py-6 text-center text-muted-foreground">Sem fatores neste escopo.</td></tr>
-                  )}
-                </tbody>
-              </table>
+                </div>
+              )}
             </CardContent>
           </Card>
 
           {/* Perguntas */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between gap-3">
-              <CardTitle className="text-base">Perguntas</CardTitle>
-              <div className="w-full max-w-xs">
-                <Select value={fatorFiltro} onValueChange={setFatorFiltro}>
-                  <SelectTrigger><SelectValue placeholder="Filtrar por fator" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os fatores</SelectItem>
-                    {fatores.map((f) => {
-                      const m = fatoresMap[f.fator_id];
-                      return <SelectItem key={f.fator_id} value={f.fator_id}>{m?.codigo || m?.nome}</SelectItem>;
-                    })}
-                  </SelectContent>
-                </Select>
+            <CardHeader className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="text-base">Perguntas</CardTitle>
+                <div className="text-xs text-muted-foreground">Filtrar por fator</div>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  onClick={() => setFatorFiltro("all")}
+                  className={`text-xs px-2.5 py-1 rounded-full border transition ${fatorFiltro === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted"}`}
+                >
+                  Todos ({perguntas.length})
+                </button>
+                {fatores.map((f) => {
+                  const m = fatoresMap[f.fator_id];
+                  const count = perguntas.filter((p) => p.fator_id === f.fator_id).length;
+                  const active = fatorFiltro === f.fator_id;
+                  return (
+                    <button
+                      key={f.fator_id}
+                      onClick={() => setFatorFiltro(f.fator_id)}
+                      className={`text-xs px-2.5 py-1 rounded-full border transition flex items-center gap-1.5 ${active ? "border-primary" : "hover:bg-muted"}`}
+                      style={active ? { background: classColorHex(f.classificacao_media), color: "#fff", borderColor: "transparent" } : undefined}
+                      title={m?.nome}
+                    >
+                      <span className="font-medium">{m?.codigo || m?.nome}</span>
+                      <span className="opacity-70">({count})</span>
+                    </button>
+                  );
+                })}
               </div>
             </CardHeader>
             <CardContent className="overflow-x-auto">
@@ -441,8 +437,6 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
                     <th className="py-2 pr-2">Pergunta</th>
                     <th className="py-2 pr-2">Score</th>
                     <th className="py-2 pr-2">% Desf.</th>
-                    <th className="py-2 pr-2">% Alto+Crít.</th>
-                    <th className="py-2 pr-2">% Crít.</th>
                     <th className="py-2 pr-2">Classificação</th>
                   </tr>
                 </thead>
@@ -458,14 +452,12 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
                         </td>
                         <td className="py-2 pr-2 font-mono">{Number(p.score_medio).toFixed(2)}</td>
                         <td className="py-2 pr-2 font-mono">{Number(p.percentual_desfavoravel).toFixed(1)}%</td>
-                        <td className="py-2 pr-2 font-mono">{Number(p.percentual_alto_critico).toFixed(1)}%</td>
-                        <td className="py-2 pr-2 font-mono">{Number(p.percentual_critico).toFixed(1)}%</td>
                         <td className="py-2 pr-2"><Badge className={classBadge(p.classificacao_media)}>{p.classificacao_media}</Badge></td>
                       </tr>
                     );
                   })}
                   {perguntasFiltradas.length === 0 && (
-                    <tr><td colSpan={7} className="py-6 text-center text-muted-foreground">Sem perguntas para este filtro.</td></tr>
+                    <tr><td colSpan={5} className="py-6 text-center text-muted-foreground">Sem perguntas para este filtro.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -486,6 +478,81 @@ function Stat({ label, value }: { label: string; value: any }) {
     <div>
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
       <div className="text-sm mt-0.5 font-medium">{value ?? "—"}</div>
+    </div>
+  );
+}
+
+const RISCO_FAIXAS: Array<{ key: string; label: string; short: string; classif: Classificacao }> = [
+  { key: "percentual_irrelevante", label: "Irrelevante", short: "Irrel.", classif: "Risco Irrelevante" },
+  { key: "percentual_baixo", label: "Baixo", short: "Baixo", classif: "Risco Baixo" },
+  { key: "percentual_medio", label: "Médio", short: "Médio", classif: "Risco Médio" },
+  { key: "percentual_alto", label: "Alto", short: "Alto", classif: "Risco Alto" },
+  { key: "percentual_critico", label: "Crítico", short: "Crít.", classif: "Risco Crítico" },
+];
+
+function FatorCard({ f, meta, criterios }: { f: any; meta: any; criterios: string[] }) {
+  const cor = classColorHex(f.classificacao_media);
+  const faixas = RISCO_FAIXAS.map((r) => ({ ...r, pct: Number(f[r.key] ?? 0) }));
+  return (
+    <div className="rounded-lg border bg-card overflow-hidden">
+      <div className="px-4 py-3 flex flex-wrap items-start justify-between gap-3 border-b" style={{ borderLeft: `4px solid ${cor}` }}>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{meta?.codigo || "—"}</span>
+            <span className="font-semibold">{meta?.nome || f.fator_id}</span>
+          </div>
+          <div className="text-xs text-muted-foreground mt-0.5">
+            {f.quantidade_perguntas} pergunta(s) · {f.total_respostas_validas} resposta(s) válida(s)
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          <div className="text-right">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Score médio</div>
+            <div className="font-mono text-lg leading-none mt-0.5">{Number(f.score_medio).toFixed(2)}</div>
+          </div>
+          <Badge className={classBadge(f.classificacao_media)}>{f.classificacao_media}</Badge>
+          <Badge className={prioBadge(f.prioridade)}>{f.prioridade}</Badge>
+          {f.significativo && <Badge variant="secondary" className="border border-primary/40 text-primary">Significativo</Badge>}
+        </div>
+      </div>
+
+      <div className="px-4 py-3 space-y-3">
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Distribuição das respostas por faixa de risco</div>
+            <div className="text-[11px] text-muted-foreground">Total 100%</div>
+          </div>
+          <div className="flex w-full h-3 rounded overflow-hidden bg-muted">
+            {faixas.map((r) => r.pct > 0 && (
+              <div key={r.key} title={`${r.label}: ${r.pct.toFixed(1)}%`} style={{ width: `${r.pct}%`, background: classColorHex(r.classif) }} />
+            ))}
+          </div>
+          <div className="grid grid-cols-5 gap-2 mt-2">
+            {faixas.map((r) => (
+              <div key={r.key} className="text-center">
+                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <span className="inline-block w-2 h-2 rounded-sm" style={{ background: classColorHex(r.classif) }} />
+                  {r.short}
+                </div>
+                <div className="font-mono text-sm mt-0.5">{r.pct.toFixed(1)}%</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 text-xs pt-1 border-t">
+          <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Critérios acionados:</span>
+          {criterios.length === 0 ? (
+            <span className="text-muted-foreground">Nenhum</span>
+          ) : criterios.map((c) => (
+            <Badge key={c} variant="outline" className="text-[10px]">{c}</Badge>
+          ))}
+          <span className="ml-auto text-muted-foreground">
+            Médio+Alto+Crít.: <span className="font-mono text-foreground">{Number(f.percentual_medio_alto_critico ?? 0).toFixed(1)}%</span>
+            {" · "}Alto+Crít.: <span className="font-mono text-foreground">{Number(f.percentual_alto_critico ?? 0).toFixed(1)}%</span>
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
