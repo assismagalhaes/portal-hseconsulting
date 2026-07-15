@@ -340,7 +340,7 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
                   <SelectContent>
                     {escopos.map((e) => (
                       <SelectItem key={e.id} value={e.id}>
-                        {e.tipo === "global" ? "Global" : `${e.tipo}: ${e.rotulo}`} · n={e.respondentes}
+                        {escopoLabel(e)} · {respondentesLabel(e.respondentes)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -348,11 +348,15 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
               </div>
             </CardHeader>
             {escopoAtual && (
-              <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
-                <Stat label="Tipo" value={escopoAtual.tipo} />
-                <Stat label="Respondentes" value={escopoAtual.respondentes} />
-                <Stat label="Mínimo aplicado" value={escopoAtual.minimo_aplicado} />
-                <Stat label="Itens" value={escopoAtual.total_itens} />
+              <CardContent className="space-y-4 text-sm">
+                <div className="rounded-md border bg-muted/30 px-4 py-3">
+                  <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Recorte analisado</div>
+                  <div className="text-base font-semibold mt-0.5">{escopoLabel(escopoAtual)}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {respondentesLabel(escopoAtual.respondentes)} · {escopoAtual.total_itens} respostas · mínimo aplicado: {escopoAtual.minimo_aplicado}
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-1">
                   <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Índice descritivo</div>
                   <div className="flex items-center gap-2">
@@ -366,8 +370,9 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
                   <Badge className={prioBadge(escopoAtual.prioridade_maxima)}>{escopoAtual.prioridade_maxima}</Badge>
                 </div>
                 {escopoAtual.amostra_reduzida && (
-                  <div className="sm:col-span-2 lg:col-span-1"><Badge className="bg-amber-500 text-black">Amostra reduzida</Badge></div>
+                  <div className="sm:col-span-2 lg:col-span-3"><Badge className="bg-amber-500 text-black">Amostra reduzida (n&lt;5) — leitura indicativa</Badge></div>
                 )}
+                </div>
               </CardContent>
             )}
           </Card>
