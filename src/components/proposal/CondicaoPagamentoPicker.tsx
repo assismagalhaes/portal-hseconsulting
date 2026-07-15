@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Info, RefreshCcw, Wrench, Plus, Trash2, Undo2 } from "lucide-react";
+import { Info, RefreshCcw, Wrench, Plus, Trash2, Undo2, History, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
 import { MARCO_LABEL, MARCOS, buildTextoCondicao, somaPercentuais, validarParcelas, type CondPagMarco, type ParcelaForm } from "@/lib/condicoesPagamento";
@@ -47,6 +47,8 @@ export default function CondicaoPagamentoPicker({
   const [textoPadrao, setTextoPadrao] = useState<string>("");
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<ParcelaForm[]>([]);
+  const [historico, setHistorico] = useState<any[]>([]);
+  const [showHist, setShowHist] = useState(false);
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [proposalId]);
 
@@ -70,6 +72,13 @@ export default function CondicaoPagamentoPicker({
       setSelectedId(snapData.condicao_id || "");
       setComplemento(snapData.texto_complementar || "");
     }
+    const { data: hist } = await supabase
+      .from("proposal_condicao_pagamento_historico")
+      .select("*")
+      .eq("proposal_id", proposalId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setHistorico(hist || []);
   }
 
   const selected = useMemo(() => conds.find((c) => c.id === selectedId), [conds, selectedId]);
@@ -376,6 +385,64 @@ export default function CondicaoPagamentoPicker({
           <div className="font-medium mb-1 flex items-center gap-1"><Info className="h-3 w-3" /> Texto legado desta proposta</div>
           <pre className="whitespace-pre-wrap font-sans text-muted-foreground">{legacyTexto}</pre>
           <p className="mt-2 text-muted-foreground">Aplique uma condição parametrizada acima para substituir este texto e habilitar a integração com o financeiro.</p>
+        </div>
+      )}
+
+      {historico.length > 0 && (
+        <div className="rounded-md border">
+          <button
+            type="button"
+            onClick={() => setShowHist((v) => !v)}
+            className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium hover:bg-muted/50"
+          >
+            <span className="flex items-center gap-1.5">
+              <History className="h-3.5 w-3.5" />
+              Histórico da condição ({historico.length})
+            </span>
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showHist ? "rotate-180" : ""}`} />
+          </button>
+          {showHist && (
+            <div className="border-t divide-y max-h-80 overflow-y-auto">
+              {historico.map((h) => (
+                <div key={h.id} className="p-3 text-xs space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={h.acao === "removida" ? "destructive" : h.acao === "personalizada" ? "secondary" : "outline"}
+                      className="text-[10px] capitalize"
+                    >
+                      {h.acao}
+                    </Badge>
+                    <span className="font-medium">{h.nome || "—"}</span>
+                    {h.revisao != null && (
+                      <Badge variant="outline" className="text-[10px] font-mono">
+                        Rev. {String(h.revisao).padStart(2, "0")}
+                      </Badge>
+                    )}
+                    <span className="ml-auto text-muted-foreground">
+                      {new Date(h.created_at).toLocaleString("pt-BR")}
+                    </span>
+                  </div>
+                  {Array.isArray(h.parcelas) && h.parcelas.length > 0 && (
+                    <div className="text-muted-foreground pl-1">
+                      {h.parcelas.map((p: any) => (
+                        <div key={p.numero} className="flex gap-2">
+                          <span className="font-mono w-6">{p.numero})</span>
+                          <span className="font-mono">{Number(p.percentual).toFixed(2)}%</span>
+                          <span>· {MARCO_LABEL[p.marco as CondPagMarco]}</span>
+                          {p.dias_apos_marco ? <span>· +{p.dias_apos_marco}d</span> : null}
+                          {p.marco === "mensal_recorrente" && p.dia_mes ? <span>· dia {p.dia_mes}</span> : null}
+                          {p.valor ? <span className="ml-auto font-mono">{brl(Number(p.valor))}</span> : null}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {h.texto_complementar && (
+                    <p className="text-muted-foreground italic">{h.texto_complementar}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
