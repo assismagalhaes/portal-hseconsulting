@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { brl, formatDate } from "@/lib/format";
 import { FIN_STATUS_CONTRATO, FIN_STATUS_CONTRATO_COR, FIN_STATUS_PARCELA, FIN_STATUS_PARCELA_COR, FIN_FORMA_PAGAMENTO, calcMargem, margemIndicador } from "@/lib/financeiro";
 import { Plus, ArrowLeft, Trash2, Receipt, Upload } from "lucide-react";
+import { CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ContratoEditor() {
@@ -24,6 +25,8 @@ export default function ContratoEditor() {
   const [pricing, setPricing] = useState<any[]>([]);
   const [openParc, setOpenParc] = useState(false);
   const [openRec, setOpenRec] = useState<any>(null);
+  const [openMarco, setOpenMarco] = useState<any>(null);
+  const [marcoData, setMarcoData] = useState(new Date().toISOString().slice(0,10));
 
   const [newP, setNewP] = useState({ numero: 1, descricao: "", valor: 0, data_vencimento: "" });
   const [rec, setRec] = useState({ valor: 0, data_recebimento: new Date().toISOString().slice(0,10), forma_pagamento: "pix", conta_recebimento: "", observacoes: "" });
@@ -61,6 +64,17 @@ export default function ContratoEditor() {
   const removerParcela = async (pid: string) => {
     if (!confirm("Excluir parcela?")) return;
     await supabase.from("financeiro_parcelas").delete().eq("id", pid);
+    load();
+  };
+
+  const ativarParcela = async () => {
+    if (!openMarco) return;
+    const { error } = await supabase.from("financeiro_parcelas")
+      .update({ status: "a_vencer", data_vencimento: marcoData })
+      .eq("id", openMarco.id);
+    if (error) return toast.error(error.message);
+    toast.success("Marco confirmado — parcela liberada para cobrança");
+    setOpenMarco(null);
     load();
   };
 
@@ -146,6 +160,11 @@ export default function ContratoEditor() {
                       <td className="px-4 py-2 text-right font-mono text-emerald-700">{brl(p.valor_recebido)}</td>
                       <td className="px-4 py-2"><span className={`inline-block px-2 py-0.5 rounded text-xs ${FIN_STATUS_PARCELA_COR[p.status]}`}>{FIN_STATUS_PARCELA[p.status]}</span></td>
                       <td className="px-4 py-2 flex gap-1">
+                        {p.status === "aguardando_evento" && (
+                          <Button size="sm" variant="outline" onClick={() => { setMarcoData(new Date().toISOString().slice(0,10)); setOpenMarco(p); }}>
+                            <CalendarClock className="h-3 w-3 mr-1"/>Confirmar marco
+                          </Button>
+                        )}
                         {p.status !== "recebida" && p.status !== "cancelada" && (
                           <Button size="sm" variant="outline" onClick={()=>{ setRec({ ...rec, valor: Number(p.valor) - Number(p.valor_recebido||0) }); setOpenRec(p); }}>
                             <Receipt className="h-3 w-3 mr-1"/>Receber
@@ -227,6 +246,21 @@ export default function ContratoEditor() {
               <div><Label>Observações</Label><Textarea value={rec.observacoes} onChange={e=>setRec({...rec, observacoes: e.target.value})} /></div>
             </div>
             <DialogFooter><Button onClick={registrarRecebimento}><Receipt className="h-4 w-4 mr-1"/>Confirmar</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={!!openMarco} onOpenChange={(o)=>!o && setOpenMarco(null)}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Confirmar ocorrência do marco — Parcela #{openMarco?.numero}</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Esta parcela estava vinculada a um evento (emissão de NF, início/conclusão de serviço etc.). Informe o novo vencimento a partir do qual o cliente pode ser cobrado.
+              </p>
+              <div><Label>Nova data de vencimento</Label>
+                <Input type="date" value={marcoData} onChange={e=>setMarcoData(e.target.value)} />
+              </div>
+            </div>
+            <DialogFooter><Button onClick={ativarParcela}><CalendarClock className="h-4 w-4 mr-1"/>Confirmar marco</Button></DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
