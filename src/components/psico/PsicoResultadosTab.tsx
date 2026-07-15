@@ -481,3 +481,78 @@ function Stat({ label, value }: { label: string; value: any }) {
     </div>
   );
 }
+
+const RISCO_FAIXAS: Array<{ key: string; label: string; short: string; classif: Classificacao }> = [
+  { key: "percentual_irrelevante", label: "Irrelevante", short: "Irrel.", classif: "Risco Irrelevante" },
+  { key: "percentual_baixo", label: "Baixo", short: "Baixo", classif: "Risco Baixo" },
+  { key: "percentual_medio", label: "Médio", short: "Médio", classif: "Risco Médio" },
+  { key: "percentual_alto", label: "Alto", short: "Alto", classif: "Risco Alto" },
+  { key: "percentual_critico", label: "Crítico", short: "Crít.", classif: "Risco Crítico" },
+];
+
+function FatorCard({ f, meta, criterios }: { f: any; meta: any; criterios: string[] }) {
+  const cor = classColorHex(f.classificacao_media);
+  const faixas = RISCO_FAIXAS.map((r) => ({ ...r, pct: Number(f[r.key] ?? 0) }));
+  return (
+    <div className="rounded-lg border bg-card overflow-hidden">
+      <div className="px-4 py-3 flex flex-wrap items-start justify-between gap-3 border-b" style={{ borderLeft: `4px solid ${cor}` }}>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{meta?.codigo || "—"}</span>
+            <span className="font-semibold">{meta?.nome || f.fator_id}</span>
+          </div>
+          <div className="text-xs text-muted-foreground mt-0.5">
+            {f.quantidade_perguntas} pergunta(s) · {f.total_respostas_validas} resposta(s) válida(s)
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          <div className="text-right">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Score médio</div>
+            <div className="font-mono text-lg leading-none mt-0.5">{Number(f.score_medio).toFixed(2)}</div>
+          </div>
+          <Badge className={classBadge(f.classificacao_media)}>{f.classificacao_media}</Badge>
+          <Badge className={prioBadge(f.prioridade)}>{f.prioridade}</Badge>
+          {f.significativo && <Badge variant="secondary" className="border border-primary/40 text-primary">Significativo</Badge>}
+        </div>
+      </div>
+
+      <div className="px-4 py-3 space-y-3">
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Distribuição das respostas por faixa de risco</div>
+            <div className="text-[11px] text-muted-foreground">Total 100%</div>
+          </div>
+          <div className="flex w-full h-3 rounded overflow-hidden bg-muted">
+            {faixas.map((r) => r.pct > 0 && (
+              <div key={r.key} title={`${r.label}: ${r.pct.toFixed(1)}%`} style={{ width: `${r.pct}%`, background: classColorHex(r.classif) }} />
+            ))}
+          </div>
+          <div className="grid grid-cols-5 gap-2 mt-2">
+            {faixas.map((r) => (
+              <div key={r.key} className="text-center">
+                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <span className="inline-block w-2 h-2 rounded-sm" style={{ background: classColorHex(r.classif) }} />
+                  {r.short}
+                </div>
+                <div className="font-mono text-sm mt-0.5">{r.pct.toFixed(1)}%</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 text-xs pt-1 border-t">
+          <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Critérios acionados:</span>
+          {criterios.length === 0 ? (
+            <span className="text-muted-foreground">Nenhum</span>
+          ) : criterios.map((c) => (
+            <Badge key={c} variant="outline" className="text-[10px]">{c}</Badge>
+          ))}
+          <span className="ml-auto text-muted-foreground">
+            Médio+Alto+Crít.: <span className="font-mono text-foreground">{Number(f.percentual_medio_alto_critico ?? 0).toFixed(1)}%</span>
+            {" · "}Alto+Crít.: <span className="font-mono text-foreground">{Number(f.percentual_alto_critico ?? 0).toFixed(1)}%</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
