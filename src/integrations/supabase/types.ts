@@ -6951,6 +6951,217 @@ export type Database = {
         }
         Relationships: []
       }
+      psico_relatorios: {
+        Row: {
+          atualizado_em: string
+          avaliacao_id: string
+          codigo: string
+          criado_em: string
+          criado_por: string | null
+          documento_tecnico_id: string | null
+          id: string
+          motivo_revogacao: string | null
+          revogado_em: string | null
+          revogado_por: string | null
+          status: Database["public"]["Enums"]["psico_relatorio_status"]
+          titulo: string
+          versao_ativa_id: string | null
+        }
+        Insert: {
+          atualizado_em?: string
+          avaliacao_id: string
+          codigo?: string
+          criado_em?: string
+          criado_por?: string | null
+          documento_tecnico_id?: string | null
+          id?: string
+          motivo_revogacao?: string | null
+          revogado_em?: string | null
+          revogado_por?: string | null
+          status?: Database["public"]["Enums"]["psico_relatorio_status"]
+          titulo?: string
+          versao_ativa_id?: string | null
+        }
+        Update: {
+          atualizado_em?: string
+          avaliacao_id?: string
+          codigo?: string
+          criado_em?: string
+          criado_por?: string | null
+          documento_tecnico_id?: string | null
+          id?: string
+          motivo_revogacao?: string | null
+          revogado_em?: string | null
+          revogado_por?: string | null
+          status?: Database["public"]["Enums"]["psico_relatorio_status"]
+          titulo?: string
+          versao_ativa_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_relatorios_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: true
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_relatorios_documento_tecnico_id_fkey"
+            columns: ["documento_tecnico_id"]
+            isOneToOne: false
+            referencedRelation: "documentos_tecnicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_relatorios_versao_ativa_fk"
+            columns: ["versao_ativa_id"]
+            isOneToOne: false
+            referencedRelation: "psico_relatorios_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_relatorios_versoes: {
+        Row: {
+          arquivo_mime_type: string | null
+          arquivo_nome: string | null
+          arquivo_paginas: number | null
+          arquivo_storage_path: string | null
+          arquivo_tamanho_bytes: number | null
+          avaliacao_id: string
+          codigo_revisao: string
+          codigo_validacao: string
+          criado_em: string
+          descricao_revisao: string | null
+          documento_tecnico_revisao_id: string | null
+          emitido_em: string | null
+          emitido_por: string | null
+          erro_codigo: string | null
+          geracao_concluida_em: string | null
+          geracao_iniciada_em: string
+          id: string
+          modelo_codigo: string
+          modelo_versao: string
+          motivo_revogacao: string | null
+          numero_revisao: number
+          pdf_hash_sha256: string | null
+          processamento_id: string
+          relatorio_id: string
+          revisao_tecnica_id: string
+          revogado_em: string | null
+          revogado_por: string | null
+          snapshot_conteudo: Json
+          snapshot_hash: string
+          status: Database["public"]["Enums"]["psico_relatorio_versao_status"]
+          substituido_em: string | null
+          substituido_por_versao_id: string | null
+        }
+        Insert: {
+          arquivo_mime_type?: string | null
+          arquivo_nome?: string | null
+          arquivo_paginas?: number | null
+          arquivo_storage_path?: string | null
+          arquivo_tamanho_bytes?: number | null
+          avaliacao_id: string
+          codigo_revisao: string
+          codigo_validacao?: string
+          criado_em?: string
+          descricao_revisao?: string | null
+          documento_tecnico_revisao_id?: string | null
+          emitido_em?: string | null
+          emitido_por?: string | null
+          erro_codigo?: string | null
+          geracao_concluida_em?: string | null
+          geracao_iniciada_em?: string
+          id?: string
+          modelo_codigo: string
+          modelo_versao: string
+          motivo_revogacao?: string | null
+          numero_revisao: number
+          pdf_hash_sha256?: string | null
+          processamento_id: string
+          relatorio_id: string
+          revisao_tecnica_id: string
+          revogado_em?: string | null
+          revogado_por?: string | null
+          snapshot_conteudo: Json
+          snapshot_hash: string
+          status?: Database["public"]["Enums"]["psico_relatorio_versao_status"]
+          substituido_em?: string | null
+          substituido_por_versao_id?: string | null
+        }
+        Update: {
+          arquivo_mime_type?: string | null
+          arquivo_nome?: string | null
+          arquivo_paginas?: number | null
+          arquivo_storage_path?: string | null
+          arquivo_tamanho_bytes?: number | null
+          avaliacao_id?: string
+          codigo_revisao?: string
+          codigo_validacao?: string
+          criado_em?: string
+          descricao_revisao?: string | null
+          documento_tecnico_revisao_id?: string | null
+          emitido_em?: string | null
+          emitido_por?: string | null
+          erro_codigo?: string | null
+          geracao_concluida_em?: string | null
+          geracao_iniciada_em?: string
+          id?: string
+          modelo_codigo?: string
+          modelo_versao?: string
+          motivo_revogacao?: string | null
+          numero_revisao?: number
+          pdf_hash_sha256?: string | null
+          processamento_id?: string
+          relatorio_id?: string
+          revisao_tecnica_id?: string
+          revogado_em?: string | null
+          revogado_por?: string | null
+          snapshot_conteudo?: Json
+          snapshot_hash?: string
+          status?: Database["public"]["Enums"]["psico_relatorio_versao_status"]
+          substituido_em?: string | null
+          substituido_por_versao_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_relatorios_versoes_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_relatorios_versoes_processamento_id_fkey"
+            columns: ["processamento_id"]
+            isOneToOne: false
+            referencedRelation: "psico_resultado_processamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_relatorios_versoes_relatorio_id_fkey"
+            columns: ["relatorio_id"]
+            isOneToOne: false
+            referencedRelation: "psico_relatorios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_relatorios_versoes_revisao_tecnica_id_fkey"
+            columns: ["revisao_tecnica_id"]
+            isOneToOne: false
+            referencedRelation: "psico_revisoes_tecnicas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_relatorios_versoes_substituido_por_versao_id_fkey"
+            columns: ["substituido_por_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_relatorios_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psico_respostas: {
         Row: {
           avaliacao_id: string
@@ -8370,6 +8581,18 @@ export type Database = {
         Args: { p_metodologia_versao_id: string; p_score: number }
         Returns: Database["public"]["Enums"]["psico_classificacao_risco"]
       }
+      psico_concluir_emissao_relatorio: {
+        Args: {
+          p_emitido_por?: string
+          p_nome_arquivo: string
+          p_pdf_hash: string
+          p_quantidade_paginas: number
+          p_relatorio_versao_id: string
+          p_storage_path: string
+          p_tamanho_bytes: number
+        }
+        Returns: Json
+      }
       psico_corrigir_participante_pos_coleta: {
         Args: {
           p_email: string
@@ -8409,6 +8632,10 @@ export type Database = {
         }
         Returns: Json
       }
+      psico_falhar_emissao_relatorio: {
+        Args: { p_erro_codigo: string; p_relatorio_versao_id: string }
+        Returns: Json
+      }
       psico_finalizar_submissao: {
         Args: {
           p_public_id: string
@@ -8418,6 +8645,8 @@ export type Database = {
         Returns: Json
       }
       psico_gerar_codigo_avaliacao: { Args: never; Returns: string }
+      psico_gerar_codigo_relatorio: { Args: never; Returns: string }
+      psico_gerar_codigo_validacao: { Args: never; Returns: string }
       psico_gerar_recomendacoes_internal: {
         Args: { p_revisao_id: string; p_substituir_geradas?: boolean }
         Returns: number
@@ -8426,6 +8655,7 @@ export type Database = {
         Args: { p_avaliacao_id: string }
         Returns: string
       }
+      psico_hash_snapshot: { Args: { p_snapshot: Json }; Returns: string }
       psico_listar_escopos_resultado: {
         Args: { p_avaliacao_id: string }
         Returns: {
@@ -8553,6 +8783,18 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      psico_obter_versao_download: {
+        Args: { p_relatorio_versao_id: string }
+        Returns: Json
+      }
+      psico_preparar_emissao_relatorio: {
+        Args: {
+          p_avaliacao_id: string
+          p_confirmacao: string
+          p_descricao_revisao?: string
+        }
+        Returns: Json
+      }
       psico_prioridade_max: {
         Args: {
           a: Database["public"]["Enums"]["psico_prioridade_fator"]
@@ -8602,12 +8844,25 @@ export type Database = {
         Returns: undefined
       }
       psico_resumo_coleta: { Args: { p_avaliacao_id: string }; Returns: Json }
+      psico_revogar_versao_relatorio: {
+        Args: { p_motivo: string; p_relatorio_versao_id: string }
+        Returns: Json
+      }
+      psico_sanitize_snapshot: { Args: { p_data: Json }; Returns: Json }
       psico_validar_biblioteca_medidas: {
         Args: { p_biblioteca_versao_id: string }
         Returns: Json
       }
+      psico_validar_emissao_relatorio: {
+        Args: { p_avaliacao_id: string }
+        Returns: Json
+      }
       psico_validar_processamento_resultados: {
         Args: { p_avaliacao_id: string }
+        Returns: Json
+      }
+      psico_validar_publico_relatorio: {
+        Args: { p_codigo_validacao: string }
         Returns: Json
       }
       psico_validar_questionario: {
@@ -8999,6 +9254,14 @@ export type Database = {
       psico_plano_status: "rascunho" | "revisado" | "aprovado"
       psico_prioridade_fator: "Monitoramento" | "Média" | "Alta" | "Crítica"
       psico_questionario_status: "em_configuracao" | "publicada" | "arquivada"
+      psico_relatorio_status: "ativo" | "revogado"
+      psico_relatorio_versao_status:
+        | "preparando"
+        | "gerando"
+        | "emitido"
+        | "falhou"
+        | "substituido"
+        | "revogado"
       psico_resultado_escopo_tipo: "global" | "funcao" | "setor" | "unidade"
       psico_resultado_proc_status:
         | "processando"
@@ -9535,6 +9798,15 @@ export const Constants = {
       psico_plano_status: ["rascunho", "revisado", "aprovado"],
       psico_prioridade_fator: ["Monitoramento", "Média", "Alta", "Crítica"],
       psico_questionario_status: ["em_configuracao", "publicada", "arquivada"],
+      psico_relatorio_status: ["ativo", "revogado"],
+      psico_relatorio_versao_status: [
+        "preparando",
+        "gerando",
+        "emitido",
+        "falhou",
+        "substituido",
+        "revogado",
+      ],
       psico_resultado_escopo_tipo: ["global", "funcao", "setor", "unidade"],
       psico_resultado_proc_status: [
         "processando",
