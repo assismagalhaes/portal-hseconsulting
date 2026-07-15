@@ -307,10 +307,15 @@ export default function PsicoAvaliacaoDetalhes() {
                   <ul className="divide-y">
                     {auditoria.map((a) => (
                       <li key={a.id} className="py-3 flex items-start gap-3 text-sm">
-                        <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
+                        <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${
+                          a.entidade === "revisao_tecnica" ? "bg-emerald-600" :
+                          a.entidade === "plano_acao" ? "bg-sky-600" : "bg-primary"
+                        }`} />
                         <div className="flex-1">
                           <div className="font-medium">{a.metadados?.resumo || a.acao}</div>
-                          <div className="text-xs text-muted-foreground">{formatDateTime(a.created_at)} · {a.acao}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {formatDateTime(a.created_at)} · {a.entidade} · {a.acao}
+                          </div>
                         </div>
                       </li>
                     ))}
