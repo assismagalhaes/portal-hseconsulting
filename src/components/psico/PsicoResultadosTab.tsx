@@ -302,7 +302,9 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
             <CardHeader className="flex flex-row items-center justify-between gap-3">
               <div>
                 <CardTitle className="text-base">Escopo analisado</CardTitle>
-                <div className="text-xs text-muted-foreground mt-1">Selecione um recorte para inspecionar os resultados.</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Selecione um recorte para inspecionar os resultados. Recortes por função, setor e unidade só aparecem quando há respondentes suficientes em cada segmento.
+                </div>
               </div>
               <div className="w-full max-w-xs">
                 <Select value={escopoSel ?? undefined} onValueChange={(v) => setEscopoSel(v)}>
@@ -367,52 +369,30 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
             </CardContent>
           </Card>
 
-          {/* Tabela de fatores */}
+          {/* Fatores — cards com distribuição de risco */}
           <Card>
-            <CardHeader><CardTitle className="text-base">Fatores</CardTitle></CardHeader>
-            <CardContent className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left border-b text-xs uppercase text-muted-foreground">
-                    <th className="py-2 pr-2">Fator</th>
-                    <th className="py-2 pr-2">Score</th>
-                    <th className="py-2 pr-2">Classificação</th>
-                    <th className="py-2 pr-2">% Alto+Crítico</th>
-                    <th className="py-2 pr-2">% Crítico</th>
-                    <th className="py-2 pr-2">Critérios</th>
-                    <th className="py-2 pr-2">Signif.</th>
-                    <th className="py-2 pr-2">Prioridade</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <CardHeader>
+              <CardTitle className="text-base">Fatores</CardTitle>
+              <div className="text-xs text-muted-foreground mt-1">
+                Distribuição percentual das respostas em cada faixa de risco, classificação final e critérios de significância acionados.
+              </div>
+            </CardHeader>
+            <CardContent>
+              {fatores.length === 0 ? (
+                <div className="py-6 text-center text-muted-foreground text-sm">Sem fatores neste escopo.</div>
+              ) : (
+                <div className="grid gap-3">
                   {fatores.map((f) => {
                     const meta = fatoresMap[f.fator_id];
                     const criterios = [
                       f.criterio_principal && "Principal",
                       f.criterio_agravamento && "Agravamento",
-                      f.criterio_critico_automatico && "Crítico Auto",
-                    ].filter(Boolean).join(", ") || "—";
-                    return (
-                      <tr key={f.id} className="border-b last:border-0">
-                        <td className="py-2 pr-2">
-                          <div className="font-medium">{meta?.nome || f.fator_id}</div>
-                          <div className="text-xs text-muted-foreground">{meta?.codigo}</div>
-                        </td>
-                        <td className="py-2 pr-2 font-mono">{Number(f.score_medio).toFixed(2)}</td>
-                        <td className="py-2 pr-2"><Badge className={classBadge(f.classificacao_media)}>{f.classificacao_media}</Badge></td>
-                        <td className="py-2 pr-2 font-mono">{Number(f.percentual_alto_critico).toFixed(1)}%</td>
-                        <td className="py-2 pr-2 font-mono">{Number(f.percentual_critico).toFixed(1)}%</td>
-                        <td className="py-2 pr-2 text-xs">{criterios}</td>
-                        <td className="py-2 pr-2">{f.significativo ? <Badge>Sim</Badge> : <span className="text-muted-foreground">—</span>}</td>
-                        <td className="py-2 pr-2"><Badge className={prioBadge(f.prioridade)}>{f.prioridade}</Badge></td>
-                      </tr>
-                    );
+                      f.criterio_critico_automatico && "Crítico automático",
+                    ].filter(Boolean) as string[];
+                    return <FatorCard key={f.id} f={f} meta={meta} criterios={criterios} />;
                   })}
-                  {fatores.length === 0 && (
-                    <tr><td colSpan={8} className="py-6 text-center text-muted-foreground">Sem fatores neste escopo.</td></tr>
-                  )}
-                </tbody>
-              </table>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -441,8 +421,6 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
                     <th className="py-2 pr-2">Pergunta</th>
                     <th className="py-2 pr-2">Score</th>
                     <th className="py-2 pr-2">% Desf.</th>
-                    <th className="py-2 pr-2">% Alto+Crít.</th>
-                    <th className="py-2 pr-2">% Crít.</th>
                     <th className="py-2 pr-2">Classificação</th>
                   </tr>
                 </thead>
@@ -458,14 +436,12 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
                         </td>
                         <td className="py-2 pr-2 font-mono">{Number(p.score_medio).toFixed(2)}</td>
                         <td className="py-2 pr-2 font-mono">{Number(p.percentual_desfavoravel).toFixed(1)}%</td>
-                        <td className="py-2 pr-2 font-mono">{Number(p.percentual_alto_critico).toFixed(1)}%</td>
-                        <td className="py-2 pr-2 font-mono">{Number(p.percentual_critico).toFixed(1)}%</td>
                         <td className="py-2 pr-2"><Badge className={classBadge(p.classificacao_media)}>{p.classificacao_media}</Badge></td>
                       </tr>
                     );
                   })}
                   {perguntasFiltradas.length === 0 && (
-                    <tr><td colSpan={7} className="py-6 text-center text-muted-foreground">Sem perguntas para este filtro.</td></tr>
+                    <tr><td colSpan={5} className="py-6 text-center text-muted-foreground">Sem perguntas para este filtro.</td></tr>
                   )}
                 </tbody>
               </table>
