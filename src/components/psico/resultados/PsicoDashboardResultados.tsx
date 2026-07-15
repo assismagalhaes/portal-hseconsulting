@@ -6,6 +6,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info, Loader2 } from "lucide-react";
 import VisaoExecutiva from "./VisaoExecutiva";
+import FatoresDetalhados from "./FatoresDetalhados";
+import MapaPerguntas from "./MapaPerguntas";
+import SegmentacoesMatriz from "./SegmentacoesMatriz";
+import MetodologiaPainel from "./MetodologiaPainel";
 import { AVISO_METODOLOGICO } from "./shared";
 
 type EscopoResumo = {
@@ -87,23 +91,19 @@ export default function PsicoDashboardResultados({ avaliacaoId }: { avaliacaoId:
         </TabsContent>
 
         <TabsContent value="fatores" className="mt-4">
-          <ProximaEntregaCard titulo="Fatores — visualização detalhada"
-            descricao="Cards expansíveis dos sete fatores com distribuição, critérios acionados, top 5 perguntas por atenção e nota metodológica." />
+          {escopoId && <FatoresDetalhados avaliacaoId={avaliacaoId} escopoId={escopoId} />}
         </TabsContent>
 
         <TabsContent value="perguntas" className="mt-4">
-          <ProximaEntregaCard titulo="Mapa das 35 perguntas"
-            descricao="Heatmap com colorização por score / desfavorável / crítico, e tabela técnica com filtros, ordenação e busca. Sem qualquer resposta individual." />
+          {escopoId && <MapaPerguntas avaliacaoId={avaliacaoId} escopoId={escopoId} />}
         </TabsContent>
 
         <TabsContent value="segmentacoes" className="mt-4">
-          <ProximaEntregaCard titulo="Segmentações protegidas"
-            descricao="Matriz de scores e gráfico comparativo entre segmentos elegíveis (função, setor, unidade), respeitando o mínimo metodológico da Fase 5. Sem ranking." />
+          <SegmentacoesMatriz avaliacaoId={avaliacaoId} />
         </TabsContent>
 
         <TabsContent value="metodologia" className="mt-4">
-          <ProximaEntregaCard titulo="Metodologia e metadados"
-            descricao="Documento somente leitura com questionário, metodologia, versão do motor, opções, pesos, faixas, critérios, mínimos, hash e nota de referência." />
+          {escopoId && <MetodologiaPainel avaliacaoId={avaliacaoId} escopoId={escopoId} />}
         </TabsContent>
       </Tabs>
 
@@ -112,15 +112,4 @@ export default function PsicoDashboardResultados({ avaliacaoId }: { avaliacaoId:
   );
 }
 
-function ProximaEntregaCard({ titulo, descricao }: { titulo: string; descricao: string }) {
-  return (
-    <Alert className="border-primary/30 bg-primary/5">
-      <Info className="h-4 w-4" />
-      <AlertTitle>{titulo}</AlertTitle>
-      <AlertDescription>
-        {descricao} <br />
-        <span className="text-xs text-muted-foreground">Disponível na próxima entrega da Fase 6.</span>
-      </AlertDescription>
-    </Alert>
-  );
-}
+
