@@ -698,6 +698,57 @@ function ConditionCard({ title, body, icon, primary, accent, neutral, fullWidth 
   );
 }
 
+function ParcelasCard({ snap, total, primary, accent, neutral }: any) {
+  const parcelas = snap.parcelas || [];
+  return (
+    <div className="avoid-break" style={{ border: `1px solid ${neutral}`, borderRadius: 12, background: "#fff", overflow: "hidden" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: primary, color: "#fff" }}>
+        <ShieldCheck size={18} />
+        <div>
+          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: 1.4, opacity: 0.85 }}>Cronograma de pagamento</div>
+          <div style={{ fontSize: 14, fontWeight: 700 }}>{snap.nome}</div>
+        </div>
+        <div style={{ marginLeft: "auto", fontSize: 12 }}>Total: <strong>{brl(total || 0)}</strong></div>
+      </div>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11.5 }}>
+        <thead>
+          <tr style={{ background: neutral, color: "#475569", textTransform: "uppercase", fontSize: 9, letterSpacing: 1 }}>
+            <th style={{ textAlign: "left", padding: "8px 12px" }}>Nº</th>
+            <th style={{ textAlign: "left", padding: "8px 12px" }}>%</th>
+            <th style={{ textAlign: "right", padding: "8px 12px" }}>Valor</th>
+            <th style={{ textAlign: "left", padding: "8px 12px" }}>Marco</th>
+            <th style={{ textAlign: "left", padding: "8px 12px" }}>Prazo</th>
+            <th style={{ textAlign: "left", padding: "8px 12px" }}>Observação</th>
+          </tr>
+        </thead>
+        <tbody>
+          {parcelas.map((p: any) => (
+            <tr key={p.id || p.numero} style={{ borderTop: `1px solid ${neutral}` }}>
+              <td style={{ padding: "8px 12px", fontWeight: 600 }}>{p.numero}</td>
+              <td style={{ padding: "8px 12px" }}>{Number(p.percentual).toFixed(2)}%</td>
+              <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "monospace", fontWeight: 600, color: primary }}>
+                {brl(Number(p.valor ?? (p.percentual / 100) * (total || 0)))}
+              </td>
+              <td style={{ padding: "8px 12px", color: accent, fontWeight: 600 }}>{MARCO_LABEL[p.marco as CondPagMarco]}</td>
+              <td style={{ padding: "8px 12px", color: "#475569" }}>
+                {p.marco === "mensal_recorrente"
+                  ? `todo dia ${p.dia_mes ?? "—"}`
+                  : p.dias_apos_marco ? `+${p.dias_apos_marco} dias` : "no ato"}
+              </td>
+              <td style={{ padding: "8px 12px", color: "#64748b" }}>{p.descricao || "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {snap.texto_complementar && (
+        <div style={{ padding: "10px 16px", fontSize: 11, color: "#475569", background: neutral, borderTop: `1px solid ${neutral}` }}>
+          {snap.texto_complementar}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SignatureBlock({ label, name, subtitle, primary }: any) {
   return (
     <div className="avoid-break">
