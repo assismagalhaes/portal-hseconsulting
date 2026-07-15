@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, Lock, RefreshCw, ShieldCheck, Info, Sparkles, Save } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import PsicoAprovacaoConsolidada from "./PsicoAprovacaoConsolidada";
 import {
   RevisaoStatus, STATUS_REVISAO_COLOR, STATUS_REVISAO_LABEL,
   TRATAMENTO_LABEL, PRIORIDADE_COLOR,
@@ -174,6 +175,7 @@ export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: 
 
   return (
     <div className="space-y-4">
+      <PsicoAprovacaoConsolidada avaliacaoId={av.id} avaliacaoCodigo={av.codigo} refreshKey={rev?.updated_at || rev?.atualizada_em} />
       <Card>
         <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
