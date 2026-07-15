@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "sonner";
 import { AlertCircle, CheckCircle2, Loader2, Play, RefreshCcw } from "lucide-react";
 import { formatDateTime } from "@/lib/format";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, LabelList } from "recharts";
 
 type Classificacao = "Risco Irrelevante" | "Risco Baixo" | "Risco Médio" | "Risco Alto" | "Risco Crítico";
 type Prioridade = "Monitoramento" | "Média" | "Alta" | "Crítica";
@@ -45,30 +45,30 @@ function respondentesLabel(n?: number) {
 
 function classBadge(c?: Classificacao | null) {
   switch (c) {
-    case "Risco Crítico": return "bg-red-600 text-white";
-    case "Risco Alto": return "bg-orange-500 text-white";
-    case "Risco Médio": return "bg-amber-400 text-black";
-    case "Risco Baixo": return "bg-lime-500 text-black";
-    case "Risco Irrelevante": return "bg-emerald-500 text-white";
+    case "Risco Crítico": return "bg-rose-700 text-white hover:bg-rose-700";
+    case "Risco Alto": return "bg-orange-600 text-white hover:bg-orange-600";
+    case "Risco Médio": return "bg-amber-400 text-black hover:bg-amber-400";
+    case "Risco Baixo": return "bg-lime-600 text-white hover:bg-lime-600";
+    case "Risco Irrelevante": return "bg-emerald-600 text-white hover:bg-emerald-600";
     default: return "bg-muted text-muted-foreground";
   }
 }
 function classColorHex(c?: Classificacao | null) {
   switch (c) {
-    case "Risco Crítico": return "hsl(0 70% 45%)";
-    case "Risco Alto": return "hsl(24 90% 55%)";
-    case "Risco Médio": return "hsl(42 95% 55%)";
-    case "Risco Baixo": return "hsl(80 65% 50%)";
-    case "Risco Irrelevante": return "hsl(150 60% 45%)";
+    case "Risco Crítico": return "hsl(340 75% 38%)";
+    case "Risco Alto": return "hsl(14 85% 52%)";
+    case "Risco Médio": return "hsl(45 95% 52%)";
+    case "Risco Baixo": return "hsl(95 55% 45%)";
+    case "Risco Irrelevante": return "hsl(160 60% 40%)";
     default: return "hsl(var(--muted-foreground))";
   }
 }
 function prioBadge(p?: Prioridade | null) {
   switch (p) {
-    case "Crítica": return "bg-red-600 text-white";
-    case "Alta": return "bg-orange-500 text-white";
-    case "Média": return "bg-amber-400 text-black";
-    case "Monitoramento": return "bg-slate-400 text-white";
+    case "Crítica": return "bg-rose-700 text-white hover:bg-rose-700";
+    case "Alta": return "bg-orange-600 text-white hover:bg-orange-600";
+    case "Média": return "bg-amber-400 text-black hover:bg-amber-400";
+    case "Monitoramento": return "bg-slate-500 text-white hover:bg-slate-500";
     default: return "bg-muted text-muted-foreground";
   }
 }
@@ -185,8 +185,8 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
   const chartData = useMemo(() => fatores.map((f) => {
     const meta = fatoresMap[f.fator_id];
     return {
-      nome: meta?.codigo || meta?.nome || "?",
-      nomeFull: meta?.nome || meta?.codigo || "",
+      nome: humanizeText(meta?.nome || meta?.codigo) || "?",
+      nomeFull: humanizeText(meta?.nome || meta?.codigo) || "",
       score: Number(f.score_medio ?? 0),
       classificacao: f.classificacao_media,
       significativo: f.significativo,
@@ -400,6 +400,12 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
                     />
                     <Bar dataKey="score" radius={[0, 6, 6, 0]} barSize={22}>
                       {chartData.map((d, i) => <Cell key={i} fill={classColorHex(d.classificacao as Classificacao)} />)}
+                      <LabelList
+                        dataKey="score"
+                        position="right"
+                        formatter={(v: any) => Number(v).toFixed(2)}
+                        style={{ fill: "hsl(var(--foreground))", fontSize: 12, fontWeight: 600 }}
+                      />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -437,34 +443,25 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
           {/* Perguntas */}
           <Card>
             <CardHeader className="space-y-3">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <CardTitle className="text-base">Perguntas</CardTitle>
-                <div className="text-xs text-muted-foreground">Filtrar por fator</div>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  onClick={() => setFatorFiltro("all")}
-                  className={`text-xs px-2.5 py-1 rounded-full border transition ${fatorFiltro === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted"}`}
-                >
-                  Todos ({perguntas.length})
-                </button>
-                {fatores.map((f) => {
-                  const m = fatoresMap[f.fator_id];
-                  const count = perguntas.filter((p) => p.fator_id === f.fator_id).length;
-                  const active = fatorFiltro === f.fator_id;
-                  return (
-                    <button
-                      key={f.fator_id}
-                      onClick={() => setFatorFiltro(f.fator_id)}
-                      className={`text-xs px-2.5 py-1 rounded-full border transition flex items-center gap-1.5 ${active ? "border-primary" : "hover:bg-muted"}`}
-                      style={active ? { background: classColorHex(f.classificacao_media), color: "#fff", borderColor: "transparent" } : undefined}
-                      title={m?.nome}
-                    >
-                      <span className="font-medium">{m?.codigo || m?.nome}</span>
-                      <span className="opacity-70">({count})</span>
-                    </button>
-                  );
-                })}
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs text-muted-foreground">Filtrar por fator</Label>
+                  <Select value={fatorFiltro} onValueChange={setFatorFiltro}>
+                    <SelectTrigger className="w-[280px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os fatores ({perguntas.length})</SelectItem>
+                      {fatores.map((f) => {
+                        const m = fatoresMap[f.fator_id];
+                        const count = perguntas.filter((p) => p.fator_id === f.fator_id).length;
+                        const nome = humanizeText(m?.nome) || humanizeText(m?.codigo) || "—";
+                        return (
+                          <SelectItem key={f.fator_id} value={f.fator_id}>{nome} ({count})</SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="overflow-x-auto">
@@ -534,13 +531,10 @@ function FatorCard({ f, meta, criterios }: { f: any; meta: any; criterios: strin
   return (
     <div className="rounded-lg border bg-card overflow-hidden">
       <div className="px-4 py-3 border-b" style={{ borderLeft: `4px solid ${cor}` }}>
-        <div className="flex items-start gap-3 min-w-0">
-          <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0 mt-0.5">{meta?.codigo || "—"}</span>
-          <div className="min-w-0 flex-1">
-            <div className="font-semibold leading-tight break-words">{humanizeText(meta?.nome) || f.fator_id}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">
-              {f.quantidade_perguntas} pergunta(s) · {f.total_respostas_validas} resposta(s) válida(s)
-            </div>
+        <div className="min-w-0">
+          <div className="font-semibold leading-tight break-words">{humanizeText(meta?.nome) || humanizeText(meta?.codigo) || "—"}</div>
+          <div className="text-xs text-muted-foreground mt-0.5">
+            {f.quantidade_perguntas} pergunta(s) · {f.total_respostas_validas} resposta(s) válida(s)
           </div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
@@ -560,7 +554,7 @@ function FatorCard({ f, meta, criterios }: { f: any; meta: any; criterios: strin
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Significância</div>
             <div className="mt-1">
               {f.significativo
-                ? <Badge variant="secondary" className="border border-primary/40 text-primary">Fator significativo</Badge>
+                ? <Badge className="bg-primary text-primary-foreground hover:bg-primary">Significativo</Badge>
                 : <Badge variant="outline" className="text-muted-foreground">Não significativo</Badge>}
             </div>
           </div>
