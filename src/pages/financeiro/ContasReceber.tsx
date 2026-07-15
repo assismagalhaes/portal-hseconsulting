@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { brl, formatDate } from "@/lib/format";
 import { FIN_STATUS_PARCELA, FIN_STATUS_PARCELA_COR } from "@/lib/financeiro";
-import { Download, RefreshCcw, Search } from "lucide-react";
+import { Download, RefreshCcw, Search, CalendarClock } from "lucide-react";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 export default function ContasReceber() {
@@ -16,6 +18,8 @@ export default function ContasReceber() {
   const [clients, setClients] = useState<any[]>([]);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("todos");
+  const [openMarco, setOpenMarco] = useState<any>(null);
+  const [marcoData, setMarcoData] = useState(new Date().toISOString().slice(0,10));
 
   const load = async () => {
     const [p, c] = await Promise.all([
@@ -37,11 +41,23 @@ export default function ContasReceber() {
   const totalAberto = filtered.filter(p=>["a_vencer","vencida","recebida_parcial"].includes(p.status)).reduce((s,p)=>s+(Number(p.valor)-Number(p.valor_recebido||0)),0);
   const totalVencido = filtered.filter(p=>p.status==="vencida").reduce((s,p)=>s+(Number(p.valor)-Number(p.valor_recebido||0)),0);
   const totalReceb = filtered.filter(p=>p.status==="recebida").reduce((s,p)=>s+Number(p.valor_recebido),0);
+  const totalAgEvento = filtered.filter(p=>p.status==="aguardando_evento").reduce((s,p)=>s+Number(p.valor||0),0);
 
   const atualizarVencidas = async () => {
     const { data, error } = await supabase.rpc("financeiro_atualizar_vencidas");
     if (error) return toast.error(error.message);
     toast.success(`${data} parcelas marcadas como vencidas`);
+    load();
+  };
+
+  const ativarParcela = async () => {
+    if (!openMarco) return;
+    const { error } = await supabase.from("financeiro_parcelas")
+      .update({ status: "a_vencer", data_vencimento: marcoData })
+      .eq("id", openMarco.id);
+    if (error) return toast.error(error.message);
+    toast.success("Marco confirmado — parcela liberada para cobrança");
+    setOpenMarco(null);
     load();
   };
 
@@ -64,10 +80,11 @@ export default function ContasReceber() {
           <Button variant="outline" size="sm" onClick={exportarCSV}><Download className="h-4 w-4 mr-1"/>CSV</Button>
         </div>} />
       <div className="p-6 space-y-4">
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-4">
           <Card className="p-4"><div className="text-xs uppercase text-muted-foreground">Total em aberto</div><div className="text-2xl font-display font-bold mt-1">{brl(totalAberto)}</div></Card>
           <Card className="p-4"><div className="text-xs uppercase text-muted-foreground">Total vencido</div><div className="text-2xl font-display font-bold mt-1 text-rose-700">{brl(totalVencido)}</div></Card>
           <Card className="p-4"><div className="text-xs uppercase text-muted-foreground">Total recebido</div><div className="text-2xl font-display font-bold mt-1 text-emerald-700">{brl(totalReceb)}</div></Card>
+          <Card className="p-4"><div className="text-xs uppercase text-muted-foreground">Aguardando evento</div><div className="text-2xl font-display font-bold mt-1 text-purple-800">{brl(totalAgEvento)}</div></Card>
         </div>
         <div className="flex gap-2 flex-wrap">
           <div className="relative flex-1 max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/>
@@ -83,7 +100,7 @@ export default function ContasReceber() {
         <Card className="overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
-              <tr><th className="text-left px-4 py-2">Vencimento</th><th className="text-left px-4 py-2">Cliente</th><th className="text-left px-4 py-2">Contrato</th><th className="text-left px-4 py-2">Parcela</th><th className="text-right px-4 py-2">Valor</th><th className="text-right px-4 py-2">Recebido</th><th className="text-left px-4 py-2">Status</th></tr>
+              <tr><th className="text-left px-4 py-2">Vencimento</th><th className="text-left px-4 py-2">Cliente</th><th className="text-left px-4 py-2">Contrato</th><th className="text-left px-4 py-2">Parcela</th><th className="text-right px-4 py-2">Valor</th><th className="text-right px-4 py-2">Recebido</th><th className="text-left px-4 py-2">Status</th><th></th></tr>
             </thead>
             <tbody>
               {filtered.map(p => (
@@ -95,12 +112,32 @@ export default function ContasReceber() {
                   <td className="px-4 py-2 text-right font-mono">{brl(p.valor)}</td>
                   <td className="px-4 py-2 text-right font-mono">{brl(p.valor_recebido)}</td>
                   <td className="px-4 py-2"><span className={`inline-block px-2 py-0.5 rounded text-xs ${FIN_STATUS_PARCELA_COR[p.status]}`}>{FIN_STATUS_PARCELA[p.status]}</span></td>
+                  <td className="px-4 py-2 text-right">
+                    {p.status === "aguardando_evento" && (
+                      <Button size="sm" variant="outline" onClick={()=>{ setMarcoData(new Date().toISOString().slice(0,10)); setOpenMarco(p); }}>
+                        <CalendarClock className="h-3 w-3 mr-1"/>Confirmar marco
+                      </Button>
+                    )}
+                  </td>
                 </tr>
               ))}
-              {filtered.length === 0 && <tr><td colSpan={7} className="text-center py-10 text-muted-foreground">Nenhuma parcela.</td></tr>}
+              {filtered.length === 0 && <tr><td colSpan={8} className="text-center py-10 text-muted-foreground">Nenhuma parcela.</td></tr>}
             </tbody>
           </table>
         </Card>
+
+        <Dialog open={!!openMarco} onOpenChange={(o)=>!o && setOpenMarco(null)}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Confirmar ocorrência do marco — Parcela #{openMarco?.numero}</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">Esta parcela estava vinculada a um evento (emissão de NF, início/conclusão de serviço etc.). Informe o novo vencimento a partir do qual o cliente pode ser cobrado.</p>
+              <div><Label>Nova data de vencimento</Label>
+                <Input type="date" value={marcoData} onChange={e=>setMarcoData(e.target.value)} />
+              </div>
+            </div>
+            <DialogFooter><Button onClick={ativarParcela}><CalendarClock className="h-4 w-4 mr-1"/>Confirmar marco</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
