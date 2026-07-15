@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, ClipboardList, BarChart3, FileText, Settings2, Eye, Pencil, Ban, CheckCircle2, XCircle, Copy, ExternalLink, Info } from "lucide-react";
+import { Plus, Search, ClipboardList, BarChart3, FileText, Settings2, Eye, Pencil, Ban, CheckCircle2, XCircle, Copy, ExternalLink, Info, BookOpen } from "lucide-react";
 import { PSICO_STATUS_LABEL, PSICO_STATUS_ORDER, contarPorStatus, listAvaliacoes, statusColor, statusLabel, getQuestionarioConfig, validarQuestionario, publicarQuestionario, duplicarQuestionario, atualizarFator, atualizarPergunta } from "@/lib/psico";
 import { formatDate } from "@/lib/format";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -27,6 +27,7 @@ function ModuleTabs() {
     { to: `${BASE}/avaliacoes`, label: "Avaliações", icon: ClipboardList },
     { to: `${BASE}/resultados`, label: "Resultados", icon: BarChart3 },
     { to: `${BASE}/relatorios`, label: "Relatórios", icon: FileText },
+    { to: `${BASE}/biblioteca-medidas`, label: "Biblioteca de Medidas", icon: BookOpen },
     { to: `${BASE}/configuracoes`, label: "Configurações", icon: Settings2 },
   ];
   const current = tabs.find((t) => loc.pathname.startsWith(t.to))?.to || tabs[0].to;
