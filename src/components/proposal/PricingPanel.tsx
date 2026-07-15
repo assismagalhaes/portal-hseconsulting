@@ -234,7 +234,7 @@ export default function PricingPanel({
           <div className="grid grid-cols-2 gap-2">
             <MiniPct label="Imposto (%)" v={draft.aliquota_imposto} onChange={v => setDraft({ ...draft, aliquota_imposto: Number(v) || 0 })} />
             <MiniPct label="Margem desejada (%)" v={draft.margem_desejada} onChange={v => setDraft({ ...draft, margem_desejada: Number(v) || 0 })} />
-            <Mini label="Lucro adicional (R$)" v={draft.lucro_desejado} onChange={v => setDraft({ ...draft, lucro_desejado: Number(v) || 0 })} />
+            <Mini label="Lucro desejado (R$)" v={draft.lucro_desejado} onChange={v => setDraft({ ...draft, lucro_desejado: Number(v) || 0 })} />
             <Mini label="Desconto (R$)" v={draft.desconto_comercial} onChange={v => setDraft({ ...draft, desconto_comercial: Number(v) || 0 })} />
           </div>
         </div>

@@ -25,7 +25,7 @@ export default function Settings() {
     setP(pp.data || {
       custo_fixo_mensal: 0, horas_produtivas_mes: 160, custo_por_vida: 0,
       aliquota_imposto: 0.06, margem_minima: 0.25, markup_minimo: 1.5,
-      arredondamento: 10, valor_hora_tecnica: 35,
+      arredondamento: 1, valor_hora_tecnica: 35,
       condicoes_pagamento_default: "", outras_condicoes_default: "",
     });
     setTpl(tt.data || {});
