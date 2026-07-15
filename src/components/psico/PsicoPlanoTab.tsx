@@ -20,6 +20,7 @@ import {
   regenerarRecomendacoes,
 } from "@/lib/psicoPlano";
 import { getRevisaoAtiva, getRevisaoFatores, PRIORIDADE_COLOR } from "@/lib/psicoRevisao";
+import PsicoAprovacaoConsolidada from "./PsicoAprovacaoConsolidada";
 
 function ChipList({ items, empty = "—" }: { items?: string[] | null; empty?: string }) {
   if (!items || items.length === 0) return <span className="text-xs text-muted-foreground">{empty}</span>;
@@ -165,6 +166,7 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
 
   return (
     <div className="space-y-4">
+      <PsicoAprovacaoConsolidada avaliacaoId={av.id} avaliacaoCodigo={av.codigo} refreshKey={plano?.atualizado_em} />
       <Card>
         <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
