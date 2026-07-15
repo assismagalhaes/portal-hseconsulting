@@ -18,6 +18,7 @@ import PsicoParticipantes from "@/components/psico/PsicoParticipantes";
 import PsicoColetaTab from "@/components/psico/PsicoColetaTab";
 import PsicoResultadosTab from "@/components/psico/PsicoResultadosTab";
 import PsicoRevisaoTab from "@/components/psico/PsicoRevisaoTab";
+import PsicoPlanoTab from "@/components/psico/PsicoPlanoTab";
 
 const BASE = "/operacoes/avaliacao-fatores-psicossociais";
 
@@ -190,6 +191,7 @@ export default function PsicoAvaliacaoDetalhes() {
             <TabsTrigger value="coleta">Coleta</TabsTrigger>
             <TabsTrigger value="resultados">Resultados</TabsTrigger>
             <TabsTrigger value="revisao">Revisão Técnica</TabsTrigger>
+            <TabsTrigger value="plano">Plano de Ação</TabsTrigger>
             <TabsTrigger value="relatorio">Relatório</TabsTrigger>
             <TabsTrigger value="historico">Histórico</TabsTrigger>
           </TabsList>
@@ -274,6 +276,9 @@ export default function PsicoAvaliacaoDetalhes() {
           </TabsContent>
           <TabsContent value="revisao">
             <PsicoRevisaoTab av={av} onReload={load} />
+          </TabsContent>
+          <TabsContent value="plano">
+            <PsicoPlanoTab av={av} onReload={load} />
           </TabsContent>
           <TabsContent value="relatorio">
             <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">O relatório poderá ser emitido após a conclusão da análise técnica.</CardContent></Card>
