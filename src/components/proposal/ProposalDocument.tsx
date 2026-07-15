@@ -53,9 +53,12 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   const [serviceNames, setServiceNames] = useState<Record<string, string>>({});
   const [flowReady, setFlowReady] = useState(false);
   const [condSnap, setCondSnap] = useState<any>(null);
+  const [textoPadraoPag, setTextoPadraoPag] = useState<string>("");
   useEffect(() => {
     supabase.from("proposal_template").select("*").limit(1).maybeSingle()
       .then(({ data }) => setTpl(data || {}));
+    supabase.from("financeiro_configuracoes").select("texto_padrao_pagamento").limit(1).maybeSingle()
+      .then(({ data }) => setTextoPadraoPag((data as any)?.texto_padrao_pagamento || ""));
   }, []);
   useEffect(() => {
     if (!proposal?.id) return;
