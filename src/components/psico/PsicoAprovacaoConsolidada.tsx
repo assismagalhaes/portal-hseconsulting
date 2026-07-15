@@ -6,9 +6,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CheckCircle2, XCircle, Circle } from "lucide-react";
 import {
   STATUS_REVISAO_COLOR, STATUS_REVISAO_LABEL, RevisaoStatus,
-  traduzirErro, validarRevisao,
+  traduzirErro, validarRevisao, getRevisaoAtiva,
 } from "@/lib/psicoRevisao";
-import { PLANO_STATUS_COLOR, PLANO_STATUS_LABEL, PlanoStatus } from "@/lib/psicoPlano";
+import { PLANO_STATUS_COLOR, PLANO_STATUS_LABEL, PlanoStatus, getPlanoPorRevisao } from "@/lib/psicoPlano";
 import PsicoSeloAprovacao from "./PsicoSeloAprovacao";
 
 /**
@@ -17,24 +17,31 @@ import PsicoSeloAprovacao from "./PsicoSeloAprovacao";
  * PsicoRevisaoTab (onde o fluxo transacional está implementado).
  */
 export default function PsicoAprovacaoConsolidada({
-  avaliacaoCodigo, revisao, plano, refreshKey,
+  avaliacaoId, avaliacaoCodigo, refreshKey,
 }: {
+  avaliacaoId: string;
   avaliacaoCodigo: string;
-  revisao: any;
-  plano: any;
   refreshKey?: any;
 }) {
+  const [revisao, setRevisao] = useState<any>(null);
+  const [plano, setPlano] = useState<any>(null);
   const [val, setVal] = useState<any>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (!revisao?.id) { setVal(null); return; }
-      const { data } = await validarRevisao(revisao.id);
+      const r = await getRevisaoAtiva(avaliacaoId);
+      if (cancelled) return;
+      setRevisao(r);
+      if (!r) { setPlano(null); setVal(null); return; }
+      const p = await getPlanoPorRevisao(r.id);
+      if (cancelled) return;
+      setPlano(p);
+      const { data } = await validarRevisao(r.id);
       if (!cancelled) setVal(data);
     })();
     return () => { cancelled = true; };
-  }, [revisao?.id, refreshKey]);
+  }, [avaliacaoId, refreshKey]);
 
   const checklist = useMemo(() => {
     if (!val) return [];
