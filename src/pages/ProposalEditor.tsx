@@ -771,12 +771,14 @@ function InternalSummary({ items, pricings, descontoRevisao = 0 }: any) {
   let custoTotal = 0, lucroTotal = 0, receita = 0, imposto = 0;
   items.forEach((it:any) => {
     const p = pricings[it.id];
-    if (p?.indicadores) {
-      custoTotal += Number(p.indicadores.custo_total||0);
-      lucroTotal += Number(p.indicadores.lucro_estimado||0);
-      receita += Number(p.indicadores.receita_liquida||0);
-      imposto += Number(p.indicadores.imposto_estimado||0);
-    }
+    if (!p?.indicadores) return;
+    // Indicadores são calculados por UNIDADE. Escala pela quantidade do item na proposta
+    // para que Custo / Impostos / Receita / Lucro reflitam o total real (mesma base do "Valor total").
+    const qtd = Math.max(1, Number(it.quantidade) || 1);
+    custoTotal += Number(p.indicadores.custo_total || 0) * qtd;
+    lucroTotal += Number(p.indicadores.lucro_estimado || 0) * qtd;
+    receita    += Number(p.indicadores.receita_liquida || 0) * qtd;
+    imposto    += Number(p.indicadores.imposto_estimado || 0) * qtd;
   });
   const desc = Number(descontoRevisao) || 0;
   const receitaFinal = Math.max(0, receita - desc);
