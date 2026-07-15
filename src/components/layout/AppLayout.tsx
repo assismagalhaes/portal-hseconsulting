@@ -78,6 +78,7 @@ const GROUPS: NavGroup[] = [
       { to: "/financeiro/contas-receber", label: "Recebimentos", icon: Receipt },
       { to: "/financeiro/custos", label: "Custos", icon: Wallet },
       { to: "/financeiro/centros-custo", label: "Centros de Custo", icon: Building2 },
+      { to: "/financeiro/condicoes-pagamento", label: "Condições de Pagamento", icon: Receipt },
       { to: "/financeiro/alertas", label: "Alertas Financeiros", icon: Bell },
     ],
   },
