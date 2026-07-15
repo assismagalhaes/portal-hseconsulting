@@ -554,8 +554,8 @@ function FatorCard({ f, meta, criterios }: { f: any; meta: any; criterios: strin
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Significância</div>
             <div className="mt-1">
               {f.significativo
-                ? <Badge className="bg-primary text-primary-foreground hover:bg-primary">Significativo</Badge>
-                : <Badge variant="outline" className="text-muted-foreground">Não significativo</Badge>}
+                ? <Badge className="bg-rose-700 text-white hover:bg-rose-700">Significativo</Badge>
+                : <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">Não significativo</Badge>}
             </div>
           </div>
         </div>
