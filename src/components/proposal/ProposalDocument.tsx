@@ -530,9 +530,10 @@ function FlowPages({ ctx, blocks, onReady }: { ctx: any; blocks: Block[]; onRead
   // altura útil de uma página (297mm - cabeçalho - rodapé - padding vertical)
   // Cabeçalho ~30mm, rodapé ~22mm, padding 10mm+10mm = 20mm → ~225mm.
   // Usamos margem de segurança para evitar overflow físico durante impressão,
-  // que geraria páginas extras sem cabeçalho (sem numeração).
+  // que geraria páginas extras sem cabeçalho (sem numeração) e/ou cortaria
+  // o último card da página (ex.: "Condições comerciais").
   const MM_TO_PX = 96 / 25.4;
-  const CONTENT_H_PX = 210 * MM_TO_PX;
+  const CONTENT_H_PX = 198 * MM_TO_PX;
 
   useLayoutEffect(() => {
     if (!measureRef.current) return;
