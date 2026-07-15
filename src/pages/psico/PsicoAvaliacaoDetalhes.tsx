@@ -53,12 +53,25 @@ export default function PsicoAvaliacaoDetalhes() {
     if (!data) return;
     setAv(data);
     setForm(data);
+    const revsQ = await (supabase as any).from("psico_revisoes_tecnicas").select("id").eq("avaliacao_id", id!);
+    const revIds: string[] = (revsQ.data || []).map((x: any) => x.id);
+    const planosQ = revIds.length
+      ? await (supabase as any).from("psico_planos_acao").select("id").in("revisao_id", revIds)
+      : { data: [] as any[] };
+    const planoIds: string[] = (planosQ.data || []).map((x: any) => x.id);
+    const auditQuery = supabase.from("psico_auditoria").select("*")
+      .or([
+        `and(entidade.eq.avaliacao,entidade_id.eq.${id})`,
+        revIds.length ? `and(entidade.eq.revisao_tecnica,entidade_id.in.(${revIds.join(",")}))` : null,
+        planoIds.length ? `and(entidade.eq.plano_acao,entidade_id.in.(${planoIds.join(",")}))` : null,
+      ].filter(Boolean).join(","))
+      .order("created_at", { ascending: false });
     const [c, r, m, q, aud] = await Promise.all([
       supabase.from("clients").select("id, razao_social, nome_fantasia, cidade, uf").eq("id", data.cliente_id).maybeSingle(),
       data.responsavel_hse_id ? supabase.from("profiles").select("id, nome, email").eq("id", data.responsavel_hse_id).maybeSingle() : Promise.resolve({ data: null }),
       data.metodologia_versao_id ? supabase.from("psico_metodologias_versoes").select("codigo, nome, versao").eq("id", data.metodologia_versao_id).maybeSingle() : Promise.resolve({ data: null }),
       data.questionario_versao_id ? supabase.from("psico_questionarios_versoes").select("codigo, nome, versao").eq("id", data.questionario_versao_id).maybeSingle() : Promise.resolve({ data: null }),
-      supabase.from("psico_auditoria").select("*").eq("entidade", "avaliacao").eq("entidade_id", id!).order("created_at", { ascending: false }),
+      auditQuery,
     ]);
     setCli(c.data); setResp(r.data); setMetod(m.data); setQuest(q.data); setAuditoria(aud.data || []);
     const { data: v } = await getVersaoVigente();
