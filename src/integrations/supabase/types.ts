@@ -909,6 +909,107 @@ export type Database = {
           },
         ]
       }
+      condicoes_pagamento: {
+        Row: {
+          ativa: boolean
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          em_uso: boolean
+          id: string
+          is_padrao: boolean
+          nome: string
+          ordem: number
+          permite_mensal_recorrente: boolean
+          quantidade_parcelas: number
+          texto_complementar: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          ativa?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          em_uso?: boolean
+          id?: string
+          is_padrao?: boolean
+          nome: string
+          ordem?: number
+          permite_mensal_recorrente?: boolean
+          quantidade_parcelas?: number
+          texto_complementar?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          ativa?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          em_uso?: boolean
+          id?: string
+          is_padrao?: boolean
+          nome?: string
+          ordem?: number
+          permite_mensal_recorrente?: boolean
+          quantidade_parcelas?: number
+          texto_complementar?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      condicoes_pagamento_parcelas: {
+        Row: {
+          condicao_id: string
+          created_at: string
+          descricao: string | null
+          dia_mes: number | null
+          dias_apos_marco: number
+          id: string
+          marco: Database["public"]["Enums"]["cond_pag_marco"]
+          numero: number
+          ordem: number
+          percentual: number
+          updated_at: string
+        }
+        Insert: {
+          condicao_id: string
+          created_at?: string
+          descricao?: string | null
+          dia_mes?: number | null
+          dias_apos_marco?: number
+          id?: string
+          marco?: Database["public"]["Enums"]["cond_pag_marco"]
+          numero: number
+          ordem?: number
+          percentual: number
+          updated_at?: string
+        }
+        Update: {
+          condicao_id?: string
+          created_at?: string
+          descricao?: string | null
+          dia_mes?: number | null
+          dias_apos_marco?: number
+          id?: string
+          marco?: Database["public"]["Enums"]["cond_pag_marco"]
+          numero?: number
+          ordem?: number
+          percentual?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "condicoes_pagamento_parcelas_condicao_id_fkey"
+            columns: ["condicao_id"]
+            isOneToOne: false
+            referencedRelation: "condicoes_pagamento"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_agenda: {
         Row: {
           client_id: string | null
@@ -2871,6 +2972,7 @@ export type Database = {
           margem_minima_alerta: number
           observacoes: string | null
           parcelas_padrao: Json
+          texto_padrao_pagamento: string
           updated_at: string
         }
         Insert: {
@@ -2881,6 +2983,7 @@ export type Database = {
           margem_minima_alerta?: number
           observacoes?: string | null
           parcelas_padrao?: Json
+          texto_padrao_pagamento?: string
           updated_at?: string
         }
         Update: {
@@ -2891,6 +2994,7 @@ export type Database = {
           margem_minima_alerta?: number
           observacoes?: string | null
           parcelas_padrao?: Json
+          texto_padrao_pagamento?: string
           updated_at?: string
         }
         Relationships: []
@@ -4973,6 +5077,144 @@ export type Database = {
           },
           {
             foreignKeyName: "proposal_clients_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposal_condicao_pagamento: {
+        Row: {
+          condicao_id: string | null
+          created_at: string
+          created_by: string | null
+          data_fixa: string | null
+          descricao: string | null
+          dia_mes: number | null
+          id: string
+          nome: string
+          personalizada: boolean
+          proposal_id: string
+          qtd_mensalidades: number | null
+          quantidade_parcelas: number
+          texto_complementar: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          condicao_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_fixa?: string | null
+          descricao?: string | null
+          dia_mes?: number | null
+          id?: string
+          nome: string
+          personalizada?: boolean
+          proposal_id: string
+          qtd_mensalidades?: number | null
+          quantidade_parcelas?: number
+          texto_complementar?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          condicao_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_fixa?: string | null
+          descricao?: string | null
+          dia_mes?: number | null
+          id?: string
+          nome?: string
+          personalizada?: boolean
+          proposal_id?: string
+          qtd_mensalidades?: number | null
+          quantidade_parcelas?: number
+          texto_complementar?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_condicao_pagamento_condicao_id_fkey"
+            columns: ["condicao_id"]
+            isOneToOne: false
+            referencedRelation: "condicoes_pagamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposal_condicao_pagamento_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: true
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposal_condicao_parcelas: {
+        Row: {
+          created_at: string
+          data_fixa: string | null
+          data_vencimento_prevista: string | null
+          descricao: string | null
+          dia_mes: number | null
+          dias_apos_marco: number
+          id: string
+          marco: Database["public"]["Enums"]["cond_pag_marco"]
+          numero: number
+          ordem: number
+          percentual: number
+          proposal_condicao_id: string
+          proposal_id: string
+          updated_at: string
+          valor: number | null
+        }
+        Insert: {
+          created_at?: string
+          data_fixa?: string | null
+          data_vencimento_prevista?: string | null
+          descricao?: string | null
+          dia_mes?: number | null
+          dias_apos_marco?: number
+          id?: string
+          marco?: Database["public"]["Enums"]["cond_pag_marco"]
+          numero: number
+          ordem?: number
+          percentual: number
+          proposal_condicao_id: string
+          proposal_id: string
+          updated_at?: string
+          valor?: number | null
+        }
+        Update: {
+          created_at?: string
+          data_fixa?: string | null
+          data_vencimento_prevista?: string | null
+          descricao?: string | null
+          dia_mes?: number | null
+          dias_apos_marco?: number
+          id?: string
+          marco?: Database["public"]["Enums"]["cond_pag_marco"]
+          numero?: number
+          ordem?: number
+          percentual?: number
+          proposal_condicao_id?: string
+          proposal_id?: string
+          updated_at?: string
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_condicao_parcelas_proposal_condicao_id_fkey"
+            columns: ["proposal_condicao_id"]
+            isOneToOne: false
+            referencedRelation: "proposal_condicao_pagamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposal_condicao_parcelas_proposal_id_fkey"
             columns: ["proposal_id"]
             isOneToOne: false
             referencedRelation: "proposals"
@@ -7746,6 +7988,15 @@ export type Database = {
         | "inativo"
         | "convite_pendente"
         | "bloqueado"
+      cond_pag_marco:
+        | "aceite_proposta"
+        | "emissao_nf"
+        | "inicio_servico"
+        | "conclusao_servico"
+        | "entrega_documento"
+        | "data_fixa"
+        | "mensal_recorrente"
+        | "definido_posteriormente"
       crm_alerta_tipo:
         | "followup_vencido"
         | "proposta_sem_retorno"
@@ -7895,6 +8146,7 @@ export type Database = {
         | "recebida"
         | "recebida_parcial"
         | "cancelada"
+        | "aguardando_evento"
       fin_tipo_custo:
         | "deslocamento"
         | "combustivel"
@@ -8226,6 +8478,16 @@ export const Constants = {
         "convite_pendente",
         "bloqueado",
       ],
+      cond_pag_marco: [
+        "aceite_proposta",
+        "emissao_nf",
+        "inicio_servico",
+        "conclusao_servico",
+        "entrega_documento",
+        "data_fixa",
+        "mensal_recorrente",
+        "definido_posteriormente",
+      ],
       crm_alerta_tipo: [
         "followup_vencido",
         "proposta_sem_retorno",
@@ -8391,6 +8653,7 @@ export const Constants = {
         "recebida",
         "recebida_parcial",
         "cancelada",
+        "aguardando_evento",
       ],
       fin_tipo_custo: [
         "deslocamento",
