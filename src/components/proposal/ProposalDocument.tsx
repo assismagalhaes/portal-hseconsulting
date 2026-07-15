@@ -360,7 +360,13 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   push("Condições & Aceite", "cd-title", <SectionTitle eyebrow="Termos" title="Condições comerciais" accent={accent} primary={primary} />, true);
   if (condSnap && condSnap.parcelas?.length) {
     push("Condições & Aceite", "cd-parc", (
-      <ParcelasCard snap={condSnap} total={total} primary={primary} accent={accent} neutral={neutral} />
+      <ParcelasCard snap={condSnap} total={total} primary={primary} accent={accent} neutral={neutral} textoPadrao={textoPadraoPag} />
+    ));
+  } else if (textoPadraoPag && proposal.condicoes_pagamento) {
+    push("Condições & Aceite", "cd-padrao", (
+      <div className="avoid-break" style={{ padding: "10px 14px", border: `1px dashed ${neutral}`, borderRadius: 10, fontSize: 11.5, color: "#475569", background: "#fff", whiteSpace: "pre-line" }}>
+        {textoPadraoPag}
+      </div>
     ));
   }
   push("Condições & Aceite", "cd-grid", (
