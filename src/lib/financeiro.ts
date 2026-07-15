@@ -21,6 +21,7 @@ export const FIN_STATUS_CONTRATO_COR: Record<string, string> = {
 };
 
 export const FIN_STATUS_PARCELA: Record<string, string> = {
+  aguardando_evento: "Aguardando evento",
   a_vencer: "A vencer",
   vencida: "Vencida",
   recebida: "Recebida",
@@ -29,6 +30,7 @@ export const FIN_STATUS_PARCELA: Record<string, string> = {
 };
 
 export const FIN_STATUS_PARCELA_COR: Record<string, string> = {
+  aguardando_evento: "bg-purple-100 text-purple-900",
   a_vencer: "bg-blue-100 text-blue-800",
   vencida: "bg-rose-100 text-rose-900",
   recebida: "bg-emerald-100 text-emerald-900",
