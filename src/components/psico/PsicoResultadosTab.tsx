@@ -45,11 +45,11 @@ function respondentesLabel(n?: number) {
 
 function classBadge(c?: Classificacao | null) {
   switch (c) {
-    case "Risco Crítico": return "bg-red-600 text-white";
-    case "Risco Alto": return "bg-orange-500 text-white";
-    case "Risco Médio": return "bg-amber-400 text-black";
-    case "Risco Baixo": return "bg-lime-500 text-black";
-    case "Risco Irrelevante": return "bg-emerald-500 text-white";
+    case "Risco Crítico": return "bg-rose-700 text-white hover:bg-rose-700";
+    case "Risco Alto": return "bg-orange-600 text-white hover:bg-orange-600";
+    case "Risco Médio": return "bg-amber-400 text-black hover:bg-amber-400";
+    case "Risco Baixo": return "bg-lime-600 text-white hover:bg-lime-600";
+    case "Risco Irrelevante": return "bg-emerald-600 text-white hover:bg-emerald-600";
     default: return "bg-muted text-muted-foreground";
   }
 }
@@ -65,10 +65,10 @@ function classColorHex(c?: Classificacao | null) {
 }
 function prioBadge(p?: Prioridade | null) {
   switch (p) {
-    case "Crítica": return "bg-red-600 text-white";
-    case "Alta": return "bg-orange-500 text-white";
-    case "Média": return "bg-amber-400 text-black";
-    case "Monitoramento": return "bg-slate-400 text-white";
+    case "Crítica": return "bg-rose-700 text-white hover:bg-rose-700";
+    case "Alta": return "bg-orange-600 text-white hover:bg-orange-600";
+    case "Média": return "bg-amber-400 text-black hover:bg-amber-400";
+    case "Monitoramento": return "bg-slate-500 text-white hover:bg-slate-500";
     default: return "bg-muted text-muted-foreground";
   }
 }
