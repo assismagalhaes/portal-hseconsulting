@@ -132,6 +132,24 @@ export default function Settings() {
               <Textarea rows={3} value={p.outras_condicoes_default||""} onChange={e=>setP({...p, outras_condicoes_default:e.target.value})} /></div>
           </CardContent>
         </Card>
+        <Card className="shadow-elegant">
+          <CardHeader><CardTitle className="font-display">Texto padrão de pagamento (PDF e aceite)</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Aparece automaticamente abaixo do cronograma de parcelas em todas as propostas. Somente administradores podem alterar.
+            </p>
+            <Textarea
+              rows={4}
+              value={finCfg?.texto_padrao_pagamento || ""}
+              onChange={(e) => setFinCfg({ ...(finCfg || {}), texto_padrao_pagamento: e.target.value })}
+              placeholder={"HSE Consulting emitirá nota fiscal de prestação do serviço.\nPagamento via boleto bancário e/ou transferência bancária."}
+              disabled={!isInternal}
+            />
+            <div className="flex justify-end">
+              <Button size="sm" variant="outline" onClick={saveFinCfg} disabled={!isInternal}>Salvar texto padrão</Button>
+            </div>
+          </CardContent>
+        </Card>
         <div className="flex justify-end"><Button onClick={save} disabled={!isInternal}>Salvar parâmetros</Button></div>
           </TabsContent>
 
