@@ -443,34 +443,25 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
           {/* Perguntas */}
           <Card>
             <CardHeader className="space-y-3">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <CardTitle className="text-base">Perguntas</CardTitle>
-                <div className="text-xs text-muted-foreground">Filtrar por fator</div>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  onClick={() => setFatorFiltro("all")}
-                  className={`text-xs px-2.5 py-1 rounded-full border transition ${fatorFiltro === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted"}`}
-                >
-                  Todos ({perguntas.length})
-                </button>
-                {fatores.map((f) => {
-                  const m = fatoresMap[f.fator_id];
-                  const count = perguntas.filter((p) => p.fator_id === f.fator_id).length;
-                  const active = fatorFiltro === f.fator_id;
-                  return (
-                    <button
-                      key={f.fator_id}
-                      onClick={() => setFatorFiltro(f.fator_id)}
-                      className={`text-xs px-2.5 py-1 rounded-full border transition flex items-center gap-1.5 ${active ? "border-primary" : "hover:bg-muted"}`}
-                      style={active ? { background: classColorHex(f.classificacao_media), color: "#fff", borderColor: "transparent" } : undefined}
-                      title={m?.nome}
-                    >
-                      <span className="font-medium">{m?.codigo || m?.nome}</span>
-                      <span className="opacity-70">({count})</span>
-                    </button>
-                  );
-                })}
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs text-muted-foreground">Filtrar por fator</Label>
+                  <Select value={fatorFiltro} onValueChange={setFatorFiltro}>
+                    <SelectTrigger className="w-[280px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os fatores ({perguntas.length})</SelectItem>
+                      {fatores.map((f) => {
+                        const m = fatoresMap[f.fator_id];
+                        const count = perguntas.filter((p) => p.fator_id === f.fator_id).length;
+                        const nome = humanizeText(m?.nome) || humanizeText(m?.codigo) || "—";
+                        return (
+                          <SelectItem key={f.fator_id} value={f.fator_id}>{nome} ({count})</SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="overflow-x-auto">
