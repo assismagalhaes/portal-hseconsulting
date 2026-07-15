@@ -38,6 +38,7 @@ import GroupPricingDrawer from "@/components/proposal/GroupPricingDrawer";
 import HistoricoPrecificacao from "@/components/proposal/HistoricoPrecificacao";
 import AceiteLinkCard from "@/components/proposal/AceiteLinkCard";
 import EmpresasProposta from "@/components/proposal/EmpresasProposta";
+import CondicaoPagamentoPicker from "@/components/proposal/CondicaoPagamentoPicker";
 
 const newId = () => Math.random().toString(36).slice(2, 10);
 
@@ -621,8 +622,15 @@ export default function ProposalEditor() {
                     <div className="space-y-1.5"><Label>Próximo follow-up</Label>
                       <Input type="date" value={proposal.proximo_followup||""} onChange={e=>scheduleProposalSave({ proximo_followup: e.target.value || null })} /></div>
                   </div>
-                  <div className="space-y-1.5"><Label>Condições de pagamento</Label>
-                    <Textarea rows={4} value={proposal.condicoes_pagamento||""} onChange={e=>scheduleProposalSave({ condicoes_pagamento: e.target.value })} /></div>
+                  <div className="space-y-1.5">
+                    <Label>Condições de pagamento</Label>
+                    <CondicaoPagamentoPicker
+                      proposalId={proposal.id}
+                      total={total}
+                      legacyTexto={proposal.condicoes_pagamento || null}
+                      onSaved={(texto) => setProposal((p: any) => ({ ...p, condicoes_pagamento: texto }))}
+                    />
+                  </div>
                   <div className="space-y-1.5"><Label>Outras condições</Label>
                     <Textarea rows={6} value={proposal.outras_condicoes||""} onChange={e=>scheduleProposalSave({ outras_condicoes: e.target.value })} /></div>
                   <div className="space-y-1.5"><Label>Observações para o cliente</Label>
