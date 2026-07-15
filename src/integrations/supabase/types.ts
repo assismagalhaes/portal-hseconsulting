@@ -8345,6 +8345,10 @@ export type Database = {
         Returns: Json
       }
       psico_admin_correcao_ativa: { Args: never; Returns: boolean }
+      psico_aprovar_revisao_tecnica: {
+        Args: { p_confirmacao: string; p_revisao_id: string }
+        Returns: Json
+      }
       psico_atualizar_participante: {
         Args: {
           _email: string
@@ -8376,6 +8380,18 @@ export type Database = {
         }
         Returns: Json
       }
+      psico_criar_revisao_tecnica: {
+        Args: { p_avaliacao_id: string; p_modo?: string }
+        Returns: Json
+      }
+      psico_duplicar_biblioteca_medidas: {
+        Args: {
+          p_biblioteca_versao_id: string
+          p_nova_versao: string
+          p_novo_nome?: string
+        }
+        Returns: string
+      }
       psico_duplicar_questionario: {
         Args: {
           _nova_versao: string
@@ -8402,6 +8418,10 @@ export type Database = {
         Returns: Json
       }
       psico_gerar_codigo_avaliacao: { Args: never; Returns: string }
+      psico_gerar_recomendacoes_internal: {
+        Args: { p_revisao_id: string; p_substituir_geradas?: boolean }
+        Returns: number
+      }
       psico_hash_entrada_resultado: {
         Args: { p_avaliacao_id: string }
         Returns: string
@@ -8428,6 +8448,10 @@ export type Database = {
       psico_norm_texto: { Args: { v: string }; Returns: string }
       psico_obter_comparacao_segmentacoes: {
         Args: { p_avaliacao_id: string; p_tipo: string }
+        Returns: Json
+      }
+      psico_obter_conteudo_aprovado_relatorio: {
+        Args: { p_avaliacao_id: string }
         Returns: Json
       }
       psico_obter_dashboard_resultados: {
@@ -8548,6 +8572,10 @@ export type Database = {
         }
         Returns: Json
       }
+      psico_publicar_biblioteca_medidas: {
+        Args: { p_biblioteca_versao_id: string; p_confirmacao: string }
+        Returns: Json
+      }
       psico_publicar_questionario: {
         Args: { _confirmacao: string; _questionario_id: string }
         Returns: Json
@@ -8561,17 +8589,33 @@ export type Database = {
         }
         Returns: boolean
       }
+      psico_reabrir_revisao_tecnica: {
+        Args: { p_motivo: string; p_revisao_id: string }
+        Returns: Json
+      }
+      psico_regenerar_recomendacoes: {
+        Args: { p_confirmacao: string; p_revisao_id: string }
+        Returns: Json
+      }
       psico_registrar_acesso_convite: {
         Args: { p_public_id: string; p_token_version: number }
         Returns: undefined
       }
       psico_resumo_coleta: { Args: { p_avaliacao_id: string }; Returns: Json }
+      psico_validar_biblioteca_medidas: {
+        Args: { p_biblioteca_versao_id: string }
+        Returns: Json
+      }
       psico_validar_processamento_resultados: {
         Args: { p_avaliacao_id: string }
         Returns: Json
       }
       psico_validar_questionario: {
         Args: { _questionario_id: string }
+        Returns: Json
+      }
+      psico_validar_revisao_tecnica: {
+        Args: { p_revisao_id: string }
         Returns: Json
       }
       psico_vincular_versao_vigente: {
