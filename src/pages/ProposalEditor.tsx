@@ -623,7 +623,6 @@ export default function ProposalEditor() {
                       <Input type="date" value={proposal.proximo_followup||""} onChange={e=>scheduleProposalSave({ proximo_followup: e.target.value || null })} /></div>
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Condições de pagamento</Label>
                     <CondicaoPagamentoPicker
                       proposalId={proposal.id}
                       total={total}
