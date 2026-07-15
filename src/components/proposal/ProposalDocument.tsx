@@ -10,6 +10,7 @@ import {
   Award, Users, Zap, Scale, UserCheck, Sparkles, CheckCircle2, Building2, FileSignature,
   ClipboardList, ListChecks, Package, Hash, Info,
 } from "lucide-react";
+import { MARCO_LABEL, type CondPagMarco } from "@/lib/condicoesPagamento";
 
 /**
  * Multi-page A4 proposal document, optimized for screen preview and PDF print.
@@ -51,10 +52,21 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   const [tpl, setTpl] = useState<any>(null);
   const [serviceNames, setServiceNames] = useState<Record<string, string>>({});
   const [flowReady, setFlowReady] = useState(false);
+  const [condSnap, setCondSnap] = useState<any>(null);
   useEffect(() => {
     supabase.from("proposal_template").select("*").limit(1).maybeSingle()
       .then(({ data }) => setTpl(data || {}));
   }, []);
+  useEffect(() => {
+    if (!proposal?.id) return;
+    supabase.from("proposal_condicao_pagamento")
+      .select("*, parcelas:proposal_condicao_parcelas(*)")
+      .eq("proposal_id", proposal.id).maybeSingle()
+      .then(({ data }) => {
+        if (data?.parcelas) data.parcelas.sort((a: any, b: any) => a.numero - b.numero);
+        setCondSnap(data || null);
+      });
+  }, [proposal?.id]);
   useEffect(() => {
     const ids = Array.from(new Set(items.map((i: any) => i.service_id).filter(Boolean)));
     if (ids.length === 0) { setServiceNames({}); return; }
