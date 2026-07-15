@@ -15,6 +15,34 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 type Classificacao = "Risco Irrelevante" | "Risco Baixo" | "Risco Médio" | "Risco Alto" | "Risco Crítico";
 type Prioridade = "Monitoramento" | "Média" | "Alta" | "Crítica";
 
+function humanizeText(s?: string | null) {
+  if (!s) return "";
+  return s
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+const TIPO_ESCOPO_LABEL: Record<string, string> = {
+  global: "Todos os respondentes",
+  funcao: "Função",
+  setor: "Setor",
+  unidade: "Unidade",
+};
+
+function escopoLabel(e: any) {
+  if (!e) return "";
+  if (e.tipo === "global") return "Todos os respondentes";
+  const tipo = TIPO_ESCOPO_LABEL[e.tipo] || humanizeText(e.tipo);
+  return `${tipo}: ${humanizeText(e.rotulo)}`;
+}
+
+function respondentesLabel(n?: number) {
+  const v = Number(n ?? 0);
+  return `${v} ${v === 1 ? "respondente" : "respondentes"}`;
+}
+
 function classBadge(c?: Classificacao | null) {
   switch (c) {
     case "Risco Crítico": return "bg-red-600 text-white";
@@ -312,7 +340,7 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
                   <SelectContent>
                     {escopos.map((e) => (
                       <SelectItem key={e.id} value={e.id}>
-                        {e.tipo === "global" ? "Global" : `${e.tipo}: ${e.rotulo}`} · n={e.respondentes}
+                        {escopoLabel(e)} · {respondentesLabel(e.respondentes)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -320,11 +348,15 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
               </div>
             </CardHeader>
             {escopoAtual && (
-              <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
-                <Stat label="Tipo" value={escopoAtual.tipo} />
-                <Stat label="Respondentes" value={escopoAtual.respondentes} />
-                <Stat label="Mínimo aplicado" value={escopoAtual.minimo_aplicado} />
-                <Stat label="Itens" value={escopoAtual.total_itens} />
+              <CardContent className="space-y-4 text-sm">
+                <div className="rounded-md border bg-muted/30 px-4 py-3">
+                  <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Recorte analisado</div>
+                  <div className="text-base font-semibold mt-0.5">{escopoLabel(escopoAtual)}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {respondentesLabel(escopoAtual.respondentes)} · {escopoAtual.total_itens} respostas · mínimo aplicado: {escopoAtual.minimo_aplicado}
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-1">
                   <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Índice descritivo</div>
                   <div className="flex items-center gap-2">
@@ -338,29 +370,35 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
                   <Badge className={prioBadge(escopoAtual.prioridade_maxima)}>{escopoAtual.prioridade_maxima}</Badge>
                 </div>
                 {escopoAtual.amostra_reduzida && (
-                  <div className="sm:col-span-2 lg:col-span-1"><Badge className="bg-amber-500 text-black">Amostra reduzida</Badge></div>
+                  <div className="sm:col-span-2 lg:col-span-3"><Badge className="bg-amber-500 text-black">Amostra reduzida (n&lt;5) — leitura indicativa</Badge></div>
                 )}
+                </div>
               </CardContent>
             )}
           </Card>
 
           {/* Gráfico de fatores */}
           <Card>
-            <CardHeader><CardTitle className="text-base">Score médio por fator</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="text-base">Score médio por fator</CardTitle>
+              <div className="text-xs text-muted-foreground mt-1">
+                Escala de 0 (Irrelevante) a 4 (Crítico). A cor da barra reflete a classificação final do fator.
+              </div>
+            </CardHeader>
             <CardContent>
               {chartData.length === 0 ? (
                 <div className="text-sm text-muted-foreground text-center py-6">Sem dados para este escopo.</div>
               ) : (
-                <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                    <XAxis dataKey="nome" />
-                    <YAxis domain={[0, 4]} ticks={[0, 1, 2, 3, 4]} />
+                <ResponsiveContainer width="100%" height={Math.max(220, chartData.length * 42 + 40)}>
+                  <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 24, left: 8, bottom: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} horizontal={false} />
+                    <XAxis type="number" domain={[0, 4]} ticks={[0, 1, 2, 3, 4]} />
+                    <YAxis type="category" dataKey="nomeFull" width={200} tick={{ fontSize: 12 }} interval={0} />
                     <Tooltip
                       formatter={(v: any, _n, p: any) => [Number(v).toFixed(2), p?.payload?.classificacao]}
-                      labelFormatter={(l: any, p: any) => p?.[0]?.payload?.nomeFull || l}
+                      labelFormatter={(l: any) => l}
                     />
-                    <Bar dataKey="score" radius={[6, 6, 0, 0]}>
+                    <Bar dataKey="score" radius={[0, 6, 6, 0]} barSize={22}>
                       {chartData.map((d, i) => <Cell key={i} fill={classColorHex(d.classificacao as Classificacao)} />)}
                     </Bar>
                   </BarChart>
@@ -483,11 +521,11 @@ function Stat({ label, value }: { label: string; value: any }) {
 }
 
 const RISCO_FAIXAS: Array<{ key: string; label: string; short: string; classif: Classificacao }> = [
-  { key: "percentual_irrelevante", label: "Irrelevante", short: "Irrel.", classif: "Risco Irrelevante" },
+  { key: "percentual_irrelevante", label: "Irrelevante", short: "Irrelev.", classif: "Risco Irrelevante" },
   { key: "percentual_baixo", label: "Baixo", short: "Baixo", classif: "Risco Baixo" },
   { key: "percentual_medio", label: "Médio", short: "Médio", classif: "Risco Médio" },
   { key: "percentual_alto", label: "Alto", short: "Alto", classif: "Risco Alto" },
-  { key: "percentual_critico", label: "Crítico", short: "Crít.", classif: "Risco Crítico" },
+  { key: "percentual_critico", label: "Crítico", short: "Crítico", classif: "Risco Crítico" },
 ];
 
 function FatorCard({ f, meta, criterios }: { f: any; meta: any; criterios: string[] }) {
@@ -495,24 +533,37 @@ function FatorCard({ f, meta, criterios }: { f: any; meta: any; criterios: strin
   const faixas = RISCO_FAIXAS.map((r) => ({ ...r, pct: Number(f[r.key] ?? 0) }));
   return (
     <div className="rounded-lg border bg-card overflow-hidden">
-      <div className="px-4 py-3 flex flex-wrap items-start justify-between gap-3 border-b" style={{ borderLeft: `4px solid ${cor}` }}>
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{meta?.codigo || "—"}</span>
-            <span className="font-semibold">{meta?.nome || f.fator_id}</span>
-          </div>
-          <div className="text-xs text-muted-foreground mt-0.5">
-            {f.quantidade_perguntas} pergunta(s) · {f.total_respostas_validas} resposta(s) válida(s)
+      <div className="px-4 py-3 border-b" style={{ borderLeft: `4px solid ${cor}` }}>
+        <div className="flex items-start gap-3 min-w-0">
+          <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0 mt-0.5">{meta?.codigo || "—"}</span>
+          <div className="min-w-0 flex-1">
+            <div className="font-semibold leading-tight break-words">{humanizeText(meta?.nome) || f.fator_id}</div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              {f.quantidade_perguntas} pergunta(s) · {f.total_respostas_validas} resposta(s) válida(s)
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap justify-end">
-          <div className="text-right">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+          <div>
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Score médio</div>
-            <div className="font-mono text-lg leading-none mt-0.5">{Number(f.score_medio).toFixed(2)}</div>
+            <div className="font-mono text-lg leading-none mt-1">{Number(f.score_medio).toFixed(2)}<span className="text-xs text-muted-foreground font-sans"> / 4</span></div>
           </div>
-          <Badge className={classBadge(f.classificacao_media)}>{f.classificacao_media}</Badge>
-          <Badge className={prioBadge(f.prioridade)}>{f.prioridade}</Badge>
-          {f.significativo && <Badge variant="secondary" className="border border-primary/40 text-primary">Significativo</Badge>}
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Classificação</div>
+            <Badge className={`${classBadge(f.classificacao_media)} mt-1`}>{f.classificacao_media}</Badge>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Prioridade de ação</div>
+            <Badge className={`${prioBadge(f.prioridade)} mt-1`}>{f.prioridade}</Badge>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Significância</div>
+            <div className="mt-1">
+              {f.significativo
+                ? <Badge variant="secondary" className="border border-primary/40 text-primary">Fator significativo</Badge>
+                : <Badge variant="outline" className="text-muted-foreground">Não significativo</Badge>}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -527,12 +578,12 @@ function FatorCard({ f, meta, criterios }: { f: any; meta: any; criterios: strin
               <div key={r.key} title={`${r.label}: ${r.pct.toFixed(1)}%`} style={{ width: `${r.pct}%`, background: classColorHex(r.classif) }} />
             ))}
           </div>
-          <div className="grid grid-cols-5 gap-2 mt-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mt-2">
             {faixas.map((r) => (
-              <div key={r.key} className="text-center">
-                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-                  <span className="inline-block w-2 h-2 rounded-sm" style={{ background: classColorHex(r.classif) }} />
-                  {r.short}
+              <div key={r.key} className="rounded border bg-background px-2 py-1.5 min-w-0">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="inline-block w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: classColorHex(r.classif) }} />
+                  <span className="text-[11px] text-muted-foreground truncate">{r.label}</span>
                 </div>
                 <div className="font-mono text-sm mt-0.5">{r.pct.toFixed(1)}%</div>
               </div>
@@ -540,8 +591,8 @@ function FatorCard({ f, meta, criterios }: { f: any; meta: any; criterios: strin
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 text-xs pt-1 border-t">
-          <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Critérios acionados:</span>
+        <div className="flex flex-wrap items-center gap-2 text-xs pt-2 border-t">
+          <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Critérios de significância acionados:</span>
           {criterios.length === 0 ? (
             <span className="text-muted-foreground">Nenhum</span>
           ) : criterios.map((c) => (
