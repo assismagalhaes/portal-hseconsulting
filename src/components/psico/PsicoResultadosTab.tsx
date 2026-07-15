@@ -521,11 +521,11 @@ function Stat({ label, value }: { label: string; value: any }) {
 }
 
 const RISCO_FAIXAS: Array<{ key: string; label: string; short: string; classif: Classificacao }> = [
-  { key: "percentual_irrelevante", label: "Irrelevante", short: "Irrel.", classif: "Risco Irrelevante" },
+  { key: "percentual_irrelevante", label: "Irrelevante", short: "Irrelev.", classif: "Risco Irrelevante" },
   { key: "percentual_baixo", label: "Baixo", short: "Baixo", classif: "Risco Baixo" },
   { key: "percentual_medio", label: "Médio", short: "Médio", classif: "Risco Médio" },
   { key: "percentual_alto", label: "Alto", short: "Alto", classif: "Risco Alto" },
-  { key: "percentual_critico", label: "Crítico", short: "Crít.", classif: "Risco Crítico" },
+  { key: "percentual_critico", label: "Crítico", short: "Crítico", classif: "Risco Crítico" },
 ];
 
 function FatorCard({ f, meta, criterios }: { f: any; meta: any; criterios: string[] }) {
@@ -533,24 +533,37 @@ function FatorCard({ f, meta, criterios }: { f: any; meta: any; criterios: strin
   const faixas = RISCO_FAIXAS.map((r) => ({ ...r, pct: Number(f[r.key] ?? 0) }));
   return (
     <div className="rounded-lg border bg-card overflow-hidden">
-      <div className="px-4 py-3 flex flex-wrap items-start justify-between gap-3 border-b" style={{ borderLeft: `4px solid ${cor}` }}>
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{meta?.codigo || "—"}</span>
-            <span className="font-semibold">{meta?.nome || f.fator_id}</span>
-          </div>
-          <div className="text-xs text-muted-foreground mt-0.5">
-            {f.quantidade_perguntas} pergunta(s) · {f.total_respostas_validas} resposta(s) válida(s)
+      <div className="px-4 py-3 border-b" style={{ borderLeft: `4px solid ${cor}` }}>
+        <div className="flex items-start gap-3 min-w-0">
+          <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0 mt-0.5">{meta?.codigo || "—"}</span>
+          <div className="min-w-0 flex-1">
+            <div className="font-semibold leading-tight break-words">{humanizeText(meta?.nome) || f.fator_id}</div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              {f.quantidade_perguntas} pergunta(s) · {f.total_respostas_validas} resposta(s) válida(s)
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap justify-end">
-          <div className="text-right">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+          <div>
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Score médio</div>
-            <div className="font-mono text-lg leading-none mt-0.5">{Number(f.score_medio).toFixed(2)}</div>
+            <div className="font-mono text-lg leading-none mt-1">{Number(f.score_medio).toFixed(2)}<span className="text-xs text-muted-foreground font-sans"> / 4</span></div>
           </div>
-          <Badge className={classBadge(f.classificacao_media)}>{f.classificacao_media}</Badge>
-          <Badge className={prioBadge(f.prioridade)}>{f.prioridade}</Badge>
-          {f.significativo && <Badge variant="secondary" className="border border-primary/40 text-primary">Significativo</Badge>}
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Classificação</div>
+            <Badge className={`${classBadge(f.classificacao_media)} mt-1`}>{f.classificacao_media}</Badge>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Prioridade de ação</div>
+            <Badge className={`${prioBadge(f.prioridade)} mt-1`}>{f.prioridade}</Badge>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Significância</div>
+            <div className="mt-1">
+              {f.significativo
+                ? <Badge variant="secondary" className="border border-primary/40 text-primary">Fator significativo</Badge>
+                : <Badge variant="outline" className="text-muted-foreground">Não significativo</Badge>}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -565,12 +578,12 @@ function FatorCard({ f, meta, criterios }: { f: any; meta: any; criterios: strin
               <div key={r.key} title={`${r.label}: ${r.pct.toFixed(1)}%`} style={{ width: `${r.pct}%`, background: classColorHex(r.classif) }} />
             ))}
           </div>
-          <div className="grid grid-cols-5 gap-2 mt-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mt-2">
             {faixas.map((r) => (
-              <div key={r.key} className="text-center">
-                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-                  <span className="inline-block w-2 h-2 rounded-sm" style={{ background: classColorHex(r.classif) }} />
-                  {r.short}
+              <div key={r.key} className="rounded border bg-background px-2 py-1.5 min-w-0">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="inline-block w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: classColorHex(r.classif) }} />
+                  <span className="text-[11px] text-muted-foreground truncate">{r.label}</span>
                 </div>
                 <div className="font-mono text-sm mt-0.5">{r.pct.toFixed(1)}%</div>
               </div>
@@ -578,8 +591,8 @@ function FatorCard({ f, meta, criterios }: { f: any; meta: any; criterios: strin
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 text-xs pt-1 border-t">
-          <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Critérios acionados:</span>
+        <div className="flex flex-wrap items-center gap-2 text-xs pt-2 border-t">
+          <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Critérios de significância acionados:</span>
           {criterios.length === 0 ? (
             <span className="text-muted-foreground">Nenhum</span>
           ) : criterios.map((c) => (
