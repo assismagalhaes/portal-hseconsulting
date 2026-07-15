@@ -7826,6 +7826,18 @@ export type Database = {
       psico_norm_email: { Args: { v: string }; Returns: string }
       psico_norm_fone: { Args: { v: string }; Returns: string }
       psico_norm_texto: { Args: { v: string }; Returns: string }
+      psico_obter_comparacao_segmentacoes: {
+        Args: { p_avaliacao_id: string; p_tipo: string }
+        Returns: Json
+      }
+      psico_obter_dashboard_resultados: {
+        Args: { p_avaliacao_id: string; p_escopo_id?: string }
+        Returns: Json
+      }
+      psico_obter_interpretacao_executiva: {
+        Args: { p_avaliacao_id: string; p_escopo_id?: string }
+        Returns: Json
+      }
       psico_obter_resultado_resumo: {
         Args: { p_avaliacao_id: string }
         Returns: Json
