@@ -15,6 +15,7 @@ export default function Settings() {
   const { isInternal } = useAuth();
   const [p, setP] = useState<any>(null);
   const [tpl, setTpl] = useState<any>(null);
+  const [finCfg, setFinCfg] = useState<any>(null);
 
   useEffect(() => { document.title = "Configurações | Portal HSE Consulting"; load(); }, []);
   async function load() {
@@ -29,6 +30,18 @@ export default function Settings() {
       condicoes_pagamento_default: "", outras_condicoes_default: "",
     });
     setTpl(tt.data || {});
+    const { data: fc } = await supabase.from("financeiro_configuracoes").select("*").limit(1).maybeSingle();
+    setFinCfg(fc || null);
+  }
+
+  async function saveFinCfg() {
+    const payload = { texto_padrao_pagamento: finCfg?.texto_padrao_pagamento || "" };
+    const { error } = finCfg?.id
+      ? await supabase.from("financeiro_configuracoes").update(payload).eq("id", finCfg.id)
+      : await supabase.from("financeiro_configuracoes").insert(payload);
+    if (error) return toast.error(error.message);
+    toast.success("Texto padrão de pagamento salvo");
+    load();
   }
 
   async function save() {
