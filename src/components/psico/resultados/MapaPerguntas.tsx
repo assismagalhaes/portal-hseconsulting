@@ -50,7 +50,7 @@ export default function MapaPerguntas({ avaliacaoId, escopoId }: { avaliacaoId: 
       if (!v?.id) return {};
       const { data } = await supabase.from("psico_perguntas").select("id,texto,sentido_pontuacao").eq("questionario_versao_id", v.id);
       const map: Record<string, { texto: string; inversa: boolean }> = {};
-      (data || []).forEach((p: any) => { map[p.id] = { texto: p.texto, inversa: p.sentido_pontuacao === "invertido" }; });
+      (data || []).forEach((p: any) => { map[p.id] = { texto: p.texto, inversa: p.sentido_pontuacao === "invertida" }; });
       return map;
     },
     staleTime: 10 * 60 * 1000,
