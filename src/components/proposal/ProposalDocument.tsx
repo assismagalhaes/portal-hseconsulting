@@ -53,9 +53,12 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   const [serviceNames, setServiceNames] = useState<Record<string, string>>({});
   const [flowReady, setFlowReady] = useState(false);
   const [condSnap, setCondSnap] = useState<any>(null);
+  const [textoPadraoPag, setTextoPadraoPag] = useState<string>("");
   useEffect(() => {
     supabase.from("proposal_template").select("*").limit(1).maybeSingle()
       .then(({ data }) => setTpl(data || {}));
+    supabase.from("financeiro_configuracoes").select("texto_padrao_pagamento").limit(1).maybeSingle()
+      .then(({ data }) => setTextoPadraoPag((data as any)?.texto_padrao_pagamento || ""));
   }, []);
   useEffect(() => {
     if (!proposal?.id) return;
@@ -357,7 +360,13 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   push("Condições & Aceite", "cd-title", <SectionTitle eyebrow="Termos" title="Condições comerciais" accent={accent} primary={primary} />, true);
   if (condSnap && condSnap.parcelas?.length) {
     push("Condições & Aceite", "cd-parc", (
-      <ParcelasCard snap={condSnap} total={total} primary={primary} accent={accent} neutral={neutral} />
+      <ParcelasCard snap={condSnap} total={total} primary={primary} accent={accent} neutral={neutral} textoPadrao={textoPadraoPag} />
+    ));
+  } else if (textoPadraoPag && proposal.condicoes_pagamento) {
+    push("Condições & Aceite", "cd-padrao", (
+      <div className="avoid-break" style={{ padding: "10px 14px", border: `1px dashed ${neutral}`, borderRadius: 10, fontSize: 11.5, color: "#475569", background: "#fff", whiteSpace: "pre-line" }}>
+        {textoPadraoPag}
+      </div>
     ));
   }
   push("Condições & Aceite", "cd-grid", (
@@ -698,7 +707,7 @@ function ConditionCard({ title, body, icon, primary, accent, neutral, fullWidth 
   );
 }
 
-function ParcelasCard({ snap, total, primary, accent, neutral }: any) {
+function ParcelasCard({ snap, total, primary, accent, neutral, textoPadrao }: any) {
   const parcelas = snap.parcelas || [];
   return (
     <div className="avoid-break" style={{ border: `1px solid ${neutral}`, borderRadius: 12, background: "#fff", overflow: "hidden" }}>
@@ -743,6 +752,11 @@ function ParcelasCard({ snap, total, primary, accent, neutral }: any) {
       {snap.texto_complementar && (
         <div style={{ padding: "10px 16px", fontSize: 11, color: "#475569", background: neutral, borderTop: `1px solid ${neutral}` }}>
           {snap.texto_complementar}
+        </div>
+      )}
+      {textoPadrao && (
+        <div style={{ padding: "10px 16px", fontSize: 11, color: "#334155", background: "#fff", borderTop: `1px solid ${neutral}`, whiteSpace: "pre-line", fontStyle: "italic" }}>
+          {textoPadrao}
         </div>
       )}
     </div>

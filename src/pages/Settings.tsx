@@ -15,6 +15,7 @@ export default function Settings() {
   const { isInternal } = useAuth();
   const [p, setP] = useState<any>(null);
   const [tpl, setTpl] = useState<any>(null);
+  const [finCfg, setFinCfg] = useState<any>(null);
 
   useEffect(() => { document.title = "Configurações | Portal HSE Consulting"; load(); }, []);
   async function load() {
@@ -29,6 +30,18 @@ export default function Settings() {
       condicoes_pagamento_default: "", outras_condicoes_default: "",
     });
     setTpl(tt.data || {});
+    const { data: fc } = await supabase.from("financeiro_configuracoes").select("*").limit(1).maybeSingle();
+    setFinCfg(fc || null);
+  }
+
+  async function saveFinCfg() {
+    const payload = { texto_padrao_pagamento: finCfg?.texto_padrao_pagamento || "" };
+    const { error } = finCfg?.id
+      ? await supabase.from("financeiro_configuracoes").update(payload).eq("id", finCfg.id)
+      : await supabase.from("financeiro_configuracoes").insert(payload);
+    if (error) return toast.error(error.message);
+    toast.success("Texto padrão de pagamento salvo");
+    load();
   }
 
   async function save() {
@@ -117,6 +130,24 @@ export default function Settings() {
               <Textarea rows={3} value={p.condicoes_pagamento_default||""} onChange={e=>setP({...p, condicoes_pagamento_default:e.target.value})} /></div>
             <div className="space-y-1.5"><Label>Outras condições</Label>
               <Textarea rows={3} value={p.outras_condicoes_default||""} onChange={e=>setP({...p, outras_condicoes_default:e.target.value})} /></div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-elegant">
+          <CardHeader><CardTitle className="font-display">Texto padrão de pagamento (PDF e aceite)</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Aparece automaticamente abaixo do cronograma de parcelas em todas as propostas. Somente administradores podem alterar.
+            </p>
+            <Textarea
+              rows={4}
+              value={finCfg?.texto_padrao_pagamento || ""}
+              onChange={(e) => setFinCfg({ ...(finCfg || {}), texto_padrao_pagamento: e.target.value })}
+              placeholder={"HSE Consulting emitirá nota fiscal de prestação do serviço.\nPagamento via boleto bancário e/ou transferência bancária."}
+              disabled={!isInternal}
+            />
+            <div className="flex justify-end">
+              <Button size="sm" variant="outline" onClick={saveFinCfg} disabled={!isInternal}>Salvar texto padrão</Button>
+            </div>
           </CardContent>
         </Card>
         <div className="flex justify-end"><Button onClick={save} disabled={!isInternal}>Salvar parâmetros</Button></div>
