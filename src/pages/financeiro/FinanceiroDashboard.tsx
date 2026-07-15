@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { brl, formatDate } from "@/lib/format";
 import { FIN_STATUS_PARCELA, FIN_STATUS_PARCELA_COR, FIN_TIPO_CUSTO, margemIndicador, calcMargem } from "@/lib/financeiro";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, CartesianGrid } from "recharts";
-import { DollarSign, TrendingUp, AlertTriangle, FileText, Receipt, Wallet, ListChecks } from "lucide-react";
+import { DollarSign, TrendingUp, AlertTriangle, FileText, Receipt, Wallet, ListChecks, CalendarClock } from "lucide-react";
 
 const PIE_COLORS = ["#16a34a","#0ea5e9","#f59e0b","#a855f7","#ef4444","#64748b","#14b8a6","#f97316","#84cc16","#ec4899","#22d3ee","#eab308","#7c3aed","#94a3b8"];
 
@@ -36,6 +36,8 @@ export default function FinanceiroDashboard() {
   const recebMes = parcelas.filter(p => p.data_recebimento && (p.data_recebimento||"").startsWith(mes)).reduce((s,p)=>s+Number(p.valor_recebido||0),0);
   const aberto = parcelas.filter(p => ["a_vencer","vencida","recebida_parcial"].includes(p.status)).reduce((s,p)=>s+(Number(p.valor)-Number(p.valor_recebido||0)),0);
   const vencido = parcelas.filter(p => p.status === "vencida").reduce((s,p)=>s+(Number(p.valor)-Number(p.valor_recebido||0)),0);
+  const aguardandoEvento = parcelas.filter(p => p.status === "aguardando_evento");
+  const aguardandoValor = aguardandoEvento.reduce((s,p)=>s+Number(p.valor||0),0);
   const custoTotal = custos.reduce((s,k)=>s+Number(k.valor||0),0);
   const receitaTotal = contratos.reduce((s,c)=>s+Number(c.valor_aprovado||0),0);
   const margem = calcMargem(receitaTotal, custoTotal);
@@ -80,8 +82,8 @@ export default function FinanceiroDashboard() {
         <div className="grid gap-3 md:grid-cols-4">
           <Kpi icon={<TrendingUp className="h-4 w-4"/>} label="Receita total aprovada" value={brl(receitaTotal)} />
           <Kpi icon={<Wallet className="h-4 w-4"/>} label="Custos realizados" value={brl(custoTotal)} />
-          <Kpi icon={<TrendingUp className="h-4 w-4"/>} label="Lucro real" value={brl(receitaTotal - custoTotal)} />
           <Kpi icon={<TrendingUp className="h-4 w-4"/>} label="Margem real" value={`${margem.toFixed(1)}%`} hint={`${ind.emoji} ${ind.label}`} />
+          <Kpi icon={<CalendarClock className="h-4 w-4 text-purple-600"/>} label="Aguardando evento" value={brl(aguardandoValor)} hint={`${aguardandoEvento.length} parcelas atreladas a marcos`} />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
