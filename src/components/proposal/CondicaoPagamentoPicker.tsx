@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Info, RefreshCcw, Wrench, Plus, Trash2, Undo2 } from "lucide-react";
+import { Info, RefreshCcw, Wrench, Plus, Trash2, Undo2, History, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
 import { MARCO_LABEL, MARCOS, buildTextoCondicao, somaPercentuais, validarParcelas, type CondPagMarco, type ParcelaForm } from "@/lib/condicoesPagamento";
@@ -47,6 +47,8 @@ export default function CondicaoPagamentoPicker({
   const [textoPadrao, setTextoPadrao] = useState<string>("");
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<ParcelaForm[]>([]);
+  const [historico, setHistorico] = useState<any[]>([]);
+  const [showHist, setShowHist] = useState(false);
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [proposalId]);
 
@@ -70,6 +72,13 @@ export default function CondicaoPagamentoPicker({
       setSelectedId(snapData.condicao_id || "");
       setComplemento(snapData.texto_complementar || "");
     }
+    const { data: hist } = await supabase
+      .from("proposal_condicao_pagamento_historico")
+      .select("*")
+      .eq("proposal_id", proposalId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setHistorico(hist || []);
   }
 
   const selected = useMemo(() => conds.find((c) => c.id === selectedId), [conds, selectedId]);
