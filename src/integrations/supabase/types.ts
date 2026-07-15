@@ -5888,6 +5888,80 @@ export type Database = {
           },
         ]
       }
+      psico_bibliotecas_medidas_versoes: {
+        Row: {
+          arquivado_em: string | null
+          atualizado_em: string
+          atualizado_por: string | null
+          codigo: string
+          criado_em: string
+          criado_por: string | null
+          descricao: string | null
+          fonte: string | null
+          id: string
+          metadados: Json | null
+          metodologia_versao_id: string | null
+          nome: string
+          publicado_em: string | null
+          publicado_por: string | null
+          quantidade_fatores_prevista: number
+          quantidade_medidas_prevista: number
+          status: Database["public"]["Enums"]["psico_biblioteca_status"]
+          versao: string
+          vigente: boolean
+        }
+        Insert: {
+          arquivado_em?: string | null
+          atualizado_em?: string
+          atualizado_por?: string | null
+          codigo: string
+          criado_em?: string
+          criado_por?: string | null
+          descricao?: string | null
+          fonte?: string | null
+          id?: string
+          metadados?: Json | null
+          metodologia_versao_id?: string | null
+          nome: string
+          publicado_em?: string | null
+          publicado_por?: string | null
+          quantidade_fatores_prevista?: number
+          quantidade_medidas_prevista?: number
+          status?: Database["public"]["Enums"]["psico_biblioteca_status"]
+          versao: string
+          vigente?: boolean
+        }
+        Update: {
+          arquivado_em?: string | null
+          atualizado_em?: string
+          atualizado_por?: string | null
+          codigo?: string
+          criado_em?: string
+          criado_por?: string | null
+          descricao?: string | null
+          fonte?: string | null
+          id?: string
+          metadados?: Json | null
+          metodologia_versao_id?: string | null
+          nome?: string
+          publicado_em?: string | null
+          publicado_por?: string | null
+          quantidade_fatores_prevista?: number
+          quantidade_medidas_prevista?: number
+          status?: Database["public"]["Enums"]["psico_biblioteca_status"]
+          versao?: string
+          vigente?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_bibliotecas_medidas_versoes_metodologia_versao_id_fkey"
+            columns: ["metodologia_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_metodologias_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psico_convites: {
         Row: {
           ativado_em: string | null
@@ -6034,6 +6108,68 @@ export type Database = {
           },
         ]
       }
+      psico_fatores_orientacoes: {
+        Row: {
+          ativo: boolean
+          atualizado_em: string
+          biblioteca_versao_id: string
+          criado_em: string
+          definicao_resumida: string
+          fator_codigo: string
+          id: string
+          impactos_possiveis: string[]
+          nome: string
+          objetivo_medidas: string
+          observacao_final: string | null
+          ordem: number
+          orientacao_priorizacao: string | null
+          perguntas_avaliacao_interna: string[]
+          situacoes_associadas: string[]
+        }
+        Insert: {
+          ativo?: boolean
+          atualizado_em?: string
+          biblioteca_versao_id: string
+          criado_em?: string
+          definicao_resumida: string
+          fator_codigo: string
+          id?: string
+          impactos_possiveis?: string[]
+          nome: string
+          objetivo_medidas: string
+          observacao_final?: string | null
+          ordem: number
+          orientacao_priorizacao?: string | null
+          perguntas_avaliacao_interna?: string[]
+          situacoes_associadas?: string[]
+        }
+        Update: {
+          ativo?: boolean
+          atualizado_em?: string
+          biblioteca_versao_id?: string
+          criado_em?: string
+          definicao_resumida?: string
+          fator_codigo?: string
+          id?: string
+          impactos_possiveis?: string[]
+          nome?: string
+          objetivo_medidas?: string
+          observacao_final?: string | null
+          ordem?: number
+          orientacao_priorizacao?: string | null
+          perguntas_avaliacao_interna?: string[]
+          situacoes_associadas?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_fatores_orientacoes_biblioteca_versao_id_fkey"
+            columns: ["biblioteca_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_bibliotecas_medidas_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psico_importacoes_participantes: {
         Row: {
           avaliacao_id: string
@@ -6104,6 +6240,98 @@ export type Database = {
             columns: ["avaliacao_id"]
             isOneToOne: false
             referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_medidas_modelos: {
+        Row: {
+          ativo: boolean
+          atualizado_em: string
+          biblioteca_versao_id: string
+          codigo: string
+          complexidade:
+            | Database["public"]["Enums"]["psico_medida_complexidade"]
+            | null
+          criado_em: string
+          custo_estimado:
+            | Database["public"]["Enums"]["psico_medida_custo"]
+            | null
+          evidencias_recomendadas: string[]
+          exemplos_aplicacao: string[]
+          fator_codigo: string
+          grupo_transversal: string | null
+          id: string
+          indicadores_sugeridos: string[]
+          nivel_recomendacao: Database["public"]["Enums"]["psico_medida_nivel"]
+          o_que_significa: string
+          observacoes: string | null
+          ordem: number
+          orientacoes_praticas: string[]
+          prazo_sugerido_dias: number | null
+          responsaveis_sugeridos: string[]
+          titulo: string
+        }
+        Insert: {
+          ativo?: boolean
+          atualizado_em?: string
+          biblioteca_versao_id: string
+          codigo: string
+          complexidade?:
+            | Database["public"]["Enums"]["psico_medida_complexidade"]
+            | null
+          criado_em?: string
+          custo_estimado?:
+            | Database["public"]["Enums"]["psico_medida_custo"]
+            | null
+          evidencias_recomendadas?: string[]
+          exemplos_aplicacao?: string[]
+          fator_codigo: string
+          grupo_transversal?: string | null
+          id?: string
+          indicadores_sugeridos?: string[]
+          nivel_recomendacao: Database["public"]["Enums"]["psico_medida_nivel"]
+          o_que_significa: string
+          observacoes?: string | null
+          ordem: number
+          orientacoes_praticas?: string[]
+          prazo_sugerido_dias?: number | null
+          responsaveis_sugeridos?: string[]
+          titulo: string
+        }
+        Update: {
+          ativo?: boolean
+          atualizado_em?: string
+          biblioteca_versao_id?: string
+          codigo?: string
+          complexidade?:
+            | Database["public"]["Enums"]["psico_medida_complexidade"]
+            | null
+          criado_em?: string
+          custo_estimado?:
+            | Database["public"]["Enums"]["psico_medida_custo"]
+            | null
+          evidencias_recomendadas?: string[]
+          exemplos_aplicacao?: string[]
+          fator_codigo?: string
+          grupo_transversal?: string | null
+          id?: string
+          indicadores_sugeridos?: string[]
+          nivel_recomendacao?: Database["public"]["Enums"]["psico_medida_nivel"]
+          o_que_significa?: string
+          observacoes?: string | null
+          ordem?: number
+          orientacoes_praticas?: string[]
+          prazo_sugerido_dias?: number | null
+          responsaveis_sugeridos?: string[]
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_medidas_modelos_biblioteca_versao_id_fkey"
+            columns: ["biblioteca_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_bibliotecas_medidas_versoes"
             referencedColumns: ["id"]
           },
         ]
@@ -6403,6 +6631,203 @@ export type Database = {
             columns: ["questionario_versao_id"]
             isOneToOne: false
             referencedRelation: "psico_questionarios_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_plano_acao_itens: {
+        Row: {
+          abrangencia_rotulo: string
+          abrangencia_tipo: Database["public"]["Enums"]["psico_abrangencia_tipo"]
+          acao_recomendada: string
+          atualizado_em: string
+          codigo_origem: string | null
+          criado_em: string
+          evidencias_recomendadas: string[]
+          exemplos_aplicacao: string[]
+          gerado_automaticamente: boolean
+          grupo_transversal: string | null
+          id: string
+          indicador_sugerido: string | null
+          medida_modelo_id: string | null
+          nivel_recomendacao: string
+          objetivo: string
+          ordem: number
+          orientacoes_praticas: string[]
+          personalizado: boolean
+          plano_id: string
+          prazo_sugerido_dias: number | null
+          prazo_sugerido_texto: string | null
+          prioridade: string
+          responsaveis_sugeridos: string[]
+          responsavel_definido: string | null
+          selecionado: boolean
+          titulo: string
+        }
+        Insert: {
+          abrangencia_rotulo?: string
+          abrangencia_tipo?: Database["public"]["Enums"]["psico_abrangencia_tipo"]
+          acao_recomendada: string
+          atualizado_em?: string
+          codigo_origem?: string | null
+          criado_em?: string
+          evidencias_recomendadas?: string[]
+          exemplos_aplicacao?: string[]
+          gerado_automaticamente?: boolean
+          grupo_transversal?: string | null
+          id?: string
+          indicador_sugerido?: string | null
+          medida_modelo_id?: string | null
+          nivel_recomendacao: string
+          objetivo: string
+          ordem?: number
+          orientacoes_praticas?: string[]
+          personalizado?: boolean
+          plano_id: string
+          prazo_sugerido_dias?: number | null
+          prazo_sugerido_texto?: string | null
+          prioridade: string
+          responsaveis_sugeridos?: string[]
+          responsavel_definido?: string | null
+          selecionado?: boolean
+          titulo: string
+        }
+        Update: {
+          abrangencia_rotulo?: string
+          abrangencia_tipo?: Database["public"]["Enums"]["psico_abrangencia_tipo"]
+          acao_recomendada?: string
+          atualizado_em?: string
+          codigo_origem?: string | null
+          criado_em?: string
+          evidencias_recomendadas?: string[]
+          exemplos_aplicacao?: string[]
+          gerado_automaticamente?: boolean
+          grupo_transversal?: string | null
+          id?: string
+          indicador_sugerido?: string | null
+          medida_modelo_id?: string | null
+          nivel_recomendacao?: string
+          objetivo?: string
+          ordem?: number
+          orientacoes_praticas?: string[]
+          personalizado?: boolean
+          plano_id?: string
+          prazo_sugerido_dias?: number | null
+          prazo_sugerido_texto?: string | null
+          prioridade?: string
+          responsaveis_sugeridos?: string[]
+          responsavel_definido?: string | null
+          selecionado?: boolean
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_plano_acao_itens_medida_modelo_id_fkey"
+            columns: ["medida_modelo_id"]
+            isOneToOne: false
+            referencedRelation: "psico_medidas_modelos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_plano_acao_itens_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "psico_planos_acao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_plano_item_fatores: {
+        Row: {
+          criado_em: string
+          fator_codigo: string
+          id: string
+          plano_item_id: string
+          resultado_fator_id: string
+        }
+        Insert: {
+          criado_em?: string
+          fator_codigo: string
+          id?: string
+          plano_item_id: string
+          resultado_fator_id: string
+        }
+        Update: {
+          criado_em?: string
+          fator_codigo?: string
+          id?: string
+          plano_item_id?: string
+          resultado_fator_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_plano_item_fatores_plano_item_id_fkey"
+            columns: ["plano_item_id"]
+            isOneToOne: false
+            referencedRelation: "psico_plano_acao_itens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_plano_item_fatores_resultado_fator_id_fkey"
+            columns: ["resultado_fator_id"]
+            isOneToOne: false
+            referencedRelation: "psico_resultados_fatores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_planos_acao: {
+        Row: {
+          aprovado_em: string | null
+          atualizado_em: string
+          atualizado_por: string | null
+          criado_em: string
+          criado_por: string | null
+          descricao: string | null
+          gerado_automaticamente: boolean
+          id: string
+          modo: Database["public"]["Enums"]["psico_plano_modo"]
+          quantidade_itens: number
+          revisao_id: string
+          status: Database["public"]["Enums"]["psico_plano_status"]
+          titulo: string
+        }
+        Insert: {
+          aprovado_em?: string | null
+          atualizado_em?: string
+          atualizado_por?: string | null
+          criado_em?: string
+          criado_por?: string | null
+          descricao?: string | null
+          gerado_automaticamente?: boolean
+          id?: string
+          modo?: Database["public"]["Enums"]["psico_plano_modo"]
+          quantidade_itens?: number
+          revisao_id: string
+          status?: Database["public"]["Enums"]["psico_plano_status"]
+          titulo?: string
+        }
+        Update: {
+          aprovado_em?: string | null
+          atualizado_em?: string
+          atualizado_por?: string | null
+          criado_em?: string
+          criado_por?: string | null
+          descricao?: string | null
+          gerado_automaticamente?: boolean
+          id?: string
+          modo?: Database["public"]["Enums"]["psico_plano_modo"]
+          quantidade_itens?: number
+          revisao_id?: string
+          status?: Database["public"]["Enums"]["psico_plano_status"]
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_planos_acao_revisao_id_fkey"
+            columns: ["revisao_id"]
+            isOneToOne: true
+            referencedRelation: "psico_revisoes_tecnicas"
             referencedColumns: ["id"]
           },
         ]
@@ -7038,6 +7463,181 @@ export type Database = {
             columns: ["pergunta_id"]
             isOneToOne: false
             referencedRelation: "psico_perguntas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_revisoes_fatores: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          fator_codigo: string
+          id: string
+          justificativa: string | null
+          observacao_tecnica: string | null
+          ordem_relatorio: number
+          prioridade_calculada: string
+          resultado_fator_id: string
+          revisado: boolean
+          revisao_id: string
+          significativo_calculado: boolean
+          tratamento_tecnico: Database["public"]["Enums"]["psico_tratamento_tecnico"]
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          fator_codigo: string
+          id?: string
+          justificativa?: string | null
+          observacao_tecnica?: string | null
+          ordem_relatorio: number
+          prioridade_calculada: string
+          resultado_fator_id: string
+          revisado?: boolean
+          revisao_id: string
+          significativo_calculado: boolean
+          tratamento_tecnico: Database["public"]["Enums"]["psico_tratamento_tecnico"]
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          fator_codigo?: string
+          id?: string
+          justificativa?: string | null
+          observacao_tecnica?: string | null
+          ordem_relatorio?: number
+          prioridade_calculada?: string
+          resultado_fator_id?: string
+          revisado?: boolean
+          revisao_id?: string
+          significativo_calculado?: boolean
+          tratamento_tecnico?: Database["public"]["Enums"]["psico_tratamento_tecnico"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_revisoes_fatores_resultado_fator_id_fkey"
+            columns: ["resultado_fator_id"]
+            isOneToOne: false
+            referencedRelation: "psico_resultados_fatores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_revisoes_fatores_revisao_id_fkey"
+            columns: ["revisao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_revisoes_tecnicas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_revisoes_tecnicas: {
+        Row: {
+          amostra_reduzida: boolean
+          aprovada_em: string | null
+          aprovada_por: string | null
+          ativa: boolean
+          atualizada_em: string
+          atualizada_por: string | null
+          avaliacao_id: string
+          biblioteca_versao_id: string
+          conclusao_sugerida: string | null
+          conclusao_tecnica: string | null
+          contexto_organizacional: string | null
+          criada_em: string
+          criada_por: string | null
+          enviada_revisao_em: string | null
+          id: string
+          limitacoes: string | null
+          modo: Database["public"]["Enums"]["psico_revisao_modo"]
+          motivo_reabertura: string | null
+          observacoes_internas: string | null
+          processamento_id: string
+          reaberta_em: string | null
+          reaberta_por: string | null
+          recomendacao_geral: string | null
+          responsavel_snapshot: Json | null
+          responsavel_tecnico_id: string | null
+          status: Database["public"]["Enums"]["psico_revisao_status"]
+          versao: number
+        }
+        Insert: {
+          amostra_reduzida?: boolean
+          aprovada_em?: string | null
+          aprovada_por?: string | null
+          ativa?: boolean
+          atualizada_em?: string
+          atualizada_por?: string | null
+          avaliacao_id: string
+          biblioteca_versao_id: string
+          conclusao_sugerida?: string | null
+          conclusao_tecnica?: string | null
+          contexto_organizacional?: string | null
+          criada_em?: string
+          criada_por?: string | null
+          enviada_revisao_em?: string | null
+          id?: string
+          limitacoes?: string | null
+          modo?: Database["public"]["Enums"]["psico_revisao_modo"]
+          motivo_reabertura?: string | null
+          observacoes_internas?: string | null
+          processamento_id: string
+          reaberta_em?: string | null
+          reaberta_por?: string | null
+          recomendacao_geral?: string | null
+          responsavel_snapshot?: Json | null
+          responsavel_tecnico_id?: string | null
+          status?: Database["public"]["Enums"]["psico_revisao_status"]
+          versao?: number
+        }
+        Update: {
+          amostra_reduzida?: boolean
+          aprovada_em?: string | null
+          aprovada_por?: string | null
+          ativa?: boolean
+          atualizada_em?: string
+          atualizada_por?: string | null
+          avaliacao_id?: string
+          biblioteca_versao_id?: string
+          conclusao_sugerida?: string | null
+          conclusao_tecnica?: string | null
+          contexto_organizacional?: string | null
+          criada_em?: string
+          criada_por?: string | null
+          enviada_revisao_em?: string | null
+          id?: string
+          limitacoes?: string | null
+          modo?: Database["public"]["Enums"]["psico_revisao_modo"]
+          motivo_reabertura?: string | null
+          observacoes_internas?: string | null
+          processamento_id?: string
+          reaberta_em?: string | null
+          reaberta_por?: string | null
+          recomendacao_geral?: string | null
+          responsavel_snapshot?: Json | null
+          responsavel_tecnico_id?: string | null
+          status?: Database["public"]["Enums"]["psico_revisao_status"]
+          versao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_revisoes_tecnicas_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_revisoes_tecnicas_biblioteca_versao_id_fkey"
+            columns: ["biblioteca_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_bibliotecas_medidas_versoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_revisoes_tecnicas_processamento_id_fkey"
+            columns: ["processamento_id"]
+            isOneToOne: false
+            referencedRelation: "psico_resultado_processamentos"
             referencedColumns: ["id"]
           },
         ]
@@ -7745,6 +8345,10 @@ export type Database = {
         Returns: Json
       }
       psico_admin_correcao_ativa: { Args: never; Returns: boolean }
+      psico_aprovar_revisao_tecnica: {
+        Args: { p_confirmacao: string; p_revisao_id: string }
+        Returns: Json
+      }
       psico_atualizar_participante: {
         Args: {
           _email: string
@@ -7776,6 +8380,18 @@ export type Database = {
         }
         Returns: Json
       }
+      psico_criar_revisao_tecnica: {
+        Args: { p_avaliacao_id: string; p_modo?: string }
+        Returns: Json
+      }
+      psico_duplicar_biblioteca_medidas: {
+        Args: {
+          p_biblioteca_versao_id: string
+          p_nova_versao: string
+          p_novo_nome?: string
+        }
+        Returns: string
+      }
       psico_duplicar_questionario: {
         Args: {
           _nova_versao: string
@@ -7802,6 +8418,10 @@ export type Database = {
         Returns: Json
       }
       psico_gerar_codigo_avaliacao: { Args: never; Returns: string }
+      psico_gerar_recomendacoes_internal: {
+        Args: { p_revisao_id: string; p_substituir_geradas?: boolean }
+        Returns: number
+      }
       psico_hash_entrada_resultado: {
         Args: { p_avaliacao_id: string }
         Returns: string
@@ -7828,6 +8448,10 @@ export type Database = {
       psico_norm_texto: { Args: { v: string }; Returns: string }
       psico_obter_comparacao_segmentacoes: {
         Args: { p_avaliacao_id: string; p_tipo: string }
+        Returns: Json
+      }
+      psico_obter_conteudo_aprovado_relatorio: {
+        Args: { p_avaliacao_id: string }
         Returns: Json
       }
       psico_obter_dashboard_resultados: {
@@ -7948,6 +8572,10 @@ export type Database = {
         }
         Returns: Json
       }
+      psico_publicar_biblioteca_medidas: {
+        Args: { p_biblioteca_versao_id: string; p_confirmacao: string }
+        Returns: Json
+      }
       psico_publicar_questionario: {
         Args: { _confirmacao: string; _questionario_id: string }
         Returns: Json
@@ -7961,17 +8589,33 @@ export type Database = {
         }
         Returns: boolean
       }
+      psico_reabrir_revisao_tecnica: {
+        Args: { p_motivo: string; p_revisao_id: string }
+        Returns: Json
+      }
+      psico_regenerar_recomendacoes: {
+        Args: { p_confirmacao: string; p_revisao_id: string }
+        Returns: Json
+      }
       psico_registrar_acesso_convite: {
         Args: { p_public_id: string; p_token_version: number }
         Returns: undefined
       }
       psico_resumo_coleta: { Args: { p_avaliacao_id: string }; Returns: Json }
+      psico_validar_biblioteca_medidas: {
+        Args: { p_biblioteca_versao_id: string }
+        Returns: Json
+      }
       psico_validar_processamento_resultados: {
         Args: { p_avaliacao_id: string }
         Returns: Json
       }
       psico_validar_questionario: {
         Args: { _questionario_id: string }
+        Returns: Json
+      }
+      psico_validar_revisao_tecnica: {
+        Args: { p_revisao_id: string }
         Returns: Json
       }
       psico_vincular_versao_vigente: {
@@ -8312,6 +8956,7 @@ export type Database = {
         | "recusada"
         | "expirada"
         | "cancelada"
+      psico_abrangencia_tipo: "global" | "funcao" | "setor" | "unidade"
       psico_avaliacao_status:
         | "rascunho"
         | "coleta_em_andamento"
@@ -8319,6 +8964,7 @@ export type Database = {
         | "resultado_pronto"
         | "relatorio_emitido"
         | "cancelada"
+      psico_biblioteca_status: "em_configuracao" | "publicada" | "arquivada"
       psico_classificacao_risco:
         | "Risco Irrelevante"
         | "Risco Baixo"
@@ -8344,8 +8990,13 @@ export type Database = {
         | "concluida_com_avisos"
         | "falhou"
         | "cancelada"
+      psico_medida_complexidade: "baixa" | "media" | "alta"
+      psico_medida_custo: "baixo" | "medio" | "alto" | "variavel"
+      psico_medida_nivel: "essencial" | "complementar" | "estruturante"
       psico_metodologia_status: "em_configuracao" | "ativa" | "arquivada"
       psico_participante_origem: "manual" | "importacao"
+      psico_plano_modo: "enxuto" | "completo" | "personalizado"
+      psico_plano_status: "rascunho" | "revisado" | "aprovado"
       psico_prioridade_fator: "Monitoramento" | "Média" | "Alta" | "Crítica"
       psico_questionario_status: "em_configuracao" | "publicada" | "arquivada"
       psico_resultado_escopo_tipo: "global" | "funcao" | "setor" | "unidade"
@@ -8354,7 +9005,18 @@ export type Database = {
         | "concluido"
         | "falhou"
         | "substituido"
+      psico_revisao_modo: "rapida" | "detalhada"
+      psico_revisao_status:
+        | "rascunho"
+        | "pronta_para_aprovacao"
+        | "aprovada"
+        | "reaberta"
+        | "substituida"
       psico_sentido_pontuacao: "direta" | "invertida"
+      psico_tratamento_tecnico:
+        | "acao_recomendada"
+        | "monitoramento_preventivo"
+        | "sem_acao_especifica"
       psico_unidade_calculo: "quantidade_respostas"
       rateio_regra:
         | "igual"
@@ -8831,6 +9493,7 @@ export const Constants = {
         "expirada",
         "cancelada",
       ],
+      psico_abrangencia_tipo: ["global", "funcao", "setor", "unidade"],
       psico_avaliacao_status: [
         "rascunho",
         "coleta_em_andamento",
@@ -8839,6 +9502,7 @@ export const Constants = {
         "relatorio_emitido",
         "cancelada",
       ],
+      psico_biblioteca_status: ["em_configuracao", "publicada", "arquivada"],
       psico_classificacao_risco: [
         "Risco Irrelevante",
         "Risco Baixo",
@@ -8862,8 +9526,13 @@ export const Constants = {
         "falhou",
         "cancelada",
       ],
+      psico_medida_complexidade: ["baixa", "media", "alta"],
+      psico_medida_custo: ["baixo", "medio", "alto", "variavel"],
+      psico_medida_nivel: ["essencial", "complementar", "estruturante"],
       psico_metodologia_status: ["em_configuracao", "ativa", "arquivada"],
       psico_participante_origem: ["manual", "importacao"],
+      psico_plano_modo: ["enxuto", "completo", "personalizado"],
+      psico_plano_status: ["rascunho", "revisado", "aprovado"],
       psico_prioridade_fator: ["Monitoramento", "Média", "Alta", "Crítica"],
       psico_questionario_status: ["em_configuracao", "publicada", "arquivada"],
       psico_resultado_escopo_tipo: ["global", "funcao", "setor", "unidade"],
@@ -8873,7 +9542,20 @@ export const Constants = {
         "falhou",
         "substituido",
       ],
+      psico_revisao_modo: ["rapida", "detalhada"],
+      psico_revisao_status: [
+        "rascunho",
+        "pronta_para_aprovacao",
+        "aprovada",
+        "reaberta",
+        "substituida",
+      ],
       psico_sentido_pontuacao: ["direta", "invertida"],
+      psico_tratamento_tecnico: [
+        "acao_recomendada",
+        "monitoramento_preventivo",
+        "sem_acao_especifica",
+      ],
       psico_unidade_calculo: ["quantidade_respostas"],
       rateio_regra: [
         "igual",
