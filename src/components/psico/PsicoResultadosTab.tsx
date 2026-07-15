@@ -540,13 +540,10 @@ function FatorCard({ f, meta, criterios }: { f: any; meta: any; criterios: strin
   return (
     <div className="rounded-lg border bg-card overflow-hidden">
       <div className="px-4 py-3 border-b" style={{ borderLeft: `4px solid ${cor}` }}>
-        <div className="flex items-start gap-3 min-w-0">
-          <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0 mt-0.5">{meta?.codigo || "—"}</span>
-          <div className="min-w-0 flex-1">
-            <div className="font-semibold leading-tight break-words">{humanizeText(meta?.nome) || f.fator_id}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">
-              {f.quantidade_perguntas} pergunta(s) · {f.total_respostas_validas} resposta(s) válida(s)
-            </div>
+        <div className="min-w-0">
+          <div className="font-semibold leading-tight break-words">{humanizeText(meta?.nome) || humanizeText(meta?.codigo) || "—"}</div>
+          <div className="text-xs text-muted-foreground mt-0.5">
+            {f.quantidade_perguntas} pergunta(s) · {f.total_respostas_validas} resposta(s) válida(s)
           </div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
@@ -566,7 +563,7 @@ function FatorCard({ f, meta, criterios }: { f: any; meta: any; criterios: strin
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Significância</div>
             <div className="mt-1">
               {f.significativo
-                ? <Badge variant="secondary" className="border border-primary/40 text-primary">Fator significativo</Badge>
+                ? <Badge className="bg-primary text-primary-foreground hover:bg-primary">Significativo</Badge>
                 : <Badge variant="outline" className="text-muted-foreground">Não significativo</Badge>}
             </div>
           </div>
