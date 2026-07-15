@@ -15,6 +15,34 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 type Classificacao = "Risco Irrelevante" | "Risco Baixo" | "Risco Médio" | "Risco Alto" | "Risco Crítico";
 type Prioridade = "Monitoramento" | "Média" | "Alta" | "Crítica";
 
+function humanizeText(s?: string | null) {
+  if (!s) return "";
+  return s
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+const TIPO_ESCOPO_LABEL: Record<string, string> = {
+  global: "Todos os respondentes",
+  funcao: "Função",
+  setor: "Setor",
+  unidade: "Unidade",
+};
+
+function escopoLabel(e: any) {
+  if (!e) return "";
+  if (e.tipo === "global") return "Todos os respondentes";
+  const tipo = TIPO_ESCOPO_LABEL[e.tipo] || humanizeText(e.tipo);
+  return `${tipo}: ${humanizeText(e.rotulo)}`;
+}
+
+function respondentesLabel(n?: number) {
+  const v = Number(n ?? 0);
+  return `${v} ${v === 1 ? "respondente" : "respondentes"}`;
+}
+
 function classBadge(c?: Classificacao | null) {
   switch (c) {
     case "Risco Crítico": return "bg-red-600 text-white";
