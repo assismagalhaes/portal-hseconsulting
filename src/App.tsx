@@ -54,6 +54,7 @@ import FinContasReceber from "./pages/financeiro/ContasReceber";
 import FinCustos from "./pages/financeiro/Custos";
 import FinAlertas from "./pages/financeiro/Alertas";
 import FinCentrosCusto from "./pages/financeiro/CentrosCusto";
+import FinCondicoesPagamento from "./pages/financeiro/CondicoesPagamento";
 import PortalClienteConfig from "./pages/PortalClienteConfig";
 import IaHub from "./pages/ia/IaHub";
 import IaChatPage from "./pages/ia/IaChatPage";
@@ -156,6 +157,7 @@ const App = () => (
               <Route path="/financeiro/custos" element={<RequireRole allow="financeiro"><FinCustos /></RequireRole>} />
               <Route path="/financeiro/alertas" element={<RequireRole allow="financeiro"><FinAlertas /></RequireRole>} />
               <Route path="/financeiro/centros-custo" element={<RequireRole allow="financeiro"><FinCentrosCusto /></RequireRole>} />
+              <Route path="/financeiro/condicoes-pagamento" element={<RequireRole allow="financeiro"><FinCondicoesPagamento /></RequireRole>} />
               <Route path="/portal-cliente" element={<RequireRole><PortalClienteConfig /></RequireRole>} />
               <Route path="/ia" element={<RequireRole><IaHub /></RequireRole>} />
               <Route path="/ia/chat" element={<RequireRole><IaChatPage /></RequireRole>} />
