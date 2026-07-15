@@ -707,7 +707,7 @@ function ConditionCard({ title, body, icon, primary, accent, neutral, fullWidth 
   );
 }
 
-function ParcelasCard({ snap, total, primary, accent, neutral }: any) {
+function ParcelasCard({ snap, total, primary, accent, neutral, textoPadrao }: any) {
   const parcelas = snap.parcelas || [];
   return (
     <div className="avoid-break" style={{ border: `1px solid ${neutral}`, borderRadius: 12, background: "#fff", overflow: "hidden" }}>
@@ -752,6 +752,11 @@ function ParcelasCard({ snap, total, primary, accent, neutral }: any) {
       {snap.texto_complementar && (
         <div style={{ padding: "10px 16px", fontSize: 11, color: "#475569", background: neutral, borderTop: `1px solid ${neutral}` }}>
           {snap.texto_complementar}
+        </div>
+      )}
+      {textoPadrao && (
+        <div style={{ padding: "10px 16px", fontSize: 11, color: "#334155", background: "#fff", borderTop: `1px solid ${neutral}`, whiteSpace: "pre-line", fontStyle: "italic" }}>
+          {textoPadrao}
         </div>
       )}
     </div>
