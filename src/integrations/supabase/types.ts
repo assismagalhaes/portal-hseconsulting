@@ -5153,6 +5153,65 @@ export type Database = {
           },
         ]
       }
+      proposal_condicao_pagamento_historico: {
+        Row: {
+          acao: string
+          changed_by: string | null
+          condicao_id: string | null
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string | null
+          parcelas: Json | null
+          personalizada: boolean | null
+          proposal_condicao_id: string | null
+          proposal_id: string
+          quantidade_parcelas: number | null
+          revisao: number | null
+          texto_complementar: string | null
+        }
+        Insert: {
+          acao: string
+          changed_by?: string | null
+          condicao_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string | null
+          parcelas?: Json | null
+          personalizada?: boolean | null
+          proposal_condicao_id?: string | null
+          proposal_id: string
+          quantidade_parcelas?: number | null
+          revisao?: number | null
+          texto_complementar?: string | null
+        }
+        Update: {
+          acao?: string
+          changed_by?: string | null
+          condicao_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string | null
+          parcelas?: Json | null
+          personalizada?: boolean | null
+          proposal_condicao_id?: string | null
+          proposal_id?: string
+          quantidade_parcelas?: number | null
+          revisao?: number | null
+          texto_complementar?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_condicao_pagamento_historico_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proposal_condicao_parcelas: {
         Row: {
           created_at: string
