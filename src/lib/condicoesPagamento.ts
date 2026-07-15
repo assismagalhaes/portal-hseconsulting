@@ -49,3 +49,23 @@ export function validarParcelas(parcelas: ParcelaForm[]): string | null {
   }
   return null;
 }
+
+function fmtBRL(n: number) {
+  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+/** Gera texto legível (compatibilidade com PDF/aceite antigos). */
+export function buildTextoCondicao(nome: string, parcelas: ParcelaForm[], total: number, complemento?: string | null) {
+  const linhas = parcelas.map((p) => {
+    const valor = (Number(p.percentual) / 100) * (total || 0);
+    const base = `${p.numero}) ${p.percentual}% (${fmtBRL(valor)}) — ${MARCO_LABEL[p.marco]}`;
+    const extras: string[] = [];
+    if (p.marco === "mensal_recorrente" && p.dia_mes) extras.push(`todo dia ${p.dia_mes}`);
+    else if (p.dias_apos_marco) extras.push(`+${p.dias_apos_marco} dias`);
+    if (p.descricao) extras.push(p.descricao);
+    return extras.length ? `${base} (${extras.join(" · ")})` : base;
+  });
+  const cab = nome ? `${nome}\n` : "";
+  const comp = complemento ? `\n\n${complemento}` : "";
+  return `${cab}${linhas.join("\n")}${comp}`;
+}
