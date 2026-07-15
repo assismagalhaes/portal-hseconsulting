@@ -63,9 +63,6 @@ function classColorHex(c?: Classificacao | null) {
     default: return "hsl(var(--muted-foreground))";
   }
 }
-function classBadge(c?: Classificacao | null) {
-  return classBadgeImpl(c);
-}
 function prioBadge(p?: Prioridade | null) {
   switch (p) {
     case "Crítica": return "bg-red-600 text-white";
