@@ -379,21 +379,26 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
 
           {/* Gráfico de fatores */}
           <Card>
-            <CardHeader><CardTitle className="text-base">Score médio por fator</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="text-base">Score médio por fator</CardTitle>
+              <div className="text-xs text-muted-foreground mt-1">
+                Escala de 0 (Irrelevante) a 4 (Crítico). A cor da barra reflete a classificação final do fator.
+              </div>
+            </CardHeader>
             <CardContent>
               {chartData.length === 0 ? (
                 <div className="text-sm text-muted-foreground text-center py-6">Sem dados para este escopo.</div>
               ) : (
-                <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                    <XAxis dataKey="nome" />
-                    <YAxis domain={[0, 4]} ticks={[0, 1, 2, 3, 4]} />
+                <ResponsiveContainer width="100%" height={Math.max(220, chartData.length * 42 + 40)}>
+                  <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 24, left: 8, bottom: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} horizontal={false} />
+                    <XAxis type="number" domain={[0, 4]} ticks={[0, 1, 2, 3, 4]} />
+                    <YAxis type="category" dataKey="nomeFull" width={200} tick={{ fontSize: 12 }} interval={0} />
                     <Tooltip
                       formatter={(v: any, _n, p: any) => [Number(v).toFixed(2), p?.payload?.classificacao]}
-                      labelFormatter={(l: any, p: any) => p?.[0]?.payload?.nomeFull || l}
+                      labelFormatter={(l: any) => l}
                     />
-                    <Bar dataKey="score" radius={[6, 6, 0, 0]}>
+                    <Bar dataKey="score" radius={[0, 6, 6, 0]} barSize={22}>
                       {chartData.map((d, i) => <Cell key={i} fill={classColorHex(d.classificacao as Classificacao)} />)}
                     </Bar>
                   </BarChart>
