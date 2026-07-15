@@ -55,7 +55,13 @@ function fmtBRL(n: number) {
 }
 
 /** Gera texto legível (compatibilidade com PDF/aceite antigos). */
-export function buildTextoCondicao(nome: string, parcelas: ParcelaForm[], total: number, complemento?: string | null) {
+export function buildTextoCondicao(
+  nome: string,
+  parcelas: ParcelaForm[],
+  total: number,
+  complemento?: string | null,
+  textoPadrao?: string | null,
+) {
   const linhas = parcelas.map((p) => {
     const valor = (Number(p.percentual) / 100) * (total || 0);
     const base = `${p.numero}) ${p.percentual}% (${fmtBRL(valor)}) — ${MARCO_LABEL[p.marco]}`;
@@ -67,5 +73,6 @@ export function buildTextoCondicao(nome: string, parcelas: ParcelaForm[], total:
   });
   const cab = nome ? `${nome}\n` : "";
   const comp = complemento ? `\n\n${complemento}` : "";
-  return `${cab}${linhas.join("\n")}${comp}`;
+  const padrao = textoPadrao?.trim() ? `\n\n${textoPadrao.trim()}` : "";
+  return `${cab}${linhas.join("\n")}${comp}${padrao}`;
 }
