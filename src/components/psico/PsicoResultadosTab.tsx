@@ -48,6 +48,7 @@ function prioBadge(p?: Prioridade | null) {
 export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload: () => void }) {
   const [loading, setLoading] = useState(true);
   const [validation, setValidation] = useState<any>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [resumo, setResumo] = useState<any>(null);
   const [escopos, setEscopos] = useState<any[]>([]);
   const [escopoSel, setEscopoSel] = useState<string | null>(null);
@@ -84,10 +85,18 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
       }
 
       if (podeProcessar) {
-        const { data: v } = await supabase.rpc("psico_validar_processamento_resultados", { p_avaliacao_id: av.id });
-        setValidation(v);
+        const { data: v, error: ev } = await supabase.rpc("psico_validar_processamento_resultados", { p_avaliacao_id: av.id });
+        if (ev) {
+          setValidation(null);
+          setValidationError("Não foi possível validar os dados para processamento.");
+        } else {
+          const parsed = Array.isArray(v) ? (v as any)[0] : v;
+          setValidation(parsed);
+          setValidationError(null);
+        }
       } else {
         setValidation(null);
+        setValidationError(null);
       }
 
       if (jaProcessado) {
@@ -208,11 +217,20 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
             </div>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div><div className="text-xs uppercase text-muted-foreground">Respondentes</div><div className="text-lg font-semibold">{validation?.total_respondentes ?? 0}</div></div>
-              <div><div className="text-xs uppercase text-muted-foreground">Itens totais</div><div className="text-lg font-semibold">{validation?.total_itens ?? 0}</div></div>
-              <div><div className="text-xs uppercase text-muted-foreground">Mínimo global</div><div className="text-lg font-semibold">{validation?.minimo_global ?? "—"}</div></div>
-            </div>
+            {validationError ? (
+              <div className="rounded border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+                {validationError}
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div><div className="text-xs uppercase text-muted-foreground">Convites respondidos</div><div className="text-lg font-semibold">{validation?.convites_respondidos ?? "—"}</div></div>
+                <div><div className="text-xs uppercase text-muted-foreground">Respostas anônimas</div><div className="text-lg font-semibold">{validation?.total_respostas_anonimas ?? "—"}</div></div>
+                <div><div className="text-xs uppercase text-muted-foreground">Respondentes</div><div className="text-lg font-semibold">{validation?.total_respondentes ?? "—"}</div></div>
+                <div><div className="text-xs uppercase text-muted-foreground">Mínimo global</div><div className="text-lg font-semibold">{validation?.minimo_global ?? "—"}</div></div>
+                <div><div className="text-xs uppercase text-muted-foreground">Itens registrados</div><div className="text-lg font-semibold">{validation?.total_itens ?? "—"}</div></div>
+                <div><div className="text-xs uppercase text-muted-foreground">Itens esperados</div><div className="text-lg font-semibold">{validation?.itens_esperados ?? "—"}</div></div>
+              </div>
+            )}
             <div className="flex flex-wrap gap-2">
               <Badge variant={validation?.valido ? "default" : "destructive"}>
                 {validation?.valido ? <CheckCircle2 className="h-3 w-3 mr-1" /> : <AlertCircle className="h-3 w-3 mr-1" />}
