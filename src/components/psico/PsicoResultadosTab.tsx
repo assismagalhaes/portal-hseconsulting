@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "sonner";
 import { AlertCircle, CheckCircle2, Loader2, Play, RefreshCcw } from "lucide-react";
 import { formatDateTime } from "@/lib/format";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, LabelList } from "recharts";
 
 type Classificacao = "Risco Irrelevante" | "Risco Baixo" | "Risco Médio" | "Risco Alto" | "Risco Crítico";
 type Prioridade = "Monitoramento" | "Média" | "Alta" | "Crítica";
@@ -55,13 +55,16 @@ function classBadge(c?: Classificacao | null) {
 }
 function classColorHex(c?: Classificacao | null) {
   switch (c) {
-    case "Risco Crítico": return "hsl(0 70% 45%)";
-    case "Risco Alto": return "hsl(24 90% 55%)";
-    case "Risco Médio": return "hsl(42 95% 55%)";
-    case "Risco Baixo": return "hsl(80 65% 50%)";
-    case "Risco Irrelevante": return "hsl(150 60% 45%)";
+    case "Risco Crítico": return "hsl(340 75% 38%)";
+    case "Risco Alto": return "hsl(14 85% 52%)";
+    case "Risco Médio": return "hsl(45 95% 52%)";
+    case "Risco Baixo": return "hsl(95 55% 45%)";
+    case "Risco Irrelevante": return "hsl(160 60% 40%)";
     default: return "hsl(var(--muted-foreground))";
   }
+}
+function classBadge(c?: Classificacao | null) {
+  return classBadgeImpl(c);
 }
 function prioBadge(p?: Prioridade | null) {
   switch (p) {
