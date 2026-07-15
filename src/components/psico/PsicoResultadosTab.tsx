@@ -185,8 +185,8 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
   const chartData = useMemo(() => fatores.map((f) => {
     const meta = fatoresMap[f.fator_id];
     return {
-      nome: meta?.codigo || meta?.nome || "?",
-      nomeFull: meta?.nome || meta?.codigo || "",
+      nome: humanizeText(meta?.nome || meta?.codigo) || "?",
+      nomeFull: humanizeText(meta?.nome || meta?.codigo) || "",
       score: Number(f.score_medio ?? 0),
       classificacao: f.classificacao_media,
       significativo: f.significativo,
@@ -400,6 +400,12 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
                     />
                     <Bar dataKey="score" radius={[0, 6, 6, 0]} barSize={22}>
                       {chartData.map((d, i) => <Cell key={i} fill={classColorHex(d.classificacao as Classificacao)} />)}
+                      <LabelList
+                        dataKey="score"
+                        position="right"
+                        formatter={(v: any) => Number(v).toFixed(2)}
+                        style={{ fill: "hsl(var(--foreground))", fontSize: 12, fontWeight: 600 }}
+                      />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
