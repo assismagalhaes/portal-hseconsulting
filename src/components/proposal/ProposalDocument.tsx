@@ -10,6 +10,7 @@ import {
   Award, Users, Zap, Scale, UserCheck, Sparkles, CheckCircle2, Building2, FileSignature,
   ClipboardList, ListChecks, Package, Hash, Info,
 } from "lucide-react";
+import { MARCO_LABEL, type CondPagMarco } from "@/lib/condicoesPagamento";
 
 /**
  * Multi-page A4 proposal document, optimized for screen preview and PDF print.
@@ -51,10 +52,21 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   const [tpl, setTpl] = useState<any>(null);
   const [serviceNames, setServiceNames] = useState<Record<string, string>>({});
   const [flowReady, setFlowReady] = useState(false);
+  const [condSnap, setCondSnap] = useState<any>(null);
   useEffect(() => {
     supabase.from("proposal_template").select("*").limit(1).maybeSingle()
       .then(({ data }) => setTpl(data || {}));
   }, []);
+  useEffect(() => {
+    if (!proposal?.id) return;
+    supabase.from("proposal_condicao_pagamento")
+      .select("*, parcelas:proposal_condicao_parcelas(*)")
+      .eq("proposal_id", proposal.id).maybeSingle()
+      .then(({ data }) => {
+        if (data?.parcelas) data.parcelas.sort((a: any, b: any) => a.numero - b.numero);
+        setCondSnap(data || null);
+      });
+  }, [proposal?.id]);
   useEffect(() => {
     const ids = Array.from(new Set(items.map((i: any) => i.service_id).filter(Boolean)));
     if (ids.length === 0) { setServiceNames({}); return; }
@@ -343,9 +355,14 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
 
   // -------- Condições & Aceite --------
   push("Condições & Aceite", "cd-title", <SectionTitle eyebrow="Termos" title="Condições comerciais" accent={accent} primary={primary} />, true);
+  if (condSnap && condSnap.parcelas?.length) {
+    push("Condições & Aceite", "cd-parc", (
+      <ParcelasCard snap={condSnap} total={total} primary={primary} accent={accent} neutral={neutral} />
+    ));
+  }
   push("Condições & Aceite", "cd-grid", (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-      {proposal.condicoes_pagamento && <ConditionCard title="Forma de pagamento" body={proposal.condicoes_pagamento} icon={<ShieldCheck size={18} />} primary={primary} accent={accent} neutral={neutral} />}
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: condSnap ? 12 : 0 }}>
+      {!condSnap && proposal.condicoes_pagamento && <ConditionCard title="Forma de pagamento" body={proposal.condicoes_pagamento} icon={<ShieldCheck size={18} />} primary={primary} accent={accent} neutral={neutral} />}
       {proposal.validade && <ConditionCard title="Validade da proposta" body={new Date(proposal.validade).toLocaleDateString("pt-BR")} icon={<CheckCircle2 size={18} />} primary={primary} accent={accent} neutral={neutral} />}
       {proposal.outras_condicoes && <ConditionCard title="Outras condições" body={proposal.outras_condicoes} icon={<FileSignature size={18} />} primary={primary} accent={accent} neutral={neutral} fullWidth />}
     </div>
@@ -677,6 +694,57 @@ function ConditionCard({ title, body, icon, primary, accent, neutral, fullWidth 
         <div style={{ fontWeight: 700, color: primary, fontSize: 13 }}>{title}</div>
       </div>
       <p style={{ fontSize: 12, lineHeight: 1.6, color: "#334155", whiteSpace: "pre-line" }}>{body}</p>
+    </div>
+  );
+}
+
+function ParcelasCard({ snap, total, primary, accent, neutral }: any) {
+  const parcelas = snap.parcelas || [];
+  return (
+    <div className="avoid-break" style={{ border: `1px solid ${neutral}`, borderRadius: 12, background: "#fff", overflow: "hidden" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: primary, color: "#fff" }}>
+        <ShieldCheck size={18} />
+        <div>
+          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: 1.4, opacity: 0.85 }}>Cronograma de pagamento</div>
+          <div style={{ fontSize: 14, fontWeight: 700 }}>{snap.nome}</div>
+        </div>
+        <div style={{ marginLeft: "auto", fontSize: 12 }}>Total: <strong>{brl(total || 0)}</strong></div>
+      </div>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11.5 }}>
+        <thead>
+          <tr style={{ background: neutral, color: "#475569", textTransform: "uppercase", fontSize: 9, letterSpacing: 1 }}>
+            <th style={{ textAlign: "left", padding: "8px 12px" }}>Nº</th>
+            <th style={{ textAlign: "left", padding: "8px 12px" }}>%</th>
+            <th style={{ textAlign: "right", padding: "8px 12px" }}>Valor</th>
+            <th style={{ textAlign: "left", padding: "8px 12px" }}>Marco</th>
+            <th style={{ textAlign: "left", padding: "8px 12px" }}>Prazo</th>
+            <th style={{ textAlign: "left", padding: "8px 12px" }}>Observação</th>
+          </tr>
+        </thead>
+        <tbody>
+          {parcelas.map((p: any) => (
+            <tr key={p.id || p.numero} style={{ borderTop: `1px solid ${neutral}` }}>
+              <td style={{ padding: "8px 12px", fontWeight: 600 }}>{p.numero}</td>
+              <td style={{ padding: "8px 12px" }}>{Number(p.percentual).toFixed(2)}%</td>
+              <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "monospace", fontWeight: 600, color: primary }}>
+                {brl(Number(p.valor ?? (p.percentual / 100) * (total || 0)))}
+              </td>
+              <td style={{ padding: "8px 12px", color: accent, fontWeight: 600 }}>{MARCO_LABEL[p.marco as CondPagMarco]}</td>
+              <td style={{ padding: "8px 12px", color: "#475569" }}>
+                {p.marco === "mensal_recorrente"
+                  ? `todo dia ${p.dia_mes ?? "—"}`
+                  : p.dias_apos_marco ? `+${p.dias_apos_marco} dias` : "no ato"}
+              </td>
+              <td style={{ padding: "8px 12px", color: "#64748b" }}>{p.descricao || "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {snap.texto_complementar && (
+        <div style={{ padding: "10px 16px", fontSize: 11, color: "#475569", background: neutral, borderTop: `1px solid ${neutral}` }}>
+          {snap.texto_complementar}
+        </div>
+      )}
     </div>
   );
 }
