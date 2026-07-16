@@ -14,9 +14,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { brl, formatDate, formatDateTime } from "@/lib/format";
 import { projetoStatusColor, projetoStatusLabel, projetoServicoStatusColor, projetoServicoStatusLabel, projetoPrioridadeLabel, projetoPrioridadeColor } from "@/lib/projetos";
-import { ArrowLeft, FileSignature, DollarSign, History, Building2, User, Mail, Phone, MapPin, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, FileSignature, DollarSign, History, Building2, User, Mail, Phone, MapPin, ClipboardCheck, AlertCircle, Check, Plus, Trash2, Flame } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import AtividadePainel from "@/components/projeto/AtividadePainel";
+import PendenciasCard from "@/components/projeto/PendenciasCard";
 
 function InfoRow({ label, value, mono, icon, href }: { label: string; value?: any; mono?: boolean; icon?: React.ReactNode; href?: string }) {
   const display = value == null || value === "" ? "—" : String(value);
