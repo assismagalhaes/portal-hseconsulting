@@ -47,6 +47,7 @@ export default function ProjetoEditor() {
   const [profissionais, setProfissionais] = useState<any[]>([]);
   const [valorContratado, setValorContratado] = useState<number | null>(null);
   const [valoresServicos, setValoresServicos] = useState<Record<string, number>>({});
+  const [pendenciasCount, setPendenciasCount] = useState<{ abertas: number; urgentes: number }>({ abertas: 0, urgentes: 0 });
 
   const load = async () => {
     if (!id) return;
@@ -196,6 +197,10 @@ export default function ProjetoEditor() {
             <TabsTrigger value="visitas"><MapPin className="h-4 w-4 mr-1.5" />Visitas</TabsTrigger>
             <TabsTrigger value="evidencias">Evidências</TabsTrigger>
             <TabsTrigger value="docs">Documentos ({docs.length})</TabsTrigger>
+            <TabsTrigger value="pendencias">
+              <AlertCircle className={`h-4 w-4 mr-1.5 ${pendenciasCount.urgentes > 0 ? "text-rose-600" : ""}`} />
+              Pendências{pendenciasCount.abertas > 0 ? ` (${pendenciasCount.abertas})` : ""}
+            </TabsTrigger>
             {!isTecnico && <TabsTrigger value="financeiro">Financeiro</TabsTrigger>}
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
           </TabsList>
