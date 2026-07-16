@@ -12,13 +12,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { ArrowLeft, Printer, QrCode, MapPin, ClipboardCheck, Camera, History, Eye } from "lucide-react";
+import { ArrowLeft, Printer, QrCode, MapPin, ClipboardCheck, Camera, History, Eye, Users as UsersIcon, ListTree, Truck, FileText as FileIcon } from "lucide-react";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { osStatusLabel, osStatusColor, osPrioridadeLabel, osPrioridadeColor } from "@/lib/os";
 import { KV } from "@/components/os/atoms";
 import { ChecklistCard } from "@/components/os/ChecklistCard";
 import { VisitasCard } from "@/components/os/VisitasCard";
 import { EvidenciasCard } from "@/components/os/EvidenciasCard";
+import { EquipeCard } from "@/components/os/EquipeCard";
+import { RecursosCard } from "@/components/os/RecursosCard";
+import { LogisticaCard } from "@/components/os/LogisticaCard";
+import { DocumentosCard } from "@/components/os/DocumentosCard";
 
 // Re-exports (compat com imports antigos, ex.: AtividadePainel)
 export { ChecklistCard } from "@/components/os/ChecklistCard";
@@ -186,6 +190,10 @@ export default function OrdemServicoEditor({ id: idProp, embedded }: { id?: stri
             <TabsTrigger value="overview"><Eye className="h-4 w-4 mr-1.5" />Visão geral</TabsTrigger>
             <TabsTrigger value="checklist"><ClipboardCheck className="h-4 w-4 mr-1.5" />Checklist <span className="ml-1 text-xs text-muted-foreground">({checklistProgress}%)</span></TabsTrigger>
             <TabsTrigger value="visitas"><MapPin className="h-4 w-4 mr-1.5" />Visitas</TabsTrigger>
+            <TabsTrigger value="equipe"><UsersIcon className="h-4 w-4 mr-1.5" />Equipe</TabsTrigger>
+            <TabsTrigger value="recursos"><ListTree className="h-4 w-4 mr-1.5" />Recursos</TabsTrigger>
+            <TabsTrigger value="logistica"><Truck className="h-4 w-4 mr-1.5" />Logística</TabsTrigger>
+            <TabsTrigger value="documentos"><FileIcon className="h-4 w-4 mr-1.5" />Documentos</TabsTrigger>
             <TabsTrigger value="evidencias"><Camera className="h-4 w-4 mr-1.5" />Evidências</TabsTrigger>
             <TabsTrigger value="historico"><History className="h-4 w-4 mr-1.5" />Histórico</TabsTrigger>
           </TabsList>
@@ -266,6 +274,22 @@ export default function OrdemServicoEditor({ id: idProp, embedded }: { id?: stri
 
           <TabsContent value="visitas">
             <VisitasCard osId={os.id} visitas={visitas} profs={profs} projRespId={projResp?.id} onChange={reload} />
+          </TabsContent>
+
+          <TabsContent value="equipe">
+            <EquipeCard osId={os.id} equipe={equipe} profs={profs} onChange={reload} />
+          </TabsContent>
+
+          <TabsContent value="recursos">
+            <RecursosCard osId={os.id} recursos={recursos} onChange={reload} />
+          </TabsContent>
+
+          <TabsContent value="logistica">
+            <LogisticaCard osId={os.id} logistica={logistica} onChange={reload} />
+          </TabsContent>
+
+          <TabsContent value="documentos">
+            <DocumentosCard osId={os.id} documentos={documentos} onChange={reload} />
           </TabsContent>
 
           <TabsContent value="evidencias">
