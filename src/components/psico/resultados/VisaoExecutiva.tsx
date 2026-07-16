@@ -18,7 +18,7 @@ import {
 import {
   CLASSIF_LABEL, CLASSIF_SHORT, PRIO_LABEL, PRIO_ORDER, TIPO_ESCOPO_LABEL,
   RISK_COLOR, classifBadgeClass, prioBadgeClass, fmt, fmtPct, fmtDateTime, fmtDate,
-  AVISO_METODOLOGICO,
+  AvisoMetodologico,
 } from "./shared";
 
 type EscopoListItem = { id: string; tipo: "global"|"funcao"|"setor"|"unidade"; rotulo: string; respondentes: number; amostra_reduzida: boolean };
@@ -527,7 +527,7 @@ function InterpretacaoExecutiva({ interp, loading }: { interp: PsicoInterpretaca
             )}
           </>
         )}
-        <p className="text-[11px] text-muted-foreground border-t pt-2">{AVISO_METODOLOGICO}</p>
+        <AvisoMetodologico />
       </CardContent>
     </Card>
   );
