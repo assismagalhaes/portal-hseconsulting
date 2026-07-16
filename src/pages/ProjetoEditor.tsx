@@ -326,6 +326,31 @@ export default function ProjetoEditor() {
                 <p className="text-[11px] text-muted-foreground">
                   Informações do cliente disponíveis para consulta. Alterações cadastrais devem ser feitas na tela de Clientes pelo perfil responsável.
                 </p>
+
+                {empresas.length > 1 && (
+                  <div>
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
+                      <Building2 className="h-3.5 w-3.5" /> Empresas do grupo ({empresas.length})
+                    </div>
+                    <ul className="divide-y rounded-lg border">
+                      {empresas.map((e: any) => (
+                        <li key={e.client_id} className="p-3 flex items-center gap-3">
+                          <Building2 className="h-4 w-4 text-muted-foreground" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate">{e.clients?.nome_fantasia || e.clients?.razao_social || "—"}</div>
+                            <div className="text-xs text-muted-foreground flex items-center gap-2">
+                              <span className="font-mono">{e.clients?.cnpj_cpf || "—"}</span>
+                              {(e.clients?.cidade || e.clients?.uf) && (
+                                <span>· {[e.clients?.cidade, e.clients?.uf].filter(Boolean).join("/")}</span>
+                              )}
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="text-[10px]">{e.papel || "coligada"}</Badge>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
