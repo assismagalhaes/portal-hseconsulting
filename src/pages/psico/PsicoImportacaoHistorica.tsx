@@ -262,6 +262,38 @@ export default function PsicoImportacaoHistorica() {
             <CardHeader><CardTitle>1. Contexto</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div>
+                <Label>Modo de importação *</Label>
+                <div className="grid md:grid-cols-2 gap-2 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => setTipo("bruta_respondentes")}
+                    className={`text-left border rounded p-3 ${tipo === "bruta_respondentes" ? "border-primary bg-primary/5" : "border-muted"}`}
+                  >
+                    <div className="font-medium text-sm">Bruto (um respondente por linha)</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      CSV/XLSX do Google Forms ou export similar. Permite segmentação por função/setor/unidade.
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTipo("agregada_perguntas")}
+                    className={`text-left border rounded p-3 ${tipo === "agregada_perguntas" ? "border-primary bg-primary/5" : "border-muted"}`}
+                  >
+                    <div className="font-medium text-sm">Agregado (contagens por pergunta)</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Colunas: <code>numero</code>, <code>quantidade_nunca</code> … <code>quantidade_sempre</code>.
+                      <b> Sem segmentação</b> e sem % de participação.
+                    </div>
+                  </button>
+                </div>
+                {tipo === "agregada_perguntas" && (
+                  <p className="text-xs text-amber-700 mt-2">
+                    ⚠ No modo agregado a avaliação fica marcada como <code>segmentacao_disponivel=false</code> e
+                    <code> participacao_calculavel=false</code>. Nenhuma resposta individual é criada.
+                  </p>
+                )}
+              </div>
+              <div>
                 <Label>Cliente *</Label>
                 <Select value={clienteId} onValueChange={setClienteId}>
                   <SelectTrigger><SelectValue placeholder="Selecione o cliente" /></SelectTrigger>
