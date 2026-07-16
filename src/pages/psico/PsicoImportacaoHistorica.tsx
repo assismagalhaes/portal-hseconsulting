@@ -57,6 +57,18 @@ export default function PsicoImportacaoHistorica() {
   const nav = useNavigate();
   const call = useAuthedFunctionCall();
 
+  function baixarTemplateAgregado() {
+    const header = "numero,quantidade_nunca,quantidade_raramente,quantidade_as_vezes,quantidade_frequentemente,quantidade_sempre\n";
+    const exemplo = Array.from({ length: 35 }, (_, i) => `${i + 1},0,0,0,0,0`).join("\n");
+    const blob = new Blob([header + exemplo + "\n"], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "template-importacao-agregada.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
   const [tipo, setTipo] = useState<"bruta_respondentes" | "agregada_perguntas">("bruta_respondentes");
