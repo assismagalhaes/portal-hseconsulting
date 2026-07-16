@@ -6292,11 +6292,14 @@ export type Database = {
           funcao: string | null
           funcao_normalizada: string | null
           id: string
+          identificador_origem_hash: string | null
           importacao_id: string
+          layout_detectado: string | null
           respostas_normalizadas: Json
           row_key: string
           setor: string | null
           setor_normalizado: string | null
+          tipo_identificador: string | null
           unidade: string | null
           unidade_normalizada: string | null
         }
@@ -6306,11 +6309,14 @@ export type Database = {
           funcao?: string | null
           funcao_normalizada?: string | null
           id?: string
+          identificador_origem_hash?: string | null
           importacao_id: string
+          layout_detectado?: string | null
           respostas_normalizadas?: Json
           row_key?: string
           setor?: string | null
           setor_normalizado?: string | null
+          tipo_identificador?: string | null
           unidade?: string | null
           unidade_normalizada?: string | null
         }
@@ -6320,11 +6326,14 @@ export type Database = {
           funcao?: string | null
           funcao_normalizada?: string | null
           id?: string
+          identificador_origem_hash?: string | null
           importacao_id?: string
+          layout_detectado?: string | null
           respostas_normalizadas?: Json
           row_key?: string
           setor?: string | null
           setor_normalizado?: string | null
+          tipo_identificador?: string | null
           unidade?: string | null
           unidade_normalizada?: string | null
         }
@@ -6352,29 +6361,38 @@ export type Database = {
           avaliacao_id: string | null
           cancelado_em: string | null
           cliente_id: string
+          codificacao_corrigida: boolean | null
+          codificacao_detectada: string | null
+          coluna_identificador_origem: string | null
           concluido_em: string | null
           criado_em: string
           data_resposta_maxima: string | null
           data_resposta_minima: string | null
+          delimitador_detectado: string | null
           erro_codigo: string | null
           formato: Database["public"]["Enums"]["psico_importacao_formato"]
+          funcao_presente: boolean | null
           hash_arquivo_sha256: string
           id: string
           idempotency_key: string
           iniciado_em: string
           iniciado_por: string
+          layout_detectado: string | null
           linhas_ignoradas: number
           linhas_invalidas: number
           linhas_validas: number
           mapeamento_colunas: Json
           metodologia_versao_id: string | null
           nome_arquivo: string
+          nome_presente: boolean | null
           questionario_versao_id: string | null
           respondentes_importados: number
           resumo_validacao: Json
+          segmentacao_funcao_disponivel: boolean | null
           status: Database["public"]["Enums"]["psico_importacao_status"]
           tamanho_bytes: number
           tipo: Database["public"]["Enums"]["psico_importacao_tipo"]
+          tipo_identificador_origem: string | null
           total_itens_importados: number
           total_linhas: number
           updated_at: string
@@ -6385,29 +6403,38 @@ export type Database = {
           avaliacao_id?: string | null
           cancelado_em?: string | null
           cliente_id: string
+          codificacao_corrigida?: boolean | null
+          codificacao_detectada?: string | null
+          coluna_identificador_origem?: string | null
           concluido_em?: string | null
           criado_em?: string
           data_resposta_maxima?: string | null
           data_resposta_minima?: string | null
+          delimitador_detectado?: string | null
           erro_codigo?: string | null
           formato: Database["public"]["Enums"]["psico_importacao_formato"]
+          funcao_presente?: boolean | null
           hash_arquivo_sha256: string
           id?: string
           idempotency_key: string
           iniciado_em?: string
           iniciado_por: string
+          layout_detectado?: string | null
           linhas_ignoradas?: number
           linhas_invalidas?: number
           linhas_validas?: number
           mapeamento_colunas?: Json
           metodologia_versao_id?: string | null
           nome_arquivo: string
+          nome_presente?: boolean | null
           questionario_versao_id?: string | null
           respondentes_importados?: number
           resumo_validacao?: Json
+          segmentacao_funcao_disponivel?: boolean | null
           status?: Database["public"]["Enums"]["psico_importacao_status"]
           tamanho_bytes: number
           tipo: Database["public"]["Enums"]["psico_importacao_tipo"]
+          tipo_identificador_origem?: string | null
           total_itens_importados?: number
           total_linhas?: number
           updated_at?: string
@@ -6418,29 +6445,38 @@ export type Database = {
           avaliacao_id?: string | null
           cancelado_em?: string | null
           cliente_id?: string
+          codificacao_corrigida?: boolean | null
+          codificacao_detectada?: string | null
+          coluna_identificador_origem?: string | null
           concluido_em?: string | null
           criado_em?: string
           data_resposta_maxima?: string | null
           data_resposta_minima?: string | null
+          delimitador_detectado?: string | null
           erro_codigo?: string | null
           formato?: Database["public"]["Enums"]["psico_importacao_formato"]
+          funcao_presente?: boolean | null
           hash_arquivo_sha256?: string
           id?: string
           idempotency_key?: string
           iniciado_em?: string
           iniciado_por?: string
+          layout_detectado?: string | null
           linhas_ignoradas?: number
           linhas_invalidas?: number
           linhas_validas?: number
           mapeamento_colunas?: Json
           metodologia_versao_id?: string | null
           nome_arquivo?: string
+          nome_presente?: boolean | null
           questionario_versao_id?: string | null
           respondentes_importados?: number
           resumo_validacao?: Json
+          segmentacao_funcao_disponivel?: boolean | null
           status?: Database["public"]["Enums"]["psico_importacao_status"]
           tamanho_bytes?: number
           tipo?: Database["public"]["Enums"]["psico_importacao_tipo"]
+          tipo_identificador_origem?: string | null
           total_itens_importados?: number
           total_linhas?: number
           updated_at?: string
@@ -9121,6 +9157,10 @@ export type Database = {
       psico_importacao_registrar_erros: {
         Args: { p_erros: Json; p_importacao_id: string }
         Returns: number
+      }
+      psico_importacao_registrar_layout: {
+        Args: { p_importacao_id: string; p_layout: Json }
+        Returns: undefined
       }
       psico_importacao_salvar_mapeamento: {
         Args: { p_importacao_id: string; p_mapeamento: Json }
