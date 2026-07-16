@@ -9,7 +9,7 @@ import { ChevronDown, ChevronRight, Loader2, AlertCircle } from "lucide-react";
 import { getPsicoDashboardResults, FatorResultado } from "@/lib/psicoResultados";
 import {
   CLASSIF_LABEL, CLASSIF_SHORT, PRIO_LABEL, RISK_COLOR,
-  classifBadgeClass, prioBadgeClass, fmt, fmtPct, AVISO_METODOLOGICO,
+  classifBadgeClass, prioBadgeClass, fmt, fmtPct, AvisoMetodologico,
 } from "./shared";
 
 export default function FatoresDetalhados({ avaliacaoId, escopoId }: { avaliacaoId: string; escopoId: string }) {
@@ -40,7 +40,7 @@ export default function FatoresDetalhados({ avaliacaoId, escopoId }: { avaliacao
           perguntasAtencao={dash.perguntas_atencao.filter((p) => p.fator_id === f.fator_id).slice(0, 5)}
         />
       ))}
-      <p className="text-[11px] text-muted-foreground border-t pt-2">{AVISO_METODOLOGICO}</p>
+      <AvisoMetodologico />
     </div>
   );
 }

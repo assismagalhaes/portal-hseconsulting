@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2, Search } from "lucide-react";
 import { getPsicoDashboardResults, ClassificacaoRisco } from "@/lib/psicoResultados";
-import { CLASSIF_LABEL, CLASSIF_SHORT, RISK_COLOR, classifBadgeClass, fmt, fmtPct, AVISO_METODOLOGICO } from "./shared";
+import { CLASSIF_LABEL, CLASSIF_SHORT, RISK_COLOR, classifBadgeClass, fmt, fmtPct, AvisoMetodologico } from "./shared";
 
 type SortKey = "numero" | "score" | "desfav" | "ac" | "critico";
 
@@ -228,7 +228,7 @@ export default function MapaPerguntas({ avaliacaoId, escopoId }: { avaliacaoId: 
               </tbody>
             </table>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-3">{AVISO_METODOLOGICO}</p>
+          <AvisoMetodologico className="text-[11px] text-muted-foreground mt-3" />
         </CardContent>
       </Card>
     </div>

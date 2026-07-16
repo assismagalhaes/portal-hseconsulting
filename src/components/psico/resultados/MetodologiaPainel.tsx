@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { getPsicoDashboardResults } from "@/lib/psicoResultados";
-import { fmt, fmtDateTime, AVISO_METODOLOGICO } from "./shared";
+import { fmt, fmtDateTime, AvisoMetodologico } from "./shared";
 
 export default function MetodologiaPainel({ avaliacaoId, escopoId }: { avaliacaoId: string; escopoId: string }) {
   const dashQ = useQuery({
@@ -105,7 +105,7 @@ export default function MetodologiaPainel({ avaliacaoId, escopoId }: { avaliacao
             </div>
           </div>
 
-          <p className="text-[11px] text-muted-foreground border-t pt-2">{AVISO_METODOLOGICO}</p>
+          <AvisoMetodologico />
         </CardContent>
       </Card>
     </div>

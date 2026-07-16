@@ -10,7 +10,7 @@ import FatoresDetalhados from "./FatoresDetalhados";
 import MapaPerguntas from "./MapaPerguntas";
 import SegmentacoesMatriz from "./SegmentacoesMatriz";
 import MetodologiaPainel from "./MetodologiaPainel";
-import { AVISO_METODOLOGICO } from "./shared";
+import { AvisoMetodologico } from "./shared";
 
 type EscopoResumo = {
   id: string;
@@ -107,7 +107,7 @@ export default function PsicoDashboardResultados({ avaliacaoId }: { avaliacaoId:
         </TabsContent>
       </Tabs>
 
-      <p className="text-[11px] text-muted-foreground border-t pt-2">{AVISO_METODOLOGICO}</p>
+      <AvisoMetodologico />
     </div>
   );
 }
