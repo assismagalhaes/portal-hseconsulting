@@ -445,34 +445,6 @@ export default function ProjetoEditor() {
             )}
           </TabsContent>
 
-          <TabsContent value="renovacoes" className="mt-4">
-            <Card className="shadow-elegant">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="font-display text-base flex items-center gap-2"><RefreshCw className="h-4 w-4" /> Renovações</CardTitle>
-                <Button size="sm" variant="outline" onClick={async () => {
-                  const { data, error } = await supabase.rpc("projetos_gerar_renovacoes");
-                  if (error) toast({ title: "Erro", description: error.message, variant: "destructive" });
-                  else { toast({ title: `${data || 0} renovações geradas` }); load(); }
-                }}>Gerar agora</Button>
-              </CardHeader>
-              <CardContent className="p-0">
-                {renovacoes.length === 0 ? (
-                  <div className="p-10 text-center text-muted-foreground">Nenhuma renovação próxima. Use "Gerar agora" para varrer serviços com validade próxima.</div>
-                ) : (
-                  <ul className="divide-y">
-                    {renovacoes.map((r) => (
-                      <li key={r.id} className="p-4 flex items-center gap-3 text-sm">
-                        <span className="flex-1">{r.projeto_servicos?.nome}</span>
-                        <span className="text-xs text-muted-foreground">Vence em {formatDate(r.data_validade)}</span>
-                        {r.oportunidade_id && <Link className="text-xs underline" to={`/crm/oportunidades`}>Ver oportunidade</Link>}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
           <TabsContent value="timeline" className="mt-4">
             <Card className="shadow-elegant">
               <CardContent className="p-0">
