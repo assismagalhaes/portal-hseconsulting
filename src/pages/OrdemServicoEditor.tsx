@@ -1,23 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PercentInput } from "@/components/ui/percent-input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Save, Plus, Trash2, Printer, QrCode, Upload, MapPin, ClipboardCheck, Camera, FileText as FileIcon, History, Users as UsersIcon, ListTree, Truck, Eye, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Printer, QrCode, MapPin, ClipboardCheck, Camera, History, Eye } from "lucide-react";
 import { formatDate, formatDateTime } from "@/lib/format";
-import { osStatusLabel, osStatusColor, osPrioridadeLabel, osPrioridadeColor, osRecursoTipoLabel, osVisitaSituacaoLabel, osDocCategoriaLabel, osEvidenciaTipoLabel } from "@/lib/os";
+import { osStatusLabel, osStatusColor, osPrioridadeLabel, osPrioridadeColor } from "@/lib/os";
+import { KV } from "@/components/os/atoms";
+import { ChecklistCard } from "@/components/os/ChecklistCard";
+import { VisitasCard } from "@/components/os/VisitasCard";
+import { EvidenciasCard } from "@/components/os/EvidenciasCard";
+
+// Re-exports (compat com imports antigos, ex.: AtividadePainel)
+export { ChecklistCard } from "@/components/os/ChecklistCard";
+export { VisitasCard } from "@/components/os/VisitasCard";
+export { EvidenciasCard } from "@/components/os/EvidenciasCard";
 
 export default function OrdemServicoEditor({ id: idProp, embedded }: { id?: string; embedded?: boolean } = {}) {
   const params = useParams();
