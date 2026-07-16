@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ export function ChecklistCard({ osId, items, onChange }: any) {
   const [presets, setPresets] = useState<string[]>([]);
   const [newPresetOpen, setNewPresetOpen] = useState(false);
   const [newPreset, setNewPreset] = useState("");
+  const obrigId = useId();
   const loadPresets = async () => {
     const { data } = await supabase
       .from("os_checklist_sugestoes" as any)
@@ -103,16 +104,25 @@ export function ChecklistCard({ osId, items, onChange }: any) {
       </div>
       <div className="flex gap-2">
         <Input placeholder="Item do checklist" value={desc} onChange={e => setDesc(e.target.value)} />
-        <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={obrig} onChange={e => setObrig(e.target.checked)} />Obrigatório</label>
-        <Button onClick={add}><Plus className="h-4 w-4" /></Button>
+        <label htmlFor={obrigId} className="flex items-center gap-2 text-xs">
+          <input id={obrigId} type="checkbox" checked={obrig} onChange={e => setObrig(e.target.checked)} />
+          Obrigatório
+        </label>
+        <Button onClick={add} aria-label="Adicionar item"><Plus className="h-4 w-4" /></Button>
       </div>
       <div className="space-y-1">
         {items.map((it: any) => (
-          <div key={it.id} className={`flex items-center gap-2 px-3 py-2 rounded ${it.concluido ? "bg-emerald-50" : "bg-muted/30"}`}>
-            <input type="checkbox" checked={it.concluido} onChange={() => toggle(it)} />
-            <span className={`flex-1 text-sm ${it.concluido ? "line-through text-muted-foreground" : ""}`}>{it.descricao}</span>
+          <div key={it.id} className={`flex items-center gap-2 px-3 py-2 rounded ${it.concluido ? "bg-primary/5" : "bg-muted/30"}`}>
+            <input
+              id={`chk-${it.id}`}
+              type="checkbox"
+              checked={it.concluido}
+              onChange={() => toggle(it)}
+              aria-label={`Marcar item "${it.descricao}" como ${it.concluido ? "pendente" : "concluído"}`}
+            />
+            <label htmlFor={`chk-${it.id}`} className={`flex-1 text-sm cursor-pointer ${it.concluido ? "line-through text-muted-foreground" : ""}`}>{it.descricao}</label>
             {it.obrigatorio && <Badge variant="secondary" className="text-xs">Obrig.</Badge>}
-            <Button size="sm" variant="ghost" onClick={() => del(it.id)}><Trash2 className="h-3 w-3" /></Button>
+            <Button size="sm" variant="ghost" onClick={() => del(it.id)} aria-label="Excluir item"><Trash2 className="h-3 w-3" /></Button>
           </div>
         ))}
         {!items.length && <p className="text-sm text-muted-foreground">Nenhum item.</p>}
