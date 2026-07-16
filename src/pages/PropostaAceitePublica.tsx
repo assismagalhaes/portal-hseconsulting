@@ -69,16 +69,8 @@ export default function PropostaAceitePublica() {
     setProposta(d.proposta);
     setCliente(d.cliente);
     setItens(d.itens || []);
-    // Coligadas (multi-CNPJ) — leitura pública autorizada pela policy do proposal_clients
-    if (d.proposta?.id) {
-      const { data: pcs } = await supabase
-        .from("proposal_clients")
-        .select("id, papel, ordem, observacao, clients(razao_social, nome_fantasia, cnpj_cpf, cidade, uf)")
-        .eq("proposal_id", d.proposta.id)
-        .eq("papel", "coligada")
-        .order("ordem", { ascending: true });
-      setColigadas(pcs || []);
-    }
+    // Coligadas (multi-CNPJ) — devolvidas pela própria RPC pública (valida token)
+    setColigadas(d.coligadas || []);
     setNome(d.aceite?.aceito_por_nome || d.cliente?.solicitante || "");
     setEmail(d.aceite?.aceito_por_email || d.cliente?.email || "");
     setCpf(d.aceite?.aceito_por_cpf || "");
@@ -172,22 +164,20 @@ export default function PropostaAceitePublica() {
     const meta = await coletarMetadados();
 
     setSaving(true);
-    const { error } = await supabase
-      .from("proposal_aceites")
-      .update({
-        status: "aceito",
-        aceito_por_nome: nome.trim(),
-        aceito_por_email: email.trim(),
-        aceito_por_cpf: cpf.trim() || null,
-        aceito_por_cargo: cargo.trim() || null,
-        observacoes: obs.trim() || null,
-        assinatura_base64: assinaturaBase64,
-        ip: meta.ip,
-        user_agent: meta.user_agent,
-      })
-      .eq("token", aceite.token);
+    const { data, error } = await supabase.rpc("registrar_aceite_proposta", {
+      _token: aceite.token,
+      _nome: nome.trim(),
+      _email: email.trim(),
+      _cpf: cpf.trim() || null,
+      _cargo: cargo.trim() || null,
+      _observacoes: obs.trim() || null,
+      _assinatura_base64: assinaturaBase64,
+      _ip: meta.ip,
+      _user_agent: meta.user_agent,
+    });
     setSaving(false);
     if (error) return toast.error("Erro ao registrar aceite: " + error.message);
+    if ((data as any)?.error) return toast.error("Não foi possível registrar o aceite (" + (data as any).error + ").");
     toast.success("Aceite registrado com sucesso!");
     carregar();
   }
@@ -198,19 +188,17 @@ export default function PropostaAceitePublica() {
     if (!motivoRecusa.trim()) return toast.error("Informe o motivo da recusa.");
     const meta = await coletarMetadados();
     setSaving(true);
-    const { error } = await supabase
-      .from("proposal_aceites")
-      .update({
-        status: "recusado",
-        aceito_por_nome: nome.trim(),
-        aceito_por_email: email.trim() || null,
-        motivo_recusa: motivoRecusa.trim(),
-        ip: meta.ip,
-        user_agent: meta.user_agent,
-      })
-      .eq("token", aceite.token);
+    const { data, error } = await supabase.rpc("registrar_recusa_proposta", {
+      _token: aceite.token,
+      _nome: nome.trim(),
+      _email: email.trim() || null,
+      _motivo: motivoRecusa.trim(),
+      _ip: meta.ip,
+      _user_agent: meta.user_agent,
+    });
     setSaving(false);
     if (error) return toast.error("Erro ao registrar recusa: " + error.message);
+    if ((data as any)?.error) return toast.error("Não foi possível registrar a recusa (" + (data as any).error + ").");
     toast.success("Recusa registrada.");
     carregar();
   }
