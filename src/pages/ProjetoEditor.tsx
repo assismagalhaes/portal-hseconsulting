@@ -477,6 +477,14 @@ export default function ProjetoEditor() {
           </TabsContent>
 
           <TabsContent value="financeiro" className="mt-4">
+
+          </TabsContent>
+
+          <TabsContent value="pendencias" className="mt-4">
+            <PendenciasCard projetoId={id!} onCountChange={(abertas, urgentes) => setPendenciasCount({ abertas, urgentes })} />
+          </TabsContent>
+
+          <TabsContent value="financeiro-placeholder" className="mt-4">
             {!contrato ? (
               <Card className="shadow-elegant"><CardContent className="p-10 text-center text-muted-foreground">Nenhum contrato financeiro vinculado.</CardContent></Card>
             ) : (
