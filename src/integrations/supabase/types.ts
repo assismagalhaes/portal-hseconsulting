@@ -4671,6 +4671,59 @@ export type Database = {
         }
         Relationships: []
       }
+      projeto_pendencias: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          observacao: string | null
+          prazo: string | null
+          prioridade: string
+          projeto_id: string
+          resolvida_em: string | null
+          responsavel: string | null
+          status: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          observacao?: string | null
+          prazo?: string | null
+          prioridade?: string
+          projeto_id: string
+          resolvida_em?: string | null
+          responsavel?: string | null
+          status?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          observacao?: string | null
+          prazo?: string | null
+          prioridade?: string
+          projeto_id?: string
+          resolvida_em?: string | null
+          responsavel?: string | null
+          status?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projeto_pendencias_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projeto_renovacoes: {
         Row: {
           client_id: string
