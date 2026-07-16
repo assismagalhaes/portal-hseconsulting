@@ -51,8 +51,8 @@ export function DocumentosCard({ osId, documentos, onChange }: any) {
           {(byCat[k] || []).map((d: any) => (
             <div key={d.id} className="flex items-center gap-2 text-sm bg-muted/40 px-3 py-2 rounded">
               <span className="flex-1">{d.nome}</span>
-              {d.anexo_path && <Button size="sm" variant="ghost" onClick={() => download(d)}>Baixar</Button>}
-              <Button size="sm" variant="ghost" onClick={() => del(d)}><Trash2 className="h-3 w-3" /></Button>
+              {d.anexo_path && <Button size="sm" variant="ghost" onClick={() => download(d)} aria-label={`Baixar ${d.nome}`}>Baixar</Button>}
+              <Button size="sm" variant="ghost" onClick={() => del(d)} aria-label={`Excluir ${d.nome}`}><Trash2 className="h-3 w-3" /></Button>
             </div>
           ))}
           {!(byCat[k] || []).length && <p className="text-xs text-muted-foreground">—</p>}
