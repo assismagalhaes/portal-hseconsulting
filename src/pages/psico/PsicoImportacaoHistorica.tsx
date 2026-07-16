@@ -59,6 +59,7 @@ export default function PsicoImportacaoHistorica() {
 
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
+  const [tipo, setTipo] = useState<"bruta_respondentes" | "agregada_perguntas">("bruta_respondentes");
 
   // Passo 1: contexto
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -137,7 +138,7 @@ export default function PsicoImportacaoHistorica() {
     const fd = new FormData();
     fd.append("arquivo", file);
     fd.append("cliente_id", clienteId);
-    fd.append("tipo", "bruta_respondentes");
+    fd.append("tipo", tipo);
     fd.append("questionario_versao_id", questSelecionado.id);
     fd.append("metodologia_versao_id", questSelecionado.metodologia_versao_id);
     fd.append("idempotency_key", crypto.randomUUID());
@@ -146,7 +147,8 @@ export default function PsicoImportacaoHistorica() {
       const j = await r.json();
       if (!r.ok) throw new Error(j.detalhe || j.error || "Falha no upload");
       setUploadResp(j as UploadResp);
-      setStep(3);
+      // Modo agregado: pula mapear/validar (colunas fixas) e vai para confirmação (step 5)
+      setStep(tipo === "agregada_perguntas" ? 5 : 3);
     } catch (e: any) { toast.error(e.message || "Falha no upload"); }
     finally { setBusy(false); }
   }
@@ -190,7 +192,10 @@ export default function PsicoImportacaoHistorica() {
     if (!uploadResp) return;
     setBusy(true);
     try {
-      const r = await call("psico-importacao-commit", {
+      const endpoint = tipo === "agregada_perguntas"
+        ? "psico-importacao-agregada-commit"
+        : "psico-importacao-commit";
+      const r = await call(endpoint, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
