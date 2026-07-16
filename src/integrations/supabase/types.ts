@@ -5743,12 +5743,18 @@ export type Database = {
           data_fim_prevista: string | null
           data_inicio_prevista: string | null
           id: string
+          importacao_avaliacao_id: string | null
+          importado_em: string | null
+          importado_por: string | null
           mensagem_convite: string | null
           metodologia_versao_id: string | null
           motivo_cancelamento: string | null
           motivo_encerramento: string | null
           motivo_prorrogacao: string | null
+          observacao_origem: string | null
           observacoes_internas: string | null
+          origem_coleta: Database["public"]["Enums"]["psico_origem_coleta"]
+          participacao_calculavel: boolean
           participantes_configurados_em: string | null
           participantes_configurados_por: string | null
           processamento_resultado_ativo_id: string | null
@@ -5759,6 +5765,7 @@ export type Database = {
           responsavel_hse_id: string | null
           resultado_processado_em: string | null
           resultado_processado_por: string | null
+          segmentacao_disponivel: boolean
           servico_execucao_id: string | null
           status: Database["public"]["Enums"]["psico_avaliacao_status"]
           titulo: string
@@ -5785,12 +5792,18 @@ export type Database = {
           data_fim_prevista?: string | null
           data_inicio_prevista?: string | null
           id?: string
+          importacao_avaliacao_id?: string | null
+          importado_em?: string | null
+          importado_por?: string | null
           mensagem_convite?: string | null
           metodologia_versao_id?: string | null
           motivo_cancelamento?: string | null
           motivo_encerramento?: string | null
           motivo_prorrogacao?: string | null
+          observacao_origem?: string | null
           observacoes_internas?: string | null
+          origem_coleta?: Database["public"]["Enums"]["psico_origem_coleta"]
+          participacao_calculavel?: boolean
           participantes_configurados_em?: string | null
           participantes_configurados_por?: string | null
           processamento_resultado_ativo_id?: string | null
@@ -5801,6 +5814,7 @@ export type Database = {
           responsavel_hse_id?: string | null
           resultado_processado_em?: string | null
           resultado_processado_por?: string | null
+          segmentacao_disponivel?: boolean
           servico_execucao_id?: string | null
           status?: Database["public"]["Enums"]["psico_avaliacao_status"]
           titulo: string
@@ -5827,12 +5841,18 @@ export type Database = {
           data_fim_prevista?: string | null
           data_inicio_prevista?: string | null
           id?: string
+          importacao_avaliacao_id?: string | null
+          importado_em?: string | null
+          importado_por?: string | null
           mensagem_convite?: string | null
           metodologia_versao_id?: string | null
           motivo_cancelamento?: string | null
           motivo_encerramento?: string | null
           motivo_prorrogacao?: string | null
+          observacao_origem?: string | null
           observacoes_internas?: string | null
+          origem_coleta?: Database["public"]["Enums"]["psico_origem_coleta"]
+          participacao_calculavel?: boolean
           participantes_configurados_em?: string | null
           participantes_configurados_por?: string | null
           processamento_resultado_ativo_id?: string | null
@@ -5843,6 +5863,7 @@ export type Database = {
           responsavel_hse_id?: string | null
           resultado_processado_em?: string | null
           resultado_processado_por?: string | null
+          segmentacao_disponivel?: boolean
           servico_execucao_id?: string | null
           status?: Database["public"]["Enums"]["psico_avaliacao_status"]
           titulo?: string
@@ -6061,6 +6082,93 @@ export type Database = {
           },
         ]
       }
+      psico_dados_agregados_perguntas: {
+        Row: {
+          avaliacao_id: string
+          criado_em: string
+          id: string
+          importacao_id: string
+          metodologia_versao_id: string
+          numero: number
+          pergunta_id: string
+          quantidade_as_vezes: number
+          quantidade_frequentemente: number
+          quantidade_nunca: number
+          quantidade_raramente: number
+          quantidade_sempre: number
+          questionario_versao_id: string
+          total_respostas: number
+        }
+        Insert: {
+          avaliacao_id: string
+          criado_em?: string
+          id?: string
+          importacao_id: string
+          metodologia_versao_id: string
+          numero: number
+          pergunta_id: string
+          quantidade_as_vezes?: number
+          quantidade_frequentemente?: number
+          quantidade_nunca?: number
+          quantidade_raramente?: number
+          quantidade_sempre?: number
+          questionario_versao_id: string
+          total_respostas: number
+        }
+        Update: {
+          avaliacao_id?: string
+          criado_em?: string
+          id?: string
+          importacao_id?: string
+          metodologia_versao_id?: string
+          numero?: number
+          pergunta_id?: string
+          quantidade_as_vezes?: number
+          quantidade_frequentemente?: number
+          quantidade_nunca?: number
+          quantidade_raramente?: number
+          quantidade_sempre?: number
+          questionario_versao_id?: string
+          total_respostas?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_dados_agregados_perguntas_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_dados_agregados_perguntas_importacao_id_fkey"
+            columns: ["importacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_importacoes_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_dados_agregados_perguntas_metodologia_versao_id_fkey"
+            columns: ["metodologia_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_metodologias_versoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_dados_agregados_perguntas_pergunta_id_fkey"
+            columns: ["pergunta_id"]
+            isOneToOne: false
+            referencedRelation: "psico_perguntas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_dados_agregados_perguntas_questionario_versao_id_fkey"
+            columns: ["questionario_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_questionarios_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psico_fatores: {
         Row: {
           ativo: boolean
@@ -6166,6 +6274,231 @@ export type Database = {
             columns: ["biblioteca_versao_id"]
             isOneToOne: false
             referencedRelation: "psico_bibliotecas_medidas_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_importacao_staging_respostas: {
+        Row: {
+          criado_em: string
+          data_resposta: string | null
+          funcao: string | null
+          funcao_normalizada: string | null
+          id: string
+          importacao_id: string
+          respostas_normalizadas: Json
+          row_key: string
+          setor: string | null
+          setor_normalizado: string | null
+          unidade: string | null
+          unidade_normalizada: string | null
+        }
+        Insert: {
+          criado_em?: string
+          data_resposta?: string | null
+          funcao?: string | null
+          funcao_normalizada?: string | null
+          id?: string
+          importacao_id: string
+          respostas_normalizadas?: Json
+          row_key?: string
+          setor?: string | null
+          setor_normalizado?: string | null
+          unidade?: string | null
+          unidade_normalizada?: string | null
+        }
+        Update: {
+          criado_em?: string
+          data_resposta?: string | null
+          funcao?: string | null
+          funcao_normalizada?: string | null
+          id?: string
+          importacao_id?: string
+          respostas_normalizadas?: Json
+          row_key?: string
+          setor?: string | null
+          setor_normalizado?: string | null
+          unidade?: string | null
+          unidade_normalizada?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_importacao_staging_respostas_importacao_id_fkey"
+            columns: ["importacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_importacoes_avaliacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_importacoes_avaliacoes: {
+        Row: {
+          arquivo_excluido_em: string | null
+          arquivo_temporario_path: string | null
+          avaliacao_id: string | null
+          cancelado_em: string | null
+          cliente_id: string
+          concluido_em: string | null
+          criado_em: string
+          data_resposta_maxima: string | null
+          data_resposta_minima: string | null
+          erro_codigo: string | null
+          formato: Database["public"]["Enums"]["psico_importacao_formato"]
+          hash_arquivo_sha256: string
+          id: string
+          idempotency_key: string
+          iniciado_em: string
+          iniciado_por: string
+          linhas_ignoradas: number
+          linhas_invalidas: number
+          linhas_validas: number
+          mapeamento_colunas: Json
+          metodologia_versao_id: string | null
+          nome_arquivo: string
+          questionario_versao_id: string | null
+          respondentes_importados: number
+          resumo_validacao: Json
+          status: Database["public"]["Enums"]["psico_importacao_status"]
+          tamanho_bytes: number
+          tipo: Database["public"]["Enums"]["psico_importacao_tipo"]
+          total_itens_importados: number
+          total_linhas: number
+          updated_at: string
+        }
+        Insert: {
+          arquivo_excluido_em?: string | null
+          arquivo_temporario_path?: string | null
+          avaliacao_id?: string | null
+          cancelado_em?: string | null
+          cliente_id: string
+          concluido_em?: string | null
+          criado_em?: string
+          data_resposta_maxima?: string | null
+          data_resposta_minima?: string | null
+          erro_codigo?: string | null
+          formato: Database["public"]["Enums"]["psico_importacao_formato"]
+          hash_arquivo_sha256: string
+          id?: string
+          idempotency_key: string
+          iniciado_em?: string
+          iniciado_por: string
+          linhas_ignoradas?: number
+          linhas_invalidas?: number
+          linhas_validas?: number
+          mapeamento_colunas?: Json
+          metodologia_versao_id?: string | null
+          nome_arquivo: string
+          questionario_versao_id?: string | null
+          respondentes_importados?: number
+          resumo_validacao?: Json
+          status?: Database["public"]["Enums"]["psico_importacao_status"]
+          tamanho_bytes: number
+          tipo: Database["public"]["Enums"]["psico_importacao_tipo"]
+          total_itens_importados?: number
+          total_linhas?: number
+          updated_at?: string
+        }
+        Update: {
+          arquivo_excluido_em?: string | null
+          arquivo_temporario_path?: string | null
+          avaliacao_id?: string | null
+          cancelado_em?: string | null
+          cliente_id?: string
+          concluido_em?: string | null
+          criado_em?: string
+          data_resposta_maxima?: string | null
+          data_resposta_minima?: string | null
+          erro_codigo?: string | null
+          formato?: Database["public"]["Enums"]["psico_importacao_formato"]
+          hash_arquivo_sha256?: string
+          id?: string
+          idempotency_key?: string
+          iniciado_em?: string
+          iniciado_por?: string
+          linhas_ignoradas?: number
+          linhas_invalidas?: number
+          linhas_validas?: number
+          mapeamento_colunas?: Json
+          metodologia_versao_id?: string | null
+          nome_arquivo?: string
+          questionario_versao_id?: string | null
+          respondentes_importados?: number
+          resumo_validacao?: Json
+          status?: Database["public"]["Enums"]["psico_importacao_status"]
+          tamanho_bytes?: number
+          tipo?: Database["public"]["Enums"]["psico_importacao_tipo"]
+          total_itens_importados?: number
+          total_linhas?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_importacoes_avaliacoes_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_importacoes_avaliacoes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_importacoes_avaliacoes_metodologia_versao_id_fkey"
+            columns: ["metodologia_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_metodologias_versoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_importacoes_avaliacoes_questionario_versao_id_fkey"
+            columns: ["questionario_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_questionarios_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_importacoes_erros: {
+        Row: {
+          campo: string | null
+          codigo: string
+          criado_em: string
+          id: string
+          importacao_id: string
+          mensagem: string | null
+          numero_linha: number | null
+          severidade: Database["public"]["Enums"]["psico_importacao_severidade"]
+        }
+        Insert: {
+          campo?: string | null
+          codigo: string
+          criado_em?: string
+          id?: string
+          importacao_id: string
+          mensagem?: string | null
+          numero_linha?: number | null
+          severidade?: Database["public"]["Enums"]["psico_importacao_severidade"]
+        }
+        Update: {
+          campo?: string | null
+          codigo?: string
+          criado_em?: string
+          id?: string
+          importacao_id?: string
+          mensagem?: string | null
+          numero_linha?: number | null
+          severidade?: Database["public"]["Enums"]["psico_importacao_severidade"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_importacoes_erros_importacao_id_fkey"
+            columns: ["importacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_importacoes_avaliacoes"
             referencedColumns: ["id"]
           },
         ]
@@ -7169,7 +7502,9 @@ export type Database = {
           funcao: string | null
           funcao_normalizada: string | null
           id: string
+          importacao_id: string | null
           metodologia_versao_id: string
+          origem_registro: Database["public"]["Enums"]["psico_resposta_origem"]
           quantidade_itens: number
           questionario_versao_id: string
           setor: string | null
@@ -7184,7 +7519,9 @@ export type Database = {
           funcao?: string | null
           funcao_normalizada?: string | null
           id?: string
+          importacao_id?: string | null
           metodologia_versao_id: string
+          origem_registro?: Database["public"]["Enums"]["psico_resposta_origem"]
           quantidade_itens?: number
           questionario_versao_id: string
           setor?: string | null
@@ -7199,7 +7536,9 @@ export type Database = {
           funcao?: string | null
           funcao_normalizada?: string | null
           id?: string
+          importacao_id?: string | null
           metodologia_versao_id?: string
+          origem_registro?: Database["public"]["Enums"]["psico_resposta_origem"]
           quantidade_itens?: number
           questionario_versao_id?: string
           setor?: string | null
@@ -9245,10 +9584,24 @@ export type Database = {
         | "concluida_com_avisos"
         | "falhou"
         | "cancelada"
+      psico_importacao_formato: "csv" | "xlsx"
+      psico_importacao_severidade: "erro" | "aviso"
+      psico_importacao_status:
+        | "arquivo_recebido"
+        | "mapeamento"
+        | "validando"
+        | "pronto_para_importar"
+        | "importando"
+        | "concluida"
+        | "concluida_com_avisos"
+        | "falhou"
+        | "cancelada"
+      psico_importacao_tipo: "bruta_respondentes" | "agregada_perguntas"
       psico_medida_complexidade: "baixa" | "media" | "alta"
       psico_medida_custo: "baixo" | "medio" | "alto" | "variavel"
       psico_medida_nivel: "essencial" | "complementar" | "estruturante"
       psico_metodologia_status: "em_configuracao" | "ativa" | "arquivada"
+      psico_origem_coleta: "portal" | "importacao_bruta" | "importacao_agregada"
       psico_participante_origem: "manual" | "importacao"
       psico_plano_modo: "enxuto" | "completo" | "personalizado"
       psico_plano_status: "rascunho" | "revisado" | "aprovado"
@@ -9262,6 +9615,7 @@ export type Database = {
         | "falhou"
         | "substituido"
         | "revogado"
+      psico_resposta_origem: "portal" | "importacao_bruta"
       psico_resultado_escopo_tipo: "global" | "funcao" | "setor" | "unidade"
       psico_resultado_proc_status:
         | "processando"
@@ -9789,10 +10143,29 @@ export const Constants = {
         "falhou",
         "cancelada",
       ],
+      psico_importacao_formato: ["csv", "xlsx"],
+      psico_importacao_severidade: ["erro", "aviso"],
+      psico_importacao_status: [
+        "arquivo_recebido",
+        "mapeamento",
+        "validando",
+        "pronto_para_importar",
+        "importando",
+        "concluida",
+        "concluida_com_avisos",
+        "falhou",
+        "cancelada",
+      ],
+      psico_importacao_tipo: ["bruta_respondentes", "agregada_perguntas"],
       psico_medida_complexidade: ["baixa", "media", "alta"],
       psico_medida_custo: ["baixo", "medio", "alto", "variavel"],
       psico_medida_nivel: ["essencial", "complementar", "estruturante"],
       psico_metodologia_status: ["em_configuracao", "ativa", "arquivada"],
+      psico_origem_coleta: [
+        "portal",
+        "importacao_bruta",
+        "importacao_agregada",
+      ],
       psico_participante_origem: ["manual", "importacao"],
       psico_plano_modo: ["enxuto", "completo", "personalizado"],
       psico_plano_status: ["rascunho", "revisado", "aprovado"],
@@ -9807,6 +10180,7 @@ export const Constants = {
         "substituido",
         "revogado",
       ],
+      psico_resposta_origem: ["portal", "importacao_bruta"],
       psico_resultado_escopo_tipo: ["global", "funcao", "setor", "unidade"],
       psico_resultado_proc_status: [
         "processando",
