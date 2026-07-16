@@ -252,7 +252,8 @@ export default function PsicoImportacaoHistorica() {
           <AlertTitle>Privacidade e rigor metodológico</AlertTitle>
           <AlertDescription className="text-sm space-y-1">
             <div>• Nomes, e-mails e telefones do arquivo <b>nunca serão persistidos</b>. Só metadados anonimizados (função, setor, unidade) e as respostas.</div>
-            <div>• Convites artificiais <b>não</b> serão criados. Respostas ficam marcadas como <code>origem_registro=importacao_bruta</code>.</div>
+            <div>• Convites artificiais <b>não</b> serão criados. Respostas ficam marcadas com sua origem (<code>importacao_bruta</code>).</div>
+            <div>• No modo agregado, <b>nenhuma resposta individual sintética</b> é criada — apenas contagens por pergunta.</div>
             <div>• O arquivo original permanece em bucket privado apenas até a conclusão desta importação — depois é removido.</div>
           </AlertDescription>
         </Alert>
@@ -341,6 +342,20 @@ export default function PsicoImportacaoHistorica() {
           <Card>
             <CardHeader><CardTitle>2. Upload do arquivo</CardTitle></CardHeader>
             <CardContent className="space-y-4">
+              {tipo === "agregada_perguntas" && (
+                <Alert>
+                  <AlertTitle>Modelo esperado</AlertTitle>
+                  <AlertDescription className="text-xs">
+                    Colunas obrigatórias (CSV ou XLSX):
+                    <code className="ml-1">numero,quantidade_nunca,quantidade_raramente,quantidade_as_vezes,quantidade_frequentemente,quantidade_sempre</code>.
+                    <div className="mt-2">
+                      <Button variant="outline" size="sm" onClick={baixarTemplateAgregado}>
+                        Baixar template CSV
+                      </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
               <div>
                 <Label>Arquivo (CSV ou XLSX, até 25 MB)</Label>
                 <Input type="file" accept=".csv,.xlsx,.xls" onChange={e => setFile(e.target.files?.[0] || null)} />
