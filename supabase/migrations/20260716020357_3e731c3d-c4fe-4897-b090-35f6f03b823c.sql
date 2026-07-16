@@ -1,0 +1,1 @@
+ALTER VIEW public.psico_importacoes_auditoria SET (security_invoker = on);
