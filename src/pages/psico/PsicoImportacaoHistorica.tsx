@@ -95,6 +95,9 @@ export default function PsicoImportacaoHistorica() {
 
   // Passo 4: validação
   const [validarResp, setValidarResp] = useState<ValidarResp | null>(null);
+  // Confirmações de privacidade obrigatórias (Fase 9A) — quando o arquivo tem nome/função
+  const [confirmNome, setConfirmNome] = useState(false);
+  const [confirmFuncao, setConfirmFuncao] = useState(false);
   const [errosDetalhados, setErrosDetalhados] = useState<any[]>([]);
 
   // Passo 5: commit
@@ -472,6 +475,43 @@ export default function PsicoImportacaoHistorica() {
                     <AlertDescription>Revise o mapeamento e retorne para tentar novamente.</AlertDescription>
                   </Alert>
                 )}
+                {validarResp.resumo.layout && (
+                  <div className="border rounded-md p-4 bg-muted/40 space-y-2">
+                    <div className="text-sm font-medium">Layout detectado</div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                      <div><span className="text-muted-foreground">Layout:</span> <span className="font-mono">{validarResp.resumo.layout}</span></div>
+                      <div><span className="text-muted-foreground">Identificador:</span> {validarResp.resumo.coluna_identificador || "—"} ({validarResp.resumo.tipo_identificador})</div>
+                      <div><span className="text-muted-foreground">Nome encontrado:</span> {validarResp.resumo.nome_presente ? "Sim" : "Não"}</div>
+                      <div><span className="text-muted-foreground">Função encontrada:</span> {validarResp.resumo.funcao_presente ? "Sim" : "Não"}</div>
+                      <div><span className="text-muted-foreground">Perguntas:</span> {validarResp.resumo.perguntas_mapeadas}/35</div>
+                      <div><span className="text-muted-foreground">Segmentação por função:</span> {validarResp.resumo.segmentacao_funcao_disponivel ? "Disponível (≥3)" : "Indisponível"}</div>
+                      <div><span className="text-muted-foreground">Delimitador:</span> {validarResp.resumo.delimitador || "—"}</div>
+                      <div><span className="text-muted-foreground">Codificação:</span> {validarResp.resumo.codificacao}{validarResp.resumo.codificacao_corrigida ? " (corrigida)" : ""}</div>
+                    </div>
+                    {validarResp.resumo.nome_presente && (
+                      <label className="flex items-start gap-2 text-xs mt-2">
+                        <input type="checkbox" className="mt-1" checked={confirmNome} onChange={e => setConfirmNome(e.target.checked)} />
+                        <span>Confirmo que os nomes serão utilizados somente durante a validação do arquivo e serão <b>descartados antes da gravação</b> das respostas.</span>
+                      </label>
+                    )}
+                    {validarResp.resumo.funcao_presente && (
+                      <label className="flex items-start gap-2 text-xs">
+                        <input type="checkbox" className="mt-1" checked={confirmFuncao} onChange={e => setConfirmFuncao(e.target.checked)} />
+                        <span>Confirmo que a função será mantida <b>exclusivamente para análise coletiva</b>, respeitando o mínimo metodológico de 3 respondentes por grupo.</span>
+                      </label>
+                    )}
+                    {Array.isArray(validarResp.resumo.previa) && validarResp.resumo.previa.length > 0 && (
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-xs text-muted-foreground">Prévia (nomes mascarados, primeiras 20 linhas)</summary>
+                        <div className="max-h-40 overflow-auto mt-2 text-xs font-mono">
+                          {validarResp.resumo.previa.map((p: any, i: number) => (
+                            <div key={i}>#{p.linha} · id {p.identificador_mascarado || "—"}{p.nome_mascarado ? ` · ${p.nome_mascarado}` : ""}{p.funcao ? ` · ${p.funcao}` : ""}</div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>)}
             {tipo === "agregada_perguntas" && !validarResp && (
@@ -514,7 +554,12 @@ export default function PsicoImportacaoHistorica() {
                       <Button variant="outline" onClick={() => setStep(3)} disabled={busy}>Ajustar mapeamento</Button>
                     )}
                     <Button
-                      disabled={busy || !avalTitulo || (validarResp !== null && validarResp.resumo.linhas_validas === 0)}
+                      disabled={
+                        busy || !avalTitulo ||
+                        (validarResp !== null && validarResp.resumo.linhas_validas === 0) ||
+                        (!!validarResp?.resumo?.nome_presente && !confirmNome) ||
+                        (!!validarResp?.resumo?.funcao_presente && !confirmFuncao)
+                      }
                       onClick={doCommit}
                     >
                       {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
