@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, ClipboardList, BarChart3, FileText, Settings2, Eye, Pencil, Ban, CheckCircle2, XCircle, Copy, ExternalLink, Info, BookOpen, Download, ShieldCheck } from "lucide-react";
+import { Plus, Search, ClipboardList, BarChart3, FileText, Settings2, Eye, Pencil, Ban, CheckCircle2, XCircle, Copy, ExternalLink, Info, BookOpen, Download, ShieldCheck, Upload } from "lucide-react";
 import { PSICO_STATUS_LABEL, PSICO_STATUS_ORDER, contarPorStatus, listAvaliacoes, statusColor, statusLabel, getQuestionarioConfig, validarQuestionario, publicarQuestionario, duplicarQuestionario, atualizarFator, atualizarPergunta } from "@/lib/psico";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { REL_STATUS_COLOR, REL_STATUS_LABEL, RelatorioVersaoStatus, baixarVersao } from "@/lib/psicoRelatorio";
@@ -136,9 +136,14 @@ export function PsicoAvaliacoesLista() {
   return (
     <div>
       <ModuloHeader actions={
-        <Button onClick={() => nav(`${BASE}/avaliacoes/nova`)}>
-          <Plus className="h-4 w-4 mr-2" /> Nova Avaliação
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => nav(`${BASE}/importar-historico`)}>
+            <Upload className="h-4 w-4 mr-2" /> Importar histórico
+          </Button>
+          <Button onClick={() => nav(`${BASE}/avaliacoes/nova`)}>
+            <Plus className="h-4 w-4 mr-2" /> Nova Avaliação
+          </Button>
+        </div>
       } />
       <div className="p-6 space-y-6">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
