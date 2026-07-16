@@ -8763,6 +8763,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _psico_classificar: {
+        Args: {
+          p_alto: number
+          p_baixo: number
+          p_irrel: number
+          p_medio: number
+          p_score: number
+        }
+        Returns: Database["public"]["Enums"]["psico_classificacao_risco"]
+      }
       _psico_require_admin_tec: { Args: never; Returns: undefined }
       add_proposal_revision: {
         Args: { _descricao: string; _proposal_id: string; _titulo: string }
@@ -9000,6 +9010,10 @@ export type Database = {
         Args: { p_importacao_id: string; p_motivo: string }
         Returns: undefined
       }
+      psico_importacao_commit_agregada: {
+        Args: { p_avaliacao: Json; p_importacao_id: string; p_linhas: Json }
+        Returns: Json
+      }
       psico_importacao_commit_bruta: {
         Args: { p_avaliacao: Json; p_importacao_id: string }
         Returns: Json
@@ -9195,6 +9209,10 @@ export type Database = {
         Returns: Database["public"]["Enums"]["psico_prioridade_fator"]
       }
       psico_processar_resultados: {
+        Args: { p_avaliacao_id: string; p_confirmacao: string }
+        Returns: Json
+      }
+      psico_processar_resultados_agregada: {
         Args: { p_avaliacao_id: string; p_confirmacao: string }
         Returns: Json
       }

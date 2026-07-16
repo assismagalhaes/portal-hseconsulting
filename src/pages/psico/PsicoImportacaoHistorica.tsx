@@ -57,8 +57,21 @@ export default function PsicoImportacaoHistorica() {
   const nav = useNavigate();
   const call = useAuthedFunctionCall();
 
+  function baixarTemplateAgregado() {
+    const header = "numero,quantidade_nunca,quantidade_raramente,quantidade_as_vezes,quantidade_frequentemente,quantidade_sempre\n";
+    const exemplo = Array.from({ length: 35 }, (_, i) => `${i + 1},0,0,0,0,0`).join("\n");
+    const blob = new Blob([header + exemplo + "\n"], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "template-importacao-agregada.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
+  const [tipo, setTipo] = useState<"bruta_respondentes" | "agregada_perguntas">("bruta_respondentes");
 
   // Passo 1: contexto
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -137,7 +150,7 @@ export default function PsicoImportacaoHistorica() {
     const fd = new FormData();
     fd.append("arquivo", file);
     fd.append("cliente_id", clienteId);
-    fd.append("tipo", "bruta_respondentes");
+    fd.append("tipo", tipo);
     fd.append("questionario_versao_id", questSelecionado.id);
     fd.append("metodologia_versao_id", questSelecionado.metodologia_versao_id);
     fd.append("idempotency_key", crypto.randomUUID());
@@ -146,7 +159,8 @@ export default function PsicoImportacaoHistorica() {
       const j = await r.json();
       if (!r.ok) throw new Error(j.detalhe || j.error || "Falha no upload");
       setUploadResp(j as UploadResp);
-      setStep(3);
+      // Modo agregado: pula mapear/validar (colunas fixas) e vai para confirmação (step 5)
+      setStep(tipo === "agregada_perguntas" ? 5 : 3);
     } catch (e: any) { toast.error(e.message || "Falha no upload"); }
     finally { setBusy(false); }
   }
@@ -190,7 +204,10 @@ export default function PsicoImportacaoHistorica() {
     if (!uploadResp) return;
     setBusy(true);
     try {
-      const r = await call("psico-importacao-commit", {
+      const endpoint = tipo === "agregada_perguntas"
+        ? "psico-importacao-agregada-commit"
+        : "psico-importacao-commit";
+      const r = await call(endpoint, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -247,7 +264,8 @@ export default function PsicoImportacaoHistorica() {
           <AlertTitle>Privacidade e rigor metodológico</AlertTitle>
           <AlertDescription className="text-sm space-y-1">
             <div>• Nomes, e-mails e telefones do arquivo <b>nunca serão persistidos</b>. Só metadados anonimizados (função, setor, unidade) e as respostas.</div>
-            <div>• Convites artificiais <b>não</b> serão criados. Respostas ficam marcadas como <code>origem_registro=importacao_bruta</code>.</div>
+            <div>• Convites artificiais <b>não</b> serão criados. Respostas ficam marcadas com sua origem (<code>importacao_bruta</code>).</div>
+            <div>• No modo agregado, <b>nenhuma resposta individual sintética</b> é criada — apenas contagens por pergunta.</div>
             <div>• O arquivo original permanece em bucket privado apenas até a conclusão desta importação — depois é removido.</div>
           </AlertDescription>
         </Alert>
@@ -256,6 +274,38 @@ export default function PsicoImportacaoHistorica() {
           <Card>
             <CardHeader><CardTitle>1. Contexto</CardTitle></CardHeader>
             <CardContent className="space-y-4">
+              <div>
+                <Label>Modo de importação *</Label>
+                <div className="grid md:grid-cols-2 gap-2 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => setTipo("bruta_respondentes")}
+                    className={`text-left border rounded p-3 ${tipo === "bruta_respondentes" ? "border-primary bg-primary/5" : "border-muted"}`}
+                  >
+                    <div className="font-medium text-sm">Bruto (um respondente por linha)</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      CSV/XLSX do Google Forms ou export similar. Permite segmentação por função/setor/unidade.
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTipo("agregada_perguntas")}
+                    className={`text-left border rounded p-3 ${tipo === "agregada_perguntas" ? "border-primary bg-primary/5" : "border-muted"}`}
+                  >
+                    <div className="font-medium text-sm">Agregado (contagens por pergunta)</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Colunas: <code>numero</code>, <code>quantidade_nunca</code> … <code>quantidade_sempre</code>.
+                      <b> Sem segmentação</b> e sem % de participação.
+                    </div>
+                  </button>
+                </div>
+                {tipo === "agregada_perguntas" && (
+                  <p className="text-xs text-amber-700 mt-2">
+                    ⚠ No modo agregado a avaliação fica marcada como <code>segmentacao_disponivel=false</code> e
+                    <code> participacao_calculavel=false</code>. Nenhuma resposta individual é criada.
+                  </p>
+                )}
+              </div>
               <div>
                 <Label>Cliente *</Label>
                 <Select value={clienteId} onValueChange={setClienteId}>
@@ -304,6 +354,20 @@ export default function PsicoImportacaoHistorica() {
           <Card>
             <CardHeader><CardTitle>2. Upload do arquivo</CardTitle></CardHeader>
             <CardContent className="space-y-4">
+              {tipo === "agregada_perguntas" && (
+                <Alert>
+                  <AlertTitle>Modelo esperado</AlertTitle>
+                  <AlertDescription className="text-xs">
+                    Colunas obrigatórias (CSV ou XLSX):
+                    <code className="ml-1">numero,quantidade_nunca,quantidade_raramente,quantidade_as_vezes,quantidade_frequentemente,quantidade_sempre</code>.
+                    <div className="mt-2">
+                      <Button variant="outline" size="sm" onClick={baixarTemplateAgregado}>
+                        Baixar template CSV
+                      </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
               <div>
                 <Label>Arquivo (CSV ou XLSX, até 25 MB)</Label>
                 <Input type="file" accept=".csv,.xlsx,.xls" onChange={e => setFile(e.target.files?.[0] || null)} />
@@ -363,9 +427,9 @@ export default function PsicoImportacaoHistorica() {
           </Card>
         )}
 
-        {step === 5 && validarResp && (
+        {step === 5 && (
           <>
-            <Card>
+            {validarResp && (<Card>
               <CardHeader><CardTitle>5. Resumo da validação</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -409,7 +473,16 @@ export default function PsicoImportacaoHistorica() {
                   </Alert>
                 )}
               </CardContent>
-            </Card>
+            </Card>)}
+            {tipo === "agregada_perguntas" && !validarResp && (
+              <Alert>
+                <AlertTitle>Modo agregado</AlertTitle>
+                <AlertDescription className="text-sm">
+                  O arquivo será lido no momento do commit: cada linha vira uma contagem por pergunta em
+                  <code> psico_dados_agregados_perguntas</code>. Sem staging técnico.
+                </AlertDescription>
+              </Alert>
+            )}
 
             <Card>
               <CardHeader><CardTitle>Confirmação da avaliação histórica</CardTitle></CardHeader>
@@ -437,9 +510,11 @@ export default function PsicoImportacaoHistorica() {
                     <X className="h-4 w-4 mr-2" /> Cancelar importação
                   </Button>
                   <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => setStep(3)} disabled={busy}>Ajustar mapeamento</Button>
+                    {tipo === "bruta_respondentes" && (
+                      <Button variant="outline" onClick={() => setStep(3)} disabled={busy}>Ajustar mapeamento</Button>
+                    )}
                     <Button
-                      disabled={busy || !avalTitulo || validarResp.resumo.linhas_validas === 0}
+                      disabled={busy || !avalTitulo || (validarResp !== null && validarResp.resumo.linhas_validas === 0)}
                       onClick={doCommit}
                     >
                       {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
@@ -459,8 +534,19 @@ export default function PsicoImportacaoHistorica() {
               <div className="flex items-center gap-3 text-green-700">
                 <CheckCircle2 className="h-6 w-6" />
                 <div>
-                  <div className="font-medium">{commitResult.respondentes_importados} respondentes importados</div>
-                  <div className="text-sm text-muted-foreground">{commitResult.total_itens_importados} respostas gravadas</div>
+                  {tipo === "bruta_respondentes" ? (
+                    <>
+                      <div className="font-medium">{commitResult.respondentes_importados} respondentes importados</div>
+                      <div className="text-sm text-muted-foreground">{commitResult.total_itens_importados} respostas gravadas</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-medium">{commitResult.perguntas_gravadas} perguntas com dados agregados</div>
+                      <div className="text-sm text-muted-foreground">
+                        Avaliação criada como agregada (segmentação e % de participação indisponíveis).
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="flex gap-2">
