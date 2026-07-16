@@ -73,6 +73,7 @@ import PsicoAvaliacaoNova from "./pages/psico/PsicoAvaliacaoNova";
 import PsicoAvaliacaoDetalhes from "./pages/psico/PsicoAvaliacaoDetalhes";
 import PsicoQuestionarioPreview from "./pages/psico/PsicoQuestionarioPreview";
 import PsicoConvitePublico from "./pages/psico/PsicoConvitePublico";
+import PsicoValidarRelatorio from "./pages/psico/PsicoValidarRelatorio";
 import { PsicoBibliotecaLista, PsicoBibliotecaDetalhe } from "./pages/psico/PsicoBiblioteca";
 import ClienteLogin from "./pages/cliente/ClienteLogin";
 import ClienteDashboard from "./pages/cliente/ClienteDashboard";
@@ -108,6 +109,7 @@ const App = () => (
             <Route path="/proposta-exemplo" element={<ProposalExample />} />
             <Route path="/aceite/:token" element={<PropostaAceitePublica />} />
             <Route path="/avaliacao/psicossocial" element={<PsicoConvitePublico />} />
+            <Route path="/validar/relatorio-psicossocial" element={<PsicoValidarRelatorio />} />
             <Route path="/cliente/login" element={<ClienteLogin />} />
             <Route element={<RequireCliente><ClienteLayout /></RequireCliente>}>
               <Route path="/cliente" element={<ClienteDashboard />} />

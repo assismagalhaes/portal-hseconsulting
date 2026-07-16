@@ -60,11 +60,18 @@ export default function PsicoAvaliacaoDetalhes() {
       ? await (supabase as any).from("psico_planos_acao").select("id").in("revisao_id", revIds)
       : { data: [] as any[] };
     const planoIds: string[] = (planosQ.data || []).map((x: any) => x.id);
+    const relQ = await (supabase as any).from("psico_relatorios").select("id").eq("avaliacao_id", id!).maybeSingle();
+    const relVersoesIds: string[] = [];
+    if (relQ.data?.id) {
+      const vs = await (supabase as any).from("psico_relatorios_versoes").select("id").eq("relatorio_id", relQ.data.id);
+      (vs.data || []).forEach((x: any) => relVersoesIds.push(x.id));
+    }
     const auditQuery = supabase.from("psico_auditoria").select("*")
       .or([
         `and(entidade.eq.avaliacao,entidade_id.eq.${id})`,
         revIds.length ? `and(entidade.eq.revisao_tecnica,entidade_id.in.(${revIds.join(",")}))` : null,
         planoIds.length ? `and(entidade.eq.plano_acao,entidade_id.in.(${planoIds.join(",")}))` : null,
+        relVersoesIds.length ? `and(entidade.eq.relatorio_versao,entidade_id.in.(${relVersoesIds.join(",")}))` : null,
       ].filter(Boolean).join(","))
       .order("created_at", { ascending: false });
     const [c, r, m, q, aud] = await Promise.all([
@@ -310,7 +317,8 @@ export default function PsicoAvaliacaoDetalhes() {
                       <li key={a.id} className="py-3 flex items-start gap-3 text-sm">
                         <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${
                           a.entidade === "revisao_tecnica" ? "bg-emerald-600" :
-                          a.entidade === "plano_acao" ? "bg-sky-600" : "bg-primary"
+                          a.entidade === "plano_acao" ? "bg-sky-600" :
+                          a.entidade === "relatorio_versao" ? "bg-violet-600" : "bg-primary"
                         }`} />
                         <div className="flex-1">
                           <div className="font-medium">{a.metadados?.resumo || a.acao}</div>
