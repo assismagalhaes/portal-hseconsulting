@@ -28,7 +28,7 @@ export function RecursosCard({ osId, recursos, onChange }: any) {
           <SelectContent>{Object.entries(osRecursoTipoLabel).map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}</SelectContent></Select>
         <Input placeholder="Descrição" value={desc} onChange={e => setDesc(e.target.value)} />
         <Input type="number" className="w-24" value={qtd} onChange={e => setQtd(e.target.value)} />
-        <Button onClick={add}><Plus className="h-4 w-4" /></Button>
+        <Button onClick={add} aria-label="Adicionar recurso"><Plus className="h-4 w-4" /></Button>
       </div>
       {Object.entries(byTipo).map(([t, arr]: any) => (
         <div key={t}>
@@ -37,7 +37,7 @@ export function RecursosCard({ osId, recursos, onChange }: any) {
             {arr.map((r: any) => (
               <div key={r.id} className="flex items-center gap-2 text-sm bg-muted/40 px-3 py-1.5 rounded">
                 <span className="flex-1">{r.descricao}</span><span className="font-mono text-xs">{r.quantidade}</span>
-                <Button size="sm" variant="ghost" onClick={() => del(r.id)}><Trash2 className="h-3 w-3" /></Button>
+                <Button size="sm" variant="ghost" onClick={() => del(r.id)} aria-label="Excluir recurso"><Trash2 className="h-3 w-3" /></Button>
               </div>
             ))}
           </div>
