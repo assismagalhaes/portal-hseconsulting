@@ -4742,6 +4742,7 @@ export type Database = {
       projeto_servicos: {
         Row: {
           categoria: string | null
+          client_id: string | null
           created_at: string
           data_conclusao: string | null
           data_inicio: string | null
@@ -4763,6 +4764,7 @@ export type Database = {
         }
         Insert: {
           categoria?: string | null
+          client_id?: string | null
           created_at?: string
           data_conclusao?: string | null
           data_inicio?: string | null
@@ -4784,6 +4786,7 @@ export type Database = {
         }
         Update: {
           categoria?: string | null
+          client_id?: string | null
           created_at?: string
           data_conclusao?: string | null
           data_inicio?: string | null
@@ -4804,6 +4807,13 @@ export type Database = {
           valor?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "projeto_servicos_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "projeto_servicos_projeto_id_fkey"
             columns: ["projeto_id"]

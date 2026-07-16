@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { brl, formatDate, formatDateTime } from "@/lib/format";
 import { projetoStatusColor, projetoStatusLabel, projetoServicoStatusColor, projetoServicoStatusLabel, projetoPrioridadeLabel, projetoPrioridadeColor } from "@/lib/projetos";
-import { ArrowLeft, FileSignature, DollarSign, History, RefreshCw, Building2, User, Mail, Phone, MapPin, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, FileSignature, DollarSign, History, Building2, User, Mail, Phone, MapPin, ClipboardCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import AtividadePainel from "@/components/projeto/AtividadePainel";
 
@@ -40,7 +40,7 @@ export default function ProjetoEditor() {
   const [contrato, setContrato] = useState<any>(null);
   const [parcelas, setParcelas] = useState<any[]>([]);
   const [timeline, setTimeline] = useState<any[]>([]);
-  const [renovacoes, setRenovacoes] = useState<any[]>([]);
+  const [empresas, setEmpresas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [profissionais, setProfissionais] = useState<any[]>([]);
@@ -57,18 +57,20 @@ export default function ProjetoEditor() {
     setProjeto(p);
     document.title = `${p?.numero || "Projeto"} | HSE Consulting`;
 
-    const [s, d, t, ren, u, pr] = await Promise.all([
+    const [s, d, t, pc, u, pr] = await Promise.all([
       supabase.from("projeto_servicos").select("*").eq("projeto_id", id).order("created_at"),
       supabase.from("documentos_tecnicos").select("id, numero, tipo, titulo, status, data_emissao, data_vencimento").eq("projeto_id", id),
       supabase.from("projeto_timeline").select("*").eq("projeto_id", id).order("created_at", { ascending: false }).limit(50),
-      supabase.from("projeto_renovacoes").select("*, projeto_servicos(nome)").eq("projeto_id", id),
+      p?.proposal_id
+        ? supabase.from("proposal_clients").select("client_id, papel, ordem, clients(id, razao_social, nome_fantasia, cnpj_cpf, cidade, uf)").eq("proposal_id", p.proposal_id).order("ordem")
+        : Promise.resolve({ data: [] as any[] }),
       supabase.from("profiles").select("id, nome, email").eq("status", "ativo").order("nome"),
       supabase.from("execucao_profissionais").select("id, nome, cargo").order("nome"),
     ]);
     setServicos(s.data || []);
     setDocs(d.data || []);
     setTimeline(t.data || []);
-    setRenovacoes(ren.data || []);
+    setEmpresas((pc as any).data || []);
     setUsuarios(u.data || []);
     setProfissionais(pr.data || []);
 
@@ -194,7 +196,6 @@ export default function ProjetoEditor() {
             <TabsTrigger value="evidencias">Evidências</TabsTrigger>
             <TabsTrigger value="docs">Documentos ({docs.length})</TabsTrigger>
             {!isTecnico && <TabsTrigger value="financeiro">Financeiro</TabsTrigger>}
-            {!isTecnico && <TabsTrigger value="renovacoes">Renovações ({renovacoes.length})</TabsTrigger>}
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
           </TabsList>
 
@@ -325,6 +326,31 @@ export default function ProjetoEditor() {
                 <p className="text-[11px] text-muted-foreground">
                   Informações do cliente disponíveis para consulta. Alterações cadastrais devem ser feitas na tela de Clientes pelo perfil responsável.
                 </p>
+
+                {empresas.length > 1 && (
+                  <div>
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
+                      <Building2 className="h-3.5 w-3.5" /> Empresas do grupo ({empresas.length})
+                    </div>
+                    <ul className="divide-y rounded-lg border">
+                      {empresas.map((e: any) => (
+                        <li key={e.client_id} className="p-3 flex items-center gap-3">
+                          <Building2 className="h-4 w-4 text-muted-foreground" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate">{e.clients?.nome_fantasia || e.clients?.razao_social || "—"}</div>
+                            <div className="text-xs text-muted-foreground flex items-center gap-2">
+                              <span className="font-mono">{e.clients?.cnpj_cpf || "—"}</span>
+                              {(e.clients?.cidade || e.clients?.uf) && (
+                                <span>· {[e.clients?.cidade, e.clients?.uf].filter(Boolean).join("/")}</span>
+                              )}
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="text-[10px]">{e.papel || "coligada"}</Badge>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -335,8 +361,22 @@ export default function ProjetoEditor() {
                 {servicos.length === 0 ? (
                   <div className="p-10 text-center text-muted-foreground">Nenhum serviço contratado.</div>
                 ) : (
-                  <ul className="divide-y">
-                    {servicos.map((s) => (
+                  (() => {
+                    const empresasMap: Record<string, { nome: string; cnpj?: string }> = {};
+                    empresas.forEach((e: any) => {
+                      if (e.client_id) empresasMap[e.client_id] = { nome: e.clients?.nome_fantasia || e.clients?.razao_social || "—", cnpj: e.clients?.cnpj_cpf };
+                    });
+                    if (projeto.clients?.id && !empresasMap[projeto.clients.id]) {
+                      empresasMap[projeto.clients.id] = { nome: projeto.clients.nome_fantasia || projeto.clients.razao_social || "—", cnpj: projeto.clients.cnpj_cpf };
+                    }
+                    const grupos = new Map<string, any[]>();
+                    servicos.forEach((s: any) => {
+                      const key = s.client_id || projeto.client_id || "sem";
+                      if (!grupos.has(key)) grupos.set(key, []);
+                      grupos.get(key)!.push(s);
+                    });
+                    const multi = grupos.size > 1;
+                    const renderItem = (s: any) => (
                       <li key={s.id} className="p-4 space-y-2">
                         <div className="flex items-center gap-3 flex-wrap">
                           <span className="font-medium flex-1 min-w-[200px]">{s.nome}</span>
@@ -367,8 +407,29 @@ export default function ProjetoEditor() {
                           </div>
                         </div>
                       </li>
-                    ))}
-                  </ul>
+                    );
+                    if (!multi) {
+                      return <ul className="divide-y">{servicos.map(renderItem)}</ul>;
+                    }
+                    return (
+                      <div className="divide-y">
+                        {Array.from(grupos.entries()).map(([cid, items]) => {
+                          const emp = empresasMap[cid] || { nome: "Empresa não identificada" };
+                          return (
+                            <div key={cid}>
+                              <div className="px-4 py-2 bg-muted/50 flex items-center gap-2 border-b">
+                                <Building2 className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-semibold text-sm">{emp.nome}</span>
+                                {emp.cnpj && <span className="font-mono text-xs text-muted-foreground">{emp.cnpj}</span>}
+                                <Badge variant="outline" className="text-[10px] ml-auto">{items.length} serviço{items.length > 1 ? "s" : ""}</Badge>
+                              </div>
+                              <ul className="divide-y">{items.map(renderItem)}</ul>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()
                 )}
               </CardContent>
             </Card>
@@ -442,34 +503,6 @@ export default function ProjetoEditor() {
                 </CardContent>
               </Card>
             )}
-          </TabsContent>
-
-          <TabsContent value="renovacoes" className="mt-4">
-            <Card className="shadow-elegant">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="font-display text-base flex items-center gap-2"><RefreshCw className="h-4 w-4" /> Renovações</CardTitle>
-                <Button size="sm" variant="outline" onClick={async () => {
-                  const { data, error } = await supabase.rpc("projetos_gerar_renovacoes");
-                  if (error) toast({ title: "Erro", description: error.message, variant: "destructive" });
-                  else { toast({ title: `${data || 0} renovações geradas` }); load(); }
-                }}>Gerar agora</Button>
-              </CardHeader>
-              <CardContent className="p-0">
-                {renovacoes.length === 0 ? (
-                  <div className="p-10 text-center text-muted-foreground">Nenhuma renovação próxima. Use "Gerar agora" para varrer serviços com validade próxima.</div>
-                ) : (
-                  <ul className="divide-y">
-                    {renovacoes.map((r) => (
-                      <li key={r.id} className="p-4 flex items-center gap-3 text-sm">
-                        <span className="flex-1">{r.projeto_servicos?.nome}</span>
-                        <span className="text-xs text-muted-foreground">Vence em {formatDate(r.data_validade)}</span>
-                        {r.oportunidade_id && <Link className="text-xs underline" to={`/crm/oportunidades`}>Ver oportunidade</Link>}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
           </TabsContent>
 
           <TabsContent value="timeline" className="mt-4">
