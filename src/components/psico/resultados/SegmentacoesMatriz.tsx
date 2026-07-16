@@ -6,7 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle, Info, Loader2 } from "lucide-react";
 import { getPsicoSegmentComparison } from "@/lib/psicoResultados";
-import { CLASSIF_LABEL, CLASSIF_SHORT, PRIO_LABEL, RISK_COLOR, classifBadgeClass, prioBadgeClass, fmt, AVISO_METODOLOGICO } from "./shared";
+import { CLASSIF_LABEL, CLASSIF_SHORT, PRIO_LABEL, RISK_COLOR, classifBadgeClass, prioBadgeClass, fmt, AvisoMetodologico } from "./shared";
 
 type Tipo = "funcao" | "setor" | "unidade";
 
@@ -50,7 +50,7 @@ export default function SegmentacoesMatriz({ avaliacaoId }: { avaliacaoId: strin
           {q.data && q.data.ok && <MatrizConteudo comp={q.data.data} />}
         </CardContent>
       </Card>
-      <p className="text-[11px] text-muted-foreground border-t pt-2">{AVISO_METODOLOGICO}</p>
+      <AvisoMetodologico />
     </div>
   );
 }

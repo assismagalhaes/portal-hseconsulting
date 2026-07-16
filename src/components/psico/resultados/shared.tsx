@@ -89,3 +89,13 @@ export function fmtDate(iso: string | null | undefined): string {
 // Texto de aviso metodológico fixo
 export const AVISO_METODOLOGICO =
   "Os percentuais apresentados representam respostas válidas relacionadas às perguntas dos fatores. Os resultados não correspondem à classificação individual dos trabalhadores.";
+
+// Componente reutilizável para o aviso metodológico.
+// Aceita `className` para variações pontuais de espaçamento/borda.
+export function AvisoMetodologico({ className }: { className?: string }) {
+  return (
+    <p className={className ?? "text-[11px] text-muted-foreground border-t pt-2"}>
+      {AVISO_METODOLOGICO}
+    </p>
+  );
+}
