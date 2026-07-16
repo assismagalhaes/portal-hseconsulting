@@ -768,4 +768,3 @@ export default function ProposalEditor() {
     </div>
   );
 }
-}
