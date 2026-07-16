@@ -39,6 +39,13 @@ import HistoricoPrecificacao from "@/components/proposal/HistoricoPrecificacao";
 import AceiteLinkCard from "@/components/proposal/AceiteLinkCard";
 import EmpresasProposta from "@/components/proposal/EmpresasProposta";
 import CondicaoPagamentoPicker from "@/components/proposal/CondicaoPagamentoPicker";
+import ClientCard from "@/components/proposal/ClientCard";
+import DatesCard from "@/components/proposal/DatesCard";
+import ItemEditor from "@/components/proposal/ItemEditor";
+import RevisionsCard from "@/components/proposal/RevisionsCard";
+import InlinePricingPanel from "@/components/proposal/InlinePricingPanel";
+import ClientPreview from "@/components/proposal/ClientPreview";
+import { Row, ResumoValor, InternalSummary, calcDescontoRevisao } from "@/components/proposal/ProposalSummary";
 
 const newId = () => Math.random().toString(36).slice(2, 10);
 
@@ -734,7 +741,7 @@ export default function ProposalEditor() {
           <SheetHeader><SheetTitle>Precificação interna do item</SheetTitle></SheetHeader>
           {pricingOpen && (
             <div className="mt-4">
-              <PricingPanel
+              <InlinePricingPanel
                 item={items.find(i=>i.id===pricingOpen)!}
                 existing={pricings[pricingOpen]}
                 params={params}
