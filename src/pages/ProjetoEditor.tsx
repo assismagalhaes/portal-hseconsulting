@@ -336,8 +336,22 @@ export default function ProjetoEditor() {
                 {servicos.length === 0 ? (
                   <div className="p-10 text-center text-muted-foreground">Nenhum serviço contratado.</div>
                 ) : (
-                  <ul className="divide-y">
-                    {servicos.map((s) => (
+                  (() => {
+                    const empresasMap: Record<string, { nome: string; cnpj?: string }> = {};
+                    empresas.forEach((e: any) => {
+                      if (e.client_id) empresasMap[e.client_id] = { nome: e.clients?.nome_fantasia || e.clients?.razao_social || "—", cnpj: e.clients?.cnpj_cpf };
+                    });
+                    if (projeto.clients?.id && !empresasMap[projeto.clients.id]) {
+                      empresasMap[projeto.clients.id] = { nome: projeto.clients.nome_fantasia || projeto.clients.razao_social || "—", cnpj: projeto.clients.cnpj_cpf };
+                    }
+                    const grupos = new Map<string, any[]>();
+                    servicos.forEach((s: any) => {
+                      const key = s.client_id || projeto.client_id || "sem";
+                      if (!grupos.has(key)) grupos.set(key, []);
+                      grupos.get(key)!.push(s);
+                    });
+                    const multi = grupos.size > 1;
+                    const renderItem = (s: any) => (
                       <li key={s.id} className="p-4 space-y-2">
                         <div className="flex items-center gap-3 flex-wrap">
                           <span className="font-medium flex-1 min-w-[200px]">{s.nome}</span>
@@ -368,8 +382,29 @@ export default function ProjetoEditor() {
                           </div>
                         </div>
                       </li>
-                    ))}
-                  </ul>
+                    );
+                    if (!multi) {
+                      return <ul className="divide-y">{servicos.map(renderItem)}</ul>;
+                    }
+                    return (
+                      <div className="divide-y">
+                        {Array.from(grupos.entries()).map(([cid, items]) => {
+                          const emp = empresasMap[cid] || { nome: "Empresa não identificada" };
+                          return (
+                            <div key={cid}>
+                              <div className="px-4 py-2 bg-muted/50 flex items-center gap-2 border-b">
+                                <Building2 className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-semibold text-sm">{emp.nome}</span>
+                                {emp.cnpj && <span className="font-mono text-xs text-muted-foreground">{emp.cnpj}</span>}
+                                <Badge variant="outline" className="text-[10px] ml-auto">{items.length} serviço{items.length > 1 ? "s" : ""}</Badge>
+                              </div>
+                              <ul className="divide-y">{items.map(renderItem)}</ul>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()
                 )}
               </CardContent>
             </Card>
