@@ -82,8 +82,14 @@ export function VisitasCard({ osId, visitas, profs, projRespId, onChange }: any)
               <TableCell className="text-sm">{vi.objetivo || "—"}</TableCell>
               <TableCell><Badge variant="secondary">{osVisitaSituacaoLabel[vi.situacao]}</Badge></TableCell>
               <TableCell className="flex gap-1">
-                {vi.situacao !== "realizada" && <Button size="sm" variant="ghost" onClick={() => concluir(vi.id)}><CheckCircle2 className="h-4 w-4" /></Button>}
-                <Button size="sm" variant="ghost" onClick={() => del(vi.id)}><Trash2 className="h-4 w-4" /></Button>
+                {vi.situacao !== "realizada" && (
+                  <Button size="sm" variant="ghost" onClick={() => concluir(vi.id)} aria-label="Marcar visita como realizada">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button size="sm" variant="ghost" onClick={() => del(vi.id)} aria-label="Excluir visita">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </TableCell>
             </TableRow>
           ))}

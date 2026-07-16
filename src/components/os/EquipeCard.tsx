@@ -40,7 +40,7 @@ export function EquipeCard({ osId, equipe, profs, onChange }: any) {
           <SelectContent>{profs.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.nome}{p.cargo ? ` — ${p.cargo}` : ""}</SelectItem>)}</SelectContent></Select>
         <Select value={papel} onValueChange={setPapel}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
           <SelectContent><SelectItem value="lider">Líder</SelectItem><SelectItem value="apoio">Apoio</SelectItem><SelectItem value="observador">Observador</SelectItem></SelectContent></Select>
-        <Button onClick={add}><Plus className="h-4 w-4" /></Button>
+        <Button onClick={add} aria-label="Adicionar profissional"><Plus className="h-4 w-4" /></Button>
       </div>
       <div className="space-y-1">
         {equipe.map((e: any) => {
@@ -48,8 +48,8 @@ export function EquipeCard({ osId, equipe, profs, onChange }: any) {
           return (
             <div key={e.id} className="flex items-center gap-3 text-sm bg-muted/40 px-3 py-2 rounded">
               <span className="flex-1">{e.execucao_profissionais?.nome} — <span className="text-muted-foreground">{e.papel}</span></span>
-              {cnt > 1 && <Badge variant="secondary" className="bg-amber-100 text-amber-900">⚠ {cnt} eventos próximos</Badge>}
-              <Button size="sm" variant="ghost" onClick={() => del(e.id)}><Trash2 className="h-3 w-3" /></Button>
+              {cnt > 1 && <Badge variant="secondary" className="bg-warning/15 text-warning-foreground"><span aria-hidden="true">⚠ </span>{cnt} eventos próximos</Badge>}
+              <Button size="sm" variant="ghost" onClick={() => del(e.id)} aria-label="Remover da equipe"><Trash2 className="h-3 w-3" /></Button>
             </div>
           );
         })}
