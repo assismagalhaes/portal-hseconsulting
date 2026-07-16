@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import PageHeader from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,6 +45,22 @@ import RevisionsCard from "@/components/proposal/RevisionsCard";
 import InlinePricingPanel from "@/components/proposal/InlinePricingPanel";
 import ClientPreview from "@/components/proposal/ClientPreview";
 import { Row, ResumoValor, InternalSummary, calcDescontoRevisao } from "@/components/proposal/ProposalSummary";
+import {
+  loadProposalBundle,
+  updateProposal,
+  updateProposalTotal,
+  upsertProposalClient,
+  insertProposalItem,
+  updateProposalItem as updateProposalItemDb,
+  deleteProposalItem,
+  findServiceByName,
+  insertService,
+  insertItemPricing,
+  upsertItemPricing,
+  recordIndividualPricingHistory,
+  listRevisions,
+  addRevisao as addRevisaoDb,
+} from "@/lib/propostas";
 
 const newId = () => Math.random().toString(36).slice(2, 10);
 
@@ -76,46 +91,20 @@ export default function ProposalEditor() {
 
   async function load() {
     if (!id) return;
-    const [p, sv, pp] = await Promise.all([
-      supabase.from("proposals").select("*, clients(*)").eq("id", id).single(),
-      supabase.from("services").select("*").order("nome"),
-      supabase.from("pricing_params").select("*").limit(1).maybeSingle(),
-    ]);
-    if (p.error) { toast.error(p.error.message); return; }
-    const proposalData = p.data;
-    // Pré-popular condições padrão APENAS na primeira abertura (campo nunca preenchido).
-    // Usar == null evita re-preencher quando o usuário apagou o texto propositalmente
-    // (nesse caso o valor salvo é "" e deve ser respeitado).
-    const patch: any = {};
-    if (proposalData.condicoes_pagamento == null && pp.data?.condicoes_pagamento_default) patch.condicoes_pagamento = pp.data.condicoes_pagamento_default;
-    if (proposalData.outras_condicoes == null && pp.data?.outras_condicoes_default) patch.outras_condicoes = pp.data.outras_condicoes_default;
-    if (Object.keys(patch).length) {
-      await supabase.from("proposals").update(patch).eq("id", proposalData.id);
-      Object.assign(proposalData, patch);
+    try {
+      const bundle = await loadProposalBundle(id);
+      setProposal(bundle.proposal);
+      setClient(bundle.client);
+      setServices(bundle.services);
+      setParams(bundle.params);
+      setItems(bundle.items);
+      setRevisions(bundle.revisions);
+      setPricings(bundle.pricings);
+      setProposalClients(bundle.proposalClients);
+      document.title = `${bundle.proposal.numero} | Portal HSE Consulting`;
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao carregar proposta");
     }
-    setProposal(proposalData);
-    setClient(proposalData.clients || null);
-    setServices(sv.data || []);
-    setParams(pp.data || { custo_fixo_mensal:0, horas_produtivas_mes:160, custo_por_vida:0, aliquota_imposto:0.10, margem_minima:0.20, markup_minimo:1.5, arredondamento:1, valor_hora_tecnica: 35 });
-    document.title = `${proposalData.numero} | Portal HSE Consulting`;
-    const [it, rv] = await Promise.all([
-      supabase.from("proposal_items").select("*").eq("proposal_id", id).order("numero_item"),
-      supabase.from("proposal_revisions").select("*").eq("proposal_id", id).order("revisao", { ascending: false }),
-    ]);
-    setItems(it.data || []);
-    setRevisions(rv.data || []);
-    if (it.data && it.data.length) {
-      const pr = await supabase.from("proposal_item_pricing").select("*").in("proposal_item_id", it.data.map(x=>x.id));
-      const map: Record<string, any> = {};
-      (pr.data || []).forEach(r => { map[r.proposal_item_id] = r; });
-      setPricings(map);
-    }
-    const { data: pcs } = await supabase.from("proposal_clients")
-      .select("*, clients(id,razao_social,nome_fantasia,cnpj_cpf,cidade,uf,endereco,solicitante,cargo,telefone,email)")
-      .eq("proposal_id", id)
-      .order("papel", { ascending: true })
-      .order("ordem", { ascending: true });
-    setProposalClients(pcs || []);
   }
 
   const total = items.reduce((a,b)=>a+Number(b.valor_total||0), 0);
@@ -125,11 +114,16 @@ export default function ProposalEditor() {
   async function saveProposalField(patch: any): Promise<boolean> {
     if (!proposal) return false;
     setSaving(true);
-    const { error } = await supabase.from("proposals").update(patch).eq("id", proposal.id);
-    setSaving(false);
-    if (error) { toast.error(error.message); return false; }
-    setProposal({ ...proposal, ...patch });
-    return true;
+    try {
+      await updateProposal(proposal.id, patch);
+      setProposal({ ...proposal, ...patch });
+      return true;
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao salvar");
+      return false;
+    } finally {
+      setSaving(false);
+    }
   }
 
   function scheduleProposalSave(patch: any) {
@@ -142,51 +136,21 @@ export default function ProposalEditor() {
   async function persistClient(c: any) {
     if (!c) return;
     setSaving(true);
-    let saved = c;
-    if (c.id) {
-      const { error } = await supabase.from("clients").update({
-        razao_social: c.razao_social, nome_fantasia: c.nome_fantasia, cnpj_cpf: c.cnpj_cpf,
-        qtd_funcionarios: Number(c.qtd_funcionarios)||0, endereco: c.endereco,
-        bairro: c.bairro, cep: c.cep, cidade: c.cidade, uf: c.uf,
-        solicitante: c.solicitante, cargo: c.cargo, telefone: c.telefone, whatsapp: c.whatsapp,
-        email: c.email, observacoes: c.observacoes,
-      }).eq("id", c.id);
-      if (error) { toast.error(error.message); setSaving(false); return; }
-    } else {
-      // Tentar localizar pelo CNPJ — reutilizar / atualizar campos vazios
-      let existing: any = null;
-      if (c.cnpj_cpf) {
-        const { data } = await supabase.from("clients").select("*").eq("cnpj_cpf", c.cnpj_cpf).maybeSingle();
-        existing = data;
-      }
-      if (existing) {
-        const merged: any = { ...existing };
-        Object.entries(c).forEach(([k,v]) => { if (v && !merged[k]) merged[k] = v; });
-        await supabase.from("clients").update(merged).eq("id", existing.id);
-        saved = merged;
-      } else {
-        const { data, error } = await supabase.from("clients").insert({
-          razao_social: c.razao_social || "Cliente sem nome",
-          nome_fantasia: c.nome_fantasia, cnpj_cpf: c.cnpj_cpf,
-          qtd_funcionarios: Number(c.qtd_funcionarios)||0, endereco: c.endereco,
-          bairro: c.bairro, cep: c.cep, cidade: c.cidade, uf: c.uf,
-          solicitante: c.solicitante, cargo: c.cargo, telefone: c.telefone, whatsapp: c.whatsapp,
-          email: c.email, observacoes: c.observacoes,
-        }).select("*").single();
-        if (error) { toast.error(error.message); setSaving(false); return; }
-        saved = data;
-      }
-      await supabase.from("proposals").update({ client_id: saved.id }).eq("id", proposal.id);
-      setProposal((p:any)=>({ ...p, client_id: saved.id }));
+    try {
+      const saved = await upsertProposalClient(proposal.id, c);
+      if (!c.id) setProposal((p: any) => ({ ...p, client_id: saved.id }));
+      setClient(saved);
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao salvar cliente");
+    } finally {
+      setSaving(false);
     }
-    setClient(saved);
-    setSaving(false);
   }
 
   /* ---------------- Itens ---------------- */
   async function updateTotal(newItems: any[]) {
     const t = newItems.reduce((a,b)=>a+Number(b.valor_total||0),0);
-    await supabase.from("proposals").update({ valor_total: t }).eq("id", proposal.id);
+    await updateProposalTotal(proposal.id, t);
     setProposal((p:any) => ({...p, valor_total:t }));
   }
 
@@ -210,9 +174,13 @@ export default function ProposalEditor() {
       valor_unitario: valorUnit,
       valor_total: valorUnit,
     };
-    const { data, error } = await supabase.from("proposal_items").insert(payload).select("*").single();
-    if (error) return toast.error(error.message);
-    const next = [...items, data!];
+    let data: any;
+    try {
+      data = await insertProposalItem(payload);
+    } catch (e: any) {
+      return toast.error(e?.message || "Falha ao adicionar item");
+    }
+    const next = [...items, data];
     setItems(next); updateTotal(next);
 
     // Se o serviço tem template de precificação, cria proposal_item_pricing automaticamente
@@ -230,35 +198,40 @@ export default function ProposalEditor() {
         preco_aprovado: Number(fromService.pricing_preco_arredondado || valorUnit),
         indicadores: fromService.pricing_indicadores || {},
       };
-      const { data: pr } = await supabase.from("proposal_item_pricing").insert(pricingPayload).select("*").single();
-      if (pr) setPricings((prev) => ({ ...prev, [data.id]: pr }));
+      try {
+        const pr = await insertItemPricing(pricingPayload);
+        if (pr) setPricings((prev) => ({ ...prev, [data.id]: pr }));
+      } catch { /* pricing template é best-effort */ }
     }
   }
 
   async function updateItem(it: any, patch: any) {
     const merged = { ...it, ...patch };
     merged.valor_total = Number(merged.quantidade||0) * Number(merged.valor_unitario||0);
-    const { error } = await supabase.from("proposal_items").update({
-      categoria: merged.categoria || null,
-      nome: merged.nome,
-      descricao_comercial: merged.descricao_comercial,
-      escopo_tecnico: merged.escopo_tecnico,
-      entregaveis: merged.entregaveis ?? null,
-      observacoes_escopo: merged.observacoes_escopo ?? null,
-      quantidade_tecnica: merged.quantidade_tecnica ?? null,
-      quantidade: merged.quantidade,
-      valor_unitario: merged.valor_unitario,
-      valor_total: merged.valor_total,
-      client_id: merged.client_id ?? null,
-      rateado: merged.rateado ?? false,
-    }).eq("id", it.id);
-    if (error) return toast.error(error.message);
+    try {
+      await updateProposalItemDb(it.id, {
+        categoria: merged.categoria || null,
+        nome: merged.nome,
+        descricao_comercial: merged.descricao_comercial,
+        escopo_tecnico: merged.escopo_tecnico,
+        entregaveis: merged.entregaveis ?? null,
+        observacoes_escopo: merged.observacoes_escopo ?? null,
+        quantidade_tecnica: merged.quantidade_tecnica ?? null,
+        quantidade: merged.quantidade,
+        valor_unitario: merged.valor_unitario,
+        valor_total: merged.valor_total,
+        client_id: merged.client_id ?? null,
+        rateado: merged.rateado ?? false,
+      });
+    } catch (e: any) {
+      return toast.error(e?.message || "Falha ao salvar item");
+    }
     const next = items.map(x => x.id === it.id ? merged : x);
     setItems(next); updateTotal(next);
   }
 
   async function removeItem(it: any) {
-    await supabase.from("proposal_items").delete().eq("id", it.id);
+    await deleteProposalItem(it.id);
     const next = items.filter(x => x.id !== it.id);
     setItems(next); updateTotal(next);
   }
@@ -266,24 +239,28 @@ export default function ProposalEditor() {
   async function saveItemAsService(it: any) {
     const nomeRef = (it.nome || it.descricao_comercial || "").trim();
     if (!nomeRef) return toast.error("Item sem nome");
-    const { data: existing } = await supabase.from("services").select("id").eq("nome", nomeRef).maybeSingle();
+    const existing = await findServiceByName(nomeRef);
     if (existing) {
       await updateItem(it, { service_id: existing.id });
       return toast.info("Já existia no catálogo — vínculo atualizado.");
     }
-    const { data, error } = await supabase.from("services").insert({
-      nome: nomeRef,
-      categoria: it.categoria,
-      descricao_comercial: it.descricao_comercial,
-      escopo_tecnico: it.escopo_tecnico,
-      entregaveis: it.entregaveis,
-      observacoes_escopo: it.observacoes_escopo,
-      quantidade_tecnica: it.quantidade_tecnica,
-      valor_referencia: it.valor_unitario,
-    }).select("*").single();
-    if (error) return toast.error(error.message);
-    setServices(s => [...s, data!]);
-    await updateItem(it, { service_id: data!.id });
+    let data: any;
+    try {
+      data = await insertService({
+        nome: nomeRef,
+        categoria: it.categoria,
+        descricao_comercial: it.descricao_comercial,
+        escopo_tecnico: it.escopo_tecnico,
+        entregaveis: it.entregaveis,
+        observacoes_escopo: it.observacoes_escopo,
+        quantidade_tecnica: it.quantidade_tecnica,
+        valor_referencia: it.valor_unitario,
+      });
+    } catch (e: any) {
+      return toast.error(e?.message || "Falha ao cadastrar serviço");
+    }
+    setServices(s => [...s, data]);
+    await updateItem(it, { service_id: data.id });
     toast.success("Serviço cadastrado no catálogo");
   }
 
@@ -300,54 +277,21 @@ export default function ProposalEditor() {
     const existing = pricings[item.id];
     const qtd = Math.max(1, Number(item.quantidade||1));
     const valorAnt = Number(item.valor_unitario||0) * qtd;
-    const hasExistingId = existing && existing.id;
-    const { data: savedRow, error } = hasExistingId
-      ? await supabase.from("proposal_item_pricing").update(payload).eq("id", existing.id).select("*").single()
-      : await supabase.from("proposal_item_pricing").insert(payload).select("*").single();
-    if (error) return toast.error(error.message);
+    let savedRow: any;
+    try {
+      savedRow = await upsertItemPricing(existing?.id, payload);
+    } catch (e: any) {
+      return toast.error(e?.message || "Falha ao salvar precificação");
+    }
     setPricings({ ...pricings, [item.id]: savedRow || { ...existing, ...payload } });
     await updateItem(item, { valor_unitario: Number((computed.preco_arredondado / qtd).toFixed(2)) });
-    // Registra simulação individual + histórico
-    try {
-      const { data: sim } = await supabase.from("simulacoes_precificacao").insert({
-        proposal_id: proposal.id,
-        tipo: "individual",
-        regra_rateio: "igual",
-        aplicada: true,
-        aplicada_em: new Date().toISOString(),
-        totais: computed as any,
-      }).select("id").single();
-      if (sim) {
-        await supabase.from("simulacao_itens").insert({
-          simulacao_id: sim.id,
-          proposal_item_id: item.id,
-          custos_individuais: draft.custos,
-          horas: draft.horas,
-          aliquota_imposto: draft.aliquota_imposto,
-          margem_desejada: draft.margem_desejada,
-          lucro_desejado: draft.lucro_desejado,
-          desconto_comercial: draft.desconto_comercial,
-          custo_individual: computed.custo_total,
-          custo_total: computed.custo_total,
-          preco_sugerido: computed.preco_sugerido,
-          preco_final: computed.preco_arredondado,
-          lucro_estimado: computed.lucro_estimado,
-          margem_liquida: computed.margem_liquida,
-          markup: computed.markup,
-          status_margem: computed.status_margem,
-          indicadores: computed as any,
-        });
-        await supabase.from("historico_precificacao").insert({
-          proposal_id: proposal.id,
-          simulacao_id: sim.id,
-          proposal_item_id: item.id,
-          acao: "aplicada_individual",
-          valor_anterior: valorAnt,
-          valor_novo: computed.preco_arredondado,
-          detalhes: { regra: "individual" } as any,
-        });
-      }
-    } catch { /* histórico é best-effort */ }
+    await recordIndividualPricingHistory({
+      proposalId: proposal.id,
+      item,
+      draft,
+      computed,
+      valorAnterior: valorAnt,
+    });
     toast.success("Precificação aplicada ao item");
     setPricingOpen(null);
   }
@@ -382,16 +326,14 @@ export default function ProposalEditor() {
     const ok = await saveProposalField(patch);
     if (!ok) return;
     // Recarrega revisões pois o trigger gravou uma nova
-    const rv = await supabase.from("proposal_revisions").select("*").eq("proposal_id", proposal.id).order("revisao",{ascending:false});
-    setRevisions(rv.data || []);
+    setRevisions(await listRevisions(proposal.id));
     toast.success("Status atualizado");
   }
 
   async function addRevisao(titulo: string, descricao: string) {
     if (!titulo) return;
-    await supabase.rpc("add_proposal_revision", { _proposal_id: proposal.id, _titulo: titulo, _descricao: descricao });
-    const rv = await supabase.from("proposal_revisions").select("*").eq("proposal_id", proposal.id).order("revisao",{ascending:false});
-    setRevisions(rv.data || []);
+    await addRevisaoDb(proposal.id, titulo, descricao);
+    setRevisions(await listRevisions(proposal.id));
     toast.success("Revisão registrada");
   }
 
