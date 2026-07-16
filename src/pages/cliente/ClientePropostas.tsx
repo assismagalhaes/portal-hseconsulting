@@ -44,7 +44,7 @@ export default function ClientePropostas() {
                 </div>
                 <Button asChild variant="secondary" size="sm"
                   onClick={() => registrarLogCliente("proposta_visualizada", p.numero)}>
-                  <Link to={`/proposta-exemplo?id=${p.id}`} target="_blank"><Download className="h-4 w-4 mr-1" />PDF</Link>
+                  <Link to={`/proposta-exemplo?id=${p.id}`} target="_blank" rel="noopener noreferrer"><Download className="h-4 w-4 mr-1" />PDF</Link>
                 </Button>
               </div>
             </CardContent>
