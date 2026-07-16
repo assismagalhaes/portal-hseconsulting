@@ -14,9 +14,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { brl, formatDate, formatDateTime } from "@/lib/format";
 import { projetoStatusColor, projetoStatusLabel, projetoServicoStatusColor, projetoServicoStatusLabel, projetoPrioridadeLabel, projetoPrioridadeColor } from "@/lib/projetos";
-import { ArrowLeft, FileSignature, DollarSign, History, Building2, User, Mail, Phone, MapPin, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, FileSignature, DollarSign, History, Building2, User, Mail, Phone, MapPin, ClipboardCheck, AlertCircle, Check, Plus, Trash2, Flame } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import AtividadePainel from "@/components/projeto/AtividadePainel";
+import PendenciasCard from "@/components/projeto/PendenciasCard";
 
 function InfoRow({ label, value, mono, icon, href }: { label: string; value?: any; mono?: boolean; icon?: React.ReactNode; href?: string }) {
   const display = value == null || value === "" ? "—" : String(value);
@@ -46,6 +47,7 @@ export default function ProjetoEditor() {
   const [profissionais, setProfissionais] = useState<any[]>([]);
   const [valorContratado, setValorContratado] = useState<number | null>(null);
   const [valoresServicos, setValoresServicos] = useState<Record<string, number>>({});
+  const [pendenciasCount, setPendenciasCount] = useState<{ abertas: number; urgentes: number }>({ abertas: 0, urgentes: 0 });
 
   const load = async () => {
     if (!id) return;
@@ -195,6 +197,10 @@ export default function ProjetoEditor() {
             <TabsTrigger value="visitas"><MapPin className="h-4 w-4 mr-1.5" />Visitas</TabsTrigger>
             <TabsTrigger value="evidencias">Evidências</TabsTrigger>
             <TabsTrigger value="docs">Documentos ({docs.length})</TabsTrigger>
+            <TabsTrigger value="pendencias">
+              <AlertCircle className={`h-4 w-4 mr-1.5 ${pendenciasCount.urgentes > 0 ? "text-rose-600" : ""}`} />
+              Pendências{pendenciasCount.abertas > 0 ? ` (${pendenciasCount.abertas})` : ""}
+            </TabsTrigger>
             {!isTecnico && <TabsTrigger value="financeiro">Financeiro</TabsTrigger>}
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
           </TabsList>
@@ -468,6 +474,10 @@ export default function ProjetoEditor() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="pendencias" className="mt-4">
+            <PendenciasCard projetoId={id!} onCountChange={(abertas, urgentes) => setPendenciasCount({ abertas, urgentes })} />
           </TabsContent>
 
           <TabsContent value="financeiro" className="mt-4">
