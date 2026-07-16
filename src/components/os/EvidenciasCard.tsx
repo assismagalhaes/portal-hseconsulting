@@ -74,8 +74,8 @@ export function EvidenciasCard({ osId, evidencias, visitas, onChange }: any) {
                     : <div className="w-full h-32 bg-muted flex items-center justify-center text-3xl">{e.tipo === "video" ? "🎬" : e.tipo === "audio" ? "🎙️" : e.tipo === "pdf" ? "📄" : "📎"}</div>}
                   <div className="p-2 flex items-center gap-2">
                     <div className="text-xs flex-1 truncate">{e.legenda || osEvidenciaTipoLabel[e.tipo]}</div>
-                    {urls[e.id] && <a href={urls[e.id]} target="_blank" rel="noreferrer" className="text-xs underline">abrir</a>}
-                    <Button size="sm" variant="ghost" onClick={() => del(e)}><Trash2 className="h-3 w-3" /></Button>
+                    {urls[e.id] && <a href={urls[e.id]} target="_blank" rel="noreferrer" className="text-xs underline" aria-label={`Abrir evidência ${e.legenda || osEvidenciaTipoLabel[e.tipo]}`}>abrir</a>}
+                    <Button size="sm" variant="ghost" onClick={() => del(e)} aria-label="Excluir evidência"><Trash2 className="h-3 w-3" /></Button>
                   </div>
                 </div>
               ))}
