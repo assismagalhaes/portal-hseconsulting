@@ -29,3 +29,17 @@ export const projetoServicoStatusColor: Record<string, string> = {
   concluido: "bg-green-200 text-green-900",
   cancelado: "bg-rose-100 text-rose-900",
 };
+
+export const projetoPrioridadeLabel: Record<string, string> = {
+  baixa: "Baixa",
+  media: "Média",
+  alta: "Alta",
+  urgente: "Urgente",
+};
+
+export const projetoPrioridadeColor: Record<string, string> = {
+  baixa: "bg-slate-200 text-slate-700",
+  media: "bg-blue-100 text-blue-800",
+  alta: "bg-amber-200 text-amber-900",
+  urgente: "bg-rose-200 text-rose-900",
+};
