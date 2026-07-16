@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { brl, formatDate } from "@/lib/format";
-import { projetoStatusColor, projetoStatusLabel } from "@/lib/projetos";
+import { projetoStatusColor, projetoStatusLabel, projetoPrioridadeColor, projetoPrioridadeLabel } from "@/lib/projetos";
 import { FolderKanban, Search, MapPin, User2, Calendar, Wrench } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
@@ -29,7 +29,7 @@ export default function Projetos() {
     (async () => {
       const { data } = await supabase
         .from("projetos")
-        .select("id, numero, titulo, status, percentual_progresso, data_inicio, data_fim_prevista, responsavel_execucao_id, created_at, clients(razao_social, nome_fantasia, cidade, uf), proposals(numero)")
+        .select("id, numero, titulo, status, prioridade, percentual_progresso, data_inicio, data_fim_prevista, responsavel_execucao_id, created_at, clients(razao_social, nome_fantasia, cidade, uf), proposals(numero)")
         .order("created_at", { ascending: false });
       const list = data || [];
       setRows(list);
@@ -207,6 +207,9 @@ export default function Projetos() {
                           <div className="font-semibold truncate mt-0.5">{r.titulo}</div>
                         </div>
                         <Badge className={projetoStatusColor[r.status] + " border-0 whitespace-nowrap"}>{projetoStatusLabel[r.status]}</Badge>
+                      </div>
+                      <div className="flex">
+                        <Badge className={(projetoPrioridadeColor[r.prioridade] || "") + " border-0"}>Urgência: {projetoPrioridadeLabel[r.prioridade] || "—"}</Badge>
                       </div>
 
                       <div className="text-sm">

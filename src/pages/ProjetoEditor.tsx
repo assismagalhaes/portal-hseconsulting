@@ -13,7 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { brl, formatDate, formatDateTime } from "@/lib/format";
-import { projetoStatusColor, projetoStatusLabel, projetoServicoStatusColor, projetoServicoStatusLabel } from "@/lib/projetos";
+import { projetoStatusColor, projetoStatusLabel, projetoServicoStatusColor, projetoServicoStatusLabel, projetoPrioridadeLabel, projetoPrioridadeColor } from "@/lib/projetos";
 import { ArrowLeft, FileSignature, DollarSign, History, RefreshCw, Building2, User, Mail, Phone, MapPin, ClipboardCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import AtividadePainel from "@/components/projeto/AtividadePainel";
@@ -129,6 +129,7 @@ export default function ProjetoEditor() {
         actions={
           <div className="flex items-center gap-2">
             <Badge className={projetoStatusColor[projeto.status] + " border-0"}>{projetoStatusLabel[projeto.status]}</Badge>
+            <Badge className={(projetoPrioridadeColor[projeto.prioridade] || "") + " border-0"}>{projetoPrioridadeLabel[projeto.prioridade] || "—"}</Badge>
             <Button asChild variant="outline" size="sm"><Link to="/projetos"><ArrowLeft className="h-4 w-4 mr-1" /> Voltar</Link></Button>
           </div>
         }
@@ -212,6 +213,15 @@ export default function ProjetoEditor() {
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {Object.entries(projetoStatusLabel).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Prioridade / Urgência</Label>
+                    <Select value={projeto.prioridade || "media"} onValueChange={(v) => saveProjeto({ prioridade: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(projetoPrioridadeLabel).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>

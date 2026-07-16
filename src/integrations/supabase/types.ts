@@ -4876,6 +4876,7 @@ export type Database = {
           numero: string | null
           observacoes: string | null
           percentual_progresso: number
+          prioridade: Database["public"]["Enums"]["projeto_prioridade"]
           proposal_id: string | null
           responsavel_comercial_id: string | null
           responsavel_execucao_id: string | null
@@ -4898,6 +4899,7 @@ export type Database = {
           numero?: string | null
           observacoes?: string | null
           percentual_progresso?: number
+          prioridade?: Database["public"]["Enums"]["projeto_prioridade"]
           proposal_id?: string | null
           responsavel_comercial_id?: string | null
           responsavel_execucao_id?: string | null
@@ -4920,6 +4922,7 @@ export type Database = {
           numero?: string | null
           observacoes?: string | null
           percentual_progresso?: number
+          prioridade?: Database["public"]["Enums"]["projeto_prioridade"]
           proposal_id?: string | null
           responsavel_comercial_id?: string | null
           responsavel_execucao_id?: string | null
@@ -9701,6 +9704,7 @@ export type Database = {
         | "acessar_projeto"
         | "aprovar_documentos"
       profissional_situacao: "ativo" | "inativo" | "ferias" | "afastado"
+      projeto_prioridade: "baixa" | "media" | "alta" | "urgente"
       projeto_servico_status:
         | "pendente"
         | "em_andamento"
@@ -10257,6 +10261,7 @@ export const Constants = {
         "aprovar_documentos",
       ],
       profissional_situacao: ["ativo", "inativo", "ferias", "afastado"],
+      projeto_prioridade: ["baixa", "media", "alta", "urgente"],
       projeto_servico_status: [
         "pendente",
         "em_andamento",
