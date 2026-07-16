@@ -400,9 +400,9 @@ export default function PsicoImportacaoHistorica() {
           </Card>
         )}
 
-        {step === 5 && validarResp && (
+        {step === 5 && (
           <>
-            <Card>
+            {validarResp && (<Card>
               <CardHeader><CardTitle>5. Resumo da validação</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -446,7 +446,16 @@ export default function PsicoImportacaoHistorica() {
                   </Alert>
                 )}
               </CardContent>
-            </Card>
+            </Card>)}
+            {tipo === "agregada_perguntas" && !validarResp && (
+              <Alert>
+                <AlertTitle>Modo agregado</AlertTitle>
+                <AlertDescription className="text-sm">
+                  O arquivo será lido no momento do commit: cada linha vira uma contagem por pergunta em
+                  <code> psico_dados_agregados_perguntas</code>. Sem staging técnico.
+                </AlertDescription>
+              </Alert>
+            )}
 
             <Card>
               <CardHeader><CardTitle>Confirmação da avaliação histórica</CardTitle></CardHeader>
@@ -474,9 +483,11 @@ export default function PsicoImportacaoHistorica() {
                     <X className="h-4 w-4 mr-2" /> Cancelar importação
                   </Button>
                   <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => setStep(3)} disabled={busy}>Ajustar mapeamento</Button>
+                    {tipo === "bruta_respondentes" && (
+                      <Button variant="outline" onClick={() => setStep(3)} disabled={busy}>Ajustar mapeamento</Button>
+                    )}
                     <Button
-                      disabled={busy || !avalTitulo || validarResp.resumo.linhas_validas === 0}
+                      disabled={busy || !avalTitulo || (validarResp !== null && validarResp.resumo.linhas_validas === 0)}
                       onClick={doCommit}
                     >
                       {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
@@ -496,8 +507,19 @@ export default function PsicoImportacaoHistorica() {
               <div className="flex items-center gap-3 text-green-700">
                 <CheckCircle2 className="h-6 w-6" />
                 <div>
-                  <div className="font-medium">{commitResult.respondentes_importados} respondentes importados</div>
-                  <div className="text-sm text-muted-foreground">{commitResult.total_itens_importados} respostas gravadas</div>
+                  {tipo === "bruta_respondentes" ? (
+                    <>
+                      <div className="font-medium">{commitResult.respondentes_importados} respondentes importados</div>
+                      <div className="text-sm text-muted-foreground">{commitResult.total_itens_importados} respostas gravadas</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-medium">{commitResult.perguntas_gravadas} perguntas com dados agregados</div>
+                      <div className="text-sm text-muted-foreground">
+                        Avaliação criada como agregada (segmentação e % de participação indisponíveis).
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="flex gap-2">
