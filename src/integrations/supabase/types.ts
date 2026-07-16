@@ -6143,6 +6143,13 @@ export type Database = {
             foreignKeyName: "psico_dados_agregados_perguntas_importacao_id_fkey"
             columns: ["importacao_id"]
             isOneToOne: false
+            referencedRelation: "psico_importacoes_auditoria"
+            referencedColumns: ["importacao_id"]
+          },
+          {
+            foreignKeyName: "psico_dados_agregados_perguntas_importacao_id_fkey"
+            columns: ["importacao_id"]
+            isOneToOne: false
             referencedRelation: "psico_importacoes_avaliacoes"
             referencedColumns: ["id"]
           },
@@ -6326,6 +6333,13 @@ export type Database = {
             foreignKeyName: "psico_importacao_staging_respostas_importacao_id_fkey"
             columns: ["importacao_id"]
             isOneToOne: false
+            referencedRelation: "psico_importacoes_auditoria"
+            referencedColumns: ["importacao_id"]
+          },
+          {
+            foreignKeyName: "psico_importacao_staging_respostas_importacao_id_fkey"
+            columns: ["importacao_id"]
+            isOneToOne: false
             referencedRelation: "psico_importacoes_avaliacoes"
             referencedColumns: ["id"]
           },
@@ -6494,6 +6508,13 @@ export type Database = {
           severidade?: Database["public"]["Enums"]["psico_importacao_severidade"]
         }
         Relationships: [
+          {
+            foreignKeyName: "psico_importacoes_erros_importacao_id_fkey"
+            columns: ["importacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_importacoes_auditoria"
+            referencedColumns: ["importacao_id"]
+          },
           {
             foreignKeyName: "psico_importacoes_erros_importacao_id_fkey"
             columns: ["importacao_id"]
@@ -8760,7 +8781,50 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      psico_importacoes_auditoria: {
+        Row: {
+          avaliacao_codigo: string | null
+          avaliacao_id: string | null
+          cliente_id: string | null
+          cliente_razao_social: string | null
+          concluido_em: string | null
+          convites_criados: number | null
+          hash_arquivo_sha256: string | null
+          importacao_id: string | null
+          iniciado_em: string | null
+          iniciado_por: string | null
+          linhas_invalidas: number | null
+          linhas_validas: number | null
+          nome_arquivo: string | null
+          origem_coleta:
+            | Database["public"]["Enums"]["psico_origem_coleta"]
+            | null
+          participacao_calculavel: boolean | null
+          participantes_criados: number | null
+          perguntas_agregadas: number | null
+          respostas_persistidas: number | null
+          segmentacao_disponivel: boolean | null
+          status: Database["public"]["Enums"]["psico_importacao_status"] | null
+          tipo: Database["public"]["Enums"]["psico_importacao_tipo"] | null
+          total_linhas: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_importacoes_avaliacoes_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_importacoes_avaliacoes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       _psico_classificar: {
@@ -9062,6 +9126,7 @@ export type Database = {
         Args: { p_importacao_id: string; p_mapeamento: Json }
         Returns: undefined
       }
+      psico_importacao_testes_integridade: { Args: never; Returns: Json }
       psico_listar_escopos_resultado: {
         Args: { p_avaliacao_id: string }
         Returns: {
