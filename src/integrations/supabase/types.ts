@@ -8763,6 +8763,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _psico_require_admin_tec: { Args: never; Returns: undefined }
       add_proposal_revision: {
         Args: { _descricao: string; _proposal_id: string; _titulo: string }
         Returns: string
@@ -8995,6 +8996,58 @@ export type Database = {
         Returns: string
       }
       psico_hash_snapshot: { Args: { p_snapshot: Json }; Returns: string }
+      psico_importacao_cancelar: {
+        Args: { p_importacao_id: string; p_motivo: string }
+        Returns: undefined
+      }
+      psico_importacao_commit_bruta: {
+        Args: { p_avaliacao: Json; p_importacao_id: string }
+        Returns: Json
+      }
+      psico_importacao_finalizar_validacao: {
+        Args: {
+          p_data_max: string
+          p_data_min: string
+          p_importacao_id: string
+          p_linhas_ignoradas: number
+          p_linhas_invalidas: number
+          p_linhas_validas: number
+          p_resumo: Json
+          p_total_linhas: number
+        }
+        Returns: undefined
+      }
+      psico_importacao_ingerir_staging_bruta: {
+        Args: { p_importacao_id: string; p_linhas: Json }
+        Returns: number
+      }
+      psico_importacao_iniciar: {
+        Args: {
+          p_arquivo_path: string
+          p_cliente_id: string
+          p_formato: Database["public"]["Enums"]["psico_importacao_formato"]
+          p_hash_sha256: string
+          p_idempotency_key: string
+          p_metodologia_versao_id: string
+          p_nome_arquivo: string
+          p_questionario_versao_id: string
+          p_tamanho_bytes: number
+          p_tipo: Database["public"]["Enums"]["psico_importacao_tipo"]
+        }
+        Returns: string
+      }
+      psico_importacao_purgar_arquivo: {
+        Args: { p_importacao_id: string }
+        Returns: undefined
+      }
+      psico_importacao_registrar_erros: {
+        Args: { p_erros: Json; p_importacao_id: string }
+        Returns: number
+      }
+      psico_importacao_salvar_mapeamento: {
+        Args: { p_importacao_id: string; p_mapeamento: Json }
+        Returns: undefined
+      }
       psico_listar_escopos_resultado: {
         Args: { p_avaliacao_id: string }
         Returns: {
