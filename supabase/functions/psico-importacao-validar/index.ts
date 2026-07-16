@@ -1,23 +1,14 @@
-// Fase 9 — Modo Bruto: aplica o mapeamento, baixa o arquivo do bucket,
-// parseia, normaliza (removendo colunas de PII), grava staging técnico,
-// registra erros/avisos e finaliza a validação.
+// Fase 9A — Importação bruta com detecção automática de 3 layouts.
+// - Detecta layout id_respostas / id_nome_funcao_respostas / id_nome_respostas.
+// - Lê bytes do arquivo, detecta codificação (UTF-8, UTF-8 BOM, Windows-1252),
+//   corrige mojibake, detecta delimitador do CSV.
+// - Calcula HMAC-SHA256(PSICO_IMPORT_ROW_SECRET, hash_arquivo + identificador_origem).
+// - Descarta nomes ANTES de gravar staging. Persiste função apenas no Layout 2.
 import {
-  authAdminOrTecnico, corsHeaders, json, normalizarChaveClassificacao,
+  authAdminOrTecnico, corsHeaders, detectarLayoutImportacaoPsico, decodificarBytes,
+  detectarDelimitador, hmacSha256Hex, json, normalizarChaveClassificacao,
   normalizarData, normalizarOpcao, normalizarTexto, parseCsv, parseXlsx, svcClient,
 } from '../_shared/psico-importacao.ts'
-
-type Mapeamento = {
-  // nome da coluna no arquivo → tipo
-  data_resposta?: string
-  funcao?: string
-  setor?: string
-  unidade?: string
-  // mapa numero_pergunta (1..N) → nome da coluna no arquivo
-  perguntas: Record<string, string>
-  // colunas explicitamente ignoradas (nome, email, telefone, timestamp completo etc.)
-  ignoradas?: string[]
-  // formato de datas esperado (opcional)
-}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
@@ -26,27 +17,20 @@ Deno.serve(async (req) => {
   const auth = await authAdminOrTecnico(req)
   if (!auth) return json(401, { error: 'unauthorized' })
 
-  let body: { importacao_id?: string; mapeamento?: Mapeamento }
+  let body: { importacao_id?: string }
   try { body = await req.json() } catch { return json(400, { error: 'json_invalido' }) }
   const importacaoId = String(body.importacao_id || '')
-  const mapeamento = body.mapeamento
-  if (!importacaoId || !mapeamento || !mapeamento.perguntas) {
-    return json(400, { error: 'parametros_obrigatorios' })
-  }
+  if (!importacaoId) return json(400, { error: 'parametros_obrigatorios' })
+
+  const rowSecret = Deno.env.get('PSICO_IMPORT_ROW_SECRET')
+  if (!rowSecret) return json(500, { error: 'row_secret_ausente' })
 
   const svc = svcClient()
-
-  // Salva mapeamento
-  const salvar = await svc.rpc('psico_importacao_salvar_mapeamento', {
-    p_importacao_id: importacaoId,
-    p_mapeamento: mapeamento,
-  })
-  if (salvar.error) return json(400, { error: 'mapeamento_falhou', detalhe: salvar.error.message })
 
   // Busca info da importação (path + questionário)
   const { data: imp, error: impErr } = await svc
     .from('psico_importacoes_avaliacoes')
-    .select('id, formato, questionario_versao_id, metodologia_versao_id, arquivo_temporario_path, status, tipo')
+    .select('id, formato, questionario_versao_id, metodologia_versao_id, arquivo_temporario_path, status, tipo, hash_arquivo_sha256')
     .eq('id', importacaoId).single()
   if (impErr || !imp) return json(404, { error: 'importacao_nao_encontrada' })
   if (imp.tipo !== 'bruta_respondentes') return json(400, { error: 'tipo_invalido' })
@@ -64,39 +48,73 @@ Deno.serve(async (req) => {
   const bytes = new Uint8Array(await dl.data.arrayBuffer())
 
   let rows: string[][]
+  let codificacao = 'utf-8'
+  let codCorrigida = false
+  let delimitador: string | null = null
   try {
-    rows = imp.formato === 'csv'
-      ? parseCsv(new TextDecoder('utf-8').decode(bytes))
-      : await parseXlsx(bytes)
+    if (imp.formato === 'csv') {
+      const dec = decodificarBytes(bytes)
+      codificacao = dec.codificacao
+      codCorrigida = dec.corrigida
+      delimitador = detectarDelimitador(dec.texto)
+      rows = parseCsv(dec.texto, delimitador)
+    } else {
+      rows = await parseXlsx(bytes)
+    }
   } catch (e) {
     return json(400, { error: 'parse_falhou', detalhe: (e as Error).message })
   }
   if (rows.length < 2) return json(400, { error: 'arquivo_sem_dados' })
 
   const headers = rows[0].map(h => (h || '').trim())
-  const idxOf = (col?: string) => (col ? headers.indexOf(col) : -1)
-  const idxData = idxOf(mapeamento.data_resposta)
-  const idxFuncao = idxOf(mapeamento.funcao)
-  const idxSetor = idxOf(mapeamento.setor)
-  const idxUnidade = idxOf(mapeamento.unidade)
-
-  const idxPerguntas: Array<{ numero: number; idx: number }> = []
-  for (const [numStr, col] of Object.entries(mapeamento.perguntas)) {
-    const numero = parseInt(numStr, 10)
-    const idx = idxOf(col)
-    if (!Number.isFinite(numero) || !numerosValidos.has(numero) || idx < 0) continue
-    idxPerguntas.push({ numero, idx })
+  const deteccao = detectarLayoutImportacaoPsico(headers)
+  if (deteccao.erros.length > 0 || deteccao.layout === 'nao_identificado') {
+    return json(400, {
+      error: 'layout_nao_identificado',
+      deteccao: { ...deteccao, colunas_perguntas: undefined },
+    })
   }
-  if (idxPerguntas.length === 0) return json(400, { error: 'mapeamento_perguntas_vazio' })
+  const idxPerguntas = deteccao.colunas_perguntas
+    .filter(p => numerosValidos.has(p.numero))
+    .map(p => ({ numero: p.numero, idx: p.idx }))
+  if (idxPerguntas.length !== 35) {
+    return json(400, { error: 'perguntas_incompativeis_versao', detalhe: `${idxPerguntas.length}/35` })
+  }
+
+  const layout = deteccao.layout
+  const idxId = deteccao.idx_identificador
+  const idxNome = deteccao.idx_nome
+  const idxFuncao = layout === 'id_nome_funcao_respostas' ? deteccao.idx_funcao : -1
+
+  // Registra layout detectado antes de qualquer ingestão
+  const regLayout = await svc.rpc('psico_importacao_registrar_layout', {
+    p_importacao_id: importacaoId,
+    p_layout: {
+      layout,
+      coluna_identificador: deteccao.coluna_identificador,
+      tipo_identificador: deteccao.tipo_identificador,
+      coluna_nome: deteccao.coluna_nome,
+      coluna_funcao: deteccao.coluna_funcao,
+      nome_presente: idxNome >= 0,
+      funcao_presente: idxFuncao >= 0,
+      segmentacao_funcao_disponivel: layout === 'id_nome_funcao_respostas',
+      delimitador: delimitador ?? null,
+      codificacao,
+      codificacao_corrigida: codCorrigida,
+    },
+  })
+  if (regLayout.error) return json(500, { error: 'registrar_layout_falhou', detalhe: regLayout.error.message })
 
   // Processa linhas — nunca extrai/loga colunas ignoradas (PII)
   const staging: unknown[] = []
   const erros: unknown[] = []
+  const previa: Array<{ linha: number; identificador_mascarado: string; nome_mascarado?: string; funcao?: string | null; status: string }> = []
   let linhasValidas = 0
   let linhasInvalidas = 0
   let linhasIgnoradas = 0
   let dataMin: string | null = null
   let dataMax: string | null = null
+  const hashesVistos = new Map<string, number>()
 
   for (let r = 1; r < rows.length; r++) {
     const linha = rows[r]
@@ -127,22 +145,62 @@ Deno.serve(async (req) => {
       erros.push({ numero_linha: r + 1, codigo: 'opcao_desconhecida', severidade: 'aviso',
         mensagem: `${opcoesInvalidas} coluna(s) com valor não reconhecido foram ignoradas.` })
     }
-    const dataResp = idxData >= 0 ? normalizarData(linha[idxData]) : null
+    // Identificador de origem: timestamp fornece também data_resposta
+    const identificadorBruto = idxId >= 0 ? String(linha[idxId] ?? '').trim() : ''
+    const dataResp = deteccao.tipo_identificador === 'timestamp'
+      ? normalizarData(identificadorBruto) : null
     if (dataResp) {
       if (!dataMin || dataResp < dataMin) dataMin = dataResp
       if (!dataMax || dataResp > dataMax) dataMax = dataResp
     }
+    // Função persistida SOMENTE no Layout 2
     const funcao = idxFuncao >= 0 ? normalizarTexto(linha[idxFuncao]) : null
-    const setor = idxSetor >= 0 ? normalizarTexto(linha[idxSetor]) : null
-    const unidade = idxUnidade >= 0 ? normalizarTexto(linha[idxUnidade]) : null
+    if (layout === 'id_nome_funcao_respostas' && !funcao) {
+      erros.push({ numero_linha: r + 1, codigo: 'FUNCAO_NAO_INFORMADA', severidade: 'aviso',
+        mensagem: 'Função vazia — resposta manterá escopo global apenas.' })
+    }
+
+    // HMAC do identificador de origem (nunca guarda o valor bruto)
+    const idHash = identificadorBruto
+      ? await hmacSha256Hex(rowSecret, `${imp.hash_arquivo_sha256 || ''}::${identificadorBruto}`)
+      : null
+    if (idHash && deteccao.tipo_identificador === 'response_id') {
+      const anterior = hashesVistos.get(idHash)
+      if (anterior) {
+        erros.push({ numero_linha: r + 1, codigo: 'IDENTIFICADOR_DUPLICADO',
+          severidade: 'aviso',
+          mensagem: `Identificador duplicado da linha ${anterior} — revise antes do commit.` })
+      } else {
+        hashesVistos.set(idHash, r + 1)
+      }
+    }
+
+    // Nome: lido apenas para prévia mascarada, NUNCA vai para staging
+    const nomeBruto = idxNome >= 0 ? normalizarTexto(linha[idxNome]) : null
+    if (previa.length < 20) {
+      const idMask = idHash ? `${idHash.slice(0, 6)}…${idHash.slice(-4)}` : ''
+      previa.push({
+        linha: r + 1,
+        identificador_mascarado: idMask,
+        nome_mascarado: nomeBruto ? mascararNomeLocal(nomeBruto) : undefined,
+        funcao: layout === 'id_nome_funcao_respostas' ? funcao : undefined,
+        status: 'valida',
+      })
+    }
 
     staging.push({
       data_resposta: dataResp,
-      funcao, setor, unidade,
-      funcao_normalizada: normalizarChaveClassificacao(funcao),
-      setor_normalizado: normalizarChaveClassificacao(setor),
-      unidade_normalizada: normalizarChaveClassificacao(unidade),
+      // Layouts 1 e 3: função permanece nula; setor/unidade sempre nulos (3 layouts do Google Forms)
+      funcao: layout === 'id_nome_funcao_respostas' ? funcao : null,
+      setor: null,
+      unidade: null,
+      funcao_normalizada: layout === 'id_nome_funcao_respostas' ? normalizarChaveClassificacao(funcao) : null,
+      setor_normalizado: null,
+      unidade_normalizada: null,
       respostas,
+      layout_detectado: layout,
+      identificador_origem_hash: idHash,
+      tipo_identificador: deteccao.tipo_identificador,
     })
     linhasValidas++
   }
@@ -173,6 +231,15 @@ Deno.serve(async (req) => {
 
   const totalLinhas = rows.length - 1
   const resumo = {
+    layout,
+    tipo_identificador: deteccao.tipo_identificador,
+    coluna_identificador: deteccao.coluna_identificador,
+    nome_presente: idxNome >= 0,
+    funcao_presente: idxFuncao >= 0,
+    segmentacao_funcao_disponivel: layout === 'id_nome_funcao_respostas',
+    delimitador,
+    codificacao,
+    codificacao_corrigida: codCorrigida,
     total_linhas: totalLinhas,
     linhas_validas: linhasValidas,
     linhas_invalidas: linhasInvalidas,
@@ -180,6 +247,7 @@ Deno.serve(async (req) => {
     perguntas_mapeadas: idxPerguntas.length,
     perguntas_esperadas: numerosValidos.size,
     avisos: erros.filter((e: unknown) => (e as { severidade?: string }).severidade === 'aviso').length,
+    previa,
   }
 
   const fin = await svc.rpc('psico_importacao_finalizar_validacao', {
@@ -194,5 +262,21 @@ Deno.serve(async (req) => {
   })
   if (fin.error) return json(500, { error: 'finalizar_falhou', detalhe: fin.error.message })
 
-  return json(200, { ok: true, resumo, erros_registrados: erros.length })
+  return json(200, { ok: true, resumo, erros_registrados: erros.length, deteccao: {
+    layout,
+    coluna_identificador: deteccao.coluna_identificador,
+    tipo_identificador: deteccao.tipo_identificador,
+    coluna_nome: deteccao.coluna_nome,
+    coluna_funcao: deteccao.coluna_funcao,
+    total_perguntas_detectadas: deteccao.total_perguntas_detectadas,
+    confianca: deteccao.confianca,
+    avisos: deteccao.avisos,
+  } })
 })
+
+// Mascara nome: "Maria da Silva" → "M**** d* S****"
+function mascararNomeLocal(nome: string): string {
+  return nome.trim().split(/\s+/).map(p =>
+    p.length <= 1 ? p : p[0] + '*'.repeat(Math.max(1, p.length - 1)),
+  ).join(' ')
+}
