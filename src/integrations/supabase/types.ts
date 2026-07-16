@@ -9466,6 +9466,31 @@ export type Database = {
           read_ct: number
         }[]
       }
+      registrar_aceite_proposta: {
+        Args: {
+          _assinatura_base64: string
+          _cargo: string
+          _cpf: string
+          _email: string
+          _ip: string
+          _nome: string
+          _observacoes: string
+          _token: string
+          _user_agent: string
+        }
+        Returns: Json
+      }
+      registrar_recusa_proposta: {
+        Args: {
+          _email: string
+          _ip: string
+          _motivo: string
+          _nome: string
+          _token: string
+          _user_agent: string
+        }
+        Returns: Json
+      }
       unaccent: { Args: { "": string }; Returns: string }
       user_can_access_execucao: {
         Args: { _execucao_id: string; _uid: string }
