@@ -156,7 +156,7 @@ export default function PsicoAvaliacaoNova() {
                   </SelectContent>
                 </Select>
                 <div className="text-xs text-muted-foreground mt-1">
-                  Precisa cadastrar um novo cliente? <Link to="/clientes" target="_blank" className="underline">Abrir cadastro de clientes</Link>
+                  Precisa cadastrar um novo cliente? <Link to="/clientes" target="_blank" rel="noopener noreferrer" className="underline">Abrir cadastro de clientes</Link>
                 </div>
               </div>
 

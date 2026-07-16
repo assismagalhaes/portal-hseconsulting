@@ -152,7 +152,7 @@ export default function DocumentoEditor() {
             <Button asChild variant="ghost" size="sm"><Link to="/documentos"><ArrowLeft className="h-4 w-4 mr-1" />Voltar</Link></Button>
             <Badge className={statusColor(doc.status)} variant="outline">{statusLabel(doc.status)}</Badge>
             {doc.data_vencimento && <Badge className={validade.cor} variant="outline">{validade.rotulo}</Badge>}
-            <Button asChild variant="outline" size="sm"><Link to={`/documentos/${id}/pdf`} target="_blank"><Printer className="h-4 w-4 mr-1" />Gerar PDF</Link></Button>
+            <Button asChild variant="outline" size="sm"><Link to={`/documentos/${id}/pdf`} target="_blank" rel="noopener noreferrer"><Printer className="h-4 w-4 mr-1" />Gerar PDF</Link></Button>
             <Button size="sm" onClick={salvar}><Save className="h-4 w-4 mr-1" />Salvar</Button>
           </>
         }
