@@ -274,12 +274,9 @@ export function detectarDelimitador(text: string): ',' | ';' | '\t' {
 }
 
 // ---------- CSV parser (RFC 4180 simplificado, aceita ; ou ,) ----------
-export function parseCsv(text: string): string[][] {
-  // Detecta separador na 1ª linha não vazia
-  const sample = text.split(/\r?\n/).find(l => l.trim().length > 0) || ''
-  const commaCount = (sample.match(/,/g) || []).length
-  const semiCount = (sample.match(/;/g) || []).length
-  const sep = semiCount > commaCount ? ';' : ','
+export function parseCsv(text: string, delimitador?: string): string[][] {
+  // Detecta separador na 1ª linha não vazia se não fornecido
+  const sep = delimitador ?? detectarDelimitador(text)
 
   const rows: string[][] = []
   let field = ''
