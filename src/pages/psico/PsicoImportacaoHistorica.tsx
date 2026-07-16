@@ -8,7 +8,7 @@
 //  6) Sucesso ou cancelamento
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, Loader2, ShieldAlert, Upload, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import PageHeader from "@/components/PageHeader";
@@ -18,55 +18,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  BASE, callFn, PrivacyAlert, StepIndicator,
+  type Cliente, type Questionario, type UploadResp, type ValidarResp,
+} from "./importacao/shared";
+import { MapeamentoStep } from "./importacao/MapeamentoStep";
+import { ValidacaoResumo } from "./importacao/ValidacaoResumo";
 
-const BASE = "/operacoes/avaliacao-fatores-psicossociais";
 const sb: any = supabase;
-
-type Cliente = { id: string; razao_social: string; nome_fantasia: string | null };
-type Questionario = {
-  id: string; codigo: string; nome: string; versao: string;
-  vigente: boolean; metodologia_versao_id: string;
-};
-type UploadResp = {
-  importacao_id: string; formato: "csv" | "xlsx";
-  hash_sha256: string; tamanho_bytes: number;
-  cabecalhos: string[]; amostra: string[][];
-};
-type ValidarResp = { ok: true; resumo: any; erros_registrados: number };
-
-const CAMPO_LABEL: Record<string, string> = {
-  none: "— não usar —",
-};
-
-// Chamada às Edge Functions usando o cliente Supabase (sem URL hardcoded).
-// Retorna um objeto compatível com `Response` (métodos `ok`, `json()`) para
-// preservar a assinatura usada nas etapas do wizard.
-async function callFn(
-  name: string,
-  init: { method?: string; body?: BodyInit; headers?: Record<string, string> },
-) {
-  const body = init.body as any;
-  const { data, error } = await supabase.functions.invoke(name, {
-    method: (init.method as any) || "POST",
-    body,
-    headers: init.headers,
-  });
-  if (error) {
-    let parsed: any = null;
-    try {
-      const ctx: any = (error as any).context;
-      if (ctx && typeof ctx.json === "function") parsed = await ctx.json();
-    } catch { /* ignore */ }
-    return {
-      ok: false,
-      json: async () => parsed || { error: error.message, detalhe: error.message },
-    };
-  }
-  return { ok: true, json: async () => data };
-}
 
 export default function PsicoImportacaoHistorica() {
   const nav = useNavigate();
@@ -276,17 +236,7 @@ export default function PsicoImportacaoHistorica() {
       />
       <div className="p-6 space-y-6 max-w-5xl">
         <StepIndicator step={step} />
-
-        <Alert className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
-          <ShieldAlert className="h-4 w-4" />
-          <AlertTitle>Privacidade e rigor metodológico</AlertTitle>
-          <AlertDescription className="text-sm space-y-1">
-            <div>• Nomes, e-mails e telefones do arquivo <b>nunca serão persistidos</b>. Só metadados anonimizados (função, setor, unidade) e as respostas.</div>
-            <div>• Convites artificiais <b>não</b> serão criados. Respostas ficam marcadas com sua origem (<code>importacao_bruta</code>).</div>
-            <div>• No modo agregado, <b>nenhuma resposta individual sintética</b> é criada — apenas contagens por pergunta.</div>
-            <div>• O arquivo original permanece em bucket privado apenas até a conclusão desta importação — depois é removido.</div>
-          </AlertDescription>
-        </Alert>
+        <PrivacyAlert />
 
         {step === 1 && (
           <Card>
@@ -447,88 +397,14 @@ export default function PsicoImportacaoHistorica() {
 
         {step === 5 && (
           <>
-            {validarResp && (<Card>
-              <CardHeader><CardTitle>5. Resumo da validação</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <MetricCard label="Linhas totais" value={validarResp.resumo.total_linhas} />
-                  <MetricCard label="Válidas" value={validarResp.resumo.linhas_validas} good />
-                  <MetricCard label="Inválidas" value={validarResp.resumo.linhas_invalidas} bad />
-                  <MetricCard label="Avisos" value={validarResp.resumo.avisos || 0} warn />
-                </div>
-                {errosDetalhados.length > 0 && (
-                  <div>
-                    <div className="text-sm font-medium mb-2">
-                      Ocorrências ({errosDetalhados.length}{errosDetalhados.length >= 200 ? "+" : ""})
-                    </div>
-                    <div className="max-h-64 overflow-auto border rounded">
-                      <Table>
-                        <TableHeader><TableRow>
-                          <TableHead>Linha</TableHead><TableHead>Severidade</TableHead>
-                          <TableHead>Código</TableHead><TableHead>Mensagem</TableHead>
-                        </TableRow></TableHeader>
-                        <TableBody>
-                          {errosDetalhados.map((e, i) => (
-                            <TableRow key={i}>
-                              <TableCell>{e.numero_linha ?? "—"}</TableCell>
-                              <TableCell>
-                                <Badge variant={e.severidade === "erro" ? "destructive" : "secondary"}>{e.severidade}</Badge>
-                              </TableCell>
-                              <TableCell className="text-xs">{e.codigo}</TableCell>
-                              <TableCell className="text-xs">{e.mensagem}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </div>
-                )}
-                {validarResp.resumo.linhas_validas === 0 && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Sem linhas válidas</AlertTitle>
-                    <AlertDescription>Revise o mapeamento e retorne para tentar novamente.</AlertDescription>
-                  </Alert>
-                )}
-                {validarResp.resumo.layout && (
-                  <div className="border rounded-md p-4 bg-muted/40 space-y-2">
-                    <div className="text-sm font-medium">Layout detectado</div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                      <div><span className="text-muted-foreground">Layout:</span> <span className="font-mono">{validarResp.resumo.layout}</span></div>
-                      <div><span className="text-muted-foreground">Identificador:</span> {validarResp.resumo.coluna_identificador || "—"} ({validarResp.resumo.tipo_identificador})</div>
-                      <div><span className="text-muted-foreground">Nome encontrado:</span> {validarResp.resumo.nome_presente ? "Sim" : "Não"}</div>
-                      <div><span className="text-muted-foreground">Função encontrada:</span> {validarResp.resumo.funcao_presente ? "Sim" : "Não"}</div>
-                      <div><span className="text-muted-foreground">Perguntas:</span> {validarResp.resumo.perguntas_mapeadas}/35</div>
-                      <div><span className="text-muted-foreground">Segmentação por função:</span> {validarResp.resumo.segmentacao_funcao_disponivel ? "Disponível (≥3)" : "Indisponível"}</div>
-                      <div><span className="text-muted-foreground">Delimitador:</span> {validarResp.resumo.delimitador || "—"}</div>
-                      <div><span className="text-muted-foreground">Codificação:</span> {validarResp.resumo.codificacao}{validarResp.resumo.codificacao_corrigida ? " (corrigida)" : ""}</div>
-                    </div>
-                    {validarResp.resumo.nome_presente && (
-                      <label className="flex items-start gap-2 text-xs mt-2">
-                        <input type="checkbox" className="mt-1" checked={confirmNome} onChange={e => setConfirmNome(e.target.checked)} />
-                        <span>Confirmo que os nomes serão utilizados somente durante a validação do arquivo e serão <b>descartados antes da gravação</b> das respostas.</span>
-                      </label>
-                    )}
-                    {validarResp.resumo.funcao_presente && (
-                      <label className="flex items-start gap-2 text-xs">
-                        <input type="checkbox" className="mt-1" checked={confirmFuncao} onChange={e => setConfirmFuncao(e.target.checked)} />
-                        <span>Confirmo que a função será mantida <b>exclusivamente para análise coletiva</b>, respeitando o mínimo metodológico de 3 respondentes por grupo.</span>
-                      </label>
-                    )}
-                    {Array.isArray(validarResp.resumo.previa) && validarResp.resumo.previa.length > 0 && (
-                      <details className="mt-2">
-                        <summary className="cursor-pointer text-xs text-muted-foreground">Prévia (nomes mascarados, primeiras 20 linhas)</summary>
-                        <div className="max-h-40 overflow-auto mt-2 text-xs font-mono">
-                          {validarResp.resumo.previa.map((p: any, i: number) => (
-                            <div key={i}>#{p.linha} · id {p.identificador_mascarado || "—"}{p.nome_mascarado ? ` · ${p.nome_mascarado}` : ""}{p.funcao ? ` · ${p.funcao}` : ""}</div>
-                          ))}
-                        </div>
-                      </details>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>)}
+            {validarResp && (
+              <ValidacaoResumo
+                validarResp={validarResp}
+                errosDetalhados={errosDetalhados}
+                confirmNome={confirmNome} setConfirmNome={setConfirmNome}
+                confirmFuncao={confirmFuncao} setConfirmFuncao={setConfirmFuncao}
+              />
+            )}
             {tipo === "agregada_perguntas" && !validarResp && (
               <Alert>
                 <AlertTitle>Modo agregado</AlertTitle>
@@ -617,212 +493,6 @@ export default function PsicoImportacaoHistorica() {
           </Card>
         )}
       </div>
-    </div>
-  );
-}
-
-function StepIndicator({ step }: { step: number }) {
-  const steps = ["Contexto", "Upload", "Mapear", "Validar", "Confirmar", "Concluído"];
-  return (
-    <div className="flex items-center gap-2 flex-wrap">
-      {steps.map((s, i) => {
-        const n = i + 1;
-        const active = step === n;
-        const done = step > n;
-        return (
-          <div key={s} className="flex items-center gap-2">
-            <div className={`h-7 min-w-7 px-2 rounded-full text-xs font-medium flex items-center justify-center ${
-              done ? "bg-green-600 text-white" : active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-            }`}>{done ? "✓" : n}</div>
-            <span className={`text-xs ${active ? "font-medium" : "text-muted-foreground"}`}>{s}</span>
-            {n < steps.length && <span className="text-muted-foreground">›</span>}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function MetricCard({ label, value, good, bad, warn }: { label: string; value: number | string; good?: boolean; bad?: boolean; warn?: boolean }) {
-  const cls = good ? "text-green-700" : bad ? "text-destructive" : warn ? "text-amber-700" : "";
-  return (
-    <div className="rounded-md border p-3">
-      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className={`text-2xl font-bold mt-1 ${cls}`}>{value}</div>
-    </div>
-  );
-}
-
-// ---------- Passo 3 componente separado ----------
-function MapeamentoStep(props: {
-  headers: string[]; amostra: string[][]; perguntasNumeros: number[];
-  mapData: string; setMapData: (v: string) => void;
-  mapFuncao: string; setMapFuncao: (v: string) => void;
-  mapSetor: string; setMapSetor: (v: string) => void;
-  mapUnidade: string; setMapUnidade: (v: string) => void;
-  mapPerguntas: Record<string, string>; setMapPerguntas: (v: Record<string, string>) => void;
-  ignoradas: Set<string>; setIgnoradas: (v: Set<string>) => void;
-  onBack: () => void; onNext: () => void;
-}) {
-  const { headers, amostra, perguntasNumeros } = props;
-
-  // Sugestão automática: colunas cujo header contenha "?" ou termine em número → mapeadas em ordem
-  useEffect(() => {
-    if (Object.keys(props.mapPerguntas).length > 0) return;
-    const candidatos = headers.filter(h =>
-      /\?/.test(h) || /^\d+\s*[-.)]/.test(h)
-    );
-    const alvo = perguntasNumeros.slice(0, candidatos.length);
-    const map: Record<string, string> = {};
-    alvo.forEach((n, i) => { map[String(n)] = candidatos[i]; });
-    props.setMapPerguntas(map);
-    // Marca como ignorada colunas típicas de PII
-    const piiRegex = /(nome|e-?mail|correio|telefone|celular|whatsapp|carimbo|timestamp)/i;
-    const ign = new Set<string>();
-    headers.forEach(h => { if (piiRegex.test(h)) ign.add(h); });
-    props.setIgnoradas(ign);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const headersDisponiveis = ["none", ...headers];
-  const usadosContexto = new Set([props.mapData, props.mapFuncao, props.mapSetor, props.mapUnidade].filter(v => v !== "none"));
-
-  function togglaIgnorada(h: string) {
-    const s = new Set(props.ignoradas);
-    if (s.has(h)) s.delete(h); else s.add(h);
-    props.setIgnoradas(s);
-  }
-
-  const mapeadas = Object.values(props.mapPerguntas).filter(Boolean);
-  const perguntasCount = mapeadas.length;
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>3. Mapear colunas</CardTitle>
-        <p className="text-xs text-muted-foreground mt-1">
-          {headers.length} colunas detectadas · {perguntasNumeros.length} perguntas no questionário · {perguntasCount} mapeadas
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <section className="space-y-3">
-          <div className="text-sm font-medium">Metadados (opcionais)</div>
-          <div className="grid md:grid-cols-2 gap-3">
-            <MapSelect label="Data da resposta" value={props.mapData} onChange={props.setMapData} options={headersDisponiveis} />
-            <MapSelect label="Função" value={props.mapFuncao} onChange={props.setMapFuncao} options={headersDisponiveis} />
-            <MapSelect label="Setor" value={props.mapSetor} onChange={props.setMapSetor} options={headersDisponiveis} />
-            <MapSelect label="Unidade" value={props.mapUnidade} onChange={props.setMapUnidade} options={headersDisponiveis} />
-          </div>
-        </section>
-
-        <section className="space-y-3">
-          <div className="text-sm font-medium">Perguntas do questionário → coluna do arquivo</div>
-          <div className="max-h-96 overflow-auto border rounded">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-16">Nº</TableHead>
-                  <TableHead>Coluna do arquivo</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {perguntasNumeros.map(n => (
-                  <TableRow key={n}>
-                    <TableCell className="font-medium">{n}</TableCell>
-                    <TableCell>
-                      <Select
-                        value={props.mapPerguntas[String(n)] || "none"}
-                        onValueChange={v => {
-                          const m = { ...props.mapPerguntas };
-                          if (v === "none") delete m[String(n)]; else m[String(n)] = v;
-                          props.setMapPerguntas(m);
-                        }}
-                      >
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">— não mapear —</SelectItem>
-                          {headers.map(h => (
-                            <SelectItem key={h} value={h} disabled={usadosContexto.has(h)}>
-                              {h.length > 80 ? h.slice(0, 80) + "…" : h}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </section>
-
-        <section className="space-y-3">
-          <div className="text-sm font-medium">Colunas de PII (não serão persistidas)</div>
-          <div className="flex flex-wrap gap-2">
-            {headers.map(h => (
-              <button
-                key={h} type="button" onClick={() => togglaIgnorada(h)}
-                className={`text-xs px-2 py-1 rounded border ${
-                  props.ignoradas.has(h)
-                    ? "bg-amber-100 border-amber-400 text-amber-900"
-                    : "bg-muted/40 border-transparent text-muted-foreground hover:bg-muted"
-                }`}
-                title={props.ignoradas.has(h) ? "Marcada como ignorada — clique para desmarcar" : "Marcar como ignorada"}
-              >
-                {props.ignoradas.has(h) ? "🚫 " : ""}{h.length > 40 ? h.slice(0, 40) + "…" : h}
-              </button>
-            ))}
-          </div>
-          <p className="text-[11px] text-muted-foreground">
-            Colunas ignoradas nunca são lidas do arquivo além do parse — o edge function não as envia ao staging.
-          </p>
-        </section>
-
-        {amostra.length > 0 && (
-          <section className="space-y-2">
-            <div className="text-sm font-medium">Prévia (5 primeiras linhas)</div>
-            <div className="max-h-56 overflow-auto border rounded">
-              <Table>
-                <TableHeader>
-                  <TableRow>{headers.slice(0, 8).map(h => <TableHead key={h}>{h.slice(0, 30)}</TableHead>)}</TableRow>
-                </TableHeader>
-                <TableBody>
-                  {amostra.slice(0, 5).map((row, i) => (
-                    <TableRow key={i}>
-                      {headers.slice(0, 8).map((_, j) => <TableCell key={j} className="text-xs">{(row[j] || "").slice(0, 40)}</TableCell>)}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </section>
-        )}
-
-        <div className="flex justify-between gap-2 pt-2">
-          <Button variant="ghost" onClick={props.onBack}><ArrowLeft className="h-4 w-4 mr-2" />Voltar</Button>
-          <Button disabled={perguntasCount === 0} onClick={props.onNext}>
-            Ir para validação <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function MapSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: string[] }) {
-  return (
-    <div>
-      <Label className="text-xs">{label}</Label>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger><SelectValue /></SelectTrigger>
-        <SelectContent>
-          {options.map(h => (
-            <SelectItem key={h} value={h}>
-              {h === "none" ? "— não usar —" : (h.length > 60 ? h.slice(0, 60) + "…" : h)}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
     </div>
   );
 }
