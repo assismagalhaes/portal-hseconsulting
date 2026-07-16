@@ -2,27 +2,19 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import {
   ConviteRow,
   ParticipanteRow,
   aplicarPlaceholders,
-  atualizarParticipante,
-  criarParticipante,
   csvSafe,
-  editarParticipanteSeguro,
   gerarLinksAssinados,
   inativarParticipante,
-  isEmailValido,
-  isFoneValido,
   listarConvitesDaAvaliacao,
   listarParticipantes,
   marcarDistribuido,
@@ -37,6 +29,12 @@ import { Copy, Download, FileUp, Link as LinkIcon, MoreHorizontal, Pencil, Plus,
 import { PsicoImportWizard } from "./PsicoImportWizard";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
+import { AdicionarDialog } from "./participantes/AdicionarDialog";
+import { DistribuirForm } from "./participantes/DistribuirForm";
+import { RevogarForm } from "./participantes/RevogarForm";
+import { EditarDialog } from "./participantes/EditarDialog";
+import { ResumoGrupos } from "./participantes/ResumoGrupos";
+import { contarGrupos, uniqueVals } from "./participantes/helpers";
 
 interface Props {
   avaliacaoId: string;
