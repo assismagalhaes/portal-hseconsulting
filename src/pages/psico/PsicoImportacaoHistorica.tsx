@@ -41,21 +41,36 @@ const CAMPO_LABEL: Record<string, string> = {
   none: "— não usar —",
 };
 
-function useAuthedFunctionCall() {
-  return async (name: string, init: RequestInit) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token || "";
-    const url = `https://ujctjiugstfrlaasgrop.supabase.co/functions/v1/${name}`;
-    const headers = new Headers(init.headers || {});
-    headers.set("Authorization", `Bearer ${token}`);
-    if (!headers.has("apikey")) headers.set("apikey", (supabase as any).supabaseKey || "");
-    return fetch(url, { ...init, headers });
-  };
+// Chamada às Edge Functions usando o cliente Supabase (sem URL hardcoded).
+// Retorna um objeto compatível com `Response` (métodos `ok`, `json()`) para
+// preservar a assinatura usada nas etapas do wizard.
+async function callFn(
+  name: string,
+  init: { method?: string; body?: BodyInit; headers?: Record<string, string> },
+) {
+  const body = init.body as any;
+  const { data, error } = await supabase.functions.invoke(name, {
+    method: (init.method as any) || "POST",
+    body,
+    headers: init.headers,
+  });
+  if (error) {
+    let parsed: any = null;
+    try {
+      const ctx: any = (error as any).context;
+      if (ctx && typeof ctx.json === "function") parsed = await ctx.json();
+    } catch { /* ignore */ }
+    return {
+      ok: false,
+      json: async () => parsed || { error: error.message, detalhe: error.message },
+    };
+  }
+  return { ok: true, json: async () => data };
 }
 
 export default function PsicoImportacaoHistorica() {
   const nav = useNavigate();
-  const call = useAuthedFunctionCall();
+  const call = callFn;
 
   function baixarTemplateAgregado() {
     const header = "numero,quantidade_nunca,quantidade_raramente,quantidade_as_vezes,quantidade_frequentemente,quantidade_sempre\n";
