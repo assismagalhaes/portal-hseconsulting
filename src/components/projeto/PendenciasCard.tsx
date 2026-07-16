@@ -8,6 +8,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Check, Plus, Trash2, Flame, Undo2, ChevronDown, ChevronRight } from "lucide-react";
 import { formatDate } from "@/lib/format";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Pendencia = {
   id: string;
@@ -28,6 +38,7 @@ export default function PendenciasCard({ projetoId, onCountChange }: { projetoId
   const [expandidas, setExpandidas] = useState<Record<string, boolean>>({});
   const [mostrarResolvidas, setMostrarResolvidas] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [confirmar, setConfirmar] = useState<Pendencia | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -67,7 +78,6 @@ export default function PendenciasCard({ projetoId, onCountChange }: { projetoId
   const reabrir = (p: Pendencia) => patch(p.id, { status: "aberta", resolvida_em: null } as any);
   const toggleUrgente = (p: Pendencia) => patch(p.id, { prioridade: p.prioridade === "urgente" ? "normal" : "urgente" } as any);
   const remover = async (p: Pendencia) => {
-    if (!confirm("Remover esta pendência?")) return;
     await (supabase as any).from("projeto_pendencias").delete().eq("id", p.id);
     load();
   };
@@ -120,7 +130,7 @@ export default function PendenciasCard({ projetoId, onCountChange }: { projetoId
                         {prazoBadge(p.prazo)}
                       </div>
                       <Button size="sm" variant="ghost" onClick={() => resolver(p)} title="Marcar como resolvida"><Check className="h-4 w-4" /></Button>
-                      <Button size="sm" variant="ghost" onClick={() => remover(p)} title="Remover"><Trash2 className="h-4 w-4" /></Button>
+                      <Button size="sm" variant="ghost" onClick={() => setConfirmar(p)} title="Remover"><Trash2 className="h-4 w-4" /></Button>
                     </div>
                     {aberta && (
                       <div className="grid gap-2 p-3 pt-0 border-t bg-muted/30 sm:grid-cols-3">
@@ -161,7 +171,7 @@ export default function PendenciasCard({ projetoId, onCountChange }: { projetoId
                         <span className="line-through flex-1 truncate">{p.titulo}</span>
                         {p.resolvida_em && <span className="text-[11px]">{formatDate(p.resolvida_em)}</span>}
                         <Button size="sm" variant="ghost" onClick={() => reabrir(p)} title="Reabrir"><Undo2 className="h-3.5 w-3.5" /></Button>
-                        <Button size="sm" variant="ghost" onClick={() => remover(p)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                        <Button size="sm" variant="ghost" onClick={() => setConfirmar(p)}><Trash2 className="h-3.5 w-3.5" /></Button>
                       </div>
                     ))}
                   </div>
@@ -170,6 +180,28 @@ export default function PendenciasCard({ projetoId, onCountChange }: { projetoId
             )}
           </>
         )}
+
+        <AlertDialog open={!!confirmar} onOpenChange={(v) => !v && setConfirmar(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remover pendência?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {confirmar ? <>A pendência <span className="font-medium text-foreground">"{confirmar.titulo}"</span> será excluída permanentemente. Esta ação não pode ser desfeita.</> : null}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={async () => {
+                  if (confirmar) { await remover(confirmar); setConfirmar(null); }
+                }}
+              >
+                Remover
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );
