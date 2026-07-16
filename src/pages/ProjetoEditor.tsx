@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { brl, formatDate, formatDateTime } from "@/lib/format";
 import { projetoStatusColor, projetoStatusLabel, projetoServicoStatusColor, projetoServicoStatusLabel, projetoPrioridadeLabel, projetoPrioridadeColor } from "@/lib/projetos";
-import { ArrowLeft, FileSignature, DollarSign, History, RefreshCw, Building2, User, Mail, Phone, MapPin, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, FileSignature, DollarSign, History, Building2, User, Mail, Phone, MapPin, ClipboardCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import AtividadePainel from "@/components/projeto/AtividadePainel";
 
@@ -40,7 +40,7 @@ export default function ProjetoEditor() {
   const [contrato, setContrato] = useState<any>(null);
   const [parcelas, setParcelas] = useState<any[]>([]);
   const [timeline, setTimeline] = useState<any[]>([]);
-  const [renovacoes, setRenovacoes] = useState<any[]>([]);
+  const [empresas, setEmpresas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [profissionais, setProfissionais] = useState<any[]>([]);
@@ -57,18 +57,20 @@ export default function ProjetoEditor() {
     setProjeto(p);
     document.title = `${p?.numero || "Projeto"} | HSE Consulting`;
 
-    const [s, d, t, ren, u, pr] = await Promise.all([
+    const [s, d, t, pc, u, pr] = await Promise.all([
       supabase.from("projeto_servicos").select("*").eq("projeto_id", id).order("created_at"),
       supabase.from("documentos_tecnicos").select("id, numero, tipo, titulo, status, data_emissao, data_vencimento").eq("projeto_id", id),
       supabase.from("projeto_timeline").select("*").eq("projeto_id", id).order("created_at", { ascending: false }).limit(50),
-      supabase.from("projeto_renovacoes").select("*, projeto_servicos(nome)").eq("projeto_id", id),
+      p?.proposal_id
+        ? supabase.from("proposal_clients").select("client_id, papel, ordem, clients(id, razao_social, nome_fantasia, cnpj_cpf, cidade, uf)").eq("proposal_id", p.proposal_id).order("ordem")
+        : Promise.resolve({ data: [] as any[] }),
       supabase.from("profiles").select("id, nome, email").eq("status", "ativo").order("nome"),
       supabase.from("execucao_profissionais").select("id, nome, cargo").order("nome"),
     ]);
     setServicos(s.data || []);
     setDocs(d.data || []);
     setTimeline(t.data || []);
-    setRenovacoes(ren.data || []);
+    setEmpresas((pc as any).data || []);
     setUsuarios(u.data || []);
     setProfissionais(pr.data || []);
 
@@ -194,7 +196,6 @@ export default function ProjetoEditor() {
             <TabsTrigger value="evidencias">Evidências</TabsTrigger>
             <TabsTrigger value="docs">Documentos ({docs.length})</TabsTrigger>
             {!isTecnico && <TabsTrigger value="financeiro">Financeiro</TabsTrigger>}
-            {!isTecnico && <TabsTrigger value="renovacoes">Renovações ({renovacoes.length})</TabsTrigger>}
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
           </TabsList>
 
