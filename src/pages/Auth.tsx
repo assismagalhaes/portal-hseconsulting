@@ -41,7 +41,7 @@ export default function Auth() {
             Propostas técnicas, precificação e acompanhamento — em um só lugar.
           </h1>
           <p className="text-white/80">
-            Cadastre clientes, monte propostas, calcule custos e margens, e acompanhe o ciclo comercial completo.
+            Cadastre clientes, monte propostas, calcule custos e margens e acompanhe o ciclo comercial completo.
           </p>
         </div>
         <div className="text-white/50 text-xs">© HSE Consulting — Saúde, Segurança e Meio Ambiente</div>
@@ -53,7 +53,7 @@ export default function Auth() {
             <p className="text-sm text-muted-foreground">Entre com sua conta de administrador.</p>
           </div>
           <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2"><Label>Email</Label>
+            <div className="space-y-2"><Label>E-mail</Label>
               <Input type="email" required value={email} onChange={e=>setEmail(e.target.value)} /></div>
             <div className="space-y-2"><Label>Senha</Label>
               <Input type="password" required value={password} onChange={e=>setPassword(e.target.value)} /></div>
