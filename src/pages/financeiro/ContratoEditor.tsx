@@ -170,7 +170,7 @@ export default function ContratoEditor() {
                             <Receipt className="h-3 w-3 mr-1"/>Receber
                           </Button>
                         )}
-                        <Button size="icon" variant="ghost" onClick={()=>removerParcela(p.id)}><Trash2 className="h-3 w-3"/></Button>
+                        <Button size="icon" variant="ghost" aria-label="Remover parcela" onClick={()=>removerParcela(p.id)}><Trash2 className="h-3 w-3"/></Button>
                       </td>
                     </tr>
                   ))}
