@@ -17,13 +17,26 @@ export function InternalSummary({ items, pricings, descontoRevisao = 0 }: any) {
   items.forEach((it: any) => {
     const p = pricings[it.id];
     if (!p?.indicadores) return;
-    // Indicadores são calculados por UNIDADE. Escala pela quantidade do item na proposta
-    // para que Custo / Impostos / Receita / Lucro reflitam o total real (mesma base do "Valor total").
+    // Indicadores históricos foram salvos ora por UNIDADE ora como TOTAL do item.
+    // Detectamos comparando `preco_arredondado` da simulação com o `valor_total`
+    // (total do item) e o `valor_unitario`: aplicamos o fator que aproximar melhor
+    // do total real, evitando dobrar quando o indicador já contempla a quantidade.
     const qtd = Math.max(1, Number(it.quantidade) || 1);
-    custoTotal += Number(p.indicadores.custo_total || 0) * qtd;
-    lucroTotal += Number(p.indicadores.lucro_estimado || 0) * qtd;
-    receita    += Number(p.indicadores.receita_liquida || 0) * qtd;
-    imposto    += Number(p.indicadores.imposto_estimado || 0) * qtd;
+    const vTotal = Number(it.valor_total) || 0;
+    const vUnit = Number(it.valor_unitario) || 0;
+    const precoInd = Number(p.preco_arredondado ?? p.preco_sugerido ?? 0);
+    let fator = qtd;
+    if (precoInd > 0 && vTotal > 0) {
+      const distTotal = Math.abs(precoInd - vTotal);
+      const distUnit = Math.abs(precoInd - vUnit);
+      // Se o preço da simulação está mais próximo do TOTAL do item, os indicadores
+      // já são totais e não devem ser multiplicados pela quantidade.
+      if (distTotal <= distUnit) fator = 1;
+    }
+    custoTotal += Number(p.indicadores.custo_total || 0) * fator;
+    lucroTotal += Number(p.indicadores.lucro_estimado || 0) * fator;
+    receita    += Number(p.indicadores.receita_liquida || 0) * fator;
+    imposto    += Number(p.indicadores.imposto_estimado || 0) * fator;
   });
   const desc = Number(descontoRevisao) || 0;
   const receitaFinal = Math.max(0, receita - desc);
