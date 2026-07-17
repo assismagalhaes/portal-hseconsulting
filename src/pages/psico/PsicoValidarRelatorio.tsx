@@ -60,7 +60,7 @@ export default function PsicoValidarRelatorio() {
   const revogado = statusTxt === "Revogado";
 
   return (
-    <div className="min-h-screen bg-muted/30 py-10 px-4">
+    <div className="min-h-dvh bg-muted/30 py-10 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
         <header className="text-center space-y-2">
           <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 grid place-items-center">

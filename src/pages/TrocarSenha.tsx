@@ -39,7 +39,7 @@ export default function TrocarSenha() {
   };
 
   return (
-    <div className="min-h-screen grid place-items-center bg-background p-6">
+    <div className="min-h-dvh grid place-items-center bg-background p-6">
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -53,7 +53,7 @@ export default function TrocarSenha() {
         <CardContent className="space-y-4">
           <div>
             <Label>Nova senha</Label>
-            <Input type="password" value={nova} onChange={(e) => setNova(e.target.value)} autoFocus />
+            <Input type="password" value={nova} onChange={(e) => setNova(e.target.value)} />
           </div>
           <div>
             <Label>Confirme a nova senha</Label>

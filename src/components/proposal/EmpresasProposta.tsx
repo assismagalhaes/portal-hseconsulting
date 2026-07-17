@@ -311,7 +311,7 @@ export default function EmpresasProposta({ proposalId, proposal, onProposalPatch
                 </Button>
               )}
               {r.papel !== "principal" && (
-                <Button size="icon" variant="ghost" onClick={() => remove(r)} disabled={busy}>
+                <Button size="icon" variant="ghost" aria-label="Remover empresa" onClick={() => remove(r)} disabled={busy}>
                   <Trash2 className="h-4 w-4 text-danger" />
                 </Button>
               )}

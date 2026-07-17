@@ -309,7 +309,7 @@ export default function CondicaoPagamentoPicker({
                     onChange={(e) => updateDraft(idx, { descricao: e.target.value })} />
                 </div>
                 <div className="col-span-1 flex justify-end">
-                  <Button type="button" size="icon" variant="ghost" onClick={() => removeDraft(idx)}>
+                  <Button type="button" size="icon" variant="ghost" aria-label="Remover parcela" onClick={() => removeDraft(idx)}>
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>

@@ -49,7 +49,7 @@ export default function PsicoConvitePublico() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+    <div className="min-h-dvh bg-background flex items-center justify-center p-6">
       <div className="max-w-lg w-full space-y-6 text-center">
         <div>
           <div className="text-xs uppercase tracking-widest text-muted-foreground">HSE Consulting</div>

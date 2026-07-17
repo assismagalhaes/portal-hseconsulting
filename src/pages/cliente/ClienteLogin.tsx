@@ -37,7 +37,7 @@ export default function ClienteLogin() {
   }
 
   return (
-    <div className="min-h-screen grid md:grid-cols-2">
+    <div className="min-h-dvh grid md:grid-cols-2">
       <div className="hidden md:flex flex-col justify-between p-12 bg-gradient-hse text-white">
         <div className="flex items-center gap-3">
           <img src={logo} className="h-20 w-20 rounded-md bg-white/10 p-2" alt="HSE Consulting" />

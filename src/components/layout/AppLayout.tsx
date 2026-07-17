@@ -433,7 +433,7 @@ export default function AppLayout() {
   );
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-dvh bg-background">
       <SidebarShell
         collapsed={collapsed}
         openGroup={openGroup}

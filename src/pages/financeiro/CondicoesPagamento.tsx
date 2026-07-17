@@ -204,13 +204,13 @@ export default function CondicoesPagamento() {
                   <td className="px-4 py-3 text-right space-x-1">
                     {isAdmin && (
                       <>
-                        <Button size="icon" variant="ghost" title="Editar" onClick={() => editar(r)}><Pencil className="h-3.5 w-3.5" /></Button>
-                        <Button size="icon" variant="ghost" title="Duplicar" onClick={() => duplicar(r)}><Copy className="h-3.5 w-3.5" /></Button>
-                        <Button size="icon" variant="ghost" title={r.ativa ? "Inativar" : "Ativar"} onClick={() => toggleAtiva(r)}>
+                        <Button size="icon" variant="ghost" title="Editar" aria-label="Editar" onClick={() => editar(r)}><Pencil className="h-3.5 w-3.5" /></Button>
+                        <Button size="icon" variant="ghost" title="Duplicar" aria-label="Duplicar" onClick={() => duplicar(r)}><Copy className="h-3.5 w-3.5" /></Button>
+                        <Button size="icon" variant="ghost" title={r.ativa ? "Inativar" : "Ativar"} aria-label={r.ativa ? "Inativar" : "Ativar"} onClick={() => toggleAtiva(r)}>
                           <Switch checked={r.ativa} className="pointer-events-none" />
                         </Button>
                         {!r.em_uso && (
-                          <Button size="icon" variant="ghost" title="Excluir" onClick={() => remover(r)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                          <Button size="icon" variant="ghost" title="Excluir" aria-label="Excluir" onClick={() => remover(r)}><Trash2 className="h-3.5 w-3.5" /></Button>
                         )}
                       </>
                     )}
@@ -295,7 +295,7 @@ export default function CondicoesPagamento() {
                         onChange={(e) => setParcelas((ps) => ps.map((x, i) => i === idx ? { ...x, descricao: e.target.value } : x))} />
                     </div>
                     <div className="col-span-1 flex justify-end">
-                      <Button type="button" size="icon" variant="ghost" onClick={() => removerParcela(idx)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      <Button type="button" size="icon" variant="ghost" aria-label="Remover parcela" onClick={() => removerParcela(idx)}><Trash2 className="h-3.5 w-3.5" /></Button>
                     </div>
                   </div>
                 ))}
