@@ -350,7 +350,7 @@ export default function PsicoParticipantes(props: Props) {
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" aria-label="Ações"><MoreHorizontal className="h-4 w-4" /></Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             {!c && p.ativo && (

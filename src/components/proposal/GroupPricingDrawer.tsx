@@ -291,7 +291,7 @@ export default function GroupPricingDrawer({
                   <Label className="text-[11px]">Observação</Label>
                   <Input className="h-8" value={s.observacao} onChange={(e) => setDiretos((arr) => arr.map((x) => x.id === s.id ? { ...x, observacao: e.target.value } : x))} />
                 </div>
-                <Button variant="ghost" size="icon" className="col-span-1 h-8" onClick={() => setDiretos((arr) => arr.filter((x) => x.id !== s.id))}>
+                <Button variant="ghost" size="icon" className="col-span-1 h-8" aria-label="Remover custo direto" onClick={() => setDiretos((arr) => arr.filter((x) => x.id !== s.id))}>
                   <Trash2 className="h-4 w-4 text-danger" />
                 </Button>
               </div>
@@ -348,7 +348,7 @@ export default function GroupPricingDrawer({
                     <Label className="text-[11px]">Obs.</Label>
                     <Input className="h-8" value={s.observacao} onChange={(e) => setHorasShared((arr) => arr.map((x) => x.id === s.id ? { ...x, observacao: e.target.value } : x))} />
                   </div>
-                  <Button variant="ghost" size="icon" className="col-span-1 h-8" onClick={() => setHorasShared((arr) => arr.filter((x) => x.id !== s.id))}>
+                  <Button variant="ghost" size="icon" className="col-span-1 h-8" aria-label="Remover linha de horas" onClick={() => setHorasShared((arr) => arr.filter((x) => x.id !== s.id))}>
                     <Trash2 className="h-4 w-4 text-danger" />
                   </Button>
                 </div>

@@ -41,7 +41,7 @@ export default function ItemEditor({
             <Input value={local.nome || ""} onChange={(e) => setLocal({ ...local, nome: e.target.value })} onBlur={() => onChange({ nome: local.nome })} className="font-display font-semibold text-base" placeholder="Nome do serviço (ex.: Visita Técnica)" />
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onRemove}><Trash2 className="h-4 w-4 text-danger" /></Button>
+          <Button variant="ghost" size="icon" aria-label="Remover item" onClick={onRemove}><Trash2 className="h-4 w-4 text-danger" /></Button>
         </div>
         <div className="space-y-1"><Label className="text-xs">Categoria</Label>
           <CategoryCombobox value={local.categoria || ""} onChange={(v) => { setLocal({ ...local, categoria: v }); onChange({ categoria: v }); }} /></div>
