@@ -47,7 +47,7 @@ export default function CentrosCusto() {
             <thead className="bg-muted/50 text-xs uppercase text-muted-foreground"><tr><th className="text-left px-4 py-2">Código</th><th className="text-left px-4 py-2">Nome</th><th className="text-left px-4 py-2">Descrição</th><th></th></tr></thead>
             <tbody>
               {rows.map(r => (
-                <tr key={r.id} className="border-t"><td className="px-4 py-2 font-mono">{r.codigo||"—"}</td><td className="px-4 py-2 font-medium">{r.nome}</td><td className="px-4 py-2 text-muted-foreground">{r.descricao||"—"}</td><td className="px-4 py-2 text-right"><Button size="icon" variant="ghost" onClick={()=>remover(r.id)}><Trash2 className="h-3 w-3"/></Button></td></tr>
+                <tr key={r.id} className="border-t"><td className="px-4 py-2 font-mono">{r.codigo||"—"}</td><td className="px-4 py-2 font-medium">{r.nome}</td><td className="px-4 py-2 text-muted-foreground">{r.descricao||"—"}</td><td className="px-4 py-2 text-right"><Button size="icon" variant="ghost" aria-label="Remover" onClick={()=>remover(r.id)}><Trash2 className="h-3 w-3"/></Button></td></tr>
               ))}
               {rows.length === 0 && <tr><td colSpan={4} className="text-center py-10 text-muted-foreground">Nenhum centro de custo cadastrado.</td></tr>}
             </tbody>
