@@ -204,13 +204,13 @@ export default function PropostaAceitePublica() {
   }
 
   if (loading) return (
-    <div className="min-h-screen grid place-items-center bg-slate-50">
+    <div className="min-h-dvh grid place-items-center bg-slate-50">
       <div className="flex items-center gap-2 text-slate-600"><Loader2 className="h-4 w-4 animate-spin" /> Carregando…</div>
     </div>
   );
 
   if (!aceite || !proposta) return (
-    <div className="min-h-screen grid place-items-center bg-slate-50 p-6">
+    <div className="min-h-dvh grid place-items-center bg-slate-50 p-6">
       <Card className="max-w-md w-full"><CardContent className="p-6 text-center">
         <XCircle className="h-10 w-10 text-destructive mx-auto mb-2" />
         <div className="font-semibold">Link inválido ou expirado</div>
@@ -224,7 +224,7 @@ export default function PropostaAceitePublica() {
   const cancelado = aceite.status === "cancelado";
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-dvh bg-slate-50">
       {/* Header */}
       <div className="bg-white border-b">
         <div className="max-w-4xl mx-auto p-4 flex items-center justify-between gap-4">

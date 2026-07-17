@@ -244,7 +244,7 @@ export default function PsicoPublicQuestionnaireForm({
 
 function Layout({ children, wide }: { children: React.ReactNode; wide?: boolean }) {
   return (
-    <div className="min-h-screen bg-background flex justify-center p-4 sm:p-6">
+    <div className="min-h-dvh bg-background flex justify-center p-4 sm:p-6">
       <div className={`w-full ${wide ? "max-w-2xl" : "max-w-lg"} space-y-4 text-center`}>{children}</div>
     </div>
   );

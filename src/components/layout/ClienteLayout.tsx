@@ -21,7 +21,7 @@ export default function ClienteLayout() {
   const navigate = useNavigate();
   useEffect(() => { registrarLogCliente("portal_aberto"); }, []);
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-dvh bg-background">
       <aside className="hidden md:flex w-64 flex-col bg-sidebar text-sidebar-foreground">
         <Link to="/cliente/dashboard" className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
           <img src={logo} alt="HSE" className="h-9 w-auto object-contain" />

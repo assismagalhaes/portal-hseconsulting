@@ -49,7 +49,7 @@ export default function Unsubscribe() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-6">
+    <div className="min-h-dvh flex items-center justify-center bg-background p-6">
       <div className="max-w-md w-full rounded-xl border bg-card p-8 shadow-sm text-center space-y-4">
         <h1 className="text-xl font-semibold">Cancelar inscrição</h1>
         {state === "loading" && (
