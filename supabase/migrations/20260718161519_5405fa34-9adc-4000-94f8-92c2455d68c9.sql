@@ -11,10 +11,10 @@ BEGIN
 
   SELECT pg_get_functiondef(v_function) INTO v_definition;
 
-  IF position(v_old_fragment IN v_definition) = 0 THEN
-    RAISE EXCEPTION 'Fragmento legado da RPC não localizado; migration interrompida para revisão.';
+  IF position(v_old_fragment IN v_definition) > 0 THEN
+    EXECUTE replace(v_definition, v_old_fragment, v_new_fragment);
+  ELSIF position(v_new_fragment IN v_definition) = 0 THEN
+    RAISE EXCEPTION 'Contrato esperado da RPC não localizado; migration interrompida para revisão.';
   END IF;
-
-  EXECUTE replace(v_definition, v_old_fragment, v_new_fragment);
 END;
 $migration$;
