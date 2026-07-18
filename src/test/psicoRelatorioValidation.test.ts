@@ -165,4 +165,10 @@ describe("metadados seguros do PDF psicossocial", () => {
     expect(reportFunction).not.toContain("${biblioteca.nome}");
     expect(reportFunction).not.toContain('{responsavel?.nome || "—"}');
   });
+
+  it("formata o horario de aprovacao no fuso oficial do portal", () => {
+    expect(reportFunction).toMatch(
+      /function fmtDateTime[\s\S]*?timeZone: "America\/Sao_Paulo"[\s\S]*?\n}/,
+    );
+  });
 });
