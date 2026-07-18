@@ -233,7 +233,9 @@ function RelatorioPDF({ snapshot, codigoRafp, codigoRev, codigoValidacao, client
   const rev = snapshot?.revisao || {};
   const responsavel = rev.responsavel || {};
   const biblioteca = snapshot?.biblioteca || {};
-  const metodologia = snapshot?.agregado?.processamento?.metodologia || {};
+  const metodologia = snapshot?.avaliacao?.metodologia
+    || snapshot?.agregado?.processamento?.metodologia
+    || {};
   const fatores: any[] = Array.isArray(snapshot?.fatores) ? snapshot.fatores : [];
   const plano = snapshot?.plano || {};
   const itens: any[] = Array.isArray(plano?.itens) ? plano.itens : [];
