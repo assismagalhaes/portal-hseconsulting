@@ -9265,6 +9265,10 @@ export type Database = {
         Args: { p_avaliacao_id: string }
         Returns: Json
       }
+      psico_obter_conteudo_aprovado_relatorio_sem_metodologia: {
+        Args: { p_avaliacao_id: string }
+        Returns: Json
+      }
       psico_obter_dashboard_resultados: {
         Args: { p_avaliacao_id: string; p_escopo_id?: string }
         Returns: Json
