@@ -6,6 +6,10 @@ const migration = readFileSync(
   resolve("supabase/migrations/20260718180000_fix_psico_report_validation_status.sql"),
   "utf8",
 );
+const reportContentMigration = readFileSync(
+  resolve("supabase/migrations/20260718183000_fix_psico_report_content_without_import.sql"),
+  "utf8",
+);
 const reportFunction = readFileSync(
   resolve("supabase/functions/psico-gerar-relatorio/template.tsx"),
   "utf8",
@@ -31,5 +35,20 @@ describe("autenticação da função de geração do relatório", () => {
     expect(reportFunction).toContain('userClient.auth.getUser(token)');
     expect(reportFunction).toContain('const userId = userData.user.id');
     expect(reportFunction).not.toContain('userClient.auth.getClaims');
+  });
+});
+
+describe("conteudo aprovado do relatorio sem importacao", () => {
+  it("nao acessa um record de importacao que nunca foi inicializado", () => {
+    expect(reportContentMigration).toContain("_tem_importacao BOOLEAN := false");
+    expect(reportContentMigration).toContain("_tem_importacao := FOUND");
+    expect(reportContentMigration).toContain("CASE WHEN NOT _tem_importacao");
+    expect(reportContentMigration).not.toContain("CASE WHEN _imp IS NULL");
+  });
+
+  it("trata avaliacao ou revisao ausente usando FOUND", () => {
+    expect(reportContentMigration.match(/IF NOT FOUND THEN/g)).toHaveLength(2);
+    expect(reportContentMigration).not.toContain("IF _av IS NULL");
+    expect(reportContentMigration).not.toContain("IF _rev IS NULL");
   });
 });
