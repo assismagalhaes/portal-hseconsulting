@@ -10,6 +10,10 @@ const reportContentMigration = readFileSync(
   resolve("supabase/migrations/20260718183000_fix_psico_report_content_without_import.sql"),
   "utf8",
 );
+const reportImportRecordMigration = readFileSync(
+  resolve("supabase/migrations/20260718190000_fix_psico_report_import_record_type.sql"),
+  "utf8",
+);
 const reportFunction = readFileSync(
   resolve("supabase/functions/psico-gerar-relatorio/template.tsx"),
   "utf8",
@@ -50,5 +54,15 @@ describe("conteudo aprovado do relatorio sem importacao", () => {
     expect(reportContentMigration.match(/IF NOT FOUND THEN/g)).toHaveLength(2);
     expect(reportContentMigration).not.toContain("IF _av IS NULL");
     expect(reportContentMigration).not.toContain("IF _rev IS NULL");
+  });
+
+  it("define a estrutura do registro de importacao antes de acessar seus campos", () => {
+    expect(reportContentMigration).toContain(
+      "_imp public.psico_importacoes_avaliacoes%ROWTYPE",
+    );
+    expect(reportImportRecordMigration).toContain(
+      "_imp public.psico_importacoes_avaliacoes%ROWTYPE",
+    );
+    expect(reportImportRecordMigration).not.toContain("_imp RECORD");
   });
 });
