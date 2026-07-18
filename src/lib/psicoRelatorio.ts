@@ -95,6 +95,17 @@ export async function gerarRelatorio(
   return { data, error };
 }
 
+export async function previewRelatorio(avaliacaoId: string) {
+  const { data, error } = await supabase.functions.invoke("psico-gerar-relatorio", {
+    body: { avaliacao_id: avaliacaoId, modo: "preview" },
+  });
+  if (error) return { error };
+  if (!(data instanceof Blob)) {
+    return { error: new Error("Resposta de prévia inválida") };
+  }
+  return { blob: data };
+}
+
 export async function baixarVersao(versaoId: string): Promise<{ url?: string; error?: string; nome?: string }> {
   const { data, error } = await sb.rpc("psico_obter_versao_download", {
     p_relatorio_versao_id: versaoId,
