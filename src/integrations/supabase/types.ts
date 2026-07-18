@@ -9250,6 +9250,10 @@ export type Database = {
           total_itens: number
         }[]
       }
+      psico_marcar_plano_revisado: {
+        Args: { p_plano_id: string }
+        Returns: Json
+      }
       psico_norm_email: { Args: { v: string }; Returns: string }
       psico_norm_fone: { Args: { v: string }; Returns: string }
       psico_norm_texto: { Args: { v: string }; Returns: string }
