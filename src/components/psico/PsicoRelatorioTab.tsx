@@ -24,6 +24,7 @@ import {
   CheckCircle2,
   Download,
   FileText,
+  Eye,
   Loader2,
   RefreshCcw,
   ShieldCheck,
@@ -33,6 +34,7 @@ import {
   gerarRelatorio,
   getRelatorio,
   listarVersoes,
+  previewRelatorio,
   REL_STATUS_COLOR,
   REL_STATUS_LABEL,
   RelatorioVersaoStatus,
@@ -57,6 +59,7 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
   const [versoes, setVersoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [gerando, setGerando] = useState(false);
+  const [visualizando, setVisualizando] = useState(false);
   const [validacaoErro, setValidacaoErro] = useState<string | null>(null);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -126,6 +129,27 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
       return;
     }
     window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  async function handlePreview() {
+    const previewWindow = window.open("about:blank", "_blank");
+    if (!previewWindow) {
+      toast.error("Permita pop-ups para abrir a prévia do relatório.");
+      return;
+    }
+    previewWindow.opener = null;
+    setVisualizando(true);
+    const { blob, error } = await previewRelatorio(av.id);
+    setVisualizando(false);
+    if (error || !blob) {
+      previewWindow.close();
+      const mensagem = error instanceof Error ? error.message : "ERRO_RENDERIZACAO";
+      toast.error(traduzirErroEmissao(mensagem));
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    previewWindow.location.href = url;
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
   }
 
   async function handleRevogar() {
@@ -217,6 +241,19 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
           )}
 
           <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handlePreview}
+              disabled={!podeEmitir || !!emAndamento || gerando || visualizando}
+            >
+              {visualizando ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Eye className="h-4 w-4 mr-2" />
+              )}
+              Pré-visualizar
+            </Button>
+
             <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
               <AlertDialogTrigger asChild>
                 <Button disabled={!podeEmitir || !!emAndamento || gerando}>

@@ -35,7 +35,7 @@ const reportMethodologySnapshotMigration = readFileSync(
   "utf8",
 );
 const reportTemplateVersionMigration = readFileSync(
-  resolve("supabase/migrations/20260718213000_bump_psico_report_template_version.sql"),
+  resolve("supabase/migrations/20260718220000_bump_psico_report_template_preview_qr.sql"),
   "utf8",
 );
 const reportFunction = readFileSync(
@@ -181,12 +181,40 @@ describe("metadados seguros do PDF psicossocial", () => {
       /const MODELO_VERSAO = "([^"]+)"/,
     )?.[1];
 
-    expect(edgeVersion).toBe("1.0.1");
+    expect(edgeVersion).toBe("1.0.2");
     expect(reportTemplateVersionMigration).toContain(
       `v_modelo_versao text := ''${edgeVersion}''`,
     );
     expect(reportTemplateVersionMigration).toContain(
       "psico_preparar_emissao_relatorio(uuid,text,text)",
+    );
+  });
+
+  it("gera QR Code apontando para a validação pública somente no PDF oficial", () => {
+    expect(reportFunction).toContain('import QRCode from "npm:qrcode@1.5.4"');
+    expect(reportFunction).toContain("VALIDATION_PAGE_URL");
+    expect(reportFunction).toContain("?codigo=${encodeURIComponent(codigoValidacao)}");
+    expect(reportFunction).toContain("QRCode.toDataURL(validationUrl");
+    expect(reportFunction).toContain("<Image src={qrDataUrl}");
+    expect(reportFunction).toContain("!preview && qrDataUrl");
+  });
+
+  it("renderiza prévia marcada sem preparar ou persistir uma emissão", () => {
+    const previewStart = reportFunction.indexOf('if (modo === "preview")');
+    const prepareStart = reportFunction.indexOf(
+      'userClient.rpc("psico_preparar_emissao_relatorio"',
+    );
+
+    expect(previewStart).toBeGreaterThan(0);
+    expect(prepareStart).toBeGreaterThan(previewStart);
+    expect(reportFunction).toContain("PRÉVIA — SEM VALIDADE");
+    expect(reportFunction).toContain("{preview && <Text style={s.watermark} fixed>");
+    expect(reportFunction).toContain('"Cache-Control": "no-store, max-age=0"');
+    expect(reportFunction.slice(previewStart, prepareStart)).not.toContain(
+      '.storage.from("psico-relatorios")',
+    );
+    expect(reportFunction.slice(previewStart, prepareStart)).not.toContain(
+      "psico_concluir_emissao_relatorio",
     );
   });
 });

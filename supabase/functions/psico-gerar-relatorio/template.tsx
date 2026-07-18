@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import QRCode from "npm:qrcode@1.5.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,6 +21,7 @@ import {
   Line,
   G,
   Path,
+  Image,
 } from "npm:@react-pdf/renderer@3.4.5";
 
 // ============================================================================
@@ -27,7 +29,8 @@ import {
 // ============================================================================
 
 const MODELO_CODIGO = "HSE-PSICO-REL-1.0";
-const MODELO_VERSAO = "1.0.1";
+const MODELO_VERSAO = "1.0.2";
+const VALIDATION_PAGE_URL = "https://portal.hseconsulting.com.br/validar/relatorio-psicossocial";
 
 const COLORS = {
   primary: "#0F4C81",
@@ -144,6 +147,20 @@ const s = StyleSheet.create({
     borderRadius: 4,
     marginTop: 10,
   },
+  watermark: {
+    position: "absolute",
+    top: "43%",
+    left: 55,
+    right: 55,
+    textAlign: "center",
+    fontSize: 38,
+    fontFamily: "Helvetica-Bold",
+    color: "#C62828",
+    opacity: 0.16,
+    transform: "rotate(-35deg)",
+  },
+  qrCode: { width: 68, height: 68, marginLeft: 12 },
+  qrCaption: { fontSize: 7, color: COLORS.primary, textAlign: "center", marginTop: 2 },
 });
 
 function fmtDate(v: any): string {
@@ -189,7 +206,9 @@ function KV({ k, v }: { k: string; v: any }) {
   );
 }
 
-function PageChrome({ codigoRafp, codigoRev, modelo }: { codigoRafp: string; codigoRev: string; modelo: string }) {
+function PageChrome({ codigoRafp, codigoRev, modelo, preview = false }: {
+  codigoRafp: string; codigoRev: string; modelo: string; preview?: boolean;
+}) {
   return (
     <>
       <View style={s.header} fixed>
@@ -203,6 +222,7 @@ function PageChrome({ codigoRafp, codigoRev, modelo }: { codigoRafp: string; cod
         <Text>Documento controlado — uso interno e do cliente. Não substitui parecer clínico individual.</Text>
         <Text render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
       </View>
+      {preview && <Text style={s.watermark} fixed>PRÉVIA — SEM VALIDADE</Text>}
     </>
   );
 }
@@ -235,7 +255,10 @@ function BarChart({ items }: { items: Array<{ label: string; value: number; colo
 }
 
 // ---- Documento ----
-function RelatorioPDF({ snapshot, codigoRafp, codigoRev, codigoValidacao, cliente, dataEmissao }: any) {
+function RelatorioPDF({
+  snapshot, codigoRafp, codigoRev, codigoValidacao, cliente, dataEmissao,
+  preview = false, qrDataUrl,
+}: any) {
   const av = snapshot?.avaliacao || {};
   const rev = snapshot?.revisao || {};
   const responsavel = rev.responsavel || {};
@@ -271,7 +294,7 @@ function RelatorioPDF({ snapshot, codigoRafp, codigoRev, codigoValidacao, client
     >
       {/* Capa */}
       <Page size="A4" style={s.page}>
-        <PageChrome codigoRafp={codigoRafp} codigoRev={codigoRev} modelo={modelo} />
+        <PageChrome codigoRafp={codigoRafp} codigoRev={codigoRev} modelo={modelo} preview={preview} />
         <View style={s.coverBox}>
           <Text style={s.coverKicker}>RELATÓRIO TÉCNICO</Text>
           <Text style={s.coverTitle}>Avaliação de Fatores Psicossociais</Text>
@@ -288,17 +311,25 @@ function RelatorioPDF({ snapshot, codigoRafp, codigoRev, codigoValidacao, client
           <KV k="Código de validação" v={codigoValidacao} />
         </View>
 
-        <View style={[s.seloBox]}>
-          <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold", color: COLORS.accent }}>
-            APROVADO TECNICAMENTE
-          </Text>
-          <Text style={{ fontSize: 10, marginTop: 4 }}>
-            {responsavelNome}
-            {responsavel?.cargo ? ` — ${responsavel.cargo}` : ""}
-          </Text>
-          <Text style={s.muted}>
-            Registro: {responsavel?.registro_profissional || "—"} · Aprovado em {fmtDateTime(rev?.aprovada_em)}
-          </Text>
+        <View style={[s.seloBox, { flexDirection: "row", alignItems: "center" }]}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold", color: COLORS.accent }}>
+              APROVADO TECNICAMENTE
+            </Text>
+            <Text style={{ fontSize: 10, marginTop: 4 }}>
+              {responsavelNome}
+              {responsavel?.cargo ? ` — ${responsavel.cargo}` : ""}
+            </Text>
+            <Text style={s.muted}>
+              Registro: {responsavel?.registro_profissional || "—"} · Aprovado em {fmtDateTime(rev?.aprovada_em)}
+            </Text>
+          </View>
+          {!preview && qrDataUrl && (
+            <View>
+              <Image src={qrDataUrl} style={s.qrCode} />
+              <Text style={s.qrCaption}>Validar autenticidade</Text>
+            </View>
+          )}
         </View>
 
         <Text style={[s.muted, { marginTop: 20 }]}>
@@ -311,7 +342,7 @@ function RelatorioPDF({ snapshot, codigoRafp, codigoRev, codigoValidacao, client
 
       {/* Sumário / Contexto */}
       <Page size="A4" style={s.page}>
-        <PageChrome codigoRafp={codigoRafp} codigoRev={codigoRev} modelo={modelo} />
+        <PageChrome codigoRafp={codigoRafp} codigoRev={codigoRev} modelo={modelo} preview={preview} />
 
         <Text style={s.h1}>1. Contexto e objetivo</Text>
         <Text style={s.p}>
@@ -338,7 +369,7 @@ function RelatorioPDF({ snapshot, codigoRafp, codigoRev, codigoValidacao, client
 
       {/* Resultados por fator */}
       <Page size="A4" style={s.page} wrap>
-        <PageChrome codigoRafp={codigoRafp} codigoRev={codigoRev} modelo={modelo} />
+        <PageChrome codigoRafp={codigoRafp} codigoRev={codigoRev} modelo={modelo} preview={preview} />
 
         <Text style={s.h1}>2. Resultados por fator</Text>
         <Text style={s.p}>
@@ -400,7 +431,7 @@ function RelatorioPDF({ snapshot, codigoRafp, codigoRev, codigoValidacao, client
 
       {/* Conclusão e Plano */}
       <Page size="A4" style={s.page} wrap>
-        <PageChrome codigoRafp={codigoRafp} codigoRev={codigoRev} modelo={modelo} />
+        <PageChrome codigoRafp={codigoRafp} codigoRev={codigoRev} modelo={modelo} preview={preview} />
 
         <Text style={s.h1}>3. Conclusão técnica</Text>
         <Text style={s.p}>{rev?.conclusao || "—"}</Text>
@@ -527,13 +558,84 @@ Deno.serve(async (req) => {
   }
 
   const avaliacaoId: string | undefined = body?.avaliacao_id;
+  const modo: string = body?.modo === "preview" ? "preview" : "emitir";
   const confirmacao: string | undefined = body?.confirmacao;
   const descricaoRevisao: string | null = body?.descricao_revisao ?? null;
 
-  if (!avaliacaoId || !confirmacao) {
+  if (!avaliacaoId || (modo === "emitir" && !confirmacao)) {
     return new Response(JSON.stringify({ error: "campos_obrigatorios" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+  }
+
+  if (modo === "preview") {
+    try {
+      // A prévia valida a autorização e os pré-requisitos, mas não prepara uma
+      // emissão: nenhum relatório, revisão, arquivo ou evento é persistido.
+      const validacao = await userClient.rpc("psico_validar_emissao_relatorio", {
+        p_avaliacao_id: avaliacaoId,
+      });
+      if (validacao.error) throw new Error(validacao.error.message);
+      const validacaoData: any = validacao.data;
+      if (!validacaoData?.pode_emitir) {
+        return new Response(JSON.stringify({
+          error: "validacao_falhou",
+          erros: validacaoData?.erros || [],
+        }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const conteudo = await userClient.rpc("psico_obter_conteudo_aprovado_relatorio", {
+        p_avaliacao_id: avaliacaoId,
+      });
+      if (conteudo.error || !conteudo.data) throw new Error("SNAPSHOT_INVALIDO");
+      const sanitizado = await admin.rpc("psico_sanitize_snapshot", { p_data: conteudo.data });
+      if (sanitizado.error || !sanitizado.data) throw new Error("SNAPSHOT_INVALIDO");
+      const snapshot = {
+        ...(sanitizado.data as Record<string, unknown>),
+        modelo: { codigo: MODELO_CODIGO, versao: MODELO_VERSAO },
+      };
+
+      const avQ = await admin.from("psico_avaliacoes")
+        .select("cliente_id").eq("id", avaliacaoId).maybeSingle();
+      let clienteNome = "—";
+      if (avQ.data?.cliente_id) {
+        const cli = await admin.from("clients").select("razao_social, nome_fantasia")
+          .eq("id", avQ.data.cliente_id).maybeSingle();
+        clienteNome = cli.data?.nome_fantasia || cli.data?.razao_social || "—";
+      }
+
+      const codigoRafp = `PRÉVIA-${validacaoData.avaliacao_codigo || "RELATÓRIO"}`;
+      const codigoRev = validacaoData.proxima_revisao || "R00";
+      const nodeBuf = await renderToBuffer(
+        <RelatorioPDF
+          snapshot={snapshot}
+          codigoRafp={codigoRafp}
+          codigoRev={codigoRev}
+          codigoValidacao="PRÉVIA — SEM VALIDADE"
+          cliente={{ nome: clienteNome }}
+          dataEmissao={new Date().toISOString()}
+          preview
+        />
+      );
+      const pdfBuffer = new Uint8Array(nodeBuf as any);
+      if (pdfBuffer.length < 500) throw new Error("PDF_INVALIDO");
+
+      return new Response(pdfBuffer, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `inline; filename="${codigoRafp}_${codigoRev}_PREVIA.pdf"`,
+          "Cache-Control": "no-store, max-age=0",
+        },
+      });
+    } catch (err: any) {
+      console.error("[psico-gerar-relatorio] preview error", err);
+      const codigo = ["SNAPSHOT_INVALIDO", "ERRO_RENDERIZACAO", "PDF_INVALIDO"]
+        .includes(err?.message) ? err.message : "ERRO_INTERNO";
+      return new Response(JSON.stringify({ error: codigo, detalhe: err?.message }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
   }
 
   // 1) preparar emissão (como usuário — usa auth.uid())
@@ -570,6 +672,13 @@ Deno.serve(async (req) => {
 
     const snapshot: any = versaoQ.data.snapshot_conteudo;
     const codigoValidacao: string = versaoQ.data.codigo_validacao;
+    const validationUrl = `${VALIDATION_PAGE_URL}?codigo=${encodeURIComponent(codigoValidacao)}`;
+    const qrDataUrl = await QRCode.toDataURL(validationUrl, {
+      width: 180,
+      margin: 1,
+      errorCorrectionLevel: "M",
+      color: { dark: COLORS.primary, light: COLORS.white },
+    });
 
     const avQ = await admin.from("psico_avaliacoes").select("cliente_id").eq("id", versaoQ.data.avaliacao_id).maybeSingle();
     let clienteNome = "—";
@@ -589,6 +698,7 @@ Deno.serve(async (req) => {
           codigoValidacao={codigoValidacao}
           cliente={{ nome: clienteNome }}
           dataEmissao={new Date().toISOString()}
+          qrDataUrl={qrDataUrl}
         />
       );
       pdfBuffer = new Uint8Array(nodeBuf as any);
