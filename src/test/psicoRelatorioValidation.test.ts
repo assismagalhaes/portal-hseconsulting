@@ -18,6 +18,10 @@ const reportSnapshotDigestMigration = readFileSync(
   resolve("supabase/migrations/20260718193000_fix_psico_report_snapshot_digest.sql"),
   "utf8",
 );
+const reportValidationCodeMigration = readFileSync(
+  resolve("supabase/migrations/20260718200000_fix_psico_report_validation_code_pgcrypto.sql"),
+  "utf8",
+);
 const reportFunction = readFileSync(
   resolve("supabase/functions/psico-gerar-relatorio/template.tsx"),
   "utf8",
@@ -76,5 +80,15 @@ describe("hash do snapshot do relatorio", () => {
     expect(reportSnapshotDigestMigration).toContain("extensions.digest(");
     expect(reportSnapshotDigestMigration).toContain("SET search_path = public");
     expect(reportSnapshotDigestMigration).not.toMatch(/(?<!extensions\.)digest\(/);
+  });
+});
+
+describe("codigo de validacao do relatorio", () => {
+  it("resolve gen_random_bytes no schema onde o pgcrypto esta instalado", () => {
+    expect(reportValidationCodeMigration).toContain("extensions.gen_random_bytes(16)");
+    expect(reportValidationCodeMigration).toContain("SET search_path = public");
+    expect(reportValidationCodeMigration).not.toMatch(
+      /(?<!extensions\.)gen_random_bytes\(/,
+    );
   });
 });
