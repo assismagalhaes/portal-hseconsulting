@@ -1,5 +1,5 @@
--- Permite montar o conteudo aprovado de avaliacoes coletadas pelo fluxo regular,
--- que nao possuem registro em psico_importacoes_avaliacoes.
+-- Define previamente a estrutura do registro de importacao. Um RECORD sem tipo
+-- nao permite que o PostgreSQL resolva seus campos durante o planejamento do CASE.
 CREATE OR REPLACE FUNCTION public.psico_obter_conteudo_aprovado_relatorio(p_avaliacao_id UUID)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
