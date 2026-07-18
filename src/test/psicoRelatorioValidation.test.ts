@@ -34,6 +34,10 @@ const reportMethodologySnapshotMigration = readFileSync(
   resolve("supabase/migrations/20260718211000_fix_psico_report_methodology_snapshot.sql"),
   "utf8",
 );
+const reportTemplateVersionMigration = readFileSync(
+  resolve("supabase/migrations/20260718213000_bump_psico_report_template_version.sql"),
+  "utf8",
+);
 const reportFunction = readFileSync(
   resolve("supabase/functions/psico-gerar-relatorio/template.tsx"),
   "utf8",
@@ -169,6 +173,20 @@ describe("metadados seguros do PDF psicossocial", () => {
   it("formata o horario de aprovacao no fuso oficial do portal", () => {
     expect(reportFunction).toMatch(
       /function fmtDateTime[\s\S]*?timeZone: "America\/Sao_Paulo"[\s\S]*?\n}/,
+    );
+  });
+
+  it("versiona a RPC e o renderer juntos quando o template muda", () => {
+    const edgeVersion = reportFunction.match(
+      /const MODELO_VERSAO = "([^"]+)"/,
+    )?.[1];
+
+    expect(edgeVersion).toBe("1.0.1");
+    expect(reportTemplateVersionMigration).toContain(
+      `v_modelo_versao text := ''${edgeVersion}''`,
+    );
+    expect(reportTemplateVersionMigration).toContain(
+      "psico_preparar_emissao_relatorio(uuid,text,text)",
     );
   });
 });
