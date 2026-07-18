@@ -28,7 +28,7 @@ vi.mock("@tanstack/react-query", () => ({
           pergunta_id: "pergunta-1",
           numero: 1,
           fator_id: "fator-1",
-          classificacao_media: "alto",
+          classificacao_media: "Risco Alto",
           score_medio: 3.2,
           percentual_desfavoravel: 50,
           percentual_alto_critico: 50,

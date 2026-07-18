@@ -37,8 +37,16 @@ export default function PsicoAprovacaoConsolidada({
       const p = await getPlanoPorRevisao(r.id);
       if (cancelled) return;
       setPlano(p);
-      const { data } = await validarRevisao(r.id);
-      if (!cancelled) setVal(data);
+      const { data, error } = await validarRevisao(r.id);
+      if (!cancelled) {
+        setVal(error ? {
+          valido: false,
+          erros: ["VALIDACAO_INDISPONIVEL"],
+          avisos: [],
+          fatores_significativos: null,
+          itens: null,
+        } : data);
+      }
     })();
     return () => { cancelled = true; };
   }, [avaliacaoId, refreshKey]);

@@ -65,6 +65,10 @@ const prioridade = z.preprocess(
   (valor) => typeof valor === "string" ? prioridadeBanco[valor] ?? valor : valor,
   z.enum(prioridadeValores),
 );
+
+export function normalizarClassificacaoRisco(valor: unknown): ClassificacaoRisco {
+  return classificacao.parse(valor);
+}
 const tipoEscopo    = z.enum(["global","funcao","setor","unidade"]);
 
 const fatorSchema = z.object({
