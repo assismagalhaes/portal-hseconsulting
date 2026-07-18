@@ -17,7 +17,7 @@ import {
   PLANO_STATUS_COLOR, PLANO_STATUS_LABEL, NIVEL_COLOR, PlanoStatus,
   adicionarMedidaDoModelo, atualizarItem, atualizarPlano, criarItemPersonalizado, excluirItem,
   getMedidasCatalogo, getPlanoPorRevisao, getResultadoFatoresPorRevisao, listItens, listItemFatores,
-  regenerarRecomendacoes,
+  marcarPlanoRevisado, regenerarRecomendacoes,
 } from "@/lib/psicoPlano";
 import { getRevisaoAtiva, getRevisaoFatores, PRIORIDADE_COLOR } from "@/lib/psicoRevisao";
 import PsicoAprovacaoConsolidada from "./PsicoAprovacaoConsolidada";
@@ -119,7 +119,7 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
 
   async function marcarRevisado() {
     if (!plano) return;
-    const { error } = await atualizarPlano(plano.id, { status: "revisado" });
+    const { error } = await marcarPlanoRevisado(plano.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Plano marcado como revisado"); load();
   }

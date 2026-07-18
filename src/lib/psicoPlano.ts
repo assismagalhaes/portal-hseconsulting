@@ -48,6 +48,10 @@ export async function atualizarPlano(id: string, patch: Record<string, any>) {
   return sb.from("psico_planos_acao").update(patch).eq("id", id);
 }
 
+export async function marcarPlanoRevisado(id: string) {
+  return sb.rpc("psico_marcar_plano_revisado", { p_plano_id: id });
+}
+
 export async function excluirItem(id: string) {
   return sb.from("psico_plano_acao_itens").delete().eq("id", id);
 }

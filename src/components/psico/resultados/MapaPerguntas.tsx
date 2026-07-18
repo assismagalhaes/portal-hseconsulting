@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2, Search } from "lucide-react";
-import { getPsicoDashboardResults, ClassificacaoRisco } from "@/lib/psicoResultados";
+import { getPsicoDashboardResults, ClassificacaoRisco, normalizarClassificacaoRisco } from "@/lib/psicoResultados";
 import { CLASSIF_LABEL, CLASSIF_SHORT, RISK_COLOR, classifBadgeClass, fmt, fmtPct, AvisoMetodologico } from "./shared";
 
 type SortKey = "numero" | "score" | "desfav" | "ac" | "critico";
@@ -71,7 +71,7 @@ export default function MapaPerguntas({ avaliacaoId, escopoId }: { avaliacaoId: 
         fator_id: p.fator_id,
         fator_codigo: fat?.fator_codigo ?? "—",
         fator_nome: fat?.fator_nome ?? "—",
-        classificacao: p.classificacao_media as ClassificacaoRisco,
+        classificacao: normalizarClassificacaoRisco(p.classificacao_media),
         score: Number(p.score_medio),
         desfav: Number(p.percentual_desfavoravel),
         ac: Number(p.percentual_alto_critico),

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dashboardSchema } from "@/lib/psicoResultados";
+import { dashboardSchema, normalizarClassificacaoRisco } from "@/lib/psicoResultados";
 
 const dashboardBanco = {
   avaliacao: {
@@ -109,5 +109,17 @@ describe("dashboard psicossocial", () => {
     expect(resultado.escopo.prioridade_maxima).toBe("monitoramento");
     expect(resultado.fatores[0].classificacao_media).toBe("baixo");
     expect(resultado.perguntas_atencao[0].classificacao_media).toBe("medio");
+  });
+});
+
+describe("normalizarClassificacaoRisco", () => {
+  it.each([
+    ["Risco Irrelevante", "irrelevante"],
+    ["Risco Baixo", "baixo"],
+    ["Risco Médio", "medio"],
+    ["Risco Alto", "alto"],
+    ["Risco Crítico", "critico"],
+  ])("normaliza o rótulo persistido %s", (persistido, esperado) => {
+    expect(normalizarClassificacaoRisco(persistido)).toBe(esperado);
   });
 });
