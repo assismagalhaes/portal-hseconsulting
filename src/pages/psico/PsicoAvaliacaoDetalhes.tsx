@@ -90,7 +90,7 @@ export default function PsicoAvaliacaoDetalhes() {
     if (!form.titulo?.trim()) return toast.error("Título é obrigatório");
     if (form.data_fim_prevista && form.data_inicio_prevista && form.data_fim_prevista < form.data_inicio_prevista) return toast.error("Data final anterior à inicial");
     if (Number(form.quantidade_participantes_prevista) < 1) return toast.error("Mínimo 1 participante");
-    const { error } = await supabase.from("psico_avaliacoes").update({
+    const atualizacao = {
       titulo: form.titulo,
       unidade: form.unidade || "Geral",
       data_inicio_prevista: form.data_inicio_prevista || null,
@@ -98,10 +98,25 @@ export default function PsicoAvaliacaoDetalhes() {
       quantidade_participantes_prevista: Number(form.quantidade_participantes_prevista) || 1,
       responsavel_hse_id: form.responsavel_hse_id,
       observacoes_internas: form.observacoes_internas || null,
-    }).eq("id", id);
+    };
+    const { data: atualizado, error } = await supabase.from("psico_avaliacoes")
+      .update(atualizacao)
+      .eq("id", id)
+      .select("*")
+      .maybeSingle();
     if (error) return toast.error(error.message);
+    if (!atualizado) return toast.error("A avaliação não foi atualizada. Recarregue a página e tente novamente.");
+    if (
+      atualizado.data_inicio_prevista !== atualizacao.data_inicio_prevista
+      || atualizado.data_fim_prevista !== atualizacao.data_fim_prevista
+    ) {
+      return toast.error("As datas previstas não foram persistidas. Recarregue a página e tente novamente.");
+    }
     toast.success("Avaliação atualizada");
-    setEditing(false); load();
+    setAv(atualizado);
+    setForm(atualizado);
+    setEditing(false);
+    load();
   }
 
   async function cancelar() {
@@ -258,11 +273,11 @@ export default function PsicoAvaliacaoDetalhes() {
                     </div>
                     <div>
                       <Label>Data prevista de início</Label>
-                      <Input type="date" value={form.data_inicio_prevista || ""} onChange={(e) => setForm({ ...form, data_inicio_prevista: e.target.value })} />
+                      <Input type="date" value={form.data_inicio_prevista || ""} onChange={(e) => setForm((atual) => ({ ...atual, data_inicio_prevista: e.target.value }))} />
                     </div>
                     <div>
                       <Label>Data prevista de encerramento</Label>
-                      <Input type="date" value={form.data_fim_prevista || ""} onChange={(e) => setForm({ ...form, data_fim_prevista: e.target.value })} />
+                      <Input type="date" value={form.data_fim_prevista || ""} onChange={(e) => setForm((atual) => ({ ...atual, data_fim_prevista: e.target.value }))} />
                     </div>
                     <div className="sm:col-span-2">
                       <Label>Observações internas</Label>
