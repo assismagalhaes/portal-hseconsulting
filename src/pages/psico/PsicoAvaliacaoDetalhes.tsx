@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PageHeader from "@/components/PageHeader";
@@ -46,6 +46,8 @@ export default function PsicoAvaliacaoDetalhes() {
   const [motivo, setMotivo] = useState("");
   const [cancelOpen, setCancelOpen] = useState(false);
   const [vigente, setVigente] = useState<any>(null);
+  const dataInicioRef = useRef<HTMLInputElement>(null);
+  const dataFimRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { document.title = "Avaliação Psicossocial | Portal HSE"; load(); }, [id]);
 
@@ -87,14 +89,16 @@ export default function PsicoAvaliacaoDetalhes() {
   }
 
   async function salvarEdicao() {
+    const dataInicioPrevista = dataInicioRef.current?.value || null;
+    const dataFimPrevista = dataFimRef.current?.value || null;
     if (!form.titulo?.trim()) return toast.error("Título é obrigatório");
-    if (form.data_fim_prevista && form.data_inicio_prevista && form.data_fim_prevista < form.data_inicio_prevista) return toast.error("Data final anterior à inicial");
+    if (dataFimPrevista && dataInicioPrevista && dataFimPrevista < dataInicioPrevista) return toast.error("Data final anterior à inicial");
     if (Number(form.quantidade_participantes_prevista) < 1) return toast.error("Mínimo 1 participante");
     const atualizacao = {
       titulo: form.titulo,
       unidade: form.unidade || "Geral",
-      data_inicio_prevista: form.data_inicio_prevista || null,
-      data_fim_prevista: form.data_fim_prevista || null,
+      data_inicio_prevista: dataInicioPrevista,
+      data_fim_prevista: dataFimPrevista,
       quantidade_participantes_prevista: Number(form.quantidade_participantes_prevista) || 1,
       responsavel_hse_id: form.responsavel_hse_id,
       observacoes_internas: form.observacoes_internas || null,
@@ -273,11 +277,11 @@ export default function PsicoAvaliacaoDetalhes() {
                     </div>
                     <div>
                       <Label>Data prevista de início</Label>
-                      <Input type="date" value={form.data_inicio_prevista || ""} onChange={(e) => setForm((atual) => ({ ...atual, data_inicio_prevista: e.target.value }))} />
+                      <Input ref={dataInicioRef} type="date" value={form.data_inicio_prevista || ""} onChange={(e) => setForm((atual) => ({ ...atual, data_inicio_prevista: e.target.value }))} />
                     </div>
                     <div>
                       <Label>Data prevista de encerramento</Label>
-                      <Input type="date" value={form.data_fim_prevista || ""} onChange={(e) => setForm((atual) => ({ ...atual, data_fim_prevista: e.target.value }))} />
+                      <Input ref={dataFimRef} type="date" value={form.data_fim_prevista || ""} onChange={(e) => setForm((atual) => ({ ...atual, data_fim_prevista: e.target.value }))} />
                     </div>
                     <div className="sm:col-span-2">
                       <Label>Observações internas</Label>
