@@ -27,7 +27,7 @@ import {
 // ============================================================================
 
 const MODELO_CODIGO = "HSE-PSICO-REL-1.0";
-const MODELO_VERSAO = "1.0.0";
+const MODELO_VERSAO = "1.0.1";
 
 const COLORS = {
   primary: "#0F4C81",
