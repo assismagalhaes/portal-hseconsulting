@@ -30,6 +30,10 @@ const reportSafeMetadataMigration = readFileSync(
   resolve("supabase/migrations/20260718210000_preserve_safe_psico_report_metadata.sql"),
   "utf8",
 );
+const reportMethodologySnapshotMigration = readFileSync(
+  resolve("supabase/migrations/20260718211000_fix_psico_report_methodology_snapshot.sql"),
+  "utf8",
+);
 const reportFunction = readFileSync(
   resolve("supabase/functions/psico-gerar-relatorio/template.tsx"),
   "utf8",
@@ -137,7 +141,22 @@ describe("metadados seguros do PDF psicossocial", () => {
     );
   });
 
-  it("usa a metodologia do processamento e nunca concatena nome ausente", () => {
+  it("persiste a metodologia vinculada no snapshot aprovado", () => {
+    expect(reportMethodologySnapshotMigration).toContain(
+      "'{avaliacao,metodologia}'",
+    );
+    expect(reportMethodologySnapshotMigration).toContain("mv.codigo");
+    expect(reportMethodologySnapshotMigration).toContain("mv.versao");
+    expect(reportMethodologySnapshotMigration).toContain(
+      "av.processamento_resultado_ativo_id",
+    );
+    expect(reportMethodologySnapshotMigration).toContain(
+      "proc.metodologia_versao_id",
+    );
+  });
+
+  it("prioriza a metodologia imutavel do snapshot e nunca concatena nome ausente", () => {
+    expect(reportFunction).toContain("snapshot?.avaliacao?.metodologia");
     expect(reportFunction).toContain(
       "snapshot?.agregado?.processamento?.metodologia",
     );
