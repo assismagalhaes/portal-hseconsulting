@@ -34,6 +34,14 @@ const reportMethodologySnapshotMigration = readFileSync(
   resolve("supabase/migrations/20260718211000_fix_psico_report_methodology_snapshot.sql"),
   "utf8",
 );
+const duplicateTemplateVersionMigration = readFileSync(
+  resolve("supabase/migrations/20260718210224_8002e5db-05ab-41c8-9de8-c2c4a13afae4.sql"),
+  "utf8",
+);
+const canonicalTemplateVersionMigration = readFileSync(
+  resolve("supabase/migrations/20260718213000_bump_psico_report_template_version.sql"),
+  "utf8",
+);
 const reportTemplateVersionMigration = readFileSync(
   resolve("supabase/migrations/20260718220000_bump_psico_report_template_preview_qr.sql"),
   "utf8",
@@ -187,6 +195,14 @@ describe("metadados seguros do PDF psicossocial", () => {
     );
     expect(reportTemplateVersionMigration).toContain(
       "psico_preparar_emissao_relatorio(uuid,text,text)",
+    );
+  });
+
+  it("mantém como no-op a migração duplicada criada pelo sincronismo", () => {
+    expect(duplicateTemplateVersionMigration).toContain("NULL;");
+    expect(duplicateTemplateVersionMigration).not.toContain("pg_get_functiondef");
+    expect(canonicalTemplateVersionMigration).toContain(
+      "v_modelo_versao text := ''1.0.1''",
     );
   });
 
