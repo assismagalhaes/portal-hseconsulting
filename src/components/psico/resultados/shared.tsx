@@ -83,7 +83,14 @@ export function fmtDateTime(iso: string | null | undefined): string {
 
 export function fmtDate(iso: string | null | undefined): string {
   if (!iso) return "—";
-  try { return new Date(iso).toLocaleDateString("pt-BR"); } catch { return "—"; }
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (dateOnly) {
+    const [, year, month, day] = dateOnly;
+    return `${day}/${month}/${year}`;
+  }
+
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString("pt-BR");
 }
 
 // Texto de aviso metodológico fixo
