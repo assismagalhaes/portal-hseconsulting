@@ -281,12 +281,21 @@ REVOKE ALL ON FUNCTION public.psico_marcar_plano_revisado(UUID) FROM PUBLIC, ano
 GRANT EXECUTE ON FUNCTION public.psico_marcar_plano_revisado(UUID) TO authenticated;
 
 -- Repara snapshots criados pela função antiga sem sobrescrever texto já editado manualmente.
+-- O guard preserva a imutabilidade durante o uso normal. A migração precisa
+-- suspendê-lo somente para normalizar snapshots legados; ALTER TABLE mantém o
+-- bloqueio necessário para que nenhuma escrita concorrente atravesse a janela.
+ALTER TABLE public.psico_revisoes_fatores
+  DISABLE TRIGGER tg_psico_rev_fator_guard;
+
 UPDATE public.psico_revisoes_fatores
    SET prioridade_calculada = CASE prioridade_calculada
      WHEN 'Crítica' THEN 'critica' WHEN 'Alta' THEN 'alta'
      WHEN 'Média' THEN 'media' WHEN 'Monitoramento' THEN 'monitoramento'
      ELSE prioridade_calculada END
  WHERE prioridade_calculada IN ('Crítica','Alta','Média','Monitoramento');
+
+ALTER TABLE public.psico_revisoes_fatores
+  ENABLE TRIGGER tg_psico_rev_fator_guard;
 
 WITH prioridades AS (
   SELECT r.id,
