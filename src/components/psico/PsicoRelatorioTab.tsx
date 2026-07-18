@@ -57,6 +57,7 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
   const [versoes, setVersoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [gerando, setGerando] = useState(false);
+  const [validacaoErro, setValidacaoErro] = useState<string | null>(null);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmTxt, setConfirmTxt] = useState("");
@@ -67,8 +68,9 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
 
   const carregar = useCallback(async () => {
     setLoading(true);
-    const [{ data: val }, rel] = await Promise.all([validarEmissao(av.id), getRelatorio(av.id)]);
+    const [{ data: val, error: valError }, rel] = await Promise.all([validarEmissao(av.id), getRelatorio(av.id)]);
     setValidacao(val);
+    setValidacaoErro(valError ? "Não foi possível validar os pré-requisitos da emissão. Tente atualizar novamente." : null);
     setRelatorio(rel);
     if (rel?.id) setVersoes(await listarVersoes(rel.id));
     else setVersoes([]);
@@ -180,6 +182,14 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
             <ChecklistItem ok={validacao?.plano_aprovado} label="Plano de ação aprovado" />
             <ChecklistItem ok={validacao?.responsavel_tecnico_valido} label="Responsável técnico definido" />
           </div>
+
+          {validacaoErro && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Falha na validação da emissão</AlertTitle>
+              <AlertDescription>{validacaoErro}</AlertDescription>
+            </Alert>
+          )}
 
           {!podeEmitir && erros.length > 0 && (
             <Alert variant="destructive">
