@@ -43,6 +43,10 @@ const canonicalTemplateVersionMigration = readFileSync(
   "utf8",
 );
 const reportTemplateVersionMigration = readFileSync(
+  resolve("supabase/migrations/20260718213351_b7cfa611-b98b-4039-8511-2183747260b3.sql"),
+  "utf8",
+);
+const duplicatePreviewQrMigration = readFileSync(
   resolve("supabase/migrations/20260718220000_bump_psico_report_template_preview_qr.sql"),
   "utf8",
 );
@@ -203,6 +207,14 @@ describe("metadados seguros do PDF psicossocial", () => {
     expect(duplicateTemplateVersionMigration).not.toContain("pg_get_functiondef");
     expect(canonicalTemplateVersionMigration).toContain(
       "v_modelo_versao text := ''1.0.1''",
+    );
+  });
+
+  it("mantém como no-op o identificador original após o Lovable materializar 1.0.2", () => {
+    expect(duplicatePreviewQrMigration).toContain("NULL;");
+    expect(duplicatePreviewQrMigration).not.toContain("pg_get_functiondef");
+    expect(reportTemplateVersionMigration).toContain(
+      "v_modelo_versao text := ''1.0.2''",
     );
   });
 
