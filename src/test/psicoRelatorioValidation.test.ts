@@ -14,6 +14,10 @@ const reportImportRecordMigration = readFileSync(
   resolve("supabase/migrations/20260718190000_fix_psico_report_import_record_type.sql"),
   "utf8",
 );
+const reportSnapshotDigestMigration = readFileSync(
+  resolve("supabase/migrations/20260718193000_fix_psico_report_snapshot_digest.sql"),
+  "utf8",
+);
 const reportFunction = readFileSync(
   resolve("supabase/functions/psico-gerar-relatorio/template.tsx"),
   "utf8",
@@ -64,5 +68,13 @@ describe("conteudo aprovado do relatorio sem importacao", () => {
       "_imp public.psico_importacoes_avaliacoes%ROWTYPE",
     );
     expect(reportImportRecordMigration).not.toContain("_imp RECORD");
+  });
+});
+
+describe("hash do snapshot do relatorio", () => {
+  it("resolve digest no schema onde o pgcrypto esta instalado", () => {
+    expect(reportSnapshotDigestMigration).toContain("extensions.digest(");
+    expect(reportSnapshotDigestMigration).toContain("SET search_path = public");
+    expect(reportSnapshotDigestMigration).not.toMatch(/(?<!extensions\.)digest\(/);
   });
 });
