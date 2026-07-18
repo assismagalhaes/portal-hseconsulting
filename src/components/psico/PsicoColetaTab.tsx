@@ -20,9 +20,11 @@ export default function PsicoColetaTab({ av, onReload }: { av: any; onReload: ()
   const [openAbrir, setOpenAbrir] = useState(false);
   const [openProrrogar, setOpenProrrogar] = useState(false);
   const [openEncerrar, setOpenEncerrar] = useState(false);
-  const [conf, setConf] = useState("");
+  const [confAbrir, setConfAbrir] = useState("");
+  const [confEncerrar, setConfEncerrar] = useState("");
   const [novaData, setNovaData] = useState("");
-  const [motivo, setMotivo] = useState("");
+  const [motivoProrrogar, setMotivoProrrogar] = useState("");
+  const [motivoEncerrar, setMotivoEncerrar] = useState("");
 
   useEffect(() => { void refresh(); /* eslint-disable-next-line */ }, [av.id, av.status]);
   useEffect(() => {
@@ -45,25 +47,46 @@ export default function PsicoColetaTab({ av, onReload }: { av: any; onReload: ()
   const podeAbrir = checklist.length > 0 && checklist.every((c) => c.ok);
   const codigo = av.codigo;
 
+  function handleAbrirOpenChange(open: boolean) {
+    setOpenAbrir(open);
+    if (!open) setConfAbrir("");
+  }
+
+  function handleProrrogarOpenChange(open: boolean) {
+    setOpenProrrogar(open);
+    if (!open) {
+      setNovaData("");
+      setMotivoProrrogar("");
+    }
+  }
+
+  function handleEncerrarOpenChange(open: boolean) {
+    setOpenEncerrar(open);
+    if (!open) {
+      setConfEncerrar("");
+      setMotivoEncerrar("");
+    }
+  }
+
   async function handleAbrir() {
-    const { error } = await abrirColeta(av.id, conf.trim());
+    const { error } = await abrirColeta(av.id, confAbrir.trim());
     if (error) return toast.error(error.message);
     toast.success("Coleta aberta");
-    setOpenAbrir(false); setConf(""); onReload();
+    handleAbrirOpenChange(false); onReload();
   }
   async function handleProrrogar() {
     if (!novaData) return toast.error("Informe a nova data");
-    if (motivo.trim().length < 10) return toast.error("Motivo mínimo 10 caracteres");
-    const { error } = await prorrogarColeta(av.id, novaData, motivo.trim());
+    if (motivoProrrogar.trim().length < 10) return toast.error("Motivo mínimo 10 caracteres");
+    const { error } = await prorrogarColeta(av.id, novaData, motivoProrrogar.trim());
     if (error) return toast.error(error.message);
     toast.success("Prazo prorrogado");
-    setOpenProrrogar(false); setNovaData(""); setMotivo(""); onReload();
+    handleProrrogarOpenChange(false); onReload();
   }
   async function handleEncerrar() {
-    const { error } = await encerrarColeta(av.id, conf.trim(), motivo.trim() || undefined);
+    const { error } = await encerrarColeta(av.id, confEncerrar.trim(), motivoEncerrar.trim() || undefined);
     if (error) return toast.error(error.message);
     toast.success("Coleta encerrada");
-    setOpenEncerrar(false); setConf(""); setMotivo(""); onReload();
+    handleEncerrarOpenChange(false); onReload();
   }
 
   if (av.status === "cancelada") {
@@ -152,7 +175,7 @@ export default function PsicoColetaTab({ av, onReload }: { av: any; onReload: ()
       )}
 
       {/* Dialog abrir */}
-      <Dialog open={openAbrir} onOpenChange={setOpenAbrir}>
+      <Dialog open={openAbrir} onOpenChange={handleAbrirOpenChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Abrir coleta — {codigo}</DialogTitle>
@@ -162,33 +185,33 @@ export default function PsicoColetaTab({ av, onReload }: { av: any; onReload: ()
           </DialogHeader>
           <div className="space-y-2 text-sm">
             <div>Digite <span className="font-mono font-semibold">ABRIR {codigo}</span> para confirmar:</div>
-            <Input value={conf} onChange={(e) => setConf(e.target.value)} placeholder={`ABRIR ${codigo}`} />
+            <Input value={confAbrir} onChange={(e) => setConfAbrir(e.target.value)} placeholder={`ABRIR ${codigo}`} />
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpenAbrir(false)}>Cancelar</Button>
+            <Button variant="ghost" onClick={() => handleAbrirOpenChange(false)}>Cancelar</Button>
             <Button onClick={handleAbrir}>Abrir coleta</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Dialog prorrogar */}
-      <Dialog open={openProrrogar} onOpenChange={setOpenProrrogar}>
+      <Dialog open={openProrrogar} onOpenChange={handleProrrogarOpenChange}>
         <DialogContent>
           <DialogHeader><DialogTitle>Prorrogar prazo</DialogTitle></DialogHeader>
           <div className="space-y-3 text-sm">
             <div>Prazo atual: <strong>{av.data_fim_prevista ? formatDate(av.data_fim_prevista) : "—"}</strong></div>
             <div><Label>Nova data</Label><Input type="date" value={novaData} onChange={(e) => setNovaData(e.target.value)} /></div>
-            <div><Label>Motivo (mín. 10 caracteres)</Label><Textarea rows={3} value={motivo} onChange={(e) => setMotivo(e.target.value)} /></div>
+            <div><Label>Motivo (mín. 10 caracteres)</Label><Textarea rows={3} value={motivoProrrogar} onChange={(e) => setMotivoProrrogar(e.target.value)} /></div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpenProrrogar(false)}>Cancelar</Button>
+            <Button variant="ghost" onClick={() => handleProrrogarOpenChange(false)}>Cancelar</Button>
             <Button onClick={handleProrrogar}>Confirmar prorrogação</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Dialog encerrar */}
-      <Dialog open={openEncerrar} onOpenChange={setOpenEncerrar}>
+      <Dialog open={openEncerrar} onOpenChange={handleEncerrarOpenChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Encerrar coleta — {codigo}</DialogTitle>
@@ -196,12 +219,12 @@ export default function PsicoColetaTab({ av, onReload }: { av: any; onReload: ()
           </DialogHeader>
           <div className="space-y-2 text-sm">
             <div>Digite <span className="font-mono font-semibold">ENCERRAR {codigo}</span>:</div>
-            <Input value={conf} onChange={(e) => setConf(e.target.value)} placeholder={`ENCERRAR ${codigo}`} />
+            <Input value={confEncerrar} onChange={(e) => setConfEncerrar(e.target.value)} placeholder={`ENCERRAR ${codigo}`} />
             <Label>Motivo (opcional, mín. 10 caracteres se informado)</Label>
-            <Textarea rows={2} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
+            <Textarea rows={2} value={motivoEncerrar} onChange={(e) => setMotivoEncerrar(e.target.value)} />
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpenEncerrar(false)}>Cancelar</Button>
+            <Button variant="ghost" onClick={() => handleEncerrarOpenChange(false)}>Cancelar</Button>
             <Button variant="destructive" onClick={handleEncerrar}>Confirmar encerramento</Button>
           </DialogFooter>
         </DialogContent>
