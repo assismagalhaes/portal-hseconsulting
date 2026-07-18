@@ -22,6 +22,10 @@ const reportValidationCodeMigration = readFileSync(
   resolve("supabase/migrations/20260718200000_fix_psico_report_validation_code_pgcrypto.sql"),
   "utf8",
 );
+const reportDocumentTimelineRetryMigration = readFileSync(
+  resolve("supabase/migrations/20260718203000_fix_psico_document_timeline_and_failed_retry.sql"),
+  "utf8",
+);
 const reportFunction = readFileSync(
   resolve("supabase/functions/psico-gerar-relatorio/template.tsx"),
   "utf8",
@@ -89,6 +93,32 @@ describe("codigo de validacao do relatorio", () => {
     expect(reportValidationCodeMigration).toContain("SET search_path = public");
     expect(reportValidationCodeMigration).not.toMatch(
       /(?<!extensions\.)gen_random_bytes\(/,
+    );
+  });
+});
+
+describe("integracao do relatorio com documentos tecnicos", () => {
+  it("registra a timeline somente depois de inserir o documento pai", () => {
+    expect(reportDocumentTimelineRetryMigration).toContain(
+      "AFTER INSERT ON public.documentos_tecnicos",
+    );
+    expect(reportDocumentTimelineRetryMigration).toContain(
+      "CREATE OR REPLACE FUNCTION public.documentos_timeline_after_insert()",
+    );
+    expect(reportDocumentTimelineRetryMigration).toContain(
+      "COALESCE(auth.uid(), NEW.created_by)",
+    );
+  });
+
+  it("reutiliza uma revisao falha para permitir retry sem violar a numeracao", () => {
+    expect(reportDocumentTimelineRetryMigration).toContain("AND status = 'falhou'");
+    expect(reportDocumentTimelineRetryMigration).toContain("status = 'gerando'");
+    expect(reportDocumentTimelineRetryMigration).toContain("erro_codigo = NULL");
+    expect(reportDocumentTimelineRetryMigration).toContain(
+      "'emissao_relatorio_retentada'",
+    );
+    expect(reportDocumentTimelineRetryMigration).not.toMatch(
+      /DELETE FROM public\.psico_relatorios_versoes/i,
     );
   });
 });
