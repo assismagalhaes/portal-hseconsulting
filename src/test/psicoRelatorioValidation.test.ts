@@ -26,6 +26,10 @@ const reportDocumentTimelineRetryMigration = readFileSync(
   resolve("supabase/migrations/20260718203000_fix_psico_document_timeline_and_failed_retry.sql"),
   "utf8",
 );
+const reportSafeMetadataMigration = readFileSync(
+  resolve("supabase/migrations/20260718210000_preserve_safe_psico_report_metadata.sql"),
+  "utf8",
+);
 const reportFunction = readFileSync(
   resolve("supabase/functions/psico-gerar-relatorio/template.tsx"),
   "utf8",
@@ -120,5 +124,26 @@ describe("integracao do relatorio com documentos tecnicos", () => {
     expect(reportDocumentTimelineRetryMigration).not.toMatch(
       /DELETE FROM public\.psico_relatorios_versoes/i,
     );
+  });
+});
+
+describe("metadados seguros do PDF psicossocial", () => {
+  it("preserva somente a identificacao profissional aprovada", () => {
+    expect(reportSafeMetadataMigration).toContain("'nome_responsavel'");
+    expect(reportSafeMetadataMigration).toContain("v->>'nome'");
+    expect(reportSafeMetadataMigration).toContain("'registro_profissional'");
+    expect(reportSafeMetadataMigration).not.toMatch(
+      /responsavel_seguro\s*:=.*v->>'email'/s,
+    );
+  });
+
+  it("usa a metodologia do processamento e nunca concatena nome ausente", () => {
+    expect(reportFunction).toContain(
+      "snapshot?.agregado?.processamento?.metodologia",
+    );
+    expect(reportFunction).toContain('v={metodologiaLabel}');
+    expect(reportFunction).toContain("responsavel?.nome_responsavel");
+    expect(reportFunction).not.toContain("${biblioteca.nome}");
+    expect(reportFunction).not.toContain('{responsavel?.nome || "—"}');
   });
 });

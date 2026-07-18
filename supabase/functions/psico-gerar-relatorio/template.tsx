@@ -233,10 +233,17 @@ function RelatorioPDF({ snapshot, codigoRafp, codigoRev, codigoValidacao, client
   const rev = snapshot?.revisao || {};
   const responsavel = rev.responsavel || {};
   const biblioteca = snapshot?.biblioteca || {};
+  const metodologia = snapshot?.agregado?.processamento?.metodologia || {};
   const fatores: any[] = Array.isArray(snapshot?.fatores) ? snapshot.fatores : [];
   const plano = snapshot?.plano || {};
   const itens: any[] = Array.isArray(plano?.itens) ? plano.itens : [];
   const modelo = `${MODELO_CODIGO} v${MODELO_VERSAO}`;
+  const metodologiaLabel = metodologia?.codigo
+    ? `${metodologia.codigo} v${metodologia.versao || "—"}`
+    : biblioteca?.codigo
+      ? `${biblioteca.codigo} v${biblioteca.versao || "—"}`
+      : "—";
+  const responsavelNome = responsavel?.nome_responsavel || responsavel?.nome || "—";
 
   const fatoresSig = fatores.filter((f) => f.significativo);
   const chartItems = fatoresSig.slice(0, 12).map((f) => ({
@@ -267,7 +274,7 @@ function RelatorioPDF({ snapshot, codigoRafp, codigoRev, codigoValidacao, client
           <KV k="Avaliação vinculada" v={`${av.codigo || "—"} — ${av.titulo || ""}`} />
           <KV k="Período de coleta" v={`${fmtDate(av.periodo?.inicio)} a ${fmtDate(av.periodo?.fim)}`} />
           <KV k="Modelo" v={modelo} />
-          <KV k="Metodologia" v={biblioteca?.codigo ? `${biblioteca.codigo} v${biblioteca.versao} — ${biblioteca.nome}` : "—"} />
+          <KV k="Metodologia" v={metodologiaLabel} />
           <KV k="Data de emissão" v={fmtDate(dataEmissao)} />
           <KV k="Código de validação" v={codigoValidacao} />
         </View>
@@ -277,7 +284,7 @@ function RelatorioPDF({ snapshot, codigoRafp, codigoRev, codigoValidacao, client
             APROVADO TECNICAMENTE
           </Text>
           <Text style={{ fontSize: 10, marginTop: 4 }}>
-            {responsavel?.nome || "—"}
+            {responsavelNome}
             {responsavel?.cargo ? ` — ${responsavel.cargo}` : ""}
           </Text>
           <Text style={s.muted}>
@@ -312,8 +319,7 @@ function RelatorioPDF({ snapshot, codigoRafp, codigoRev, codigoValidacao, client
         <Text style={s.h2}>1.2 Metodologia</Text>
         <Text style={s.p}>
           Aplicou-se a metodologia <Text style={{ fontFamily: "Helvetica-Bold" }}>
-          {biblioteca?.codigo ? `${biblioteca.codigo} v${biblioteca.versao}` : "HSE-PSICO"}</Text>
-          {biblioteca?.nome ? ` — ${biblioteca.nome}` : ""}. Os resultados foram calculados de forma
+          {metodologiaLabel}</Text>. Os resultados foram calculados de forma
           agregada, sem qualquer vínculo nominal, e revisados tecnicamente antes da emissão.
         </Text>
 
@@ -440,7 +446,7 @@ function RelatorioPDF({ snapshot, codigoRafp, codigoRev, codigoValidacao, client
             APROVAÇÃO TÉCNICA
           </Text>
           <Text style={{ fontSize: 10, marginTop: 4 }}>
-            {responsavel?.nome || "—"}
+            {responsavelNome}
             {responsavel?.cargo ? ` — ${responsavel.cargo}` : ""}
           </Text>
           <Text style={s.muted}>
