@@ -8,6 +8,7 @@ import {
   authAdminOrTecnico, corsHeaders, detectarLayoutImportacaoPsico, decodificarBytes,
   detectarDelimitador, hmacSha256Hex, json, normalizarChaveClassificacao,
   normalizarData, normalizarOpcao, normalizarTexto, parseCsv, parseXlsx, svcClient,
+  userClient,
 } from '../_shared/psico-importacao.ts'
 
 Deno.serve(async (req) => {
@@ -26,6 +27,7 @@ Deno.serve(async (req) => {
   if (!rowSecret) return json(500, { error: 'row_secret_ausente' })
 
   const svc = svcClient()
+  const userSvc = userClient(auth.jwt)
 
   // Busca info da importação (path + questionário)
   const { data: imp, error: impErr } = await svc
@@ -87,7 +89,7 @@ Deno.serve(async (req) => {
   const idxFuncao = layout === 'id_nome_funcao_respostas' ? deteccao.idx_funcao : -1
 
   // Registra layout detectado antes de qualquer ingestão
-  const regLayout = await svc.rpc('psico_importacao_registrar_layout', {
+  const regLayout = await userSvc.rpc('psico_importacao_registrar_layout', {
     p_importacao_id: importacaoId,
     p_layout: {
       layout,
@@ -211,7 +213,7 @@ Deno.serve(async (req) => {
   // Ingere em lotes de 500
   for (let i = 0; i < staging.length; i += 500) {
     const lote = staging.slice(i, i + 500)
-    const ing = await svc.rpc('psico_importacao_ingerir_staging_bruta', {
+    const ing = await userSvc.rpc('psico_importacao_ingerir_staging_bruta', {
       p_importacao_id: importacaoId,
       p_linhas: lote,
     })
@@ -222,7 +224,7 @@ Deno.serve(async (req) => {
   if (erros.length > 0) {
     for (let i = 0; i < erros.length; i += 500) {
       const lote = erros.slice(i, i + 500)
-      await svc.rpc('psico_importacao_registrar_erros', {
+      await userSvc.rpc('psico_importacao_registrar_erros', {
         p_importacao_id: importacaoId,
         p_erros: lote,
       })
@@ -250,7 +252,7 @@ Deno.serve(async (req) => {
     previa,
   }
 
-  const fin = await svc.rpc('psico_importacao_finalizar_validacao', {
+  const fin = await userSvc.rpc('psico_importacao_finalizar_validacao', {
     p_importacao_id: importacaoId,
     p_total_linhas: totalLinhas,
     p_linhas_validas: linhasValidas,
