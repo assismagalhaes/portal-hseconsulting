@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.psico_importacao_ingerir_staging_bruta(uuid, jsonb) TO authenticated;
