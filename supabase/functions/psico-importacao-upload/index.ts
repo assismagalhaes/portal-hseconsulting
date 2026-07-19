@@ -4,7 +4,7 @@
 // Nenhum dado pessoal é persistido nesta etapa — o arquivo bruto vive apenas
 // no bucket privado até o commit ou cancelamento.
 import {
-  authAdminOrTecnico, corsHeaders, json, parseCsv, parseXlsx, sha256Hex, svcClient,
+  authAdminOrTecnico, corsHeaders, json, parseCsv, parseXlsx, sha256Hex, svcClient, userClient,
 } from '../_shared/psico-importacao.ts'
 
 const MAX_BYTES = 25 * 1024 * 1024
@@ -48,6 +48,7 @@ Deno.serve(async (req) => {
 
   const hash = await sha256Hex(bytes)
   const svc = svcClient()
+  const userSvc = userClient(auth.jwt)
 
   const storagePath = `${clienteId}/${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}.${formato}`
   const up = await svc.storage.from('psico-importacoes').upload(storagePath, bytes, {
@@ -60,7 +61,7 @@ Deno.serve(async (req) => {
   }
 
   // Chama RPC iniciar com JWT do usuário → registra iniciado_por corretamente
-  const { data: importacaoId, error: rpcErr } = await svc.rpc('psico_importacao_iniciar', {
+  const { data: importacaoId, error: rpcErr } = await userSvc.rpc('psico_importacao_iniciar', {
     p_cliente_id: clienteId,
     p_tipo: tipo,
     p_formato: formato,
@@ -77,9 +78,6 @@ Deno.serve(async (req) => {
     await svc.storage.from('psico-importacoes').remove([storagePath])
     return json(400, { error: 'iniciar_falhou', detalhe: rpcErr.message })
   }
-
-  // Ajusta iniciado_por para o usuário real (auth.uid não existe com service role)
-  await svc.from('psico_importacoes_avaliacoes').update({ iniciado_por: auth.userId }).eq('id', importacaoId)
 
   // Extrai apenas cabeçalhos + amostra (10 primeiras linhas) — sem persistir dados
   let cabecalhos: string[] = []

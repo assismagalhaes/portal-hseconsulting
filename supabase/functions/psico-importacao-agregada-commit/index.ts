@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
   if (linhas.length === 0) return json(400, { error: 'sem_linhas_validas' })
 
   if (erros.length > 0) {
-    await svc.rpc('psico_importacao_registrar_erros', { p_importacao_id: importacaoId, p_erros: erros })
+    await userSvc.rpc('psico_importacao_registrar_erros', { p_importacao_id: importacaoId, p_erros: erros })
   }
 
   const payload = {
