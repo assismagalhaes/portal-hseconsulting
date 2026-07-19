@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   const auth = await authAdminOrTecnico(req)
   if (!auth) return json(401, { error: 'unauthorized' })
 
-  let body: { importacao_id?: string }
+  let body: { importacao_id?: string; mapeamento?: Record<string, unknown> }
   try { body = await req.json() } catch { return json(400, { error: 'json_invalido' }) }
   const importacaoId = String(body.importacao_id || '')
   if (!importacaoId) return json(400, { error: 'parametros_obrigatorios' })
@@ -86,6 +86,16 @@ Deno.serve(async (req) => {
   const idxId = deteccao.idx_identificador
   const idxNome = deteccao.idx_nome
   const idxFuncao = layout === 'id_nome_funcao_respostas' ? deteccao.idx_funcao : -1
+
+  // Persiste o mapeamento e faz a transição arquivo_recebido -> mapeamento
+  // antes da RPC de ingestão, que aceita apenas mapeamento/validando.
+  const salvarMapeamento = await userSvc.rpc('psico_importacao_salvar_mapeamento', {
+    p_importacao_id: importacaoId,
+    p_mapeamento: body.mapeamento ?? {},
+  })
+  if (salvarMapeamento.error) {
+    return json(500, { error: 'salvar_mapeamento_falhou', detalhe: salvarMapeamento.error.message })
+  }
 
   // Registra layout detectado antes de qualquer ingestão
   const regLayout = await userSvc.rpc('psico_importacao_registrar_layout', {
