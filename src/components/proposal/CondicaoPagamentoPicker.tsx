@@ -342,8 +342,6 @@ export default function CondicaoPagamentoPicker({
                 <th className="text-left px-3 py-1.5">%</th>
                 <th className="text-right px-3 py-1.5">Valor</th>
                 <th className="text-left px-3 py-1.5">Marco</th>
-                <th className="text-left px-3 py-1.5">Prazo</th>
-                <th className="text-left px-3 py-1.5">Observação</th>
               </tr>
             </thead>
             <tbody>
@@ -353,12 +351,6 @@ export default function CondicaoPagamentoPicker({
                   <td className="px-3 py-1.5">{Number(p.percentual).toFixed(2)}%</td>
                   <td className="px-3 py-1.5 text-right font-mono">{brl(Number(p.valor ?? (p.percentual / 100) * total))}</td>
                   <td className="px-3 py-1.5">{MARCO_LABEL[p.marco as CondPagMarco]}</td>
-                  <td className="px-3 py-1.5 text-muted-foreground">
-                    {p.marco === "mensal_recorrente"
-                      ? `todo dia ${p.dia_mes ?? "—"}`
-                      : p.dias_apos_marco ? `+${p.dias_apos_marco} dias` : "no ato"}
-                  </td>
-                  <td className="px-3 py-1.5 text-muted-foreground">{p.descricao || "—"}</td>
                 </tr>
               ))}
             </tbody>
