@@ -5,6 +5,7 @@
 // - Parser CSV simples + wrapper XLSX
 // - Normalização de opções de resposta (nunca/raramente/às vezes/frequentemente/sempre)
 import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2'
+export { normalizarData } from './psico-importacao-dates.ts'
 
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -82,22 +83,6 @@ export function normalizarChaveClassificacao(v: unknown): string | null {
   const s = normalizarTexto(v)
   if (!s) return null
   return stripDiacritics(s.toLowerCase()).replace(/\s+/g, ' ')
-}
-
-export function normalizarData(v: unknown): string | null {
-  if (!v) return null
-  const s = String(v).trim()
-  if (!s) return null
-  // ISO
-  const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(s)
-  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`
-  // Google Forms (pt-BR): dd/mm/yyyy HH:MM:SS
-  const br = /^(\d{2})\/(\d{2})\/(\d{4})/.exec(s)
-  if (br) return `${br[3]}-${br[2]}-${br[1]}`
-  // dd-mm-yyyy
-  const br2 = /^(\d{2})-(\d{2})-(\d{4})/.exec(s)
-  if (br2) return `${br2[3]}-${br2[2]}-${br2[1]}`
-  return null
 }
 
 // ---------- SHA-256 ----------

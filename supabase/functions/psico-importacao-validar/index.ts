@@ -257,6 +257,8 @@ Deno.serve(async (req) => {
     linhas_ignoradas: linhasIgnoradas,
     perguntas_mapeadas: idxPerguntas.length,
     perguntas_esperadas: numerosValidos.size,
+    data_resposta_minima: dataMin,
+    data_resposta_maxima: dataMax,
     avisos: erros.filter((e: unknown) => (e as { severidade?: string }).severidade === 'aviso').length,
     previa,
   }

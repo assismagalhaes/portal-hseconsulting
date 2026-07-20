@@ -169,6 +169,12 @@ export default function PsicoImportacaoHistorica() {
       const j = await r.json();
       if (!r.ok) throw new Error(j.detalhe || j.error || "Falha na validação");
       setValidarResp(j as ValidarResp);
+      if (j.resumo?.data_resposta_minima) {
+        setAvalDataInicio((atual) => atual || j.resumo.data_resposta_minima);
+      }
+      if (j.resumo?.data_resposta_maxima) {
+        setAvalDataFim((atual) => atual || j.resumo.data_resposta_maxima);
+      }
       const { data } = await sb.from("psico_importacoes_erros")
         .select("numero_linha, codigo, campo, severidade, mensagem")
         .eq("importacao_id", uploadResp.importacao_id).order("numero_linha").limit(200);
@@ -180,6 +186,12 @@ export default function PsicoImportacaoHistorica() {
 
   async function doCommit() {
     if (!uploadResp) return;
+    if (!avalDataInicio || !avalDataFim) {
+      toast.error("Informe o período original da coleta"); return;
+    }
+    if (avalDataFim < avalDataInicio) {
+      toast.error("A data final não pode ser anterior à data inicial"); return;
+    }
     setBusy(true);
     try {
       const endpoint = tipo === "agregada_perguntas"
@@ -428,11 +440,11 @@ export default function PsicoImportacaoHistorica() {
                     <Input value={avalUnidade} onChange={e => setAvalUnidade(e.target.value)} />
                   </div>
                   <div>
-                    <Label>Data início (coleta original)</Label>
+                    <Label>Data início (coleta original) *</Label>
                     <Input type="date" value={avalDataInicio} onChange={e => setAvalDataInicio(e.target.value)} />
                   </div>
                   <div>
-                    <Label>Data fim (coleta original)</Label>
+                    <Label>Data fim (coleta original) *</Label>
                     <Input type="date" value={avalDataFim} onChange={e => setAvalDataFim(e.target.value)} />
                   </div>
                 </div>
@@ -446,7 +458,7 @@ export default function PsicoImportacaoHistorica() {
                     )}
                     <Button
                       disabled={
-                        busy || !avalTitulo ||
+                        busy || !avalTitulo || !avalDataInicio || !avalDataFim || avalDataFim < avalDataInicio ||
                         (validarResp !== null && validarResp.resumo.linhas_validas === 0) ||
                         (!!validarResp?.resumo?.nome_presente && !confirmNome) ||
                         (!!validarResp?.resumo?.funcao_presente && !confirmFuncao)
