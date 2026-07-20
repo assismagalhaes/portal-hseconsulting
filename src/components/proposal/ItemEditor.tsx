@@ -14,7 +14,7 @@ import { statusMargemMeta } from "@/lib/pricing";
 import CategoryCombobox from "@/components/CategoryCombobox";
 
 export default function ItemEditor({
-  item, pricing, onChange, onRemove, onOpenPricing, onSaveToCatalog,
+  item, pricing, onChange, onRemove, onOpenPricing, onSaveToCatalog, numero,
   isInternal, selected, onSelect, proposalClients, modoFaturamento,
 }: any) {
   const [local, setLocal] = useState(item);
@@ -34,7 +34,7 @@ export default function ItemEditor({
             )}
             <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="outline" className="font-mono">#{item.numero_item}</Badge>
+              <Badge variant="outline" className="font-mono">#{numero ?? item.numero_item}</Badge>
               {item.categoria && <Badge variant="secondary">{item.categoria}</Badge>}
               {meta && <Badge className={`border ${meta.color}`}>{meta.label}</Badge>}
             </div>
