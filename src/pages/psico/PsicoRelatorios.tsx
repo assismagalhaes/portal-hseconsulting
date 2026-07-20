@@ -24,13 +24,14 @@ export function PsicoRelatorios() {
     document.title = "Relatórios | Avaliação Psicossocial";
     (async () => {
       const sb: any = supabase;
-      const { data } = await sb
+      const { data, error } = await sb
         .from("psico_relatorios_versoes")
         .select(
-          "id, relatorio_id, codigo_revisao, numero_revisao, status, emitido_em, arquivo_paginas, arquivo_tamanho_bytes, pdf_hash_sha256, codigo_validacao, avaliacao_id, psico_relatorios!inner(id, codigo, status), psico_avaliacoes!inner(id, codigo, titulo, cliente_id, clients(id, razao_social, nome_fantasia))"
+          "id, relatorio_id, codigo_revisao, numero_revisao, status, emitido_em, arquivo_paginas, arquivo_tamanho_bytes, pdf_hash_sha256, codigo_validacao, avaliacao_id, psico_relatorios!psico_relatorios_versoes_relatorio_id_fkey(id, codigo, status), psico_avaliacoes!inner(id, codigo, titulo, cliente_id, clients(id, razao_social, nome_fantasia))"
         )
         .in("status", ["emitido", "substituido", "revogado"])
         .order("emitido_em", { ascending: false });
+      if (error) console.error("Relatórios load error:", error);
       setRows(data || []);
       setLoading(false);
     })();
