@@ -43,7 +43,7 @@ export default function PsicoAvaliacaoNova() {
   const [form, setForm] = useState({
     cliente_id: "",
     titulo: "",
-    unidade: "Geral",
+    unidade: "Matriz",
     data_inicio_prevista: "",
     data_fim_prevista: "",
     quantidade_participantes_prevista: 1,
@@ -94,7 +94,7 @@ export default function PsicoAvaliacaoNova() {
     const { data, error } = await supabase.from("psico_avaliacoes").insert({
       cliente_id: parsed.data.cliente_id,
       titulo: parsed.data.titulo,
-      unidade: parsed.data.unidade || "Geral",
+      unidade: parsed.data.unidade || "Matriz",
       data_inicio_prevista: parsed.data.data_inicio_prevista,
       data_fim_prevista: parsed.data.data_fim_prevista,
       quantidade_participantes_prevista: parsed.data.quantidade_participantes_prevista,
@@ -168,7 +168,7 @@ export default function PsicoAvaliacaoNova() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <Label>Unidade</Label>
-                  <Input value={form.unidade} onChange={(e) => setForm((f) => ({ ...f, unidade: e.target.value }))} placeholder="Geral" />
+                  <Input value={form.unidade} onChange={(e) => setForm((f) => ({ ...f, unidade: e.target.value }))} placeholder="Matriz" />
                 </div>
                 <div>
                   <Label>Quantidade prevista de participantes *</Label>

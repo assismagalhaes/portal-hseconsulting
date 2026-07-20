@@ -77,7 +77,7 @@ export default function PsicoImportacaoHistorica() {
 
   // Passo 5: commit
   const [avalTitulo, setAvalTitulo] = useState("");
-  const [avalUnidade, setAvalUnidade] = useState("Geral");
+  const [avalUnidade, setAvalUnidade] = useState("Matriz");
   const [avalDataInicio, setAvalDataInicio] = useState("");
   const [avalDataFim, setAvalDataFim] = useState("");
   const [commitResult, setCommitResult] = useState<any>(null);

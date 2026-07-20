@@ -96,7 +96,7 @@ export default function PsicoAvaliacaoDetalhes() {
     if (Number(form.quantidade_participantes_prevista) < 1) return toast.error("Mínimo 1 participante");
     const atualizacao = {
       titulo: form.titulo,
-      unidade: form.unidade || "Geral",
+      unidade: form.unidade || "Matriz",
       data_inicio_prevista: dataInicioPrevista,
       data_fim_prevista: dataFimPrevista,
       quantidade_participantes_prevista: Number(form.quantidade_participantes_prevista) || 1,
