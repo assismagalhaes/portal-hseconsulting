@@ -141,12 +141,15 @@ Deno.serve(async (req) => {
 
       const avQ = await admin.from("psico_avaliacoes")
         .select("cliente_id").eq("id", avaliacaoId).maybeSingle();
-      let clienteNome = "—";
+      let cliente: any = { nome: "—" };
       if (avQ.data?.cliente_id) {
-        const cli = await admin.from("clients").select("razao_social, nome_fantasia")
+        const cli = await admin.from("clients").select("razao_social, nome_fantasia, cnpj_cpf, endereco, numero, complemento, bairro, cidade, uf, cep")
           .eq("id", avQ.data.cliente_id).maybeSingle();
-        clienteNome = cli.data?.nome_fantasia || cli.data?.razao_social || "—";
+        cliente = { ...cli.data, nome: cli.data?.nome_fantasia || cli.data?.razao_social || "—" };
       }
+      const empresaQ = await admin.from("proposal_template")
+        .select("quem_somos, telefone, email, site, endereco, slogan, cor_primaria, cor_secundaria")
+        .limit(1).maybeSingle();
 
       const codigoRafp = `PRÉVIA-${validacaoData.avaliacao_codigo || "RELATÓRIO"}`;
       const codigoRev = validacaoData.proxima_revisao || "R00";
@@ -156,7 +159,8 @@ Deno.serve(async (req) => {
           codigoRafp={codigoRafp}
           codigoRev={codigoRev}
           codigoValidacao="PRÉVIA — SEM VALIDADE"
-          cliente={{ nome: clienteNome }}
+          cliente={cliente}
+          empresa={empresaQ.data || {}}
           dataEmissao={new Date().toISOString()}
           preview
         />
@@ -225,11 +229,16 @@ Deno.serve(async (req) => {
     });
 
     const avQ = await admin.from("psico_avaliacoes").select("cliente_id").eq("id", versaoQ.data.avaliacao_id).maybeSingle();
-    let clienteNome = "—";
+    let cliente: any = { nome: "—" };
     if (avQ.data?.cliente_id) {
-      const cli = await admin.from("clients").select("razao_social, nome_fantasia").eq("id", avQ.data.cliente_id).maybeSingle();
-      clienteNome = cli.data?.nome_fantasia || cli.data?.razao_social || "—";
+      const cli = await admin.from("clients")
+        .select("razao_social, nome_fantasia, cnpj_cpf, endereco, numero, complemento, bairro, cidade, uf, cep")
+        .eq("id", avQ.data.cliente_id).maybeSingle();
+      cliente = { ...cli.data, nome: cli.data?.nome_fantasia || cli.data?.razao_social || "—" };
     }
+    const empresaQ = await admin.from("proposal_template")
+      .select("quem_somos, telefone, email, site, endereco, slogan, cor_primaria, cor_secundaria")
+      .limit(1).maybeSingle();
 
     // 3) Renderizar PDF
     let pdfBuffer: Uint8Array;
@@ -240,7 +249,8 @@ Deno.serve(async (req) => {
           codigoRafp={codigoRafp}
           codigoRev={codigoRev}
           codigoValidacao={codigoValidacao}
-          cliente={{ nome: clienteNome }}
+          cliente={cliente}
+          empresa={empresaQ.data || {}}
           dataEmissao={new Date().toISOString()}
           qrDataUrl={qrDataUrl}
         />

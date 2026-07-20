@@ -50,6 +50,10 @@ const reportExecutiveSnapshotMigration = readFileSync(
   resolve("supabase/migrations/20260720141040_enrich_psico_report_snapshot.sql"),
   "utf8",
 );
+const reportVisualMethodologyMigration = readFileSync(
+  resolve("supabase/migrations/20260720151008_enrich_psico_report_methodology_v1_2.sql"),
+  "utf8",
+);
 const duplicatePreviewQrMigration = readFileSync(
   resolve("supabase/migrations/20260718220000_bump_psico_report_template_preview_qr.sql"),
   "utf8",
@@ -201,11 +205,11 @@ describe("metadados seguros do PDF psicossocial", () => {
       /export const REPORT_MODEL_VERSION = "([^"]+)"/,
     )?.[1];
 
-    expect(edgeVersion).toBe("1.1.0");
-    expect(reportExecutiveSnapshotMigration).toContain(
+    expect(edgeVersion).toBe("1.2.0");
+    expect(reportVisualMethodologyMigration).toContain(
       `v_modelo_versao text := ''${edgeVersion}''`,
     );
-    expect(reportExecutiveSnapshotMigration).toContain(
+    expect(reportVisualMethodologyMigration).toContain(
       "psico_preparar_emissao_relatorio(uuid,text,text)",
     );
   });
@@ -217,6 +221,36 @@ describe("metadados seguros do PDF psicossocial", () => {
     expect(reportExecutiveSnapshotMigration).toContain("'score_medio', rf.score_medio");
     expect(reportExecutiveSnapshotMigration).not.toContain("psico_respostas");
     expect(reportExecutiveSnapshotMigration).not.toContain("psico_participantes");
+  });
+
+  it("inclui parâmetros metodológicos e distribuição agregada sem respostas individuais", () => {
+    expect(reportVisualMethodologyMigration).toContain("'escala_min', 0");
+    expect(reportVisualMethodologyMigration).toContain("'escala_max'");
+    expect(reportVisualMethodologyMigration).toContain("'criterio_principal_percentual'");
+    expect(reportVisualMethodologyMigration).toContain("'percentual_critico', rf.percentual_critico");
+    expect(reportVisualMethodologyMigration).not.toContain("psico_respostas");
+    expect(reportVisualMethodologyMigration).not.toContain("psico_participantes");
+  });
+
+  it("usa a identidade oficial e dados completos da organização avaliada", () => {
+    expect(reportDocument).toContain("HSE_LOGO_GREEN_DATA_URL");
+    expect(reportDocument).toContain("Razão social:");
+    expect(reportDocument).toContain("CNPJ:");
+    expect(reportDocument).toContain("Endereço:");
+    expect(reportFunction).toContain("cnpj_cpf, endereco, numero, complemento, bairro, cidade, uf, cep");
+    expect(reportFunction).toContain('from("proposal_template")');
+  });
+
+  it("apresenta gráfico em escala de 0 a 4 e critérios de significância", () => {
+    expect(reportDocument).toContain("Comparativo dos resultados");
+    expect(reportDocument).toContain("índice geral (0 a 4)");
+    expect(reportDocument).toContain("Quanto maior o valor, maior a necessidade de atenção");
+    expect(reportDocument).toContain("principalCriterionLabel");
+    expect(reportDocument).toContain("principalLimit");
+    expect(reportDocument).toContain("aggravationLimit");
+    expect(reportDocument).toContain("criticalLimit");
+    expect(reportDocument).not.toContain("PANORAMA DOS RISCOS");
+    expect(reportDocument).not.toContain("avaliação de riscos psicossociais");
   });
 
   it("mantém como no-op a migração duplicada criada pelo sincronismo", () => {

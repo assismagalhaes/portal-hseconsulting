@@ -9,9 +9,10 @@ import {
   Font,
   Image,
 } from "npm:@react-pdf/renderer@3.4.5";
+import { HSE_LOGO_GREEN_DATA_URL } from "./brand-assets.ts";
 
 export const REPORT_MODEL_CODE = "HSE-PSICO-REL-1.0";
-export const REPORT_MODEL_VERSION = "1.1.0";
+export const REPORT_MODEL_VERSION = "1.2.0";
 
 export const REPORT_COLORS = {
   navy: "#0B2545",
@@ -56,15 +57,18 @@ const styles = StyleSheet.create({
     backgroundColor: REPORT_COLORS.white,
   },
   cover: { padding: 0, backgroundColor: REPORT_COLORS.white },
-  coverBand: { height: 205, backgroundColor: REPORT_COLORS.navy, paddingHorizontal: 48, paddingTop: 38 },
+  coverBand: { height: 225, backgroundColor: REPORT_COLORS.navy, paddingHorizontal: 48, paddingTop: 34, overflow: "hidden" },
+  coverShapeOne: { position: "absolute", width: 210, height: 210, backgroundColor: REPORT_COLORS.teal, opacity: 0.13, top: -105, right: -35, transform: "rotate(35deg)" },
+  coverShapeTwo: { position: "absolute", width: 145, height: 145, backgroundColor: REPORT_COLORS.teal, opacity: 0.1, bottom: -95, left: -35, transform: "rotate(35deg)" },
   brandRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  brandMark: { fontFamily: "Helvetica-Bold", fontSize: 24, color: REPORT_COLORS.teal, letterSpacing: -1 },
-  brandName: { fontSize: 8, color: "#C8D8E8", letterSpacing: 1.2 },
+  coverLogo: { width: 112, height: 56, objectFit: "contain" },
   coverKicker: { marginTop: 43, fontSize: 9, color: "#7FE0CF", fontFamily: "Helvetica-Bold", letterSpacing: 1.8 },
   coverTitle: { marginTop: 8, width: 430, fontSize: 29, lineHeight: 1.08, color: REPORT_COLORS.white, fontFamily: "Helvetica-Bold" },
-  coverBody: { paddingHorizontal: 48, paddingTop: 30 },
+  coverBody: { paddingHorizontal: 48, paddingTop: 25 },
   clientLabel: { color: REPORT_COLORS.muted, fontSize: 8, fontFamily: "Helvetica-Bold", letterSpacing: 1 },
   clientName: { marginTop: 4, fontSize: 20, color: REPORT_COLORS.navy, fontFamily: "Helvetica-Bold" },
+  organizationCard: { marginTop: 10, padding: 11, borderRadius: 6, backgroundColor: REPORT_COLORS.panel, borderLeftWidth: 3, borderLeftColor: REPORT_COLORS.teal },
+  organizationLine: { marginBottom: 3, fontSize: 8.7 },
   coverMetaGrid: { marginTop: 24, flexDirection: "row", flexWrap: "wrap", borderTopWidth: 1, borderTopColor: REPORT_COLORS.line, paddingTop: 15 },
   coverMeta: { width: "50%", marginBottom: 15, paddingRight: 16 },
   metaLabel: { fontSize: 7.5, color: REPORT_COLORS.muted, fontFamily: "Helvetica-Bold", textTransform: "uppercase", letterSpacing: 0.7 },
@@ -74,7 +78,7 @@ const styles = StyleSheet.create({
   approvalText: { flex: 1, marginLeft: 10 },
   qr: { width: 60, height: 60, marginLeft: 12 },
   header: { position: "absolute", top: 24, left: 42, right: 42, height: 32, flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, borderBottomColor: REPORT_COLORS.line },
-  headerBrand: { fontFamily: "Helvetica-Bold", color: REPORT_COLORS.navy, fontSize: 9 },
+  headerLogo: { width: 60, height: 25, objectFit: "contain" },
   headerMeta: { color: REPORT_COLORS.muted, fontSize: 7.5, textAlign: "right" },
   footer: { position: "absolute", bottom: 20, left: 42, right: 42, flexDirection: "row", justifyContent: "space-between", borderTopWidth: 1, borderTopColor: REPORT_COLORS.line, paddingTop: 6, color: REPORT_COLORS.muted, fontSize: 7 },
   watermark: { position: "absolute", top: "44%", left: 55, right: 55, color: REPORT_COLORS.red, opacity: 0.12, fontSize: 36, fontFamily: "Helvetica-Bold", textAlign: "center", transform: "rotate(-34deg)" },
@@ -105,6 +109,12 @@ const styles = StyleSheet.create({
   scoreTrack: { flex: 1, height: 7, borderRadius: 4, backgroundColor: REPORT_COLORS.line, marginRight: 8 },
   scoreFill: { height: 7, borderRadius: 4 },
   scoreText: { width: 42, textAlign: "right", fontSize: 8, color: REPORT_COLORS.muted },
+  chart: { padding: 12, borderWidth: 1, borderColor: REPORT_COLORS.line, borderRadius: 7, backgroundColor: REPORT_COLORS.white },
+  chartRow: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
+  chartLabel: { width: 150, paddingRight: 8, fontSize: 8.2, color: REPORT_COLORS.ink },
+  chartTrack: { flex: 1, height: 11, backgroundColor: REPORT_COLORS.line, borderRadius: 5 },
+  chartFill: { height: 11, borderRadius: 5 },
+  chartValue: { width: 92, paddingLeft: 7, fontSize: 7.2, color: REPORT_COLORS.muted },
   factorMeta: { flexDirection: "row", marginTop: 6 },
   factorMetaText: { fontSize: 7.8, color: REPORT_COLORS.muted, marginRight: 14 },
   detailCard: { borderLeftWidth: 4, borderLeftColor: REPORT_COLORS.amber, backgroundColor: REPORT_COLORS.panel, padding: 11, marginBottom: 9, borderRadius: 5 },
@@ -126,6 +136,20 @@ const styles = StyleSheet.create({
   key: { width: 135, color: REPORT_COLORS.muted, fontSize: 8.2 },
   value: { flex: 1, fontSize: 8.6 },
   signBox: { marginTop: 14, padding: 13, backgroundColor: REPORT_COLORS.paleGreen, borderRadius: 6, borderLeftWidth: 4, borderLeftColor: REPORT_COLORS.green },
+  methodFlow: { flexDirection: "row", marginBottom: 12 },
+  methodStep: { flex: 1, minHeight: 74, padding: 7, marginRight: 6, borderRadius: 6, backgroundColor: REPORT_COLORS.panel, borderTopWidth: 3, borderTopColor: REPORT_COLORS.teal },
+  methodStepLast: { marginRight: 0 },
+  methodNo: { fontFamily: "Helvetica-Bold", fontSize: 15, color: REPORT_COLORS.teal },
+  methodTitle: { marginTop: 3, fontFamily: "Helvetica-Bold", fontSize: 8.4, color: REPORT_COLORS.navy },
+  methodText: { marginTop: 3, fontSize: 7.2, color: REPORT_COLORS.muted },
+  criteriaRow: { flexDirection: "row", marginTop: 7 },
+  criteriaCard: { flex: 1, padding: 9, marginRight: 6, borderRadius: 6, backgroundColor: REPORT_COLORS.paleBlue },
+  criteriaValue: { fontFamily: "Helvetica-Bold", fontSize: 13, color: REPORT_COLORS.navy },
+  criteriaText: { marginTop: 3, fontSize: 7.4, color: REPORT_COLORS.muted },
+  aboutPanel: { marginTop: 8, padding: 9, borderRadius: 7, backgroundColor: REPORT_COLORS.navy, color: REPORT_COLORS.white },
+  aboutLogo: { width: 52, height: 25, objectFit: "contain", marginBottom: 4 },
+  aboutText: { fontSize: 7.3, color: "#D8E4EF" },
+  contactText: { marginTop: 4, fontSize: 7.1, color: "#AEEBDD" },
 });
 
 function clean(value: unknown, fallback = "Não informado"): string {
@@ -162,7 +186,27 @@ function riskColor(value: unknown): string {
 
 function riskLabel(value: unknown, fallback = "Monitoramento"): string {
   const raw = clean(value, fallback);
-  return raw.replace(/^Risco\s+/i, "");
+  const withoutRisk = raw.replace(/^Risco\s+/i, "");
+  const key = withoutRisk.toLocaleLowerCase("pt-BR");
+  if (key === "critica" || key === "crítica") return "Crítica";
+  if (key === "alta") return "Alta";
+  if (key === "media" || key === "média") return "Média";
+  if (key === "baixo") return "Baixo";
+  if (key === "irrelevante") return "Muito baixo";
+  if (key === "monitoramento") return "Monitoramento";
+  return withoutRisk.charAt(0).toLocaleUpperCase("pt-BR") + withoutRisk.slice(1);
+}
+
+function formatCnpj(value: unknown): string {
+  const digits = clean(value, "").replace(/\D/g, "");
+  if (digits.length !== 14) return clean(value);
+  return digits.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+}
+
+function organizationAddress(cliente: any): string {
+  const street = [cliente?.endereco, cliente?.numero, cliente?.complemento].filter(Boolean).join(", ");
+  const city = [cliente?.bairro, cliente?.cidade, cliente?.uf].filter(Boolean).join(" · ");
+  return [street, city, cliente?.cep ? `CEP ${clean(cliente.cep)}` : null].filter(Boolean).join(" — ") || "Endereço não informado no cadastro";
 }
 
 function priorityRank(value: unknown): number {
@@ -173,10 +217,10 @@ function priorityRank(value: unknown): number {
   return 1;
 }
 
-function HeaderFooter({ code, revision, preview }: { code: string; revision: string; preview: boolean }) {
+function HeaderFooter({ code, revision, preview, logoSrc }: { code: string; revision: string; preview: boolean; logoSrc: string }) {
   return <>
     <View style={styles.header}>
-      <Text style={styles.headerBrand}>HSE CONSULTING  |  FATORES PSICOSSOCIAIS</Text>
+      <Image src={logoSrc} style={styles.headerLogo} />
       <Text style={styles.headerMeta}>{code} · {revision}{"\n"}Modelo {REPORT_MODEL_VERSION}</Text>
     </View>
     <View style={styles.footer}>
@@ -213,7 +257,7 @@ function FactorCard({ factor }: { factor: any }) {
   const hasScore = Number.isFinite(score);
   const classification = factor?.classificacao || factor?.tratamento || factor?.prioridade;
   const color = riskColor(classification);
-  const width = hasScore ? Math.max(4, Math.min(100, ((score - 1) / 4) * 100)) : (factor?.significativo ? 70 : 25);
+  const width = hasScore ? Math.max(2, Math.min(100, (score / 4) * 100)) : (factor?.significativo ? 70 : 25);
   return <View style={styles.factorCard} wrap={false}>
     <View style={styles.factorTop}>
       <Text style={styles.factorName}>{factorName(factor)}</Text>
@@ -221,7 +265,7 @@ function FactorCard({ factor }: { factor: any }) {
     </View>
     <View style={styles.scoreRow}>
       <View style={styles.scoreTrack}><View style={[styles.scoreFill, { width: `${width}%`, backgroundColor: color }]} /></View>
-      <Text style={styles.scoreText}>{hasScore ? `${score.toFixed(2)} / 5` : "leitura técnica"}</Text>
+      <Text style={styles.scoreText}>{hasScore ? `${score.toFixed(2)} / 4` : "leitura técnica"}</Text>
     </View>
     <View style={styles.factorMeta}>
       <Text style={styles.factorMetaText}>{factor?.significativo ? "Requer tratamento" : "Manter monitoramento"}</Text>
@@ -234,14 +278,41 @@ function evidenceText(evidence: unknown): string {
   return Array.isArray(evidence) && evidence.length ? evidence.map((item) => clean(item)).join("; ") : "Definir evidência de conclusão no acompanhamento do plano.";
 }
 
-function chunkItems<T>(items: T[], size: number): T[][] {
+function chunkByWeight<T>(items: T[], maxWeight: number, weightOf: (item: T) => number): T[][] {
   const chunks: T[][] = [];
-  for (let index = 0; index < items.length; index += size) chunks.push(items.slice(index, index + size));
+  let current: T[] = [];
+  let currentWeight = 0;
+  for (const item of items) {
+    const weight = Math.min(maxWeight, Math.max(1, weightOf(item)));
+    if (current.length && currentWeight + weight > maxWeight) {
+      chunks.push(current);
+      current = [];
+      currentWeight = 0;
+    }
+    current.push(item);
+    currentWeight += weight;
+  }
+  if (current.length) chunks.push(current);
   return chunks;
 }
 
+function FactorChart({ factors }: { factors: any[] }) {
+  return <View style={styles.chart}>
+    {factors.map((factor, index) => {
+      const score = Number(factor?.score_medio);
+      const color = riskColor(factor?.classificacao || factor?.prioridade);
+      const width = Number.isFinite(score) ? Math.max(2, Math.min(100, (score / 4) * 100)) : 2;
+      return <View key={index} style={[styles.chartRow, index === factors.length - 1 ? { marginBottom: 0 } : {}]} wrap={false}>
+        <Text style={styles.chartLabel}>{factorName(factor)}</Text>
+        <View style={styles.chartTrack}><View style={[styles.chartFill, { width: `${width}%`, backgroundColor: color }]} /></View>
+        <Text style={styles.chartValue}>{Number.isFinite(score) ? score.toFixed(2) : "—"} · {riskLabel(factor?.classificacao)}{factor?.significativo ? " · tratar" : ""}</Text>
+      </View>;
+    })}
+  </View>;
+}
+
 export function PsychosocialReportDocument({
-  snapshot, codigoRafp, codigoRev, codigoValidacao, cliente, dataEmissao, preview = false, qrDataUrl,
+  snapshot, codigoRafp, codigoRev, codigoValidacao, cliente, empresa, dataEmissao, preview = false, qrDataUrl,
 }: any) {
   const assessment = snapshot?.avaliacao || {};
   const review = snapshot?.revisao || {};
@@ -254,16 +325,35 @@ export function PsychosocialReportDocument({
   const highest = sortedFactors[0];
   const methodology = assessment?.metodologia || snapshot?.agregado?.processamento?.metodologia || snapshot?.biblioteca || {};
   const methodologyLabel = methodology?.codigo ? `${methodology.codigo} v${clean(methodology.versao, "—")}` : "Metodologia registrada no Portal HSE";
+  const principalLimit = Number(methodology?.criterio_principal_percentual ?? 50);
+  const aggravationLimit = Number(methodology?.criterio_agravamento_percentual ?? 30);
+  const criticalLimit = Number(methodology?.criterio_critico_percentual ?? 10);
+  const principalCriterionLabel = methodology?.criterio_principal_operador === ">"
+    ? `Mais de ${principalLimit}%`
+    : `${principalLimit}% ou mais`;
+  const aggravationCriterionLabel = methodology?.criterio_agravamento_operador === ">"
+    ? `Mais de ${aggravationLimit}%`
+    : `${aggravationLimit}% ou mais`;
+  const criticalCriterionLabel = methodology?.criterio_critico_operador === ">"
+    ? `Mais de ${criticalLimit}%`
+    : `${criticalLimit}% ou mais`;
   const responsibleName = responsible?.nome_responsavel || responsible?.nome || "Responsável técnico não informado";
   const generalClass = result?.classificacao_indice_geral || (highest ? highest?.classificacao || highest?.tratamento : "Monitoramento");
   const generalColor = riskColor(generalClass);
   const responseCount = result?.total_participantes ?? result?.total_respostas ?? "—";
   const generalScore = Number(result?.indice_geral_descritivo);
-  const detailFactors = significant.length ? significant : sortedFactors;
-  const detailChunks = chunkItems(detailFactors, 3);
+  const detailFactors = significant;
+  const detailChunks = chunkByWeight(detailFactors, 390, (factor: any) =>
+    105 + Math.ceil(clean(factor?.observacao || factor?.justificativa || factor?.tratamento, "").length / 75) * 15
+  );
   const detailPages = detailChunks.length ? detailChunks : [[]];
-  const actionChunks = chunkItems(actions, 2);
+  const actionChunks = chunkByWeight(actions, 420, (action: any) =>
+    150 + Math.ceil((clean(action?.acao, "").length + evidenceText(action?.evidencias).length) / 90) * 18
+  );
   const actionPages = actionChunks.length ? actionChunks : [[]];
+  const logoSrc = empresa?.logo_url || HSE_LOGO_GREEN_DATA_URL;
+  const companyAbout = clean(empresa?.quem_somos, "A HSE Consulting oferece soluções técnicas em Saúde e Segurança do Trabalho, com atuação orientada à prevenção, à conformidade e à melhoria contínua dos ambientes de trabalho.");
+  const companyContacts = [empresa?.telefone, empresa?.email, empresa?.site].filter(Boolean).join("  ·  ");
 
   return <Document
     title={`Relatório ${codigoRafp} ${codigoRev}`}
@@ -274,8 +364,10 @@ export function PsychosocialReportDocument({
   >
     <Page size="A4" style={styles.cover}>
       <View style={styles.coverBand}>
+        <View style={styles.coverShapeOne} />
+        <View style={styles.coverShapeTwo} />
         <View style={styles.brandRow}>
-          <View><Text style={styles.brandMark}>HSE</Text><Text style={styles.brandName}>CONSULTING</Text></View>
+          <Image src={logoSrc} style={styles.coverLogo} />
           <Text style={{ color: "#C8D8E8", fontSize: 8 }}>SAÚDE · SEGURANÇA · GESTÃO</Text>
         </View>
         <Text style={styles.coverKicker}>RELATÓRIO TÉCNICO</Text>
@@ -284,6 +376,11 @@ export function PsychosocialReportDocument({
       <View style={styles.coverBody}>
         <Text style={styles.clientLabel}>ORGANIZAÇÃO AVALIADA</Text>
         <Text style={styles.clientName}>{clean(cliente?.nome)}</Text>
+        <View style={styles.organizationCard}>
+          <Text style={styles.organizationLine}><Text style={{ fontFamily: "Helvetica-Bold" }}>Razão social: </Text>{clean(cliente?.razao_social)}</Text>
+          <Text style={styles.organizationLine}><Text style={{ fontFamily: "Helvetica-Bold" }}>CNPJ: </Text>{formatCnpj(cliente?.cnpj_cpf)}</Text>
+          <Text style={styles.organizationLine}><Text style={{ fontFamily: "Helvetica-Bold" }}>Endereço: </Text>{organizationAddress(cliente)}</Text>
+        </View>
         <View style={styles.coverMetaGrid}>
           <Meta label="Relatório e revisão" value={`${codigoRafp} · ${codigoRev}`} />
           <Meta label="Avaliação" value={`${clean(assessment?.codigo, "—")} · ${clean(assessment?.titulo, "")}`} />
@@ -302,18 +399,23 @@ export function PsychosocialReportDocument({
           {!preview && qrDataUrl && <Image src={qrDataUrl} style={styles.qr} />}
         </View>
         <Text style={[styles.note, { marginTop: 12 }]}>Validação: {clean(codigoValidacao)}. O QR Code confirma a autenticidade deste documento.</Text>
+        <View style={[styles.aboutPanel, { marginTop: 10 }]} wrap={false}>
+          <Text style={{ fontFamily: "Helvetica-Bold", marginBottom: 3 }}>HSE Consulting · Saúde, segurança e gestão com rigor técnico</Text>
+          <Text style={styles.aboutText}>{companyAbout}</Text>
+          {companyContacts && <Text style={styles.contactText}>{companyContacts}</Text>}
+        </View>
       </View>
       {preview && <Text style={styles.watermark}>PRÉVIA · SEM VALIDADE</Text>}
     </Page>
 
     <Page size="A4" style={styles.page}>
-      <HeaderFooter code={codigoRafp} revision={codigoRev} preview={preview} />
+      <HeaderFooter code={codigoRafp} revision={codigoRev} preview={preview} logoSrc={logoSrc} />
       <Text style={styles.sectionKicker}>LEITURA RÁPIDA</Text>
       <Text style={styles.h1}>Resumo executivo</Text>
-      <Text style={styles.intro}>Esta página concentra o que a liderança precisa compreender e encaminhar primeiro. Os detalhes técnicos e as evidências aparecem nas páginas seguintes.</Text>
+      <Text style={styles.intro}>Síntese dos resultados e das providências recomendadas para orientar a tomada de decisão da organização.</Text>
       <View style={styles.row}>
         <Kpi value={responseCount} label="participantes analisados" />
-        <Kpi value={Number.isFinite(generalScore) ? generalScore.toFixed(2) : riskLabel(generalClass)} label={Number.isFinite(generalScore) ? "índice geral (1 a 5)" : "classificação geral"} color={generalColor} />
+        <Kpi value={Number.isFinite(generalScore) ? generalScore.toFixed(2) : riskLabel(generalClass)} label={Number.isFinite(generalScore) ? "índice geral (0 a 4)" : "classificação geral"} color={generalColor} />
         <Kpi value={significant.length} label="fatores que requerem ação" />
         <Kpi value={highest ? riskLabel(highest?.prioridade) : "Monitorar"} label="maior prioridade" last color={highest ? riskColor(highest?.prioridade) : REPORT_COLORS.green} />
       </View>
@@ -325,13 +427,13 @@ export function PsychosocialReportDocument({
           : "Não foram identificados fatores significativos. Recomenda-se manter monitoramento e ações preventivas.")}</Text>
       </View>
 
-      <Text style={styles.h2}>O que fazer agora</Text>
+      <Text style={styles.h2}>Providências recomendadas</Text>
       {actions.length ? actions.slice(0, 3).map((action, index) => <View key={index} style={styles.bullet} wrap={false}>
         <Text style={styles.bulletNo}>{index + 1}</Text>
         <Text style={styles.bulletText}><Text style={{ fontFamily: "Helvetica-Bold" }}>{clean(action?.titulo, `Ação ${index + 1}`)}.</Text> {action?.acao && clean(action.acao) !== clean(action.titulo) ? clean(action.acao) : "Executar conforme o plano aprovado e registrar a evidência."}</Text>
-      </View>) : <Text style={styles.note}>Manter os controles existentes, acompanhar os indicadores e programar nova avaliação conforme o ciclo de gestão de riscos.</Text>}
+      </View>) : <Text style={styles.note}>Manter os controles existentes, acompanhar os indicadores e programar nova avaliação conforme o ciclo de acompanhamento dos fatores.</Text>}
 
-      <Text style={styles.h2}>Como interpretar as cores</Text>
+      <Text style={styles.h2}>Faixas de classificação</Text>
       <View style={styles.legend}>
         {[["Baixo", REPORT_COLORS.green], ["Médio", REPORT_COLORS.amber], ["Alto", REPORT_COLORS.orange], ["Crítico", REPORT_COLORS.red]].map(([label, color]) => <View key={label} style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: color }]} /><Text style={styles.legendText}>{label}</Text>
@@ -345,18 +447,29 @@ export function PsychosocialReportDocument({
     </Page>
 
     <Page size="A4" style={styles.page} wrap>
-      <HeaderFooter code={codigoRafp} revision={codigoRev} preview={preview} />
-      <Text style={styles.sectionKicker}>PANORAMA DOS RISCOS</Text>
-      <Text style={styles.h1}>Resultados por fator</Text>
-      <Text style={styles.intro}>Cada cartão apresenta a classificação consolidada e a decisão técnica. A prioridade orienta a ordem de tratamento; o índice, quando disponível, resume a escala de 1 a 5.</Text>
-      {sortedFactors.length ? sortedFactors.map((factor, index) => <FactorCard key={index} factor={factor} />) : <View style={styles.infoPanel}><Text>Nenhum resultado por fator foi disponibilizado no snapshot aprovado.</Text></View>}
+      <HeaderFooter code={codigoRafp} revision={codigoRev} preview={preview} logoSrc={logoSrc} />
+      <Text style={styles.sectionKicker}>PANORAMA DOS FATORES</Text>
+      <Text style={styles.h1}>Comparativo dos resultados</Text>
+      <Text style={styles.intro}>O gráfico compara o índice médio de cada fator na escala de 0 a 4. Quanto maior o valor, maior a necessidade de atenção. A significância é determinada pelos percentuais explicados na metodologia.</Text>
+      {sortedFactors.length ? <FactorChart factors={sortedFactors} /> : <View style={styles.infoPanel}><Text>Nenhum resultado por fator foi disponibilizado no snapshot aprovado.</Text></View>}
+      <View style={[styles.infoPanel, { marginTop: 12, backgroundColor: REPORT_COLORS.panel }]}>
+        <Text style={styles.h3}>Leitura objetiva</Text>
+        <Text>{significant.length
+          ? `${significant.length} de ${factors.length} fatores atenderam a pelo menos um critério de significância e devem ser tratados conforme a prioridade técnica e o plano de ação.`
+          : `Nenhum dos ${factors.length} fatores atendeu aos critérios de significância. O resultado orienta a manutenção das medidas preventivas e o acompanhamento periódico.`}</Text>
+      </View>
+      <View style={styles.legend}>
+        {[["Muito baixo / baixo", REPORT_COLORS.green], ["Médio", REPORT_COLORS.amber], ["Alto", REPORT_COLORS.orange], ["Crítico", REPORT_COLORS.red]].map(([label, color]) => <View key={label} style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: color }]} /><Text style={styles.legendText}>{label}</Text>
+        </View>)}
+      </View>
     </Page>
 
-    {detailPages.map((pageFactors, pageIndex) => <Page key={`detail-${pageIndex}`} size="A4" style={styles.page}>
-      <HeaderFooter code={codigoRafp} revision={codigoRev} preview={preview} />
+    {significant.length > 0 && detailPages.map((pageFactors, pageIndex) => <Page key={`detail-${pageIndex}`} size="A4" style={styles.page}>
+      <HeaderFooter code={codigoRafp} revision={codigoRev} preview={preview} logoSrc={logoSrc} />
       <Text style={styles.sectionKicker}>ANÁLISE TÉCNICA</Text>
-      <Text style={styles.h1}>{significant.length ? "Fatores que exigem atenção" : "Fatores sob monitoramento"}{pageIndex ? " · continuação" : ""}</Text>
-      <Text style={styles.intro}>{significant.length ? "A seguir estão os fatores classificados para tratamento, com a justificativa registrada na revisão técnica." : "Nenhum fator foi marcado como significativo. As observações abaixo apoiam a prevenção e o acompanhamento contínuo."}</Text>
+      <Text style={styles.h1}>{significant.length ? "Fatores que exigem atenção" : "Acompanhamento preventivo"}{pageIndex ? " · continuação" : ""}</Text>
+      <Text style={styles.intro}>{significant.length ? "Análise dos fatores que atenderam aos critérios de significância, com a justificativa técnica aprovada." : "Como não houve fator significativo, esta seção registra a orientação preventiva e o ciclo de acompanhamento recomendado."}</Text>
       {pageFactors.length ? pageFactors.map((factor, index) => <View key={index} style={[styles.detailCard, { borderLeftColor: riskColor(factor?.prioridade || factor?.classificacao) }]} wrap={false}>
           <View style={styles.factorTop}>
             <Text style={styles.factorName}>{factorName(factor)}</Text>
@@ -366,18 +479,18 @@ export function PsychosocialReportDocument({
           <Text style={[styles.h3, { marginTop: 7 }]}>Leitura técnica</Text>
           <Text>{clean(factor?.observacao || factor?.justificativa || factor?.tratamento, factor?.significativo ? "O fator requer medida de controle conforme o plano aprovado." : "Manter os controles e acompanhar a evolução do fator.")}</Text>
           {factor?.observacao && factor?.justificativa && clean(factor.observacao) !== clean(factor.justificativa) && <Text style={[styles.note, { marginTop: 5 }]}><Text style={{ fontFamily: "Helvetica-Bold" }}>Justificativa: </Text>{clean(factor.justificativa)}</Text>}
-        </View>) : <View style={styles.infoPanel}><Text>Não há fatores detalhados no snapshot aprovado.</Text></View>}
+        </View>) : <View style={styles.infoPanel}><Text>Não foram identificados fatores significativos nesta avaliação. Recomenda-se preservar os controles existentes, manter canais de escuta e repetir a avaliação no ciclo definido pela gestão de SST.</Text></View>}
       {pageIndex === detailPages.length - 1 && <View style={[styles.callout, { marginTop: 8 }]}>
         <Text style={styles.calloutTitle}>Decisão técnica</Text>
-        <Text>{clean(review?.recomendacao_geral, significant.length ? "Tratar primeiro os fatores de maior prioridade, comunicar as medidas às equipes e verificar a eficácia dos controles." : "Manter os controles preventivos e acompanhar a evolução dos fatores no ciclo de gestão de riscos.")}</Text>
+        <Text>{clean(review?.recomendacao_geral, significant.length ? "Tratar primeiro os fatores de maior prioridade, comunicar as medidas às equipes e verificar a eficácia dos controles." : "Manter os controles preventivos e acompanhar a evolução dos fatores no ciclo definido pela gestão de SST.")}</Text>
       </View>}
     </Page>)}
 
     {actionPages.map((pageActions, pageIndex) => <Page key={`actions-${pageIndex}`} size="A4" style={styles.page}>
-      <HeaderFooter code={codigoRafp} revision={codigoRev} preview={preview} />
+      <HeaderFooter code={codigoRafp} revision={codigoRev} preview={preview} logoSrc={logoSrc} />
       <Text style={styles.sectionKicker}>DA ANÁLISE À EXECUÇÃO</Text>
       <Text style={styles.h1}>Plano de ação{pageIndex ? " · continuação" : ""}</Text>
-      <Text style={styles.intro}>{pageIndex ? "Continuação das medidas selecionadas, com responsabilidades, prazos e evidências esperadas." : "As ações abaixo foram selecionadas na revisão técnica. A organização deve confirmar responsáveis e registrar evidências de implantação e eficácia."}</Text>
+      <Text style={styles.intro}>{pageIndex ? "Continuação das medidas aprovadas, com responsabilidades, prazos e formas de comprovação." : "Medidas aprovadas na revisão técnica. A organização deve designar responsáveis, registrar a implantação e verificar a eficácia de cada ação."}</Text>
       {pageActions.length ? pageActions.map((action, index) => {
         const actionNumber = pageIndex * 2 + index + 1;
         const description = clean(action?.acao, "Executar a ação conforme definida na revisão técnica.");
@@ -403,34 +516,40 @@ export function PsychosocialReportDocument({
     </Page>)}
 
     <Page size="A4" style={styles.page}>
-      <HeaderFooter code={codigoRafp} revision={codigoRev} preview={preview} />
+      <HeaderFooter code={codigoRafp} revision={codigoRev} preview={preview} logoSrc={logoSrc} />
       <Text style={styles.sectionKicker}>BASE TÉCNICA E CONTROLE</Text>
-      <Text style={styles.h1}>Metodologia, limites e aprovação</Text>
-      <View style={styles.infoPanel}>
-        <Text style={styles.h3}>Escopo da avaliação</Text>
-        <Text>{clean(review?.contexto, "Avaliação organizacional de fatores psicossociais relacionados ao trabalho, com resultados consolidados e revisão técnica.")}</Text>
+      <Text style={styles.h1}>Como os resultados foram obtidos</Text>
+      <Text style={styles.intro}>A metodologia transforma as respostas em indicadores coletivos, preserva a confidencialidade e combina cálculo estruturado com revisão profissional.</Text>
+      <View style={styles.methodFlow}>
+        {[
+          ["1", "Respostas", "As alternativas recebem pesos de 0 a 4, considerando o sentido de cada pergunta."],
+          ["2", "Consolidação", "Os pesos são agrupados por fator e apresentados como índice médio e percentuais."],
+          ["3", "Significância", "Um fator é significativo quando atende a pelo menos um dos três critérios abaixo."],
+          ["4", "Revisão técnica", "O profissional interpreta o contexto, define prioridades e aprova o plano de ação."],
+        ].map(([no, title, text], index) => <View key={no} style={[styles.methodStep, index === 3 ? styles.methodStepLast : {}]} wrap={false}>
+          <Text style={styles.methodNo}>{no}</Text><Text style={styles.methodTitle}>{title}</Text><Text style={styles.methodText}>{text}</Text>
+        </View>)}
       </View>
-      <View style={styles.infoPanel}>
-        <Text style={styles.h3}>Método e amostra</Text>
-        <Text style={{ marginBottom: 7 }}>Aplicou-se {methodologyLabel}. Os dados foram processados de forma agregada e o resultado foi submetido à revisão técnica antes da emissão.</Text>
+      <Text style={styles.h3}>Quando um fator é considerado significativo</Text>
+      <View style={styles.criteriaRow}>
+        <View style={styles.criteriaCard}><Text style={styles.criteriaValue}>{principalCriterionLabel}</Text><Text style={styles.criteriaText}>das respostas do fator estão nas faixas média, alta ou crítica.</Text></View>
+        <View style={styles.criteriaCard}><Text style={styles.criteriaValue}>{aggravationCriterionLabel}</Text><Text style={styles.criteriaText}>das respostas do fator estão nas faixas alta ou crítica.</Text></View>
+        <View style={[styles.criteriaCard, { marginRight: 0 }]}><Text style={styles.criteriaValue}>{criticalCriterionLabel}</Text><Text style={styles.criteriaText}>das respostas do fator estão na faixa crítica.</Text></View>
+      </View>
+      <View style={[styles.infoPanel, { marginTop: 12 }]}>
+        <Text style={styles.h3}>Escala e contexto da análise</Text>
+        <Text style={{ marginBottom: 7 }}>Aplicou-se {methodologyLabel}. O índice varia de 0 a 4 e ajuda a comparar os fatores; sozinho, ele não define significância. A decisão considera os percentuais acima e a revisão técnica.</Text>
         <KeyValue label="Participantes analisados" value={responseCount} />
-        <KeyValue label="Amostra reduzida" value={review?.amostra_reduzida ? "Sim — interpretar com cautela" : "Não sinalizada pelo processamento"} />
         <KeyValue label="Período" value={`${date(assessment?.periodo?.inicio)} a ${date(assessment?.periodo?.fim)}`} />
+        <KeyValue label="Limitações" value={clean(review?.limitacoes, "Fotografia do período avaliado; interpretar em conjunto com observação do trabalho, escuta das equipes e demais dados de SST.")} />
       </View>
-      <View style={styles.infoPanel}>
-        <Text style={styles.h3}>Limitações declaradas</Text>
-        <Text>{clean(review?.limitacoes, "Os resultados são uma fotografia do período avaliado e devem ser combinados com observação do trabalho, escuta das equipes e demais dados de SST.")}</Text>
-      </View>
-      {review?.recomendacao_geral && <View style={[styles.callout, { marginTop: 0 }]}>
-        <Text style={styles.calloutTitle}>Recomendação geral</Text><Text>{clean(review.recomendacao_geral)}</Text>
-      </View>}
       <View style={styles.signBox}>
         <Text style={{ fontFamily: "Helvetica-Bold", color: REPORT_COLORS.green }}>APROVAÇÃO TÉCNICA REGISTRADA</Text>
         <Text style={{ marginTop: 5, fontFamily: "Helvetica-Bold" }}>{clean(responsibleName)}</Text>
         <Text>{clean(responsible?.cargo, "Responsável técnico")} · {clean(responsible?.registro_profissional, "Registro não informado")}</Text>
         <Text style={[styles.note, { marginTop: 4 }]}>Aprovado em {dateTime(review?.aprovada_em)} · Validação {clean(codigoValidacao)}</Text>
       </View>
-      <Text style={[styles.note, { marginTop: 13 }]}>Este documento registra uma avaliação de riscos psicossociais relacionados ao trabalho. Não substitui avaliação clínica individual, diagnóstico de saúde ou prontuário. O conteúdo emitido é versionado e sua autenticidade pode ser verificada pelo código constante na capa.</Text>
+      <Text style={[styles.note, { marginTop: 7 }]}>Este documento registra uma avaliação de fatores psicossociais relacionados ao trabalho. Não substitui avaliação clínica individual, diagnóstico de saúde ou prontuário. O conteúdo emitido é versionado e sua autenticidade pode ser verificada pelo código constante na capa.</Text>
     </Page>
   </Document>;
 }
