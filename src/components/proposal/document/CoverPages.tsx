@@ -2,7 +2,8 @@ import { Globe, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { PAGE_STYLE, ContactLine, Stat } from "./atoms";
 
 /** Capa (primeira página) do PDF da proposta. */
-export function CapaPage({ proposal, client, tpl, primary, accent, logoSrcLight, capaSrc }: any) {
+export function CapaPage({ proposal, client, tpl, primary, accent, logoSrcLight, capaSrc, tituloOverride, subtituloOverride }: any) {
+  const titulo = tituloOverride || client?.nome_fantasia || client?.razao_social || "Cliente";
   return (
     <section className="pdf-page" style={{ ...PAGE_STYLE, background: primary, color: "#fff" }}>
       <img src={capaSrc} alt="" className="absolute inset-0 w-full h-full object-cover opacity-25" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.22 }} />
@@ -20,8 +21,13 @@ export function CapaPage({ proposal, client, tpl, primary, accent, logoSrcLight,
           <div style={{ width: 64, height: 4, background: accent, marginBottom: 18 }} />
           <div style={{ fontSize: 11, letterSpacing: 4, textTransform: "uppercase", opacity: 0.9 }}>Proposta Comercial</div>
           <h1 style={{ fontFamily: `${tpl.font_titulo || "Sora"}, sans-serif`, fontSize: 52, fontWeight: 800, lineHeight: 1.05, marginTop: 8, marginBottom: 22, letterSpacing: "-0.02em" }}>
-            {client?.nome_fantasia || client?.razao_social || "Cliente"}
+            {titulo}
           </h1>
+          {subtituloOverride && (
+            <div style={{ fontSize: 13, opacity: 0.85, marginTop: -12, marginBottom: 18, letterSpacing: 0.3 }}>
+              {subtituloOverride}
+            </div>
+          )}
           <div style={{ display: "flex", gap: 28, flexWrap: "wrap", fontSize: 13 }}>
             <Stat label="Nº da proposta" value={proposal.numero} accent={accent} />
             <Stat label="Data" value={new Date(((proposal.data_emissao || proposal.created_at) + "").slice(0, 10) + "T00:00:00").toLocaleDateString("pt-BR")} accent={accent} />
