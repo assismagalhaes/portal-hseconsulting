@@ -436,6 +436,8 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
         proposal={proposal} client={client} tpl={tpl}
         primary={primary} accent={accent}
         logoSrcLight={logoSrcLight} capaSrc={capaSrc}
+        tituloOverride={coligadas.length > 0 && client?.client_groups?.nome ? client.client_groups.nome : undefined}
+        subtituloOverride={coligadas.length > 0 && client?.client_groups?.nome ? `Grupo econômico · ${coligadas.length + 1} empresas` : undefined}
       />
 
       <FlowPages ctx={ctxHeader} blocks={bodyBlocks} onReady={() => setFlowReady(true)} />
