@@ -33,7 +33,7 @@ const DEFAULT_PARAMS = {
  *  condições padrão na PRIMEIRA abertura (quando o campo é null — vazio "" é respeitado). */
 export async function loadProposalBundle(id: string): Promise<ProposalBundle> {
   const [p, sv, pp] = await Promise.all([
-    supabase.from("proposals").select("*, clients(*)").eq("id", id).single(),
+    supabase.from("proposals").select("*, clients(*, client_groups(id, nome))").eq("id", id).single(),
     supabase.from("services").select("*").order("nome"),
     supabase.from("pricing_params").select("*").limit(1).maybeSingle(),
   ]);
