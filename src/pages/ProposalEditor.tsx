@@ -537,8 +537,8 @@ export default function ProposalEditor() {
                   })()}
                 </div>
                 {items.length === 0 && <Card className="p-8 text-center text-muted-foreground">Nenhum item ainda. Adicione o primeiro serviço.</Card>}
-                {items.map(it => (
-                  <ItemEditor key={it.id} item={it} pricing={pricings[it.id]}
+                {items.map((it, idx) => (
+                  <ItemEditor key={it.id} item={it} numero={idx + 1} pricing={pricings[it.id]}
                     onChange={(patch)=>updateItem(it, patch)}
                     onRemove={()=>removeItem(it)}
                     onOpenPricing={()=>setPricingOpen(it.id)}
