@@ -56,15 +56,24 @@ export async function excluirItem(id: string) {
   return sb.from("psico_plano_acao_itens").delete().eq("id", id);
 }
 
-export async function criarItemPersonalizado(planoId: string, patch: Record<string, any>, fatoresCodes: string[], resultadoFatorPorCodigo: Record<string, string>) {
-  const { data, error } = await sb.from("psico_plano_acao_itens").insert({
+export function montarNovoItemPlano(planoId: string, patch: Record<string, any>) {
+  return {
     plano_id: planoId,
     personalizado: true,
     gerado_automaticamente: false,
     selecionado: true,
     ordem: 9999,
     ...patch,
-  }).select("id").single();
+    objetivo: patch.objetivo?.trim?.() || patch.acao_recomendada || patch.titulo || "Ação preventiva",
+    prioridade: patch.prioridade || "monitoramento",
+  };
+}
+
+export async function criarItemPersonalizado(planoId: string, patch: Record<string, any>, fatoresCodes: string[], resultadoFatorPorCodigo: Record<string, string>) {
+  const { data, error } = await sb.from("psico_plano_acao_itens")
+    .insert(montarNovoItemPlano(planoId, patch))
+    .select("id")
+    .single();
   if (error || !data) return { error };
   const links = fatoresCodes.map((c) => ({
     plano_item_id: data.id,
