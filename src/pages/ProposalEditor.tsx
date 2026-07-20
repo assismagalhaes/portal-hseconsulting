@@ -237,7 +237,7 @@ export default function ProposalEditor() {
     await Promise.all(
       next
         .filter((x, i) => x.numero_item !== remaining[i].numero_item)
-        .map(x => updateProposalItem(x.id, { numero_item: x.numero_item }))
+        .map(x => updateProposalItemDb(x.id, { numero_item: x.numero_item }))
     );
     setItems(next); updateTotal(next);
   }
