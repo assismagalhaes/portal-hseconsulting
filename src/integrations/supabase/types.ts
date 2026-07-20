@@ -4629,6 +4629,14 @@ export type Database = {
       profiles: {
         Row: {
           area: string | null
+          assinatura_ativa: boolean
+          assinatura_carregada_em: string | null
+          assinatura_carregada_por: string | null
+          assinatura_hash_sha256: string | null
+          assinatura_mime_type: string | null
+          assinatura_modo: string
+          assinatura_nome_arquivo: string | null
+          assinatura_storage_path: string | null
           cargo: string | null
           created_at: string
           email: string | null
@@ -4643,6 +4651,14 @@ export type Database = {
         }
         Insert: {
           area?: string | null
+          assinatura_ativa?: boolean
+          assinatura_carregada_em?: string | null
+          assinatura_carregada_por?: string | null
+          assinatura_hash_sha256?: string | null
+          assinatura_mime_type?: string | null
+          assinatura_modo?: string
+          assinatura_nome_arquivo?: string | null
+          assinatura_storage_path?: string | null
           cargo?: string | null
           created_at?: string
           email?: string | null
@@ -4657,6 +4673,14 @@ export type Database = {
         }
         Update: {
           area?: string | null
+          assinatura_ativa?: boolean
+          assinatura_carregada_em?: string | null
+          assinatura_carregada_por?: string | null
+          assinatura_hash_sha256?: string | null
+          assinatura_mime_type?: string | null
+          assinatura_modo?: string
+          assinatura_nome_arquivo?: string | null
+          assinatura_storage_path?: string | null
           cargo?: string | null
           created_at?: string
           email?: string | null
@@ -6929,6 +6953,50 @@ export type Database = {
           },
         ]
       }
+      psico_parecer_versoes: {
+        Row: {
+          conteudo: Json
+          criado_em: string
+          criado_por: string | null
+          id: string
+          modelo_ia: string | null
+          numero: number
+          origem: string
+          prompt_codigo: string | null
+          revisao_id: string
+        }
+        Insert: {
+          conteudo: Json
+          criado_em?: string
+          criado_por?: string | null
+          id?: string
+          modelo_ia?: string | null
+          numero: number
+          origem: string
+          prompt_codigo?: string | null
+          revisao_id: string
+        }
+        Update: {
+          conteudo?: Json
+          criado_em?: string
+          criado_por?: string | null
+          id?: string
+          modelo_ia?: string | null
+          numero?: number
+          origem?: string
+          prompt_codigo?: string | null
+          revisao_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_parecer_versoes_revisao_id_fkey"
+            columns: ["revisao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_revisoes_tecnicas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psico_participantes: {
         Row: {
           ativo: boolean
@@ -8224,6 +8292,12 @@ export type Database = {
           modo: Database["public"]["Enums"]["psico_revisao_modo"]
           motivo_reabertura: string | null
           observacoes_internas: string | null
+          parecer_conclusivo: Json | null
+          parecer_editado_em: string | null
+          parecer_gerado_em: string | null
+          parecer_modelo_ia: string | null
+          parecer_origem: string | null
+          parecer_prompt_codigo: string | null
           processamento_id: string
           reaberta_em: string | null
           reaberta_por: string | null
@@ -8253,6 +8327,12 @@ export type Database = {
           modo?: Database["public"]["Enums"]["psico_revisao_modo"]
           motivo_reabertura?: string | null
           observacoes_internas?: string | null
+          parecer_conclusivo?: Json | null
+          parecer_editado_em?: string | null
+          parecer_gerado_em?: string | null
+          parecer_modelo_ia?: string | null
+          parecer_origem?: string | null
+          parecer_prompt_codigo?: string | null
           processamento_id: string
           reaberta_em?: string | null
           reaberta_por?: string | null
@@ -8282,6 +8362,12 @@ export type Database = {
           modo?: Database["public"]["Enums"]["psico_revisao_modo"]
           motivo_reabertura?: string | null
           observacoes_internas?: string | null
+          parecer_conclusivo?: Json | null
+          parecer_editado_em?: string | null
+          parecer_gerado_em?: string | null
+          parecer_modelo_ia?: string | null
+          parecer_origem?: string | null
+          parecer_prompt_codigo?: string | null
           processamento_id?: string
           reaberta_em?: string | null
           reaberta_por?: string | null
@@ -9273,8 +9359,16 @@ export type Database = {
         Args: { p_avaliacao_id: string }
         Returns: Json
       }
+      psico_obter_conteudo_aprovado_relatorio_sem_v1_4: {
+        Args: { p_avaliacao_id: string }
+        Returns: Json
+      }
       psico_obter_conteudo_aprovado_relatorio_sem_visual_v1_2: {
         Args: { p_avaliacao_id: string }
+        Returns: Json
+      }
+      psico_obter_contexto_parecer_ia: {
+        Args: { p_revisao_id: string }
         Returns: Json
       }
       psico_obter_dashboard_resultados: {
@@ -9380,6 +9474,7 @@ export type Database = {
         Args: { p_relatorio_versao_id: string }
         Returns: Json
       }
+      psico_parecer_valido: { Args: { p_parecer: Json }; Returns: boolean }
       psico_preparar_emissao_relatorio: {
         Args: {
           p_avaliacao_id: string
@@ -9445,6 +9540,16 @@ export type Database = {
         Args: { p_motivo: string; p_relatorio_versao_id: string }
         Returns: Json
       }
+      psico_salvar_parecer_conclusivo: {
+        Args: {
+          p_modelo_ia?: string
+          p_origem?: string
+          p_parecer: Json
+          p_prompt_codigo?: string
+          p_revisao_id: string
+        }
+        Returns: Json
+      }
       psico_sanitize_snapshot: { Args: { p_data: Json }; Returns: Json }
       psico_validar_biblioteca_medidas: {
         Args: { p_biblioteca_versao_id: string }
@@ -9467,6 +9572,10 @@ export type Database = {
         Returns: Json
       }
       psico_validar_revisao_tecnica: {
+        Args: { p_revisao_id: string }
+        Returns: Json
+      }
+      psico_validar_revisao_tecnica_sem_parecer_v1_4: {
         Args: { p_revisao_id: string }
         Returns: Json
       }
