@@ -29,3 +29,9 @@ verify_jwt = true
 
 [functions.psico-enviar-respostas]
 verify_jwt = false
+
+[functions.psico-gerar-parecer]
+verify_jwt = true
+
+[functions.psico-assinatura-upload]
+verify_jwt = true

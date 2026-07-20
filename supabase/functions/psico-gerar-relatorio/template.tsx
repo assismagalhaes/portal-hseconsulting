@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any no-import-prefix no-unused-vars
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import QRCode from "npm:qrcode@1.5.4";
+// @deno-types="npm:@types/react@18.3.3"
 import React from "npm:react@18.3.1";
 import { renderToBuffer } from "npm:@react-pdf/renderer@3.4.5";
 import {
@@ -48,6 +49,26 @@ async function sha256Hex(buf: Uint8Array): Promise<string> {
   const digestInput = new Uint8Array(buf).buffer as ArrayBuffer;
   const h = await crypto.subtle.digest("SHA-256", digestInput);
   return Array.from(new Uint8Array(h)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function loadApprovedSignature(admin: any, snapshot: any): Promise<string | undefined> {
+  const responsible = snapshot?.revisao?.responsavel;
+  const path = responsible?.assinatura_modo === "imagem" ? responsible?.assinatura_storage_path : null;
+  if (!path) return undefined;
+  const downloaded = await admin.storage.from("psico-assinaturas").download(path);
+  if (downloaded.error || !downloaded.data) throw new Error("ASSINATURA_INDISPONIVEL");
+  const bytes = new Uint8Array(await downloaded.data.arrayBuffer());
+  if (bytes.length > 2 * 1024 * 1024) throw new Error("ASSINATURA_INVALIDA");
+  const hash = await sha256Hex(bytes);
+  if (responsible?.assinatura_hash_sha256 && hash !== responsible.assinatura_hash_sha256) {
+    throw new Error("ASSINATURA_INTEGRIDADE_INVALIDA");
+  }
+  let binary = "";
+  for (let offset = 0; offset < bytes.length; offset += 8192) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + 8192));
+  }
+  const mime = responsible?.assinatura_mime_type === "image/jpeg" ? "image/jpeg" : "image/png";
+  return `data:${mime};base64,${btoa(binary)}`;
 }
 
 // Best-effort page count from PDF bytes (regex /Type /Page)
@@ -153,6 +174,7 @@ Deno.serve(async (req) => {
 
       const codigoRafp = `PRÉVIA-${validacaoData.avaliacao_codigo || "RELATÓRIO"}`;
       const codigoRev = validacaoData.proxima_revisao || "R00";
+      const assinaturaDataUrl = await loadApprovedSignature(admin, snapshot);
       const nodeBuf = await renderToBuffer(
         <PsychosocialReportDocument
           snapshot={snapshot}
@@ -162,6 +184,7 @@ Deno.serve(async (req) => {
           cliente={cliente}
           empresa={empresaQ.data || {}}
           dataEmissao={new Date().toISOString()}
+          assinaturaDataUrl={assinaturaDataUrl}
           preview
         />
       );
@@ -178,7 +201,7 @@ Deno.serve(async (req) => {
       });
     } catch (err: any) {
       console.error("[psico-gerar-relatorio] preview error", err);
-      const codigo = ["SNAPSHOT_INVALIDO", "ERRO_RENDERIZACAO", "PDF_INVALIDO"]
+      const codigo = ["SNAPSHOT_INVALIDO", "ERRO_RENDERIZACAO", "PDF_INVALIDO", "ASSINATURA_INDISPONIVEL", "ASSINATURA_INVALIDA", "ASSINATURA_INTEGRIDADE_INVALIDA"]
         .includes(err?.message) ? err.message : "ERRO_INTERNO";
       return new Response(JSON.stringify({ error: codigo, detalhe: err?.detalhe || err?.message }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -239,6 +262,7 @@ Deno.serve(async (req) => {
     const empresaQ = await admin.from("proposal_template")
       .select("quem_somos, telefone, email, site, endereco, slogan, cor_primaria, cor_secundaria")
       .limit(1).maybeSingle();
+    const assinaturaDataUrl = await loadApprovedSignature(admin, snapshot);
 
     // 3) Renderizar PDF
     let pdfBuffer: Uint8Array;
@@ -253,6 +277,7 @@ Deno.serve(async (req) => {
           empresa={empresaQ.data || {}}
           dataEmissao={new Date().toISOString()}
           qrDataUrl={qrDataUrl}
+          assinaturaDataUrl={assinaturaDataUrl}
         />
       );
       pdfBuffer = new Uint8Array(nodeBuf as any);
@@ -305,6 +330,7 @@ Deno.serve(async (req) => {
   } catch (err: any) {
     const codigo = ["SNAPSHOT_INVALIDO","MODELO_NAO_LOCALIZADO","ERRO_RENDERIZACAO",
       "ERRO_GRAFICO","PDF_INVALIDO","ERRO_STORAGE","ERRO_INTEGRACAO_DOCUMENTOS",
+      "ASSINATURA_INDISPONIVEL","ASSINATURA_INVALIDA","ASSINATURA_INTEGRIDADE_INVALIDA",
       "TEMPO_LIMITE","ERRO_INTERNO"].includes(err?.message) ? err.message : "ERRO_INTERNO";
     try {
       await admin.rpc("psico_falhar_emissao_relatorio", {

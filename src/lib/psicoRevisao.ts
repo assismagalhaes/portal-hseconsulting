@@ -77,9 +77,33 @@ export async function atualizarRevisaoFator(id: string, patch: Record<string, an
   return sb.from("psico_revisoes_fatores").update(patch).eq("id", id);
 }
 
+export async function salvarParecerConclusivo(
+  revisaoId: string,
+  parecer: Record<string, string>,
+  origem: "manual" | "editado_ia" | "restaurado" = "manual",
+) {
+  return sb.rpc("psico_salvar_parecer_conclusivo", {
+    p_revisao_id: revisaoId,
+    p_parecer: parecer,
+    p_origem: origem,
+    p_prompt_codigo: null,
+    p_modelo_ia: null,
+  });
+}
+
+export async function getParecerHistorico(revisaoId: string) {
+  const { data, error } = await sb
+    .from("psico_parecer_versoes")
+    .select("id,numero,conteudo,origem,prompt_codigo,modelo_ia,criado_em,criado_por")
+    .eq("revisao_id", revisaoId)
+    .order("numero", { ascending: false });
+  return { data: data || [], error };
+}
+
 export const ERRO_LABEL: Record<string, string> = {
   RESPONSAVEL_TECNICO_AUSENTE: "Responsável técnico não definido",
   CONCLUSAO_INCOMPLETA: "Conclusão técnica insuficiente (mín. 50 caracteres)",
+  PARECER_CONCLUSIVO_INCOMPLETO: "Parecer técnico conclusivo incompleto; preencha as seis seções antes de aprovar",
   LIMITACOES_INCOMPLETAS: "Limitações não descritas (mín. 10 caracteres)",
   FATOR_SIGNIFICATIVO_SEM_ACAO: "Fator significativo sem ação selecionada no plano",
   PLANO_SEM_ACOES: "Plano de ação sem itens selecionados",
