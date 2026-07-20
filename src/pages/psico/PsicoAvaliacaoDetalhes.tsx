@@ -20,6 +20,7 @@ import PsicoResultadosTab from "@/components/psico/PsicoResultadosTab";
 import PsicoRevisaoTab from "@/components/psico/PsicoRevisaoTab";
 import PsicoPlanoTab from "@/components/psico/PsicoPlanoTab";
 import PsicoRelatorioTab from "@/components/psico/PsicoRelatorioTab";
+import PsicoLinkPublicoTab from "@/components/psico/PsicoLinkPublicoTab";
 
 const BASE = "/operacoes/avaliacao-fatores-psicossociais";
 
@@ -228,6 +229,7 @@ export default function PsicoAvaliacaoDetalhes() {
           <TabsList className="w-full justify-start overflow-x-auto">
             <TabsTrigger value="visao">Visão Geral</TabsTrigger>
             <TabsTrigger value="participantes">Participantes</TabsTrigger>
+            <TabsTrigger value="link-publico">Link Público</TabsTrigger>
             <TabsTrigger value="coleta">Coleta</TabsTrigger>
             <TabsTrigger value="resultados">Resultados</TabsTrigger>
             <TabsTrigger value="revisao">Revisão Técnica</TabsTrigger>
@@ -307,6 +309,9 @@ export default function PsicoAvaliacaoDetalhes() {
               temVersaoPublicada={!!av.questionario_versao_id}
               codigoAvaliacao={av.codigo}
             />
+          </TabsContent>
+          <TabsContent value="link-publico">
+            <PsicoLinkPublicoTab av={av} onReload={load} />
           </TabsContent>
           <TabsContent value="coleta">
             <PsicoColetaTab av={av} onReload={load} />

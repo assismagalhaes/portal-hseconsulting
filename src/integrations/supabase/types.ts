@@ -5817,6 +5817,7 @@ export type Database = {
         Row: {
           assunto_convite: string | null
           atualizado_por: string | null
+          campos_identificacao: Json
           cancelado_em: string | null
           cancelado_por: string | null
           cliente_id: string
@@ -5836,8 +5837,10 @@ export type Database = {
           importacao_avaliacao_id: string | null
           importado_em: string | null
           importado_por: string | null
+          link_publico_token: string | null
           mensagem_convite: string | null
           metodologia_versao_id: string | null
+          modo_coleta: Database["public"]["Enums"]["psico_modo_coleta"]
           motivo_cancelamento: string | null
           motivo_encerramento: string | null
           motivo_prorrogacao: string | null
@@ -5852,6 +5855,7 @@ export type Database = {
           quantidade_participantes_abertura: number | null
           quantidade_participantes_prevista: number
           questionario_versao_id: string | null
+          registrar_participacao: boolean
           responsavel_hse_id: string | null
           resultado_processado_em: string | null
           resultado_processado_por: string | null
@@ -5866,6 +5870,7 @@ export type Database = {
         Insert: {
           assunto_convite?: string | null
           atualizado_por?: string | null
+          campos_identificacao?: Json
           cancelado_em?: string | null
           cancelado_por?: string | null
           cliente_id: string
@@ -5885,8 +5890,10 @@ export type Database = {
           importacao_avaliacao_id?: string | null
           importado_em?: string | null
           importado_por?: string | null
+          link_publico_token?: string | null
           mensagem_convite?: string | null
           metodologia_versao_id?: string | null
+          modo_coleta?: Database["public"]["Enums"]["psico_modo_coleta"]
           motivo_cancelamento?: string | null
           motivo_encerramento?: string | null
           motivo_prorrogacao?: string | null
@@ -5901,6 +5908,7 @@ export type Database = {
           quantidade_participantes_abertura?: number | null
           quantidade_participantes_prevista?: number
           questionario_versao_id?: string | null
+          registrar_participacao?: boolean
           responsavel_hse_id?: string | null
           resultado_processado_em?: string | null
           resultado_processado_por?: string | null
@@ -5915,6 +5923,7 @@ export type Database = {
         Update: {
           assunto_convite?: string | null
           atualizado_por?: string | null
+          campos_identificacao?: Json
           cancelado_em?: string | null
           cancelado_por?: string | null
           cliente_id?: string
@@ -5934,8 +5943,10 @@ export type Database = {
           importacao_avaliacao_id?: string | null
           importado_em?: string | null
           importado_por?: string | null
+          link_publico_token?: string | null
           mensagem_convite?: string | null
           metodologia_versao_id?: string | null
+          modo_coleta?: Database["public"]["Enums"]["psico_modo_coleta"]
           motivo_cancelamento?: string | null
           motivo_encerramento?: string | null
           motivo_prorrogacao?: string | null
@@ -5950,6 +5961,7 @@ export type Database = {
           quantidade_participantes_abertura?: number | null
           quantidade_participantes_prevista?: number
           questionario_versao_id?: string | null
+          registrar_participacao?: boolean
           responsavel_hse_id?: string | null
           resultado_processado_em?: string | null
           resultado_processado_por?: string | null
@@ -7475,6 +7487,38 @@ export type Database = {
         }
         Relationships: []
       }
+      psico_registro_participacao: {
+        Row: {
+          avaliacao_id: string
+          created_at: string
+          id: string
+          nome: string
+          nome_normalizado: string
+        }
+        Insert: {
+          avaliacao_id: string
+          created_at?: string
+          id?: string
+          nome: string
+          nome_normalizado: string
+        }
+        Update: {
+          avaliacao_id?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          nome_normalizado?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_registro_participacao_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psico_relatorios: {
         Row: {
           atualizado_em: string
@@ -7801,6 +7845,62 @@ export type Database = {
             columns: ["resposta_id"]
             isOneToOne: false
             referencedRelation: "psico_respostas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_respostas_publicas: {
+        Row: {
+          avaliacao_id: string
+          created_at: string
+          funcao: string | null
+          funcao_normalizada: string | null
+          hash_nome: string | null
+          id: string
+          origem_ip_hash: string | null
+          respostas: Json
+          setor: string | null
+          setor_normalizada: string | null
+          unidade: string | null
+          unidade_normalizada: string | null
+          user_agent_hash: string | null
+        }
+        Insert: {
+          avaliacao_id: string
+          created_at?: string
+          funcao?: string | null
+          funcao_normalizada?: string | null
+          hash_nome?: string | null
+          id?: string
+          origem_ip_hash?: string | null
+          respostas: Json
+          setor?: string | null
+          setor_normalizada?: string | null
+          unidade?: string | null
+          unidade_normalizada?: string | null
+          user_agent_hash?: string | null
+        }
+        Update: {
+          avaliacao_id?: string
+          created_at?: string
+          funcao?: string | null
+          funcao_normalizada?: string | null
+          hash_nome?: string | null
+          id?: string
+          origem_ip_hash?: string | null
+          respostas?: Json
+          setor?: string | null
+          setor_normalizada?: string | null
+          unidade?: string | null
+          unidade_normalizada?: string | null
+          user_agent_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_respostas_publicas_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
             referencedColumns: ["id"]
           },
         ]
@@ -9249,6 +9349,10 @@ export type Database = {
       psico_gerar_codigo_avaliacao: { Args: never; Returns: string }
       psico_gerar_codigo_relatorio: { Args: never; Returns: string }
       psico_gerar_codigo_validacao: { Args: never; Returns: string }
+      psico_gerar_link_publico: {
+        Args: { p_avaliacao_id: string }
+        Returns: string
+      }
       psico_gerar_recomendacoes_internal: {
         Args: { p_revisao_id: string; p_substituir_geradas?: boolean }
         Returns: number
@@ -9551,6 +9655,20 @@ export type Database = {
         Returns: Json
       }
       psico_sanitize_snapshot: { Args: { p_data: Json }; Returns: Json }
+      psico_submeter_resposta_publica: {
+        Args: {
+          p_funcao: string
+          p_hash_nome: string
+          p_ip_hash: string
+          p_nome_para_registro: string
+          p_respostas: Json
+          p_setor: string
+          p_token: string
+          p_ua_hash: string
+          p_unidade: string
+        }
+        Returns: Json
+      }
       psico_validar_biblioteca_medidas: {
         Args: { p_biblioteca_versao_id: string }
         Returns: Json
@@ -9994,6 +10112,7 @@ export type Database = {
       psico_medida_custo: "baixo" | "medio" | "alto" | "variavel"
       psico_medida_nivel: "essencial" | "complementar" | "estruturante"
       psico_metodologia_status: "em_configuracao" | "ativa" | "arquivada"
+      psico_modo_coleta: "nominal" | "publico_anonimo"
       psico_origem_coleta: "portal" | "importacao_bruta" | "importacao_agregada"
       psico_participante_origem: "manual" | "importacao"
       psico_plano_modo: "enxuto" | "completo" | "personalizado"
@@ -10555,6 +10674,7 @@ export const Constants = {
       psico_medida_custo: ["baixo", "medio", "alto", "variavel"],
       psico_medida_nivel: ["essencial", "complementar", "estruturante"],
       psico_metodologia_status: ["em_configuracao", "ativa", "arquivada"],
+      psico_modo_coleta: ["nominal", "publico_anonimo"],
       psico_origem_coleta: [
         "portal",
         "importacao_bruta",
