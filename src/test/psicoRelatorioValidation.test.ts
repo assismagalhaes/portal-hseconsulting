@@ -46,12 +46,20 @@ const reportTemplateVersionMigration = readFileSync(
   resolve("supabase/migrations/20260718213351_b7cfa611-b98b-4039-8511-2183747260b3.sql"),
   "utf8",
 );
+const reportExecutiveSnapshotMigration = readFileSync(
+  resolve("supabase/migrations/20260720141040_enrich_psico_report_snapshot.sql"),
+  "utf8",
+);
 const duplicatePreviewQrMigration = readFileSync(
   resolve("supabase/migrations/20260718220000_bump_psico_report_template_preview_qr.sql"),
   "utf8",
 );
 const reportFunction = readFileSync(
   resolve("supabase/functions/psico-gerar-relatorio/template.tsx"),
+  "utf8",
+);
+const reportDocument = readFileSync(
+  resolve("supabase/functions/psico-gerar-relatorio/report-document.tsx"),
   "utf8",
 );
 
@@ -172,34 +180,43 @@ describe("metadados seguros do PDF psicossocial", () => {
   });
 
   it("prioriza a metodologia imutavel do snapshot e nunca concatena nome ausente", () => {
-    expect(reportFunction).toContain("snapshot?.avaliacao?.metodologia");
-    expect(reportFunction).toContain(
+    expect(reportDocument).toContain("assessment?.metodologia");
+    expect(reportDocument).toContain(
       "snapshot?.agregado?.processamento?.metodologia",
     );
-    expect(reportFunction).toContain('v={metodologiaLabel}');
-    expect(reportFunction).toContain("responsavel?.nome_responsavel");
-    expect(reportFunction).not.toContain("${biblioteca.nome}");
-    expect(reportFunction).not.toContain('{responsavel?.nome || "—"}');
+    expect(reportDocument).toContain("methodologyLabel");
+    expect(reportDocument).toContain("responsible?.nome_responsavel");
+    expect(reportDocument).not.toContain("${biblioteca.nome}");
+    expect(reportDocument).not.toContain('{responsavel?.nome || "—"}');
   });
 
   it("formata o horario de aprovacao no fuso oficial do portal", () => {
-    expect(reportFunction).toMatch(
-      /function fmtDateTime[\s\S]*?timeZone: "America\/Sao_Paulo"[\s\S]*?\n}/,
+    expect(reportDocument).toMatch(
+      /function dateTime[\s\S]*?timeZone: "America\/Sao_Paulo"[\s\S]*?\n}/,
     );
   });
 
   it("versiona a RPC e o renderer juntos quando o template muda", () => {
-    const edgeVersion = reportFunction.match(
-      /const MODELO_VERSAO = "([^"]+)"/,
+    const edgeVersion = reportDocument.match(
+      /export const REPORT_MODEL_VERSION = "([^"]+)"/,
     )?.[1];
 
-    expect(edgeVersion).toBe("1.0.2");
-    expect(reportTemplateVersionMigration).toContain(
+    expect(edgeVersion).toBe("1.1.0");
+    expect(reportExecutiveSnapshotMigration).toContain(
       `v_modelo_versao text := ''${edgeVersion}''`,
     );
-    expect(reportTemplateVersionMigration).toContain(
+    expect(reportExecutiveSnapshotMigration).toContain(
       "psico_preparar_emissao_relatorio(uuid,text,text)",
     );
+  });
+
+  it("inclui somente indicadores agregados no resumo executivo", () => {
+    expect(reportExecutiveSnapshotMigration).toContain("'total_participantes', e.respondentes");
+    expect(reportExecutiveSnapshotMigration).toContain("'indice_geral_descritivo'");
+    expect(reportExecutiveSnapshotMigration).toContain("'fator_nome', f.nome");
+    expect(reportExecutiveSnapshotMigration).toContain("'score_medio', rf.score_medio");
+    expect(reportExecutiveSnapshotMigration).not.toContain("psico_respostas");
+    expect(reportExecutiveSnapshotMigration).not.toContain("psico_participantes");
   });
 
   it("mantém como no-op a migração duplicada criada pelo sincronismo", () => {
@@ -223,8 +240,8 @@ describe("metadados seguros do PDF psicossocial", () => {
     expect(reportFunction).toContain("VALIDATION_PAGE_URL");
     expect(reportFunction).toContain("?codigo=${encodeURIComponent(codigoValidacao)}");
     expect(reportFunction).toContain("QRCode.toDataURL(validationUrl");
-    expect(reportFunction).toContain("<Image src={qrDataUrl}");
-    expect(reportFunction).toContain("!preview && qrDataUrl");
+    expect(reportDocument).toContain("<Image src={qrDataUrl}");
+    expect(reportDocument).toContain("!preview && qrDataUrl");
   });
 
   it("renderiza prévia marcada sem preparar ou persistir uma emissão", () => {
@@ -236,7 +253,7 @@ describe("metadados seguros do PDF psicossocial", () => {
     expect(previewStart).toBeGreaterThan(0);
     expect(prepareStart).toBeGreaterThan(previewStart);
     expect(reportFunction).toContain("PRÉVIA — SEM VALIDADE");
-    expect(reportFunction).toContain("{preview && <Text style={s.watermark} fixed>");
+    expect(reportDocument).toContain("{preview && <Text style={styles.watermark}>");
     expect(reportFunction).toContain('"Cache-Control": "no-store, max-age=0"');
     expect(reportFunction.slice(previewStart, prepareStart)).not.toContain(
       '.storage.from("psico-relatorios")',
