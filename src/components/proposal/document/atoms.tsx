@@ -164,7 +164,7 @@ export function Stat({ label, value, accent }: any) {
 }
 
 /* ---------- Scope card (technical/commercial, no financials) ---------- */
-export function ScopeCard({ item, title, primary, accent, neutral, fontTitulo }: any) {
+export function ScopeCard({ item, numero, title, primary, accent, neutral, fontTitulo }: any) {
   const toList = (s?: string): string[] =>
     (s || "")
       .split(/\r?\n|;|•/)
@@ -195,7 +195,7 @@ export function ScopeCard({ item, title, primary, accent, neutral, fontTitulo }:
       <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 4, background: accent, borderRadius: "12px 0 0 12px" }} />
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
         <span style={{ width: 32, height: 32, borderRadius: 8, background: primary, color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13 }}>
-          {String(item.numero_item).padStart(2, "0")}
+          {String(numero ?? item.numero_item).padStart(2, "0")}
         </span>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: `${fontTitulo}, sans-serif`, fontWeight: 700, fontSize: 15, color: primary, lineHeight: 1.2 }}>

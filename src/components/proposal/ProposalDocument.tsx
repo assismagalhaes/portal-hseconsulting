@@ -254,10 +254,10 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   // -------- Escopo dos Serviços (cards) --------
   if (items.length > 0) {
     push("Escopo dos Serviços", "sc-title", <SectionTitle eyebrow="Detalhamento" title="Escopo dos serviços" accent={accent} primary={primary} />, true);
-    items.forEach((it) => {
+    items.forEach((it, idx) => {
       push("Escopo dos Serviços", "sc-" + it.id, (
         <div style={{ marginTop: 12 }}>
-          <ScopeCard item={it} title={titleOf(it)} primary={primary} accent={accent} neutral={neutral} fontTitulo={fontTitulo} />
+          <ScopeCard item={it} numero={idx + 1} title={titleOf(it)} primary={primary} accent={accent} neutral={neutral} fontTitulo={fontTitulo} />
         </div>
       ));
     });
@@ -265,7 +265,10 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
 
   // -------- Investimento --------
   push("Investimento", "inv-title", <SectionTitle eyebrow="Resumo financeiro" title="Investimento" accent={accent} primary={primary} />, true);
+  let invOffset = 0;
   invChunks.forEach((chunk, idx) => {
+    const baseOffset = invOffset;
+    invOffset += chunk.length;
     push("Investimento", "inv-t-" + idx, (
       <div style={{ marginTop: idx === 0 ? 0 : 6 }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
@@ -281,7 +284,7 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
           <tbody>
             {chunk.map((it: any, i: number) => (
               <tr key={it.id} style={{ background: i % 2 ? neutral : "#fff", verticalAlign: "top" }}>
-                <td style={{ padding: "10px 12px", fontFamily: "monospace", color: "#64748b" }}>{String(it.numero_item).padStart(2, "0")}</td>
+                <td style={{ padding: "10px 12px", fontFamily: "monospace", color: "#64748b" }}>{String(baseOffset + i + 1).padStart(2, "0")}</td>
                 <td style={{ padding: "10px 12px" }}>
                   <div style={{ fontWeight: 600, color: "#0f172a" }}>{titleOf(it)}</div>
                   {it.categoria && <div style={{ fontSize: 10, color: "#64748b" }}>{it.categoria}</div>}
