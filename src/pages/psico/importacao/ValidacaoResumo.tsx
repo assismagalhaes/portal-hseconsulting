@@ -66,6 +66,7 @@ export function ValidacaoResumo({
               <div><span className="text-muted-foreground">Nome encontrado:</span> {validarResp.resumo.nome_presente ? "Sim" : "Não"}</div>
               <div><span className="text-muted-foreground">Função encontrada:</span> {validarResp.resumo.funcao_presente ? "Sim" : "Não"}</div>
               <div><span className="text-muted-foreground">Perguntas:</span> {validarResp.resumo.perguntas_mapeadas}/35</div>
+              <div><span className="text-muted-foreground">Período detectado:</span> {validarResp.resumo.data_resposta_minima && validarResp.resumo.data_resposta_maxima ? `${validarResp.resumo.data_resposta_minima} → ${validarResp.resumo.data_resposta_maxima}` : "Não detectado"}</div>
               <div><span className="text-muted-foreground">Segmentação por função:</span> {validarResp.resumo.segmentacao_funcao_disponivel ? "Disponível (≥3)" : "Indisponível"}</div>
               <div><span className="text-muted-foreground">Delimitador:</span> {validarResp.resumo.delimitador || "—"}</div>
               <div><span className="text-muted-foreground">Codificação:</span> {validarResp.resumo.codificacao}{validarResp.resumo.codificacao_corrigida ? " (corrigida)" : ""}</div>
