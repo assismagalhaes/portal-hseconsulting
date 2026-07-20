@@ -32,6 +32,26 @@ const MODELO_CODIGO = "HSE-PSICO-REL-1.0";
 const MODELO_VERSAO = "1.0.2";
 const VALIDATION_PAGE_URL = "https://portal.hseconsulting.com.br/validar/relatorio-psicossocial";
 
+type SnapshotRpcError = {
+  message?: string;
+  code?: string;
+  hint?: string;
+} | null;
+
+function previewSnapshotError(stage: string, error: SnapshotRpcError) {
+  const message = error?.message || "RPC retornou resultado vazio";
+  console.error("[psico-gerar-relatorio] preview snapshot error", {
+    stage,
+    message,
+    code: error?.code,
+    hint: error?.hint,
+  });
+
+  const failure = new Error("SNAPSHOT_INVALIDO") as Error & { detalhe: string };
+  failure.detalhe = `${stage}: ${message}`;
+  return failure;
+}
+
 const COLORS = {
   primary: "#0F4C81",
   primarySoft: "#E7EEF6",
@@ -587,9 +607,13 @@ Deno.serve(async (req) => {
       const conteudo = await userClient.rpc("psico_obter_conteudo_aprovado_relatorio", {
         p_avaliacao_id: avaliacaoId,
       });
-      if (conteudo.error || !conteudo.data) throw new Error("SNAPSHOT_INVALIDO");
+      if (conteudo.error || !conteudo.data) {
+        throw previewSnapshotError("psico_obter_conteudo_aprovado_relatorio", conteudo.error);
+      }
       const sanitizado = await admin.rpc("psico_sanitize_snapshot", { p_data: conteudo.data });
-      if (sanitizado.error || !sanitizado.data) throw new Error("SNAPSHOT_INVALIDO");
+      if (sanitizado.error || !sanitizado.data) {
+        throw previewSnapshotError("psico_sanitize_snapshot", sanitizado.error);
+      }
       const snapshot = {
         ...(sanitizado.data as Record<string, unknown>),
         modelo: { codigo: MODELO_CODIGO, versao: MODELO_VERSAO },
@@ -632,7 +656,7 @@ Deno.serve(async (req) => {
       console.error("[psico-gerar-relatorio] preview error", err);
       const codigo = ["SNAPSHOT_INVALIDO", "ERRO_RENDERIZACAO", "PDF_INVALIDO"]
         .includes(err?.message) ? err.message : "ERRO_INTERNO";
-      return new Response(JSON.stringify({ error: codigo, detalhe: err?.message }), {
+      return new Response(JSON.stringify({ error: codigo, detalhe: err?.detalhe || err?.message }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
