@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import PageHeader from "@/components/PageHeader";
+import { ModuleTabs } from "./_ModuloShared";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -201,6 +202,7 @@ export function PsicoBibliotecaLista() {
         title="Biblioteca de Medidas"
         subtitle="Catálogo técnico de fatores psicossociais e medidas recomendadas. Base para as revisões técnicas de cada avaliação."
       />
+      <div className="px-6 pt-4"><ModuleTabs /></div>
       <div className="p-6 space-y-6">
         {vigente && (
           <Alert>
