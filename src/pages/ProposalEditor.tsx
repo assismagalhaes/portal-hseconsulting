@@ -433,7 +433,7 @@ export default function ProposalEditor() {
               print-color-adjust: exact !important;
             }
             .proposal-doc { width: 210mm; margin: 0; padding: 0; }
-            .pdf-page { box-shadow: none !important; margin: 0 !important; page-break-after: always; break-after: page; }
+            .pdf-page { box-shadow: none !important; margin: 0 !important; padding: 0 !important; page-break-after: always; break-after: page; overflow: hidden; }
             .pdf-page:last-child { page-break-after: auto; break-after: auto; }
             .avoid-break { break-inside: avoid; page-break-inside: avoid; }
             @media screen { body { margin: 0 auto; } }
