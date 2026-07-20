@@ -41,7 +41,7 @@ function ChipList({ items }: { items?: string[] | null }) {
 
 function FatorCard({ f, medidas }: { f: FatorOrientacao; medidas: MedidaModelo[] }) {
   const doFator = medidas.filter((m) => m.fator_codigo === f.fator_codigo);
-  const cores = { basica: 0, intermediaria: 0, avancada: 0, transversal: 0 };
+  const cores = { essencial: 0, estruturante: 0, complementar: 0 };
   doFator.forEach((m) => { (cores as any)[m.nivel_recomendacao]++; });
   return (
     <Card>
@@ -55,7 +55,7 @@ function FatorCard({ f, medidas }: { f: FatorOrientacao; medidas: MedidaModelo[]
             {f.definicao_resumida && <p className="text-sm text-muted-foreground mt-2 max-w-3xl">{f.definicao_resumida}</p>}
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {(["basica","intermediaria","avancada","transversal"] as const).map((n) => (
+            {(["essencial","estruturante","complementar"] as const).map((n) => (
               (cores as any)[n] > 0 && <Badge key={n} className={NIVEL_COLOR[n]}>{(cores as any)[n]} {NIVEL_LABEL[n]}</Badge>
             ))}
           </div>
@@ -354,10 +354,9 @@ export function PsicoBibliotecaDetalhe() {
               <SelectTrigger className="w-[200px]"><SelectValue placeholder="Nível" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os níveis</SelectItem>
-                <SelectItem value="basica">Básica</SelectItem>
-                <SelectItem value="intermediaria">Intermediária</SelectItem>
-                <SelectItem value="avancada">Avançada</SelectItem>
-                <SelectItem value="transversal">Transversal</SelectItem>
+                <SelectItem value="essencial">Essencial</SelectItem>
+                <SelectItem value="estruturante">Estruturante</SelectItem>
+                <SelectItem value="complementar">Complementar</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="ghost" onClick={() => { setBusca(""); setFiltroFator("all"); setFiltroNivel("all"); }}>Limpar</Button>
