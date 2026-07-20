@@ -100,8 +100,6 @@ export function ParcelasCard({ snap, total, primary, accent, neutral, textoPadra
             <th style={{ textAlign: "left", padding: "8px 12px" }}>%</th>
             <th style={{ textAlign: "right", padding: "8px 12px" }}>Valor</th>
             <th style={{ textAlign: "left", padding: "8px 12px" }}>Marco</th>
-            <th style={{ textAlign: "left", padding: "8px 12px" }}>Prazo</th>
-            <th style={{ textAlign: "left", padding: "8px 12px" }}>Observação</th>
           </tr>
         </thead>
         <tbody>
@@ -113,12 +111,6 @@ export function ParcelasCard({ snap, total, primary, accent, neutral, textoPadra
                 {brl(Number(p.valor ?? (p.percentual / 100) * (total || 0)))}
               </td>
               <td style={{ padding: "8px 12px", color: accent, fontWeight: 600 }}>{MARCO_LABEL[p.marco as CondPagMarco]}</td>
-              <td style={{ padding: "8px 12px", color: "#475569" }}>
-                {p.marco === "mensal_recorrente"
-                  ? `todo dia ${p.dia_mes ?? "—"}`
-                  : p.dias_apos_marco ? `+${p.dias_apos_marco} dias` : "no ato"}
-              </td>
-              <td style={{ padding: "8px 12px", color: "#64748b" }}>{p.descricao || "—"}</td>
             </tr>
           ))}
         </tbody>
