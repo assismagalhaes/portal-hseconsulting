@@ -343,7 +343,7 @@ export default function CondicaoPagamentoPicker({
       <div className="space-y-1.5">
         <Label className="text-xs">Texto complementar (aparece na proposta abaixo das parcelas)</Label>
         <Textarea rows={2} value={complemento} onChange={(e) => setComplemento(e.target.value)}
-          placeholder="Opcional: observação livre sobre pagamento (juros, multa, dados bancários…)" />
+          placeholder="Opcional: texto livre sobre pagamento (juros, multa, dados bancários…)" />
       </div>
 
       {textoPadrao && (
