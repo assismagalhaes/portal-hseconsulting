@@ -54,6 +54,10 @@ const reportVisualMethodologyMigration = readFileSync(
   resolve("supabase/migrations/20260720151008_enrich_psico_report_methodology_v1_2.sql"),
   "utf8",
 );
+const reportEditorialVersionMigration = readFileSync(
+  resolve("supabase/migrations/20260720161655_bump_psico_report_editorial_v1_3.sql"),
+  "utf8",
+);
 const duplicatePreviewQrMigration = readFileSync(
   resolve("supabase/migrations/20260718220000_bump_psico_report_template_preview_qr.sql"),
   "utf8",
@@ -205,11 +209,11 @@ describe("metadados seguros do PDF psicossocial", () => {
       /export const REPORT_MODEL_VERSION = "([^"]+)"/,
     )?.[1];
 
-    expect(edgeVersion).toBe("1.2.0");
-    expect(reportVisualMethodologyMigration).toContain(
+    expect(edgeVersion).toBe("1.3.0");
+    expect(reportEditorialVersionMigration).toContain(
       `v_modelo_versao text := ''${edgeVersion}''`,
     );
-    expect(reportVisualMethodologyMigration).toContain(
+    expect(reportEditorialVersionMigration).toContain(
       "psico_preparar_emissao_relatorio(uuid,text,text)",
     );
   });
@@ -241,16 +245,26 @@ describe("metadados seguros do PDF psicossocial", () => {
     expect(reportFunction).toContain('from("proposal_template")');
   });
 
-  it("apresenta gráfico em escala de 0 a 4 e critérios de significância", () => {
-    expect(reportDocument).toContain("Comparativo dos resultados");
-    expect(reportDocument).toContain("índice geral (0 a 4)");
-    expect(reportDocument).toContain("Quanto maior o valor, maior a necessidade de atenção");
+  it("apresenta distribuição percentual e critérios de significância", () => {
+    expect(reportDocument).toContain("Distribuição das respostas por fator");
+    expect(reportDocument).toContain("percentual_irrelevante");
+    expect(reportDocument).toContain("percentual_critico");
+    expect(reportDocument).toContain("Índice geral descritivo:");
     expect(reportDocument).toContain("principalCriterionLabel");
     expect(reportDocument).toContain("principalLimit");
     expect(reportDocument).toContain("aggravationLimit");
     expect(reportDocument).toContain("criticalLimit");
     expect(reportDocument).not.toContain("PANORAMA DOS RISCOS");
     expect(reportDocument).not.toContain("avaliação de riscos psicossociais");
+  });
+
+  it("aplica as regras editoriais para dados ausentes e planos preventivos", () => {
+    expect(reportDocument).toContain("Plano de monitoramento preventivo");
+    expect(reportDocument).toContain("Prioridade ${riskLabel(highest?.prioridade)}");
+    expect(reportDocument).toContain("Dados históricos importados");
+    expect(reportDocument).toContain("Amostra de pequeno porte");
+    expect(reportDocument).not.toContain("Muito baixo");
+    expect(reportDocument).not.toContain("Endereço não informado no cadastro");
   });
 
   it("mantém como no-op a migração duplicada criada pelo sincronismo", () => {
