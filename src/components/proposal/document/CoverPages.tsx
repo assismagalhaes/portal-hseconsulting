@@ -5,14 +5,14 @@ import { PAGE_STYLE, ContactLine, Stat } from "./atoms";
 export function CapaPage({ proposal, client, tpl, primary, accent, logoSrcLight, capaSrc, tituloOverride, subtituloOverride }: any) {
   const titulo = tituloOverride || client?.nome_fantasia || client?.razao_social || "Cliente";
   return (
-    <section className="pdf-page" style={{ ...PAGE_STYLE, background: primary, color: "#fff" }}>
+    <section className="pdf-page" style={{ ...PAGE_STYLE, height: "297mm", minHeight: 0, marginBottom: 0, boxSizing: "border-box", background: primary, color: "#fff" }}>
       <img src={capaSrc} alt="" className="absolute inset-0 w-full h-full object-cover opacity-25" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.22 }} />
       <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${primary} 0%, ${primary}cc 55%, ${accent}66 120%)` }} />
       {/* Faixa diagonal */}
       <div style={{ position: "absolute", top: "-40mm", right: "-40mm", width: "120mm", height: "120mm", background: accent, opacity: 0.18, transform: "rotate(35deg)" }} />
       <div style={{ position: "absolute", bottom: "-30mm", left: "-30mm", width: "100mm", height: "100mm", background: accent, opacity: 0.12, transform: "rotate(35deg)" }} />
 
-      <div style={{ position: "relative", height: "297mm", padding: "22mm 22mm", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+      <div style={{ position: "relative", height: "100%", padding: "22mm 22mm", display: "flex", flexDirection: "column", justifyContent: "space-between", boxSizing: "border-box" }}>
         <div>
           <img src={logoSrcLight} alt="HSE Consulting" style={{ height: 110, objectFit: "contain" }} />
         </div>
@@ -52,12 +52,12 @@ export function CapaPage({ proposal, client, tpl, primary, accent, logoSrcLight,
 /** Contracapa (última página) do PDF da proposta. */
 export function ContracapaPage({ tpl, primary, accent, logoSrcLight, contraSrc }: any) {
   return (
-    <section className="pdf-page" style={{ ...PAGE_STYLE, background: primary, color: "#fff" }}>
+    <section className="pdf-page" style={{ ...PAGE_STYLE, height: "297mm", minHeight: 0, marginBottom: 0, boxSizing: "border-box", background: primary, color: "#fff" }}>
       <img src={contraSrc} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.3 }} />
       <div style={{ position: "absolute", inset: 0, background: `linear-gradient(180deg, ${primary}cc 0%, ${primary}f5 70%, ${primary} 100%)` }} />
       <div style={{ position: "absolute", top: "-30mm", left: "-30mm", width: "100mm", height: "100mm", background: accent, opacity: 0.12, transform: "rotate(35deg)" }} />
 
-      <div style={{ position: "relative", height: "297mm", padding: "30mm 24mm", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+      <div style={{ position: "relative", height: "100%", padding: "30mm 24mm", display: "flex", flexDirection: "column", justifyContent: "space-between", boxSizing: "border-box" }}>
         <img src={logoSrcLight} alt="HSE Consulting" style={{ height: 56, objectFit: "contain" }} />
 
         <div style={{ maxWidth: 520 }}>
