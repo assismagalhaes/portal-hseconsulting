@@ -10,14 +10,15 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Lock, RefreshCw, ShieldCheck, Info, Sparkles, Save } from "lucide-react";
+import { CheckCircle2, XCircle, Lock, RefreshCw, ShieldCheck, Info, Sparkles, Save, History, Upload, FileSignature } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import PsicoAprovacaoConsolidada from "./PsicoAprovacaoConsolidada";
 import {
   RevisaoStatus, STATUS_REVISAO_COLOR, STATUS_REVISAO_LABEL,
   TRATAMENTO_LABEL, PRIORIDADE_COLOR,
   aprovarRevisao, atualizarRevisao, atualizarRevisaoFator, criarRevisao,
-  getRevisaoAtiva, getRevisaoFatores, reabrirRevisao, traduzirErro, validarRevisao,
+  getParecerHistorico, getRevisaoAtiva, getRevisaoFatores, reabrirRevisao,
+  salvarParecerConclusivo, traduzirErro, validarRevisao,
 } from "@/lib/psicoRevisao";
 import { formatDateTime } from "@/lib/format";
 
@@ -36,16 +37,27 @@ export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: 
   const [approveText, setApproveText] = useState("");
   const [reopenOpen, setReopenOpen] = useState(false);
   const [reopenMotivo, setReopenMotivo] = useState("");
+  const [parecer, setParecer] = useState<Record<string, string>>({});
+  const [parecerHistory, setParecerHistory] = useState<any[]>([]);
+  const [generatingOpinion, setGeneratingOpinion] = useState(false);
+  const [uploadingSignature, setUploadingSignature] = useState(false);
 
   async function load() {
     setLoading(true);
     try {
       const r = await getRevisaoAtiva(av.id);
       setRev(r);
+      setParecer(r?.parecer_conclusivo || {
+        sintese_resultados: r?.conclusao_tecnica || r?.conclusao_sugerida || "",
+        interpretacao_integrada: r?.contexto_organizacional || "",
+        prioridades_intervencao: r?.recomendacao_geral || "",
+        recomendacoes: r?.recomendacao_geral || "",
+        limitacoes: r?.limitacoes || "",
+        conclusao: r?.conclusao_tecnica || r?.conclusao_sugerida || "",
+      });
       setForm({
         contexto_organizacional: r?.contexto_organizacional || "",
         limitacoes: r?.limitacoes || "",
-        conclusao_tecnica: r?.conclusao_tecnica || r?.conclusao_sugerida || "",
         recomendacao_geral: r?.recomendacao_geral || "",
         observacoes_internas: r?.observacoes_internas || "",
         responsavel_tecnico_id: r?.responsavel_tecnico_id || "",
@@ -63,8 +75,10 @@ export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: 
           (o || []).forEach((x: any) => { map[x.fator_codigo] = x; });
           setOrient(map);
         }
-        const { data: p } = await (supabase as any).from("profiles").select("id, nome, email").order("nome");
+        const { data: p } = await (supabase as any).from("profiles").select("id, nome, email, cargo, registro_profissional, assinatura_modo, assinatura_ativa, assinatura_nome_arquivo, assinatura_mime_type").order("nome");
         setProfiles(p || []);
+        const history = await getParecerHistorico(r.id);
+        setParecerHistory(history.data || []);
         const { data: val } = await validarRevisao(r.id);
         setValidacao(val);
       }
@@ -91,7 +105,6 @@ export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: 
     const { error } = await atualizarRevisao(rev.id, {
       contexto_organizacional: form.contexto_organizacional || null,
       limitacoes: form.limitacoes || null,
-      conclusao_tecnica: form.conclusao_tecnica || null,
       recomendacao_geral: form.recomendacao_geral || null,
       observacoes_internas: form.observacoes_internas || null,
       responsavel_tecnico_id: form.responsavel_tecnico_id || null,
@@ -99,6 +112,61 @@ export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: 
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Revisão salva"); load();
+  }
+
+  async function salvarParecer(origem?: "manual" | "editado_ia" | "restaurado", conteudo = parecer) {
+    if (!rev) return;
+    setSaving(true);
+    const resolvedOrigin = origem || (rev.parecer_origem === "ia" || rev.parecer_origem === "editado_ia" ? "editado_ia" : "manual");
+    const { error } = await salvarParecerConclusivo(rev.id, conteudo, resolvedOrigin);
+    setSaving(false);
+    if (error) { toast.error(error.message.includes("PARECER_ESTRUTURA_INVALIDA") ? "Preencha as seis partes do parecer com conteúdo técnico suficiente." : error.message); return; }
+    toast.success("Parecer técnico salvo e versionado");
+    load();
+  }
+
+  async function gerarParecerIa() {
+    if (!rev) return;
+    const hasOpinion = Object.values(parecer).some((value) => value?.trim());
+    if (hasOpinion && !window.confirm("Gerar uma nova minuta? A versão atual será preservada no histórico para comparação.")) return;
+    setGeneratingOpinion(true);
+    const headerSave = await atualizarRevisao(rev.id, {
+      contexto_organizacional: form.contexto_organizacional || null,
+      limitacoes: form.limitacoes || null,
+      recomendacao_geral: form.recomendacao_geral || null,
+      responsavel_tecnico_id: form.responsavel_tecnico_id || null,
+    });
+    if (headerSave.error) {
+      setGeneratingOpinion(false);
+      toast.error(`Não foi possível salvar o contexto antes da geração: ${headerSave.error.message}`);
+      return;
+    }
+    const { data, error } = await supabase.functions.invoke("psico-gerar-parecer", {
+      body: { revisao_id: rev.id, confirmar_substituicao: hasOpinion },
+    });
+    setGeneratingOpinion(false);
+    if (error || !data?.parecer) { toast.error(data?.error || error?.message || "Não foi possível gerar a minuta"); return; }
+    setParecer(data.parecer);
+    toast.success("Minuta gerada. Revise e salve antes de aprovar.");
+    load();
+  }
+
+  async function configurarAssinatura(mode: "em_branco" | "imagem", file?: File) {
+    const target = form.responsavel_tecnico_id;
+    if (!target) { toast.error("Selecione o responsável técnico primeiro"); return; }
+    setUploadingSignature(true);
+    let body: FormData | Record<string, string>;
+    if (mode === "imagem" && file) {
+      const formData = new FormData();
+      formData.append("responsavel_tecnico_id", target);
+      formData.append("arquivo", file);
+      body = formData;
+    } else body = { responsavel_tecnico_id: target, modo: "em_branco" };
+    const { data, error } = await supabase.functions.invoke("psico-assinatura-upload", { body });
+    setUploadingSignature(false);
+    if (error || !data?.ok) { toast.error(data?.error || error?.message || "Não foi possível configurar a assinatura"); return; }
+    toast.success(mode === "imagem" ? "Imagem privada da assinatura atualizada" : "Assinatura em branco selecionada");
+    load();
   }
 
   async function salvarFator(f: any, patch: Record<string, any>) {
@@ -274,6 +342,24 @@ export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: 
                 Assinado por: <b>{rev.responsavel_snapshot.nome}</b> · {rev.responsavel_snapshot.cargo}
               </p>
             )}
+            {!readOnly && form.responsavel_tecnico_id && (
+              <div className="mt-3 rounded-md border p-3 space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium"><FileSignature className="h-4 w-4" /> Assinatura no relatório</div>
+                <p className="text-xs text-muted-foreground">A imagem é opcional, privada e será congelada como referência quando a revisão for aprovada.</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" size="sm" variant="outline" disabled={uploadingSignature} onClick={() => configurarAssinatura("em_branco")}>Deixar espaço em branco</Button>
+                  <Label className="inline-flex h-9 cursor-pointer items-center rounded-md border border-input bg-background px-3 text-sm hover:bg-accent">
+                    <Upload className="mr-2 h-4 w-4" /> Enviar PNG/JPG
+                    <Input className="sr-only" type="file" accept="image/png,image/jpeg" disabled={uploadingSignature}
+                      onChange={(event) => { const file = event.target.files?.[0]; if (file) configurarAssinatura("imagem", file); event.target.value = ""; }} />
+                  </Label>
+                </div>
+                {(() => {
+                  const selected = profiles.find((profile) => profile.id === form.responsavel_tecnico_id);
+                  return selected ? <p className="text-xs text-muted-foreground">Modo atual: <b>{selected.assinatura_modo === "imagem" && selected.assinatura_ativa ? `imagem (${selected.assinatura_nome_arquivo || "arquivo protegido"})` : "em branco"}</b></p> : null;
+                })()}
+              </div>
+            )}
           </div>
           <div className="md:col-span-2">
             <Label>Contexto organizacional</Label>
@@ -288,12 +374,6 @@ export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: 
               placeholder="Ex.: baixa adesão em determinada unidade, período curto de coleta…" />
           </div>
           <div className="md:col-span-2">
-            <Label>Conclusão técnica * <span className="text-xs text-muted-foreground">(mín. 50 caracteres)</span></Label>
-            <Textarea rows={5} value={form.conclusao_tecnica} disabled={readOnly}
-              onChange={(e) => setForm({ ...form, conclusao_tecnica: e.target.value })} />
-            <p className="text-[11px] text-muted-foreground mt-1">Conclusão sugerida automaticamente pelos critérios internos; ajuste conforme análise.</p>
-          </div>
-          <div className="md:col-span-2">
             <Label>Recomendação geral</Label>
             <Textarea rows={3} value={form.recomendacao_geral} disabled={readOnly}
               onChange={(e) => setForm({ ...form, recomendacao_geral: e.target.value })} />
@@ -303,6 +383,56 @@ export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: 
             <Textarea rows={2} value={form.observacoes_internas} disabled={readOnly}
               onChange={(e) => setForm({ ...form, observacoes_internas: e.target.value })} />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle>Parecer técnico conclusivo</CardTitle>
+            {!readOnly && <div className="flex flex-wrap gap-2">
+              <Button type="button" size="sm" variant="outline" onClick={gerarParecerIa} disabled={generatingOpinion}>
+                <Sparkles className="mr-2 h-4 w-4" /> {generatingOpinion ? "Gerando…" : "Gerar minuta com IA"}
+              </Button>
+              <Button type="button" size="sm" onClick={() => salvarParecer()} disabled={saving}>
+                <Save className="mr-2 h-4 w-4" /> Salvar parecer
+              </Button>
+            </div>}
+          </div>
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>Texto sugerido por inteligência artificial. Revisão e aprovação técnica humanas são obrigatórias. Somente o parecer aprovado integra o relatório.</AlertDescription>
+          </Alert>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {[
+            ["sintese_resultados", "Síntese dos resultados", "Apresente participação, índice descritivo, fatores significativos e prioridades calculadas."],
+            ["interpretacao_integrada", "Interpretação integrada", "Relacione os achados coletivos ao contexto informado, sem afirmar causalidade."],
+            ["prioridades_intervencao", "Prioridades de intervenção", "Explique o que deve ser priorizado e por quê."],
+            ["recomendacoes", "Recomendações", "Oriente medidas organizacionais, trabalho real, eficácia e integração com o PGR."],
+            ["limitacoes", "Limitações", "Registre limites da amostra e da interpretação do questionário."],
+            ["conclusao", "Conclusão", "Consolide a decisão técnica e os próximos passos da organização."],
+          ].map(([key, label, placeholder]) => <div key={key}>
+            <Label>{label} *</Label>
+            <Textarea rows={key === "interpretacao_integrada" || key === "recomendacoes" ? 4 : 3}
+              value={parecer[key] || ""} disabled={readOnly}
+              placeholder={placeholder}
+              onChange={(event) => setParecer((current) => ({ ...current, [key]: event.target.value }))} />
+          </div>)}
+          {parecerHistory.length > 0 && <details className="rounded-md border p-3">
+            <summary className="cursor-pointer text-sm font-medium inline-flex items-center gap-2"><History className="h-4 w-4" /> Histórico do parecer ({parecerHistory.length})</summary>
+            <div className="mt-3 space-y-2">
+              {parecerHistory.map((version) => <div key={version.id} className="flex flex-wrap items-center justify-between gap-2 rounded bg-muted/50 p-2 text-xs">
+                <span>Versão {version.numero} · {version.origem} · {formatDateTime(version.criado_em)}{version.prompt_codigo ? ` · ${version.prompt_codigo}` : ""}</span>
+                {!readOnly && <Button size="sm" variant="ghost" onClick={() => {
+                  if (window.confirm(`Restaurar a versão ${version.numero}? A versão atual continuará no histórico.`)) {
+                    setParecer(version.conteudo);
+                    salvarParecer("restaurado", version.conteudo);
+                  }
+                }}>Restaurar</Button>}
+              </div>)}
+            </div>
+          </details>}
         </CardContent>
       </Card>
 

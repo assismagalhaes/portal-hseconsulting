@@ -58,6 +58,18 @@ const reportEditorialVersionMigration = readFileSync(
   resolve("supabase/migrations/20260720161655_bump_psico_report_editorial_v1_3.sql"),
   "utf8",
 );
+const reportV14Migration = readFileSync(
+  resolve("supabase/migrations/20260720165358_psico_report_v1_4_conclusion_signature.sql"),
+  "utf8",
+);
+const opinionFunction = readFileSync(
+  resolve("supabase/functions/psico-gerar-parecer/index.ts"),
+  "utf8",
+);
+const signatureFunction = readFileSync(
+  resolve("supabase/functions/psico-assinatura-upload/index.ts"),
+  "utf8",
+);
 const duplicatePreviewQrMigration = readFileSync(
   resolve("supabase/migrations/20260718220000_bump_psico_report_template_preview_qr.sql"),
   "utf8",
@@ -209,11 +221,11 @@ describe("metadados seguros do PDF psicossocial", () => {
       /export const REPORT_MODEL_VERSION = "([^"]+)"/,
     )?.[1];
 
-    expect(edgeVersion).toBe("1.3.0");
-    expect(reportEditorialVersionMigration).toContain(
+    expect(edgeVersion).toBe("1.4.0");
+    expect(reportV14Migration).toContain(
       `v_modelo_versao text := ''${edgeVersion}''`,
     );
-    expect(reportEditorialVersionMigration).toContain(
+    expect(reportV14Migration).toContain(
       "psico_preparar_emissao_relatorio(uuid,text,text)",
     );
   });
@@ -245,12 +257,12 @@ describe("metadados seguros do PDF psicossocial", () => {
     expect(reportFunction).toContain('from("proposal_template")');
   });
 
-  it("apresenta distribuição percentual e critérios de significância", () => {
-    expect(reportDocument).toContain("Distribuição das respostas por fator");
-    expect(reportDocument).toContain("percentual_irrelevante");
+  it("apresenta score vetorial no padrão do portal e critérios de significância", () => {
+    expect(reportDocument).toContain("Score médio por fator");
+    expect(reportDocument).toContain("0,80");
+    expect(reportDocument).toContain("3,20");
     expect(reportDocument).toContain("percentual_critico");
     expect(reportDocument).toContain("Índice geral descritivo:");
-    expect(reportDocument).toContain("principalCriterionLabel");
     expect(reportDocument).toContain("principalLimit");
     expect(reportDocument).toContain("aggravationLimit");
     expect(reportDocument).toContain("criticalLimit");
@@ -259,12 +271,51 @@ describe("metadados seguros do PDF psicossocial", () => {
   });
 
   it("aplica as regras editoriais para dados ausentes e planos preventivos", () => {
-    expect(reportDocument).toContain("Plano de monitoramento preventivo");
-    expect(reportDocument).toContain("Prioridade ${riskLabel(highest?.prioridade)}");
-    expect(reportDocument).toContain("Dados históricos importados");
-    expect(reportDocument).toContain("Amostra de pequeno porte");
+    expect(reportDocument).toContain("Plano preventivo");
+    expect(reportDocument).toContain("PRIORIDADE MÁXIMA DE INTERVENÇÃO");
+    expect(reportDocument).toContain("Importação de formulário externo em dados brutos");
     expect(reportDocument).not.toContain("Muito baixo");
     expect(reportDocument).not.toContain("Endereço não informado no cadastro");
+    expect(reportDocument).not.toContain("SAÚDE · SEGURANÇA · GESTÃO");
+    expect(reportDocument).not.toContain("ORIGEM DA AVALIAÇÃO");
+    expect(reportDocument).not.toContain("ENCAMINHAMENTO");
+  });
+
+  it("inclui as 35 perguntas agregadas, plano operacional e rodapé controlado", () => {
+    expect(reportV14Migration).toContain("public.psico_resultados_perguntas");
+    expect(reportV14Migration).toContain("'orientacoes_praticas'");
+    expect(reportV14Migration).toContain("'exemplos_aplicacao'");
+    expect(reportV14Migration).toContain("'indicador_eficacia'");
+    expect(reportV14Migration).not.toContain("public.psico_respostas ");
+    expect(reportDocument).toContain("Resultados completos por pergunta");
+    expect(reportDocument).toContain("Página ${pageNumber} de ${totalPages}");
+    expect(reportDocument).toContain("Como implementar");
+    expect(reportDocument).toContain("Exemplos de aplicação");
+    expect(reportDocument).toContain("Indicador de eficácia");
+  });
+
+  it("mantém parecer com IA sob versionamento e aprovação humana", () => {
+    expect(reportV14Migration).toContain("psico_parecer_versoes");
+    expect(reportV14Migration).toContain("PARECER_CONCLUSIVO_INCOMPLETO");
+    expect(reportV14Migration).toContain("responsavel_snapshot = v_snap");
+    expect(opinionFunction).toContain("HSE-PSICO-IA-PARECER-1.0");
+    expect(opinionFunction).toContain("CONFIRMACAO_REGENERACAO_NECESSARIA");
+    expect(opinionFunction).toContain("psico_salvar_parecer_conclusivo");
+    expect(opinionFunction).not.toContain("console.log(contexto");
+  });
+
+  it("usa assinatura opcional em bucket privado, com validação de conteúdo e hash", () => {
+    expect(reportV14Migration).toContain("'psico-assinaturas', false");
+    expect(reportV14Migration).toContain("assinatura_hash_sha256");
+    expect(reportV14Migration).toContain("ASSINATURA_ALTERACAO_SOMENTE_VIA_FLUXO_SEGURO");
+    expect(reportV14Migration).toContain("PARECER_ALTERACAO_SOMENTE_VIA_RPC");
+    expect(reportV14Migration).toContain("GRANT SELECT ON public.psico_parecer_versoes TO authenticated");
+    expect(reportV14Migration).not.toContain("GRANT SELECT, INSERT ON public.psico_parecer_versoes");
+    expect(signatureFunction).toContain("detectImage(bytes)");
+    expect(signatureFunction).toContain('digest("SHA-256"');
+    expect(reportFunction).toContain('from("psico-assinaturas").download(path)');
+    expect(reportDocument).toContain("Assinatura reproduzida graficamente.");
+    expect(reportDocument).not.toContain("assinatura digital");
   });
 
   it("mantém como no-op a migração duplicada criada pelo sincronismo", () => {
