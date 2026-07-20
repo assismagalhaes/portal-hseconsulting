@@ -340,6 +340,32 @@ export function PsicoBibliotecaDetalhe() {
         </Card>
 
         <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Níveis das medidas de controle</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 grid gap-3 md:grid-cols-3">
+            <div className="rounded-md border p-3 space-y-1">
+              <Badge className="bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200">Essencial</Badge>
+              <p className="text-xs text-muted-foreground">
+                Ataca a causa raiz do fator de risco. Exige impacto imediato e, muitas vezes, tem base legal ou normativa (ex.: comunicação clara, definição de papéis, jornada). Deve ser priorizada.
+              </p>
+            </div>
+            <div className="rounded-md border p-3 space-y-1">
+              <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Estruturante</Badge>
+              <p className="text-xs text-muted-foreground">
+                Sustenta a mudança no médio prazo por meio de políticas, procedimentos e programas formalizados (ex.: política de gestão de mudanças, canal de escuta ativa, plano de desenvolvimento de lideranças).
+              </p>
+            </div>
+            <div className="rounded-md border p-3 space-y-1">
+              <Badge className="bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">Complementar</Badge>
+              <p className="text-xs text-muted-foreground">
+                Reforça cultura, maturidade e desenvolvimento das pessoas (ex.: inteligência emocional, autocuidado, capacitações). Potencializa as medidas essenciais e estruturantes, mas não substitui.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardContent className="py-4 flex flex-wrap gap-3 items-center">
             <div className="relative flex-1 min-w-[240px]">
               <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
