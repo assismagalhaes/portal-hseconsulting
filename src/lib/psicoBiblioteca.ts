@@ -38,7 +38,7 @@ export type MedidaModelo = {
   codigo: string;
   ordem: number;
   titulo: string;
-  nivel_recomendacao: "basica" | "intermediaria" | "avancada" | "transversal";
+  nivel_recomendacao: "essencial" | "estruturante" | "complementar";
   grupo_transversal: string | null;
   o_que_significa: string | null;
   orientacoes_praticas: string[] | null;
@@ -110,17 +110,15 @@ export async function duplicarBiblioteca(id: string, novoCodigo: string, novaVer
 }
 
 export const NIVEL_LABEL: Record<string, string> = {
-  basica: "Básica",
-  intermediaria: "Intermediária",
-  avancada: "Avançada",
-  transversal: "Transversal",
+  essencial: "Essencial",
+  estruturante: "Estruturante",
+  complementar: "Complementar",
 };
 
 export const NIVEL_COLOR: Record<string, string> = {
-  basica: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
-  intermediaria: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200",
-  avancada: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200",
-  transversal: "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200",
+  essencial: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200",
+  estruturante: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200",
+  complementar: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
 };
 
 export const STATUS_BIB_LABEL: Record<string, string> = {
