@@ -281,7 +281,7 @@ export default function CondicaoPagamentoPicker({
                   <Input type="number" step="0.01" className="h-8" value={p.percentual}
                     onChange={(e) => updateDraft(idx, { percentual: Number(e.target.value) })} />
                 </div>
-                <div className="col-span-3">
+                <div className="col-span-8">
                   <Label className="text-[10px]">Marco</Label>
                   <Select value={p.marco} onValueChange={(v) => updateDraft(idx, { marco: v as CondPagMarco })}>
                     <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
@@ -289,24 +289,6 @@ export default function CondicaoPagamentoPicker({
                       {MARCOS.map((m) => <SelectItem key={m} value={m}>{MARCO_LABEL[m]}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                </div>
-                {p.marco === "mensal_recorrente" ? (
-                  <div className="col-span-2">
-                    <Label className="text-[10px]">Dia do mês</Label>
-                    <Input type="number" min={1} max={31} className="h-8" value={p.dia_mes ?? ""}
-                      onChange={(e) => updateDraft(idx, { dia_mes: e.target.value ? Number(e.target.value) : null })} />
-                  </div>
-                ) : (
-                  <div className="col-span-2">
-                    <Label className="text-[10px]">Dias após marco</Label>
-                    <Input type="number" className="h-8" value={p.dias_apos_marco}
-                      onChange={(e) => updateDraft(idx, { dias_apos_marco: Number(e.target.value) })} />
-                  </div>
-                )}
-                <div className="col-span-3">
-                  <Label className="text-[10px]">Descrição</Label>
-                  <Input className="h-8" value={p.descricao || ""}
-                    onChange={(e) => updateDraft(idx, { descricao: e.target.value })} />
                 </div>
                 <div className="col-span-1 flex justify-end">
                   <Button type="button" size="icon" variant="ghost" aria-label="Remover parcela" onClick={() => removeDraft(idx)}>
@@ -342,8 +324,6 @@ export default function CondicaoPagamentoPicker({
                 <th className="text-left px-3 py-1.5">%</th>
                 <th className="text-right px-3 py-1.5">Valor</th>
                 <th className="text-left px-3 py-1.5">Marco</th>
-                <th className="text-left px-3 py-1.5">Prazo</th>
-                <th className="text-left px-3 py-1.5">Observação</th>
               </tr>
             </thead>
             <tbody>
@@ -353,12 +333,6 @@ export default function CondicaoPagamentoPicker({
                   <td className="px-3 py-1.5">{Number(p.percentual).toFixed(2)}%</td>
                   <td className="px-3 py-1.5 text-right font-mono">{brl(Number(p.valor ?? (p.percentual / 100) * total))}</td>
                   <td className="px-3 py-1.5">{MARCO_LABEL[p.marco as CondPagMarco]}</td>
-                  <td className="px-3 py-1.5 text-muted-foreground">
-                    {p.marco === "mensal_recorrente"
-                      ? `todo dia ${p.dia_mes ?? "—"}`
-                      : p.dias_apos_marco ? `+${p.dias_apos_marco} dias` : "no ato"}
-                  </td>
-                  <td className="px-3 py-1.5 text-muted-foreground">{p.descricao || "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -369,7 +343,7 @@ export default function CondicaoPagamentoPicker({
       <div className="space-y-1.5">
         <Label className="text-xs">Texto complementar (aparece na proposta abaixo das parcelas)</Label>
         <Textarea rows={2} value={complemento} onChange={(e) => setComplemento(e.target.value)}
-          placeholder="Opcional: observação livre sobre pagamento (juros, multa, dados bancários…)" />
+          placeholder="Opcional: texto livre sobre pagamento (juros, multa, dados bancários…)" />
       </div>
 
       {textoPadrao && (
@@ -429,8 +403,6 @@ export default function CondicaoPagamentoPicker({
                           <span className="font-mono w-6">{p.numero})</span>
                           <span className="font-mono">{Number(p.percentual).toFixed(2)}%</span>
                           <span>· {MARCO_LABEL[p.marco as CondPagMarco]}</span>
-                          {p.dias_apos_marco ? <span>· +{p.dias_apos_marco}d</span> : null}
-                          {p.marco === "mensal_recorrente" && p.dia_mes ? <span>· dia {p.dia_mes}</span> : null}
                           {p.valor ? <span className="ml-auto font-mono">{brl(Number(p.valor))}</span> : null}
                         </div>
                       ))}

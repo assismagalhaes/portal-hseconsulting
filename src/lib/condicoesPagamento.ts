@@ -64,12 +64,7 @@ export function buildTextoCondicao(
 ) {
   const linhas = parcelas.map((p) => {
     const valor = (Number(p.percentual) / 100) * (total || 0);
-    const base = `${p.numero}) ${p.percentual}% (${fmtBRL(valor)}) — ${MARCO_LABEL[p.marco]}`;
-    const extras: string[] = [];
-    if (p.marco === "mensal_recorrente" && p.dia_mes) extras.push(`todo dia ${p.dia_mes}`);
-    else if (p.dias_apos_marco) extras.push(`+${p.dias_apos_marco} dias`);
-    if (p.descricao) extras.push(p.descricao);
-    return extras.length ? `${base} (${extras.join(" · ")})` : base;
+    return `${p.numero}) ${p.percentual}% (${fmtBRL(valor)}) — ${MARCO_LABEL[p.marco]}`;
   });
   const cab = nome ? `${nome}\n` : "";
   const comp = complemento ? `\n\n${complemento}` : "";
