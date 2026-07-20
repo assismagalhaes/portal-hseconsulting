@@ -184,7 +184,8 @@ export default function GroupPricingDrawer({
         const item = items.find((x) => x.id === r.proposal_item_id);
         if (!item) continue;
         const qtd = Math.max(1, Number(item.quantidade) || 1);
-        const novoUnit = Number((r.preco_final / qtd).toFixed(2));
+        const unitBruto = r.preco_final / qtd;
+        const novoUnit = qtd > 1 ? Math.ceil(unitBruto) : Number(unitBruto.toFixed(2));
         const valorAnt = Number(item.valor_unitario || 0) * qtd;
 
         await supabase.from("proposal_items").update({

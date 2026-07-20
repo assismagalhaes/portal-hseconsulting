@@ -290,7 +290,11 @@ export default function ProposalEditor() {
       return toast.error(e?.message || "Falha ao salvar precificação");
     }
     setPricings({ ...pricings, [item.id]: savedRow || { ...existing, ...payload } });
-    await updateItem(item, { valor_unitario: Number((computed.preco_arredondado / qtd).toFixed(2)) });
+    // Arredonda o valor UNITÁRIO para cima (R$1) quando há mais de 1 unidade,
+    // para manter o mesmo padrão do valor total (que já vem arredondado).
+    const unitBruto = computed.preco_arredondado / qtd;
+    const novoUnit = qtd > 1 ? Math.ceil(unitBruto) : Number(unitBruto.toFixed(2));
+    await updateItem(item, { valor_unitario: novoUnit });
     await recordIndividualPricingHistory({
       proposalId: proposal.id,
       item,
