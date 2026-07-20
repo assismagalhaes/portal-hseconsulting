@@ -403,8 +403,6 @@ export default function CondicaoPagamentoPicker({
                           <span className="font-mono w-6">{p.numero})</span>
                           <span className="font-mono">{Number(p.percentual).toFixed(2)}%</span>
                           <span>· {MARCO_LABEL[p.marco as CondPagMarco]}</span>
-                          {p.dias_apos_marco ? <span>· +{p.dias_apos_marco}d</span> : null}
-                          {p.marco === "mensal_recorrente" && p.dia_mes ? <span>· dia {p.dia_mes}</span> : null}
                           {p.valor ? <span className="ml-auto font-mono">{brl(Number(p.valor))}</span> : null}
                         </div>
                       ))}
