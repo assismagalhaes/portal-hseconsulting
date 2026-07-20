@@ -232,7 +232,13 @@ export default function ProposalEditor() {
 
   async function removeItem(it: any) {
     await deleteProposalItem(it.id);
-    const next = items.filter(x => x.id !== it.id);
+    const remaining = items.filter(x => x.id !== it.id);
+    const next = remaining.map((x, i) => ({ ...x, numero_item: i + 1 }));
+    await Promise.all(
+      next
+        .filter((x, i) => x.numero_item !== remaining[i].numero_item)
+        .map(x => updateProposalItem(x.id, { numero_item: x.numero_item }))
+    );
     setItems(next); updateTotal(next);
   }
 
