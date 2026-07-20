@@ -349,7 +349,7 @@ export function PsicoBibliotecaDetalhe() {
               <SelectTrigger className="w-[240px]"><SelectValue placeholder="Fator" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os fatores</SelectItem>
-                {fatores.map((f) => <SelectItem key={f.fator_codigo} value={f.fator_codigo}>{f.fator_codigo} · {f.nome}</SelectItem>)}
+                {fatores.map((f) => <SelectItem key={f.fator_codigo} value={f.fator_codigo}>{f.nome}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={filtroNivel} onValueChange={setFiltroNivel}>
