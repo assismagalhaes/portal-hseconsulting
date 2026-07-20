@@ -281,7 +281,7 @@ export default function CondicaoPagamentoPicker({
                   <Input type="number" step="0.01" className="h-8" value={p.percentual}
                     onChange={(e) => updateDraft(idx, { percentual: Number(e.target.value) })} />
                 </div>
-                <div className="col-span-3">
+                <div className="col-span-8">
                   <Label className="text-[10px]">Marco</Label>
                   <Select value={p.marco} onValueChange={(v) => updateDraft(idx, { marco: v as CondPagMarco })}>
                     <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
@@ -289,24 +289,6 @@ export default function CondicaoPagamentoPicker({
                       {MARCOS.map((m) => <SelectItem key={m} value={m}>{MARCO_LABEL[m]}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                </div>
-                {p.marco === "mensal_recorrente" ? (
-                  <div className="col-span-2">
-                    <Label className="text-[10px]">Dia do mês</Label>
-                    <Input type="number" min={1} max={31} className="h-8" value={p.dia_mes ?? ""}
-                      onChange={(e) => updateDraft(idx, { dia_mes: e.target.value ? Number(e.target.value) : null })} />
-                  </div>
-                ) : (
-                  <div className="col-span-2">
-                    <Label className="text-[10px]">Dias após marco</Label>
-                    <Input type="number" className="h-8" value={p.dias_apos_marco}
-                      onChange={(e) => updateDraft(idx, { dias_apos_marco: Number(e.target.value) })} />
-                  </div>
-                )}
-                <div className="col-span-3">
-                  <Label className="text-[10px]">Descrição</Label>
-                  <Input className="h-8" value={p.descricao || ""}
-                    onChange={(e) => updateDraft(idx, { descricao: e.target.value })} />
                 </div>
                 <div className="col-span-1 flex justify-end">
                   <Button type="button" size="icon" variant="ghost" aria-label="Remover parcela" onClick={() => removeDraft(idx)}>
