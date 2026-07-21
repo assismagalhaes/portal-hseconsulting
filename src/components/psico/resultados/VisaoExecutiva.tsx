@@ -333,7 +333,7 @@ function GraficoDistribuicao({ dash }: { dash: PsicoDashboard }) {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={height}>
-          <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 24, left: 8, bottom: 8 }} stackOffset="expand" barCategoryGap={10}>
+          <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 24, left: 8, bottom: 8 }} barCategoryGap={10}>
             <CartesianGrid strokeDasharray="3 3" opacity={0.25} horizontal={false} />
             <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => `${v}%`} ticks={[0,20,40,60,80,100]} />
             <YAxis type="category" dataKey="nome" width={210} tick={{ fontSize: 12 }} interval={0} />
