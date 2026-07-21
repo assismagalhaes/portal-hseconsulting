@@ -34,7 +34,6 @@ import {
   gerarRelatorio,
   getRelatorio,
   listarVersoes,
-  previewRelatorio,
   REL_STATUS_COLOR,
   REL_STATUS_LABEL,
   RelatorioVersaoStatus,
@@ -59,7 +58,6 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
   const [versoes, setVersoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [gerando, setGerando] = useState(false);
-  const [visualizando, setVisualizando] = useState(false);
   const [validacaoErro, setValidacaoErro] = useState<string | null>(null);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -127,24 +125,14 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
   }
 
   async function handlePreview() {
-    const previewWindow = window.open("about:blank", "_blank");
+    const previewUrl = `/operacoes/avaliacao-fatores-psicossociais/avaliacoes/${av.id}/relatorio/preview`;
+    const previewWindow = window.open(previewUrl, "_blank");
     if (!previewWindow) {
       toast.error("Permita pop-ups para abrir a prévia do relatório.");
       return;
     }
     previewWindow.opener = null;
-    setVisualizando(true);
-    const { blob, error } = await previewRelatorio(av.id);
-    setVisualizando(false);
-    if (error || !blob) {
-      previewWindow.close();
-      const mensagem = error instanceof Error ? error.message : "ERRO_RENDERIZACAO";
-      toast.error(traduzirErroEmissao(mensagem));
-      return;
-    }
-    const url = URL.createObjectURL(blob);
-    previewWindow.location.href = url;
-    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    toast.info("A prévia será carregada na nova aba.");
   }
 
   async function handleRevogar() {
@@ -239,13 +227,9 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
             <Button
               variant="outline"
               onClick={handlePreview}
-              disabled={!podeEmitir || !!emAndamento || gerando || visualizando}
+              disabled={!podeEmitir || !!emAndamento || gerando}
             >
-              {visualizando ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Eye className="h-4 w-4 mr-2" />
-              )}
+              <Eye className="h-4 w-4 mr-2" />
               Pré-visualizar
             </Button>
 

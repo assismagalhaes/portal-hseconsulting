@@ -73,6 +73,7 @@ import PsicoAvaliacaoNova from "./pages/psico/PsicoAvaliacaoNova";
 import PsicoImportacaoHistorica from "./pages/psico/PsicoImportacaoHistorica";
 import PsicoAvaliacaoDetalhes from "./pages/psico/PsicoAvaliacaoDetalhes";
 import PsicoQuestionarioPreview from "./pages/psico/PsicoQuestionarioPreview";
+import PsicoRelatorioPreview from "./pages/psico/PsicoRelatorioPreview";
 import PsicoConvitePublico from "./pages/psico/PsicoConvitePublico";
 import PsicoValidarRelatorio from "./pages/psico/PsicoValidarRelatorio";
 import PsicoResponderPublico from "./pages/psico/PsicoResponderPublico";
@@ -182,6 +183,7 @@ const App = () => (
               <Route path="/operacoes/avaliacao-fatores-psicossociais/avaliacoes" element={<RequireRole><PsicoAvaliacoesLista /></RequireRole>} />
               <Route path="/operacoes/avaliacao-fatores-psicossociais/avaliacoes/nova" element={<RequireRole><PsicoAvaliacaoNova /></RequireRole>} />
               <Route path="/operacoes/avaliacao-fatores-psicossociais/importar-historico" element={<RequireRole><PsicoImportacaoHistorica /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais/avaliacoes/:id/relatorio/preview" element={<RequireRole><PsicoRelatorioPreview /></RequireRole>} />
               <Route path="/operacoes/avaliacao-fatores-psicossociais/avaliacoes/:id" element={<RequireRole><PsicoAvaliacaoDetalhes /></RequireRole>} />
               <Route path="/operacoes/avaliacao-fatores-psicossociais/resultados" element={<RequireRole><PsicoResultados /></RequireRole>} />
               <Route path="/operacoes/avaliacao-fatores-psicossociais/relatorios" element={<RequireRole><PsicoRelatorios /></RequireRole>} />
