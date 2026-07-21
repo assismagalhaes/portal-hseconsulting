@@ -79,7 +79,11 @@ export default function PsicoAvaliacaoDetalhes() {
       .order("created_at", { ascending: false });
     const [c, r, m, q, aud] = await Promise.all([
       supabase.from("clients").select("id, razao_social, nome_fantasia, cidade, uf").eq("id", data.cliente_id).maybeSingle(),
-      data.responsavel_hse_id ? supabase.from("profiles").select("id, nome, email").eq("id", data.responsavel_hse_id).maybeSingle() : Promise.resolve({ data: null }),
+      data.responsavel_hse_id
+        ? supabase.from("profiles").select("id, nome, email").eq("id", data.responsavel_hse_id).maybeSingle()
+        : data.responsavel_profissional_id
+          ? supabase.from("execucao_profissionais").select("id, nome, cargo").eq("id", data.responsavel_profissional_id).maybeSingle().then((r: any) => ({ data: r.data ? { id: r.data.id, nome: r.data.nome, email: r.data.cargo } : null }))
+          : Promise.resolve({ data: null }),
       data.metodologia_versao_id ? supabase.from("psico_metodologias_versoes").select("codigo, nome, versao").eq("id", data.metodologia_versao_id).maybeSingle() : Promise.resolve({ data: null }),
       data.questionario_versao_id ? supabase.from("psico_questionarios_versoes").select("codigo, nome, versao").eq("id", data.questionario_versao_id).maybeSingle() : Promise.resolve({ data: null }),
       auditQuery,

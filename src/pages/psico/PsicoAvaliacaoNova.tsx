@@ -23,7 +23,7 @@ const schema = z.object({
   data_inicio_prevista: z.string().optional().nullable(),
   data_fim_prevista: z.string().optional().nullable(),
   quantidade_participantes_prevista: z.number().int().min(1, "Mínimo 1 participante"),
-  responsavel_hse_id: z.string().uuid({ message: "Selecione um responsável" }),
+  responsavel_ref: z.string().min(1, { message: "Selecione um responsável" }),
   observacoes_internas: z.string().max(2000).optional().nullable(),
 }).refine((d) => !d.data_inicio_prevista || !d.data_fim_prevista || d.data_fim_prevista >= d.data_inicio_prevista, {
   message: "Data final não pode ser anterior à data inicial",
@@ -34,7 +34,7 @@ export default function PsicoAvaliacaoNova() {
   const nav = useNavigate();
   const { user } = useAuth();
   const [clientes, setClientes] = useState<any[]>([]);
-  const [resps, setResps] = useState<any[]>([]);
+  const [resps, setResps] = useState<{ id: string; nome: string; source: "user" | "prof" }[]>([]);
   const [saving, setSaving] = useState(false);
   const [metodId, setMetodId] = useState<string | null>(null);
   const [questId, setQuestId] = useState<string | null>(null);
@@ -47,20 +47,23 @@ export default function PsicoAvaliacaoNova() {
     data_inicio_prevista: "",
     data_fim_prevista: "",
     quantidade_participantes_prevista: 1,
-    responsavel_hse_id: user?.id || "",
+    responsavel_ref: user?.id ? `user:${user.id}` : "",
     observacoes_internas: "",
   });
 
   useEffect(() => {
     document.title = "Nova Avaliação Psicossocial | Portal HSE";
     (async () => {
-      const [c, p, v] = await Promise.all([
+      const [c, p, prof, v] = await Promise.all([
         supabase.from("clients").select("id, razao_social, nome_fantasia").order("razao_social"),
         supabase.from("profiles").select("id, nome, email").order("nome"),
+        supabase.from("execucao_profissionais").select("id, nome, cargo").order("nome"),
         (supabase as any).from("psico_questionarios_versoes").select("id, codigo, nome, versao, vigente, metodologia_versao_id").eq("vigente", true).maybeSingle(),
       ]);
       setClientes(c.data || []);
-      setResps(p.data || []);
+      const users = (p.data || []).map((u: any) => ({ id: u.id, nome: u.nome || u.email, source: "user" as const }));
+      const profs = (prof.data || []).map((x: any) => ({ id: x.id, nome: x.cargo ? `${x.nome} — ${x.cargo}` : x.nome, source: "prof" as const }));
+      setResps([...users, ...profs].sort((a, b) => (a.nome || "").localeCompare(b.nome || "")));
       setVigente(v.data || null);
       setMetodId(v.data?.metodologia_versao_id || null);
       setQuestId(v.data?.id || null);
@@ -90,6 +93,8 @@ export default function PsicoAvaliacaoNova() {
       toast.error(parsed.error.issues[0]?.message || "Verifique os campos");
       return;
     }
+    const [srcType, srcId] = parsed.data.responsavel_ref.split(":");
+    if (!srcId) return toast.error("Selecione um responsável");
     setSaving(true);
     const { data, error } = await supabase.from("psico_avaliacoes").insert({
       cliente_id: parsed.data.cliente_id,
@@ -98,7 +103,8 @@ export default function PsicoAvaliacaoNova() {
       data_inicio_prevista: parsed.data.data_inicio_prevista,
       data_fim_prevista: parsed.data.data_fim_prevista,
       quantidade_participantes_prevista: parsed.data.quantidade_participantes_prevista,
-      responsavel_hse_id: parsed.data.responsavel_hse_id,
+      responsavel_hse_id: srcType === "user" ? srcId : null,
+      responsavel_profissional_id: srcType === "prof" ? srcId : null,
       observacoes_internas: parsed.data.observacoes_internas || null,
       metodologia_versao_id: metodId,
       questionario_versao_id: questId,
@@ -197,11 +203,11 @@ export default function PsicoAvaliacaoNova() {
 
               <div>
                 <Label>Responsável HSE *</Label>
-                <Select value={form.responsavel_hse_id} onValueChange={(v) => setForm((f) => ({ ...f, responsavel_hse_id: v }))}>
+                <Select value={form.responsavel_ref} onValueChange={(v) => setForm((f) => ({ ...f, responsavel_ref: v }))}>
                   <SelectTrigger><SelectValue placeholder="Selecione o responsável" /></SelectTrigger>
                   <SelectContent>
                     {resps.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>{p.nome || p.email}</SelectItem>
+                      <SelectItem key={`${p.source}:${p.id}`} value={`${p.source}:${p.id}`}>{p.nome}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
