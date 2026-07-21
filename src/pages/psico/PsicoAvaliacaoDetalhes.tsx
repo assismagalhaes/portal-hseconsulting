@@ -232,8 +232,8 @@ export default function PsicoAvaliacaoDetalhes() {
             <TabsTrigger value="link-publico">Link Público</TabsTrigger>
             <TabsTrigger value="coleta">Coleta</TabsTrigger>
             <TabsTrigger value="resultados">Resultados</TabsTrigger>
-            <TabsTrigger value="revisao">Revisão Técnica</TabsTrigger>
             <TabsTrigger value="plano">Plano de Ação</TabsTrigger>
+            <TabsTrigger value="revisao">Revisão Técnica</TabsTrigger>
             <TabsTrigger value="relatorio">Relatório</TabsTrigger>
             <TabsTrigger value="historico">Histórico</TabsTrigger>
           </TabsList>
@@ -319,11 +319,11 @@ export default function PsicoAvaliacaoDetalhes() {
           <TabsContent value="resultados">
             <PsicoResultadosTab av={av} onReload={load} />
           </TabsContent>
-          <TabsContent value="revisao">
-            <PsicoRevisaoTab av={av} onReload={load} />
-          </TabsContent>
           <TabsContent value="plano">
             <PsicoPlanoTab av={av} onReload={load} />
+          </TabsContent>
+          <TabsContent value="revisao">
+            <PsicoRevisaoTab av={av} onReload={load} />
           </TabsContent>
           <TabsContent value="relatorio">
             <PsicoRelatorioTab av={av} onReload={load} />
