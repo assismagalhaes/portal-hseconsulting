@@ -112,6 +112,7 @@ const App = () => (
             <Route path="/aceite/:token" element={<PropostaAceitePublica />} />
             <Route path="/avaliacao/psicossocial" element={<PsicoConvitePublico />} />
             <Route path="/avaliacao/publica" element={<PsicoResponderPublico />} />
+            <Route path="/p" element={<PsicoResponderPublico />} />
             <Route path="/validar/relatorio-psicossocial" element={<PsicoValidarRelatorio />} />
             <Route path="/cliente/login" element={<ClienteLogin />} />
             <Route element={<RequireCliente><ClienteLayout /></RequireCliente>}>
