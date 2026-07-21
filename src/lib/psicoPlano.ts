@@ -94,6 +94,13 @@ export async function regenerarRecomendacoes(revisaoId: string, confirmacao: str
   return sb.rpc("psico_regenerar_recomendacoes", { p_revisao_id: revisaoId, p_confirmacao: confirmacao });
 }
 
+export async function gerarPlanoIA(revisaoId: string) {
+  const { data, error } = await sb.functions.invoke("psico-gerar-plano-ia", {
+    body: { revisao_id: revisaoId },
+  });
+  return { data, error };
+}
+
 export async function getMedidasCatalogo(bibliotecaVersaoId: string) {
   const { data } = await sb
     .from("psico_medidas_modelos")
