@@ -12,12 +12,14 @@ const HASH_SECRET = Deno.env.get('PSICO_PUBLIC_HASH_SECRET')
 const ALLOWED = (Deno.env.get('PSICO_PUBLIC_ALLOWED_ORIGINS') ||
   'https://portal.hseconsulting.com.br,https://portal-hseconsulting.lovable.app')
   .split(',').map((s) => s.trim()).filter(Boolean)
-const IS_DEV = (Deno.env.get('DENO_ENV') || '') === 'development'
 
 function pickOrigin(o: string | null) {
   if (!o) return null
   if (ALLOWED.includes(o)) return o
-  if (IS_DEV && /^http:\/\/localhost(:\d+)?$/.test(o)) return o
+  // Aceita localhost (dev do Lovable/preview local) e subdomínios de preview do Lovable
+  if (/^http:\/\/localhost(:\d+)?$/.test(o)) return o
+  if (/^https:\/\/[a-z0-9-]+\.lovable\.app$/i.test(o)) return o
+  if (/^https:\/\/[a-z0-9-]+\.lovableproject\.com$/i.test(o)) return o
   return null
 }
 function baseHeaders(o: string | null): HeadersInit {
