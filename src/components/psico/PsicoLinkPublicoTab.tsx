@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { AlertTriangle, Copy, RefreshCw, Link2, Users, Eye, EyeOff, QrCode, Download, Radio } from "lucide-react";
 import QRCode from "qrcode";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip as RTooltip, CartesianGrid, LabelList } from "recharts";
+import * as XLSX from "xlsx";
 
 type CampoCfg = { ativo: boolean; obrigatorio: boolean };
 type CamposIdent = { nome: CampoCfg; funcao: CampoCfg; setor: CampoCfg; unidade: CampoCfg };
@@ -57,7 +58,7 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
   const [respostas, setRespostas] = useState<Array<{ id: string; funcao: string | null; setor: string | null; unidade: string | null; funcao_normalizada: string | null; setor_normalizada: string | null; unidade_normalizada: string | null; created_at: string }>>([]);
   const [realtimeAtivo, setRealtimeAtivo] = useState(false);
   const [ultimaAtualizacao, setUltimaAtualizacao] = useState<Date | null>(null);
-  const [mostrarNomes, setMostrarNomes] = useState(false);
+  const [mostrarNomes, setMostrarNomes] = useState(true);
   const [confirmarRotacao, setConfirmarRotacao] = useState(false);
 
   const publicUrl = useMemo(() => {
@@ -127,22 +128,32 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
     return { funcao: agg("funcao"), setor: agg("setor"), unidade: agg("unidade") };
   }, [respostas]);
 
-  function exportarCsv() {
-    const header = ["created_at", "funcao", "setor", "unidade"];
-    const linhas = respostas.map((r) => [
-      new Date(r.created_at).toISOString(),
-      (r.funcao || "").replace(/"/g, '""'),
-      (r.setor || "").replace(/"/g, '""'),
-      (r.unidade || "").replace(/"/g, '""'),
-    ]);
-    const csv = [header, ...linhas].map((row) => row.map((c) => `"${c}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `adesao-${av.codigo || av.id}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  function exportarXlsx() {
+    const wb = XLSX.utils.book_new();
+
+    const partRows = participantes.map((p) => ({
+      Nome: p.nome,
+      "Data/Hora": new Date(p.created_at).toLocaleString("pt-BR"),
+    }));
+    const wsPart = XLSX.utils.json_to_sheet(
+      partRows.length ? partRows : [{ Nome: "", "Data/Hora": "" }],
+    );
+    wsPart["!cols"] = [{ wch: 40 }, { wch: 22 }];
+    XLSX.utils.book_append_sheet(wb, wsPart, "Participantes");
+
+    const respRows = respostas.map((r) => ({
+      "Data/Hora": new Date(r.created_at).toLocaleString("pt-BR"),
+      Função: r.funcao || "",
+      Setor: r.setor || "",
+      Unidade: r.unidade || "",
+    }));
+    const wsResp = XLSX.utils.json_to_sheet(
+      respRows.length ? respRows : [{ "Data/Hora": "", Função: "", Setor: "", Unidade: "" }],
+    );
+    wsResp["!cols"] = [{ wch: 22 }, { wch: 28 }, { wch: 22 }, { wch: 22 }];
+    XLSX.utils.book_append_sheet(wb, wsResp, "Respostas");
+
+    XLSX.writeFile(wb, `adesao-${av.codigo || av.id}.xlsx`);
   }
 
   async function ativarModoPublico() {
@@ -363,8 +374,8 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
             )}
           </CardTitle>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={exportarCsv} disabled={respostas.length === 0}>
-              <Download className="h-3 w-3 mr-1" /> Exportar CSV
+            <Button size="sm" variant="outline" onClick={exportarXlsx} disabled={respostas.length === 0 && participantes.length === 0}>
+              <Download className="h-3 w-3 mr-1" /> Exportar Excel
             </Button>
             <Button size="sm" variant="ghost" onClick={carregarAdesao}><RefreshCw className="h-3 w-3 mr-1" /> Atualizar</Button>
           </div>
