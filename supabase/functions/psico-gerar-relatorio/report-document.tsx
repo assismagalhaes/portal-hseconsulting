@@ -156,6 +156,9 @@ function fixTypos(input: unknown): string {
     .replace(/\blideranca\b/gi, "liderança")
     .replace(/\bReduç[aã]o de e (\d)/gi, "Redução de $1")
     .replace(/\bde e (\d+\s*%)/gi, "de $1")
+    .replace(/≥\s*(\d)/g, "no mínimo $1")
+    .replace(/≤\s*(\d)/g, "até $1")
+    .replace(/[≥≤]/g, "")
     .replace(/\s{2,}/g, " ")
     .trim();
 }
