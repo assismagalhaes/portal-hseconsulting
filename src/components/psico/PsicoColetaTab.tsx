@@ -216,12 +216,13 @@ export default function PsicoColetaTab({ av, onReload }: { av: any; onReload: ()
 
       {/* Dialog encerrar */}
       <Dialog open={openEncerrar} onOpenChange={handleEncerrarOpenChange}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Encerrar coleta — {codigo}</DialogTitle>
             <DialogDescription>Pendentes serão expirados. Respondidos permanecem inalterados.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 text-sm">
+          <div className="space-y-3 text-sm max-h-[60vh] overflow-y-auto">
+            {openEncerrar && <PreviewEncerramento av={av} />}
             <div>Digite <span className="font-mono font-semibold">ENCERRAR {codigo}</span>:</div>
             <Input value={confEncerrar} onChange={(e) => setConfEncerrar(e.target.value)} placeholder={`ENCERRAR ${codigo}`} />
             <Label>Motivo (opcional, mín. 10 caracteres se informado)</Label>
@@ -236,6 +237,137 @@ export default function PsicoColetaTab({ av, onReload }: { av: any; onReload: ()
     </div>
   );
 }
+
+function PreviewEncerramento({ av }: { av: any }) {
+  const [loading, setLoading] = useState(true);
+  const [totalPublico, setTotalPublico] = useState(0);
+  const [identificadas, setIdentificadas] = useState(0);
+  const [respostas, setRespostas] = useState<Array<{ funcao_normalizada: string | null; setor_normalizada: string | null; unidade_normalizada: string | null; funcao: string | null; setor: string | null; unidade: string | null; hash_nome: string | null }>>([]);
+
+  useEffect(() => {
+    if (av.modo_coleta !== "publico_anonimo") { setLoading(false); return; }
+    let cancel = false;
+    (async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("psico_respostas_publicas")
+        .select("funcao, setor, unidade, funcao_normalizada, setor_normalizada, unidade_normalizada, hash_nome")
+        .eq("avaliacao_id", av.id)
+        .limit(5000);
+      if (cancel) return;
+      const rs = (data || []) as any[];
+      setRespostas(rs);
+      setTotalPublico(rs.length);
+      setIdentificadas(rs.filter((r) => r.hash_nome).length);
+      setLoading(false);
+    })();
+    return () => { cancel = true; };
+  }, [av?.id, av?.modo_coleta]);
+
+  const breakdown = useMemo(() => {
+    function agg(dim: "funcao" | "setor" | "unidade") {
+      const m = new Map<string, { rotulo: string; total: number }>();
+      for (const r of respostas) {
+        const norm = (r as any)[`${dim}_normalizada`] as string | null;
+        if (!norm) continue;
+        const rot = ((r as any)[dim] as string | null) || norm;
+        const cur = m.get(norm) || { rotulo: rot, total: 0 };
+        cur.total += 1;
+        m.set(norm, cur);
+      }
+      const arr = Array.from(m.values()).sort((a, b) => b.total - a.total);
+      const visiveis = arr.filter((x) => x.total >= 2);
+      const suprimidos = arr.length - visiveis.length;
+      return { arr, visiveis, suprimidos };
+    }
+    return { funcao: agg("funcao"), setor: agg("setor"), unidade: agg("unidade") };
+  }, [respostas]);
+
+  if (av.modo_coleta !== "publico_anonimo") {
+    return (
+      <Alert>
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Coleta nominal</AlertTitle>
+        <AlertDescription>
+          Convites pendentes serão marcados como expirados. Respostas já enviadas permanecem imutáveis.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (loading) {
+    return <div className="py-4 text-center text-xs text-muted-foreground"><Loader2 className="inline h-3 w-3 animate-spin mr-2" />Calculando prévia…</div>;
+  }
+
+  const totalSuprimidos = breakdown.funcao.suprimidos + breakdown.setor.suprimidos + breakdown.unidade.suprimidos;
+
+  return (
+    <div className="space-y-3">
+      <Alert>
+        <ShieldAlert className="h-4 w-4" />
+        <AlertTitle>Prévia do encerramento</AlertTitle>
+        <AlertDescription>
+          Ao encerrar, as respostas públicas são materializadas em respostas oficiais e o resultado
+          consolidado passa a ser gerado. Esta prévia mostra o que será processado.
+        </AlertDescription>
+      </Alert>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="border rounded p-2 text-center">
+          <div className="text-2xl font-semibold">{totalPublico}</div>
+          <div className="text-[11px] text-muted-foreground">Respostas anônimas coletadas</div>
+        </div>
+        <div className="border rounded p-2 text-center">
+          <div className="text-2xl font-semibold">{identificadas}</div>
+          <div className="text-[11px] text-muted-foreground">Com hash de identificação (dedup)</div>
+        </div>
+      </div>
+
+      {totalPublico === 0 ? (
+        <Alert variant="destructive">
+          <AlertCircleIcon />
+          <AlertTitle>Nenhuma resposta recebida</AlertTitle>
+          <AlertDescription>Encerrar agora manterá a avaliação sem resultado consolidado.</AlertDescription>
+        </Alert>
+      ) : (
+        <div className="grid gap-2 md:grid-cols-3">
+          {(["setor", "funcao", "unidade"] as const).map((dim) => {
+            const b = breakdown[dim];
+            if (b.arr.length === 0) return null;
+            return (
+              <div key={dim} className="border rounded p-2 text-xs space-y-1">
+                <div className="font-medium capitalize">{dim === "funcao" ? "Por função" : `Por ${dim}`}</div>
+                <ul className="space-y-0.5 max-h-32 overflow-auto">
+                  {b.arr.slice(0, 8).map((x, i) => (
+                    <li key={i} className="flex items-center justify-between gap-2">
+                      <span className="truncate">{x.rotulo}</span>
+                      <span className="flex items-center gap-1">
+                        <span className="font-mono">{x.total}</span>
+                        {x.total < 2 && <Badge variant="outline" className="h-4 text-[9px] border-amber-400 text-amber-700">n&lt;2</Badge>}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {b.suprimidos > 0 && (
+                  <div className="text-[10px] text-amber-700">{b.suprimidos} recorte(s) serão suprimidos por sigilo.</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {totalSuprimidos > 0 && (
+        <div className="text-[11px] text-muted-foreground border-t pt-2">
+          Total de recortes suprimidos por n&lt;2: <strong>{totalSuprimidos}</strong>. Esses grupos não
+          aparecerão em nenhum relatório para preservar o anonimato exigido pela NR‑01.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AlertCircleIcon() { return <AlertTriangle className="h-4 w-4" />; }
 
 function Kpi({ label, value }: { label: string; value: any }) {
   return (
