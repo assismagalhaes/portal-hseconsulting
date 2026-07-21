@@ -341,10 +341,13 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
                 Guarda apenas o nome de quem respondeu, em tabela separada das respostas. Serve para saber quem já participou. Desative para anonimato absoluto.
               </div>
             </div>
-            <Switch checked={registrar} onCheckedChange={setRegistrar} disabled={!campos.nome.ativo} />
+            <Switch checked={registrar} onCheckedChange={toggleRegistrar} disabled={!campos.nome.ativo} />
           </div>
-          <div className="flex justify-end">
-            <Button onClick={salvarConfig} disabled={saving}>Salvar configuração</Button>
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-xs text-muted-foreground">
+              {saving ? "Salvando..." : savedAt ? `Salvo automaticamente às ${savedAt.toLocaleTimeString()}` : "As alterações são salvas automaticamente."}
+            </span>
+            <Button variant="outline" size="sm" onClick={salvarConfig} disabled={saving}>Salvar novamente</Button>
           </div>
         </CardContent>
       </Card>
