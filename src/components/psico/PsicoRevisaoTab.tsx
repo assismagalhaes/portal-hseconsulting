@@ -566,6 +566,61 @@ Modalidade: ${modoColeta}.`;
         </AlertDescription>
       </Alert>
 
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-2">
+          <div>
+            <CardTitle>Plano de ação consolidado</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Referência somente-leitura das medidas selecionadas na aba <b>Plano de Ação</b>. Edições devem ser feitas por lá.
+            </p>
+          </div>
+          {plano && (
+            <Badge className={PLANO_STATUS_COLOR[plano.status as keyof typeof PLANO_STATUS_COLOR] || ""}>
+              {PLANO_STATUS_LABEL[plano.status as keyof typeof PLANO_STATUS_LABEL] || plano.status}
+            </Badge>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {!plano && (
+            <p className="text-sm text-muted-foreground">Nenhum plano de ação vinculado a esta revisão ainda.</p>
+          )}
+          {plano && totalItens === 0 && (
+            <p className="text-sm text-muted-foreground">O plano ainda não possui medidas selecionadas.</p>
+          )}
+          {plano && totalItens > 0 && (
+            <>
+              <div className="text-xs text-muted-foreground">{totalItens} medida(s) selecionada(s) no plano.</div>
+              {Object.entries(itensPorFator).map(([codigo, itens]) => (
+                <div key={codigo} className="rounded-md border">
+                  <div className="border-b bg-muted/40 px-3 py-2 text-sm font-medium">
+                    {codigo === "_sem_fator" ? "Ações transversais" : fatorLabel(codigo)}
+                    <span className="ml-2 text-xs text-muted-foreground">{itens.length} medida(s)</span>
+                  </div>
+                  <ul className="divide-y">
+                    {itens.map((it: any) => (
+                      <li key={it.id} className="px-3 py-2 text-sm">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-medium">{it.titulo || it.acao_recomendada || it.objetivo}</span>
+                          {it.prioridade && (
+                            <Badge variant="outline" className="text-[10px]">{prioridadeLabel(it.prioridade)}</Badge>
+                          )}
+                          {it.personalizado && <Badge variant="outline" className="text-[10px]">Personalizada</Badge>}
+                        </div>
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          {it.responsavel ? <>Responsável: <b>{it.responsavel}</b></> : "Sem responsável"}
+                          {" · "}
+                          {it.prazo ? <>Prazo: <b>{formatDate(it.prazo)}</b></> : "Sem prazo"}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </>
+          )}
+        </CardContent>
+      </Card>
+
       <p className="text-[11px] text-muted-foreground border-t pt-2">
         A revisão não altera resultados matemáticos calculados. Apenas registra o tratamento técnico, a conclusão e as recomendações do responsável.
       </p>
