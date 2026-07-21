@@ -143,7 +143,8 @@ Modalidade: ${modoColeta}.`;
             listItens(planoData.id),
             listItemFatores(planoData.id),
           ]);
-          setPlanoItens(itens.filter((it: any) => it.selecionado !== false));
+          // Mesma base do PsicoPlanoTab (sem filtrar por selecionado) para 100% de sincronia
+          setPlanoItens(itens);
           setPlanoItemFatores(links);
         } else {
           setPlanoItens([]);
@@ -574,14 +575,6 @@ Modalidade: ${modoColeta}.`;
         </CardContent>
       </Card>
 
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertTitle>Tratamento por fator</AlertTitle>
-        <AlertDescription>
-          O tratamento técnico de cada fator agora é definido na aba <b>Resultados</b> e alimenta automaticamente o Plano de Ação e esta revisão.
-        </AlertDescription>
-      </Alert>
-
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-2">
           <div>
@@ -621,6 +614,9 @@ Modalidade: ${modoColeta}.`;
                             <Badge variant="outline" className="text-[10px]">{prioridadeLabel(it.prioridade)}</Badge>
                           )}
                           {it.personalizado && <Badge variant="outline" className="text-[10px]">Personalizada</Badge>}
+                          {it.selecionado === false && (
+                            <Badge variant="outline" className="text-[10px] bg-muted text-muted-foreground">Não selecionada</Badge>
+                          )}
                         </div>
                         <div className="mt-1 text-xs text-muted-foreground">
                           {it.responsavel ? <>Responsável: <b>{it.responsavel}</b></> : "Sem responsável"}
