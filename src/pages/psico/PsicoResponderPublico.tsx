@@ -188,8 +188,7 @@ export default function PsicoResponderPublico() {
             <h1 className="text-xl font-semibold text-center">{questionario.nome}</h1>
             <Card><CardContent className="py-5 space-y-4">
               <p className="text-sm text-muted-foreground">
-                As respostas são <strong>anônimas</strong>. Os dados abaixo são usados apenas para os
-                recortes coletivos do relatório (por função, setor, unidade) e {boot && (boot as any).registrar_participacao ? "para controle de participação" : "não são vinculados às suas respostas"}.
+                Suas respostas são <strong>anônimas</strong>. As informações abaixo servem apenas para agrupar os resultados por função, setor e unidade{boot && (boot as any).registrar_participacao ? " e para confirmar sua participação" : " — elas não ficam ligadas às suas respostas"}.
               </p>
               {cfg.nome?.ativo && (
                 <div>
