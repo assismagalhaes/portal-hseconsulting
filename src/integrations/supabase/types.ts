@@ -5857,6 +5857,7 @@ export type Database = {
           questionario_versao_id: string | null
           registrar_participacao: boolean
           responsavel_hse_id: string | null
+          responsavel_profissional_id: string | null
           resultado_processado_em: string | null
           resultado_processado_por: string | null
           segmentacao_disponivel: boolean
@@ -5910,6 +5911,7 @@ export type Database = {
           questionario_versao_id?: string | null
           registrar_participacao?: boolean
           responsavel_hse_id?: string | null
+          responsavel_profissional_id?: string | null
           resultado_processado_em?: string | null
           resultado_processado_por?: string | null
           segmentacao_disponivel?: boolean
@@ -5963,6 +5965,7 @@ export type Database = {
           questionario_versao_id?: string | null
           registrar_participacao?: boolean
           responsavel_hse_id?: string | null
+          responsavel_profissional_id?: string | null
           resultado_processado_em?: string | null
           resultado_processado_por?: string | null
           segmentacao_disponivel?: boolean
@@ -6000,6 +6003,13 @@ export type Database = {
             columns: ["questionario_versao_id"]
             isOneToOne: false
             referencedRelation: "psico_questionarios_versoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_avaliacoes_responsavel_profissional_id_fkey"
+            columns: ["responsavel_profissional_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_profissionais"
             referencedColumns: ["id"]
           },
           {

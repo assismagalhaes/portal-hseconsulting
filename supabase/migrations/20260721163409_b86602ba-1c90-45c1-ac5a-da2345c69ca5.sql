@@ -1,0 +1,2 @@
+ALTER TABLE public.psico_avaliacoes ADD COLUMN IF NOT EXISTS responsavel_profissional_id uuid REFERENCES public.execucao_profissionais(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_psico_avaliacoes_responsavel_profissional ON public.psico_avaliacoes(responsavel_profissional_id);
