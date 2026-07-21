@@ -43,6 +43,8 @@ export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: 
   const [generatingOpinion, setGeneratingOpinion] = useState(false);
   const [uploadingSignature, setUploadingSignature] = useState(false);
   const [ctxDados, setCtxDados] = useState<{ clienteNome?: string; totalRespondentes?: number } | null>(null);
+  const [regenOpen, setRegenOpen] = useState(false);
+  const [restoreVersion, setRestoreVersion] = useState<any>(null);
 
   function buildDefaults(revData: any, dados: { clienteNome?: string; totalRespondentes?: number }) {
     const cliente = dados.clienteNome || "—";
@@ -204,7 +206,7 @@ Modalidade: ${modoColeta}.`;
   async function gerarParecerIa() {
     if (!rev) return;
     const hasOpinion = Object.values(parecer).some((value) => value?.trim());
-    if (hasOpinion && !window.confirm("Gerar uma nova minuta? A versão atual será preservada no histórico para comparação.")) return;
+    if (hasOpinion && !regenOpen) { setRegenOpen(true); return; }
     setGeneratingOpinion(true);
     const headerSave = await atualizarRevisao(rev.id, {
       contexto_organizacional: form.contexto_organizacional || null,
