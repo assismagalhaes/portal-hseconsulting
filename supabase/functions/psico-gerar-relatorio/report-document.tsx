@@ -298,11 +298,11 @@ export function PsychosocialReportDocument({ snapshot, codigoRafp, codigoRev, co
       <View style={styles.row}><Kpi value={responseCount} label="Participantes analisados" /><Kpi value={significant.length} label="Fatores significativos" /><Kpi value={highest ? riskLabel(highest.prioridade) : "Monitoramento"} label="PRIORIDADE MÁXIMA DE INTERVENÇÃO" hint={`Prazo recomendado: até ${priorityDeadline} dias`} last color={highest ? riskColor(highest.prioridade) : REPORT_COLORS.green} /></View>
       <Text style={styles.h2}>O que fazer agora</Text>
       {(actions.length ? [
-        ["Imediato · até 30 dias", actions.filter((a) => deadlineFor(a?.prioridade) <= 30)],
-        ["Curto prazo · até 60 dias", actions.filter((a) => deadlineFor(a?.prioridade) === 60)],
-        ["Consolidação · até 90 dias", actions.filter((a) => deadlineFor(a?.prioridade) === 90)],
-        ["Monitoramento · até 180 dias", actions.filter((a) => deadlineFor(a?.prioridade) >= 180)],
-      ].filter(([, items]: any) => items.length).slice(0, 4) : [["Monitoramento · até 180 dias", []]]).map(([when, items]: any) => <View key={when} style={styles.timelineItem} wrap={false}><Text style={styles.timelineWhen}>{when}</Text><View style={styles.timelineBody}><Text style={styles.timelineTitle}>{items.length ? items.slice(0, 2).map((a: any) => clean(a?.titulo)).join("; ") : "Preservar controles, acompanhar indicadores e repetir a avaliação no ciclo definido."}</Text><Text style={styles.note}>Liderança sugerida: {items.length ? clean(items[0]?.responsavel, "Gestão da unidade e RH") : "Gestão da unidade e RH"}</Text></View></View>)}
+        ["Onda 1 · até 60 dias", actions.filter((a) => bucketByPrazo(a?.prazo_dias, a?.prioridade) === "onda1")],
+        ["Onda 2 · até 120 dias", actions.filter((a) => bucketByPrazo(a?.prazo_dias, a?.prioridade) === "onda2")],
+        ["Onda 3 · até 210 dias", actions.filter((a) => bucketByPrazo(a?.prazo_dias, a?.prioridade) === "onda3")],
+        ["Onda 4 · até 365 dias", actions.filter((a) => bucketByPrazo(a?.prazo_dias, a?.prioridade) === "onda4")],
+      ].filter(([, items]: any) => items.length).slice(0, 4) : [["Ciclo anual · até 365 dias", []]]).map(([when, items]: any) => <View key={when} style={styles.timelineItem} wrap={false}><Text style={styles.timelineWhen}>{when}</Text><View style={styles.timelineBody}><Text style={styles.timelineTitle}>{items.length ? items.slice(0, 2).map((a: any) => fixTypos(a?.titulo)).join("; ") : "Preservar controles, acompanhar indicadores e repetir a avaliação no ciclo definido."}</Text><Text style={styles.note}>Liderança sugerida: {items.length ? fixTypos(items[0]?.responsavel) || "Gestão da unidade e RH" : "Gestão da unidade e RH"}</Text></View></View>)}
       <View style={styles.infoPanel}><Text style={styles.h3}>Como ler este documento</Text><Text style={styles.note}>Os resultados descrevem percepções coletivas sobre a organização do trabalho. Não constituem diagnóstico psicológico individual e precisam ser confrontados com o trabalho real por meio de escuta, observação e análise técnica.</Text></View>
     </Page>
 
