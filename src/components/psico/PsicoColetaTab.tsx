@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
+import { useMemo } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, AlertTriangle, RefreshCw, Play, CalendarClock, Square } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, RefreshCw, Play, CalendarClock, Square, ShieldAlert, Loader2 } from "lucide-react";
 import {
   ResumoColeta, ChecklistItem, calcularChecklist, getResumoColeta,
   abrirColeta, prorrogarColeta, encerrarColeta,
