@@ -5,7 +5,7 @@ import { Document, Page, Text, View, StyleSheet, Font, Image } from "npm:@react-
 import { HSE_LOGO_GREEN_DATA_URL } from "./brand-assets.ts";
 
 export const REPORT_MODEL_CODE = "HSE-PSICO-REL-1.0";
-export const REPORT_MODEL_VERSION = "1.4.0";
+export const REPORT_MODEL_VERSION = "1.5.0";
 
 export const REPORT_COLORS = {
   navy: "#0B2545", blue: "#176B87", teal: "#159A85", green: "#27864A",
@@ -28,13 +28,13 @@ const FACTOR_LABELS: Record<string, string> = {
 };
 
 const FACTOR_DIRECTION: Record<string, string> = {
-  carga_excessiva: "Revisar volume, ritmo, distribuição de demandas, pausas e recursos disponíveis, confrontando os indicadores com a rotina real das equipes.",
-  falta_autonomia: "Examinar margens de decisão, participação no planejamento e clareza dos limites de autonomia em cada função.",
-  conflitos_hierarquicos: "Avaliar práticas de liderança, critérios de cobrança, canais de escalonamento e tratamento respeitoso nas relações de autoridade.",
-  relacoes_interpessoais: "Fortalecer cooperação, apoio entre pares, comunicação e condições para resolução construtiva de dificuldades cotidianas.",
-  conflitos_interpessoais: "Estruturar prevenção e manejo de conflitos, com canais seguros, critérios conhecidos e resposta organizacional consistente.",
-  falta_clareza: "Revisar papéis, responsabilidades, prioridades, interfaces e critérios de desempenho para reduzir ambiguidades e retrabalho.",
-  gestao_mudancas: "Planejar comunicação, participação, suporte e acompanhamento das equipes durante mudanças organizacionais.",
+  carga_excessiva: "Rever volume de trabalho, ritmo, distribuição de tarefas, pausas e recursos disponíveis, comparando os números com o dia a dia real das equipes.",
+  falta_autonomia: "Ampliar a margem de decisão das equipes, envolver o time no planejamento e deixar claros os limites de autonomia de cada função.",
+  conflitos_hierarquicos: "Rever práticas de liderança, forma de cobrança, canais para levar problemas adiante e o respeito nas relações de chefia.",
+  relacoes_interpessoais: "Fortalecer cooperação, apoio entre colegas, comunicação clara e condições para resolver bem as dificuldades do dia a dia.",
+  conflitos_interpessoais: "Organizar a prevenção e o tratamento de conflitos, com canais seguros, critérios conhecidos e resposta firme e consistente.",
+  falta_clareza: "Deixar claros papéis, responsabilidades, prioridades e critérios de desempenho, reduzindo dúvidas e retrabalho.",
+  gestao_mudancas: "Planejar comunicação, participação e apoio às equipes durante mudanças na organização (novos processos, sistemas, estruturas).",
 };
 
 const styles = StyleSheet.create({
