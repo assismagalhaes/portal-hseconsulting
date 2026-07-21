@@ -120,6 +120,30 @@ function estimatePageCount(bytes: Uint8Array): number {
   return matches?.length ?? 1;
 }
 
+async function clearStaleReportGeneration(admin: any, avaliacaoId: string) {
+  const cutoff = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+  const reports = await admin.from("psico_relatorios")
+    .select("id")
+    .eq("avaliacao_id", avaliacaoId);
+
+  const reportIds = (reports.data || []).map((row: any) => row.id).filter(Boolean);
+  if (!reportIds.length) return;
+
+  const cleared = await admin.from("psico_relatorios_versoes")
+    .update({
+      status: "falhou",
+      erro_codigo: "TEMPO_LIMITE",
+      geracao_concluida_em: new Date().toISOString(),
+    })
+    .in("relatorio_id", reportIds)
+    .in("status", ["preparando", "gerando"])
+    .lt("criado_em", cutoff);
+
+  if (cleared.error) {
+    console.error("[psico-gerar-relatorio] stale cleanup error", cleared.error);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") {
@@ -171,6 +195,8 @@ Deno.serve(async (req) => {
     });
   }
 
+  await clearStaleReportGeneration(admin, avaliacaoId);
+
   if (modo === "preview") {
     try {
       // A prévia valida a autorização e os pré-requisitos, mas não prepara uma
@@ -214,6 +240,7 @@ Deno.serve(async (req) => {
       const codigoRafp = `PRÉVIA-${validacaoData.avaliacao_codigo || "RELATÓRIO"}`;
       const codigoRev = validacaoData.proxima_revisao || "R00";
       const assinaturaDataUrl = await loadApprovedSignature(admin, snapshot);
+      console.log("[psico-gerar-relatorio] preview render start", { avaliacaoId });
       const nodeBuf = await renderToBuffer(
         <PsychosocialReportDocument
           snapshot={snapshot}
@@ -227,6 +254,7 @@ Deno.serve(async (req) => {
           preview
         />
       );
+      console.log("[psico-gerar-relatorio] preview render done", { avaliacaoId });
       const pdfBuffer = new Uint8Array(nodeBuf as any);
       if (pdfBuffer.length < 500) throw new Error("PDF_INVALIDO");
 
@@ -306,6 +334,7 @@ Deno.serve(async (req) => {
     // 3) Renderizar PDF
     let pdfBuffer: Uint8Array;
     try {
+      console.log("[psico-gerar-relatorio] render start", { avaliacaoId, versaoId });
       const nodeBuf = await renderToBuffer(
         <PsychosocialReportDocument
           snapshot={snapshot}
@@ -319,6 +348,7 @@ Deno.serve(async (req) => {
           assinaturaDataUrl={assinaturaDataUrl}
         />
       );
+      console.log("[psico-gerar-relatorio] render done", { avaliacaoId, versaoId });
       pdfBuffer = new Uint8Array(nodeBuf as any);
     } catch (e) {
       console.error("[psico-gerar-relatorio] render error", e);
