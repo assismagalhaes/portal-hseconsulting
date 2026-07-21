@@ -32,6 +32,7 @@ export const PRIORIDADE_COLOR: Record<string, string> = {
   alta: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200",
   media: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200",
   baixa: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
+  monitoramento: "bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100",
 };
 
 export async function getRevisaoAtiva(avaliacaoId: string) {
