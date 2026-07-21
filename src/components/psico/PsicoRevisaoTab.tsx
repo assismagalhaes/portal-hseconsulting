@@ -22,6 +22,8 @@ import {
 } from "@/lib/psicoRevisao";
 import { formatDateTime } from "@/lib/format";
 import { formatDate } from "@/lib/format";
+import { getPlanoPorRevisao, listItens, listItemFatores, PLANO_STATUS_COLOR, PLANO_STATUS_LABEL } from "@/lib/psicoPlano";
+import { fatorLabel, prioridadeLabel } from "@/lib/psicoLabels";
 
 export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: () => void }) {
   const { isAdmin, user } = useAuth();
@@ -45,6 +47,9 @@ export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: 
   const [ctxDados, setCtxDados] = useState<{ clienteNome?: string; totalRespondentes?: number } | null>(null);
   const [regenOpen, setRegenOpen] = useState(false);
   const [restoreVersion, setRestoreVersion] = useState<any>(null);
+  const [plano, setPlano] = useState<any>(null);
+  const [planoItens, setPlanoItens] = useState<any[]>([]);
+  const [planoItemFatores, setPlanoItemFatores] = useState<any[]>([]);
 
   function buildDefaults(revData: any, dados: { clienteNome?: string; totalRespondentes?: number }) {
     const cliente = dados.clienteNome || "—";
@@ -130,6 +135,21 @@ Modalidade: ${modoColeta}.`;
         const { data: val } = await validarRevisao(r.id);
         setValidacao(val);
 
+        // Plano de ação consolidado (referência somente-leitura)
+        const planoData = await getPlanoPorRevisao(r.id);
+        setPlano(planoData);
+        if (planoData?.id) {
+          const [itens, links] = await Promise.all([
+            listItens(planoData.id),
+            listItemFatores(planoData.id),
+          ]);
+          setPlanoItens(itens.filter((it: any) => it.selecionado !== false));
+          setPlanoItemFatores(links);
+        } else {
+          setPlanoItens([]);
+          setPlanoItemFatores([]);
+        }
+
         // Contexto determinístico: cliente + totais do processamento
         const [{ data: cli }, { data: proc }] = await Promise.all([
           av?.cliente_id
@@ -159,6 +179,9 @@ Modalidade: ${modoColeta}.`;
           observacoes_internas: "",
           responsavel_tecnico_id: "",
         });
+        setPlano(null);
+        setPlanoItens([]);
+        setPlanoItemFatores([]);
       }
     } finally { setLoading(false); }
   }
