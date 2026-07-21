@@ -63,6 +63,24 @@ export default function VisaoExecutiva({
   const dash = dashQ.data.data;
   const interp = interpQ.data && interpQ.data.ok ? interpQ.data.data : null;
 
+  // Fase 3 — bloqueio defensivo: recortes com n<2 nunca renderizam resultados.
+  if (dash.escopo.tipo !== "global" && dash.escopo.respondentes < 2) {
+    return (
+      <div className="space-y-4">
+        <HeaderCabecalho dash={dash} escoposDisponiveis={escoposDisponiveis} escopoId={escopoId ?? dash.escopo.id} onChangeEscopo={onChangeEscopo} />
+        <Alert className="border-amber-400 bg-amber-50 dark:bg-amber-900/10">
+          <ShieldAlert className="h-4 w-4 text-amber-600" />
+          <AlertTitle>Resultado suprimido por sigilo (n&lt;2)</AlertTitle>
+          <AlertDescription>
+            Este recorte possui apenas {dash.escopo.respondentes} respondente(s). Para preservar o
+            anonimato exigido pela NR‑01, resultados só são exibidos com pelo menos 2 respondentes.
+            Selecione outro recorte ou consulte o resultado geral.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <HeaderCabecalho dash={dash} escoposDisponiveis={escoposDisponiveis} escopoId={escopoId ?? dash.escopo.id} onChangeEscopo={onChangeEscopo} />

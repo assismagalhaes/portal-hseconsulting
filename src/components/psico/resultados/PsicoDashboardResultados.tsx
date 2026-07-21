@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Info, Loader2 } from "lucide-react";
+import { Info, Loader2, ShieldAlert } from "lucide-react";
 import VisaoExecutiva from "./VisaoExecutiva";
 import FatoresDetalhados from "./FatoresDetalhados";
 import MapaPerguntas from "./MapaPerguntas";
@@ -47,13 +47,34 @@ export default function PsicoDashboardResultados({ avaliacaoId }: { avaliacaoId:
     }));
   }, [escoposQ.data]);
 
+  // Fase 3 — supressão n<2: recortes por função/setor/unidade com menos de 2
+  // respondentes são omitidos da interface (o escopo global permanece sempre).
+  const escoposVisiveis = useMemo(
+    () => escoposLista.filter((e) => e.tipo === "global" || e.respondentes >= 2),
+    [escoposLista],
+  );
+  const escoposSuprimidos = useMemo(
+    () => escoposLista.filter((e) => e.tipo !== "global" && e.respondentes < 2),
+    [escoposLista],
+  );
+
+  // Se o escopo selecionado passou a ser suprimido, volta ao global.
+  useEffect(() => {
+    if (!escopoId) return;
+    const ok = escoposVisiveis.some((e) => e.id === escopoId);
+    if (!ok) {
+      const g = escoposVisiveis.find((e) => e.tipo === "global") ?? escoposVisiveis[0];
+      if (g) setEscopoId(g.id);
+    }
+  }, [escopoId, escoposVisiveis]);
+
   // Escopo padrão = global
   useEffect(() => {
-    if (!escopoId && escoposLista.length > 0) {
-      const g = escoposLista.find((e) => e.tipo === "global") ?? escoposLista[0];
+    if (!escopoId && escoposVisiveis.length > 0) {
+      const g = escoposVisiveis.find((e) => e.tipo === "global") ?? escoposVisiveis[0];
       setEscopoId(g.id);
     }
-  }, [escopoId, escoposLista]);
+  }, [escopoId, escoposVisiveis]);
 
   if (escoposQ.isLoading) {
     return <Card><CardContent className="py-10 text-center text-sm text-muted-foreground"><Loader2 className="inline h-4 w-4 animate-spin mr-2" />Carregando escopos…</CardContent></Card>;
@@ -70,6 +91,18 @@ export default function PsicoDashboardResultados({ avaliacaoId }: { avaliacaoId:
 
   return (
     <div className="space-y-4">
+      {escoposSuprimidos.length > 0 && (
+        <Alert className="border-amber-400 bg-amber-50 dark:bg-amber-900/10">
+          <ShieldAlert className="h-4 w-4 text-amber-600" />
+          <AlertTitle>Recortes ocultos por sigilo (n&lt;2)</AlertTitle>
+          <AlertDescription>
+            {escoposSuprimidos.length} recorte(s) por função, setor ou unidade foram omitidos porque
+            possuem menos de 2 respondentes. Exibi‑los poderia identificar pessoas individualmente e
+            violaria o princípio de confidencialidade da NR‑01.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
         <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="executiva">Visão Executiva</TabsTrigger>
@@ -85,7 +118,7 @@ export default function PsicoDashboardResultados({ avaliacaoId }: { avaliacaoId:
               avaliacaoId={avaliacaoId}
               escopoId={escopoId}
               onChangeEscopo={setEscopoId}
-              escoposDisponiveis={escoposLista}
+              escoposDisponiveis={escoposVisiveis}
             />
           )}
         </TabsContent>
