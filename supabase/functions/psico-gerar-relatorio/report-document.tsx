@@ -216,7 +216,7 @@ function ScoreChart({ factors }: { factors: any[] }) {
 
 function SignificanceTable({ factors }: { factors: any[] }) {
   return <View style={styles.table}>
-    <View style={styles.tableHeader} fixed><Text style={styles.cellFactor}>Fator</Text><Text style={styles.cellScore}>Score</Text><Text style={styles.cellMetric}>M+A+C</Text><Text style={styles.cellMetric}>A+C</Text><Text style={styles.cellMetric}>Crítico</Text><Text style={styles.cellSig}>Significativo</Text><Text style={styles.cellPriority}>Prioridade</Text></View>
+    <View style={styles.tableHeader} fixed><Text style={styles.cellFactor}>Fator avaliado</Text><Text style={styles.cellScore}>Índice</Text><Text style={styles.cellMetric}>Atenção geral</Text><Text style={styles.cellMetric}>Atenção intensa</Text><Text style={styles.cellMetric}>Situação crítica</Text><Text style={styles.cellSig}>Exige ação?</Text><Text style={styles.cellPriority}>Prioridade</Text></View>
     {factors.map((factor) => <View key={factor?.fator_codigo} style={styles.tableRow} wrap={false}>
       <Text style={styles.cellFactor}>{factorName(factor)}</Text><Text style={styles.cellScore}>{score(factor?.score_medio)}</Text><Text style={styles.cellMetric}>{pct(factor?.percentual_medio_alto_critico)}</Text><Text style={styles.cellMetric}>{pct(factor?.percentual_alto_critico)}</Text><Text style={styles.cellMetric}>{pct(factor?.percentual_critico)}</Text><Text style={styles.cellSig}>{factor?.significativo ? "Sim" : "Não"}</Text><Text style={[styles.cellPriority, { color: riskColor(factor?.prioridade), fontFamily: "Helvetica-Bold" }]}>{riskLabel(factor?.prioridade)}</Text>
     </View>)}
@@ -225,7 +225,7 @@ function SignificanceTable({ factors }: { factors: any[] }) {
 
 function QuestionTable({ questions }: { questions: any[] }) {
   return <View style={styles.table}>
-    <View style={styles.tableHeader} fixed><Text style={styles.qNo}>Q</Text><Text style={styles.qText}>Pergunta</Text><Text style={styles.qScore}>Score</Text><Text style={styles.qClass}>Classificação</Text><Text style={styles.qPct}>Desfav.</Text><Text style={styles.qPct}>A+C</Text><Text style={styles.qPct}>Crítico</Text></View>
+    <View style={styles.tableHeader} fixed><Text style={styles.qNo}>Nº</Text><Text style={styles.qText}>Pergunta</Text><Text style={styles.qScore}>Índice</Text><Text style={styles.qClass}>Nível</Text><Text style={styles.qPct}>Desfav.</Text><Text style={styles.qPct}>Atenção</Text><Text style={styles.qPct}>Crítico</Text></View>
     {questions.map((question) => <View key={question?.numero} style={styles.tableRow} wrap={false}><Text style={styles.qNo}>{question?.numero}</Text><Text style={styles.qText}>{clean(question?.texto, "Pergunta do questionário")}</Text><Text style={styles.qScore}>{score(question?.score_medio)}</Text><Text style={[styles.qClass, { color: riskColor(question?.classificacao) }]}>{riskLabel(question?.classificacao)}</Text><Text style={styles.qPct}>{pct(question?.percentual_desfavoravel)}</Text><Text style={styles.qPct}>{pct(question?.percentual_alto_critico)}</Text><Text style={styles.qPct}>{pct(question?.percentual_critico)}</Text></View>)}
   </View>;
 }
