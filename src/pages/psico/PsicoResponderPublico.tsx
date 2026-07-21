@@ -361,9 +361,6 @@ export default function PsicoResponderPublico() {
           </div>
         )}
 
-        <p className="text-[11px] text-muted-foreground pt-4 border-t">
-          A HSE Consulting utiliza os dados apenas para gerar recortes coletivos (função, setor, unidade). Recortes com menos de 2 respostas são automaticamente suprimidos no relatório.
-        </p>
       </div>
     </div>
   );
