@@ -82,8 +82,8 @@ Deno.serve(async (req) => {
     try { body = JSON.parse(raw) } catch { return invalid(origin) }
 
     const action = String(body?.action || '')
-    const token = String(body?.token || '')
-    if (!token || token.length < 16 || token.length > 128) return invalid(origin)
+    const token = String(body?.token || '').trim()
+    if (!/^[a-zA-Z0-9_-]{8,128}$/.test(token)) return invalid(origin)
 
     const admin = createClient(
       Deno.env.get('SUPABASE_URL')!,

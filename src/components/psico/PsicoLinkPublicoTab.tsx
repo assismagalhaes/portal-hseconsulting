@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Copy, RefreshCw, Link2, Users, Eye, EyeOff, QrCode, Download, Radio } from "lucide-react";
+import { AlertTriangle, Copy, RefreshCw, Link2, Users, Eye, EyeOff, QrCode, Download, Radio } from "lucide-react";
 import QRCode from "qrcode";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip as RTooltip, CartesianGrid, LabelList } from "recharts";
 
@@ -62,6 +62,9 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
       : "https://portal.hseconsulting.com.br";
     return `${host}/p#${encodeURIComponent(token)}`;
   }, [token]);
+
+  const coletaAberta = av?.status === "coleta_em_andamento";
+  const podeCompartilhar = !!publicUrl && coletaAberta;
 
   useEffect(() => {
     if (!publicUrl) { setQrDataUrl(null); return; }
@@ -162,12 +165,18 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
   }
 
   function copiarLink() {
-    if (!publicUrl) return;
+    if (!podeCompartilhar || !publicUrl) {
+      toast.info("Abra a coleta antes de compartilhar o link público.");
+      return;
+    }
     navigator.clipboard.writeText(publicUrl).then(() => toast.success("Link copiado"));
   }
 
   function baixarQR() {
-    if (!qrDataUrl) return;
+    if (!podeCompartilhar || !qrDataUrl) {
+      toast.info("Abra a coleta antes de baixar o QR Code.");
+      return;
+    }
     const a = document.createElement("a");
     a.href = qrDataUrl;
     a.download = `qrcode-${av.codigo || av.id}.png`;
@@ -212,14 +221,24 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2"><Link2 className="h-4 w-4" /> Link público</CardTitle>
-          <Badge variant="secondary">Modo público anônimo</Badge>
+          <Badge variant={coletaAberta ? "secondary" : "outline"}>
+            {coletaAberta ? "Modo público anônimo" : "Aguardando abertura"}
+          </Badge>
         </CardHeader>
         <CardContent className="space-y-4">
+          {!coletaAberta && (
+            <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200 flex gap-2">
+              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+              <div>
+                O link já está reservado, mas só fica acessível para respondentes após clicar em <strong>Abrir coleta</strong> na aba Coleta.
+              </div>
+            </div>
+          )}
           <div>
-            <Label>URL para compartilhar</Label>
+            <Label>{coletaAberta ? "URL para compartilhar" : "URL reservada"}</Label>
             <div className="flex gap-2 mt-1">
               <Input readOnly value={publicUrl || ""} className="font-mono text-xs" />
-              <Button variant="outline" onClick={copiarLink}><Copy className="h-4 w-4" /></Button>
+              <Button variant="outline" onClick={copiarLink} disabled={!podeCompartilhar}><Copy className="h-4 w-4" /></Button>
               <Button variant="outline" onClick={rotacionarLink} title="Gerar novo link (invalida o atual)"><RefreshCw className="h-4 w-4" /></Button>
               <AlertDialog open={confirmarRotacao} onOpenChange={setConfirmarRotacao}>
                 <AlertDialogContent>
@@ -244,11 +263,13 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
               </AlertDialog>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Envie por WhatsApp, cole no mural interno ou imprima o QR Code abaixo. O link só funciona quando a coleta estiver aberta.
+              {coletaAberta
+                ? "Envie por WhatsApp, cole no mural interno ou imprima o QR Code abaixo."
+                : "Finalize a abertura da coleta antes de enviar este endereço por WhatsApp, mural interno ou QR Code."}
             </p>
           </div>
 
-          {qrDataUrl && (
+          {qrDataUrl && coletaAberta && (
             <div className="border rounded p-4 flex items-center gap-4">
               <img src={qrDataUrl} alt="QR Code" className="w-40 h-40" />
               <div className="text-xs space-y-2">
