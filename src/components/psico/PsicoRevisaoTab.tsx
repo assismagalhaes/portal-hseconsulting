@@ -22,6 +22,8 @@ import {
 } from "@/lib/psicoRevisao";
 import { formatDateTime } from "@/lib/format";
 import { formatDate } from "@/lib/format";
+import { getPlanoPorRevisao, listItens, listItemFatores, PLANO_STATUS_COLOR, PLANO_STATUS_LABEL } from "@/lib/psicoPlano";
+import { fatorLabel, prioridadeLabel } from "@/lib/psicoLabels";
 
 export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: () => void }) {
   const { isAdmin, user } = useAuth();
@@ -45,6 +47,9 @@ export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: 
   const [ctxDados, setCtxDados] = useState<{ clienteNome?: string; totalRespondentes?: number } | null>(null);
   const [regenOpen, setRegenOpen] = useState(false);
   const [restoreVersion, setRestoreVersion] = useState<any>(null);
+  const [plano, setPlano] = useState<any>(null);
+  const [planoItens, setPlanoItens] = useState<any[]>([]);
+  const [planoItemFatores, setPlanoItemFatores] = useState<any[]>([]);
 
   function buildDefaults(revData: any, dados: { clienteNome?: string; totalRespondentes?: number }) {
     const cliente = dados.clienteNome || "—";
@@ -130,6 +135,21 @@ Modalidade: ${modoColeta}.`;
         const { data: val } = await validarRevisao(r.id);
         setValidacao(val);
 
+        // Plano de ação consolidado (referência somente-leitura)
+        const planoData = await getPlanoPorRevisao(r.id);
+        setPlano(planoData);
+        if (planoData?.id) {
+          const [itens, links] = await Promise.all([
+            listItens(planoData.id),
+            listItemFatores(planoData.id),
+          ]);
+          setPlanoItens(itens.filter((it: any) => it.selecionado !== false));
+          setPlanoItemFatores(links);
+        } else {
+          setPlanoItens([]);
+          setPlanoItemFatores([]);
+        }
+
         // Contexto determinístico: cliente + totais do processamento
         const [{ data: cli }, { data: proc }] = await Promise.all([
           av?.cliente_id
@@ -159,6 +179,9 @@ Modalidade: ${modoColeta}.`;
           observacoes_internas: "",
           responsavel_tecnico_id: "",
         });
+        setPlano(null);
+        setPlanoItens([]);
+        setPlanoItemFatores([]);
       }
     } finally { setLoading(false); }
   }
@@ -305,7 +328,7 @@ Modalidade: ${modoColeta}.`;
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground max-w-2xl">
-            A revisão técnica traz o tratamento de cada fator (ação recomendada, monitoramento preventivo ou sem ação), a conclusão do responsável técnico e as recomendações. O plano de ação é pré-populado com as medidas sugeridas da biblioteca vigente.
+            A revisão técnica consolida o tratamento por fator (definido na aba <b>Resultados</b>) e o <b>Plano de Ação</b> já elaborado, formalizando o parecer conclusivo, as limitações e a responsabilidade técnica.
           </p>
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => iniciar("rapida")} disabled={creating}>
@@ -322,6 +345,24 @@ Modalidade: ${modoColeta}.`;
 
   const status: RevisaoStatus = rev.status;
   const erros: string[] = validacao?.erros || [];
+
+  const itensPorFator = useMemo(() => {
+    const byItem: Record<string, string[]> = {};
+    planoItemFatores.forEach((l: any) => {
+      byItem[l.plano_item_id] = byItem[l.plano_item_id] || [];
+      byItem[l.plano_item_id].push(l.fator_codigo);
+    });
+    const grupos: Record<string, any[]> = {};
+    planoItens.forEach((it: any) => {
+      const codes = byItem[it.id] && byItem[it.id].length ? byItem[it.id] : ["_sem_fator"];
+      codes.forEach((c) => {
+        grupos[c] = grupos[c] || [];
+        grupos[c].push(it);
+      });
+    });
+    return grupos;
+  }, [planoItens, planoItemFatores]);
+  const totalItens = planoItens.length;
 
   return (
     <div className="space-y-4">
@@ -524,6 +565,61 @@ Modalidade: ${modoColeta}.`;
           O tratamento técnico de cada fator agora é definido na aba <b>Resultados</b> e alimenta automaticamente o Plano de Ação e esta revisão.
         </AlertDescription>
       </Alert>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-2">
+          <div>
+            <CardTitle>Plano de ação consolidado</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Referência somente-leitura das medidas selecionadas na aba <b>Plano de Ação</b>. Edições devem ser feitas por lá.
+            </p>
+          </div>
+          {plano && (
+            <Badge className={PLANO_STATUS_COLOR[plano.status as keyof typeof PLANO_STATUS_COLOR] || ""}>
+              {PLANO_STATUS_LABEL[plano.status as keyof typeof PLANO_STATUS_LABEL] || plano.status}
+            </Badge>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {!plano && (
+            <p className="text-sm text-muted-foreground">Nenhum plano de ação vinculado a esta revisão ainda.</p>
+          )}
+          {plano && totalItens === 0 && (
+            <p className="text-sm text-muted-foreground">O plano ainda não possui medidas selecionadas.</p>
+          )}
+          {plano && totalItens > 0 && (
+            <>
+              <div className="text-xs text-muted-foreground">{totalItens} medida(s) selecionada(s) no plano.</div>
+              {Object.entries(itensPorFator).map(([codigo, itens]) => (
+                <div key={codigo} className="rounded-md border">
+                  <div className="border-b bg-muted/40 px-3 py-2 text-sm font-medium">
+                    {codigo === "_sem_fator" ? "Ações transversais" : fatorLabel(codigo)}
+                    <span className="ml-2 text-xs text-muted-foreground">{itens.length} medida(s)</span>
+                  </div>
+                  <ul className="divide-y">
+                    {itens.map((it: any) => (
+                      <li key={it.id} className="px-3 py-2 text-sm">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-medium">{it.titulo || it.acao_recomendada || it.objetivo}</span>
+                          {it.prioridade && (
+                            <Badge variant="outline" className="text-[10px]">{prioridadeLabel(it.prioridade)}</Badge>
+                          )}
+                          {it.personalizado && <Badge variant="outline" className="text-[10px]">Personalizada</Badge>}
+                        </div>
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          {it.responsavel ? <>Responsável: <b>{it.responsavel}</b></> : "Sem responsável"}
+                          {" · "}
+                          {it.prazo ? <>Prazo: <b>{formatDate(it.prazo)}</b></> : "Sem prazo"}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       <p className="text-[11px] text-muted-foreground border-t pt-2">
         A revisão não altera resultados matemáticos calculados. Apenas registra o tratamento técnico, a conclusão e as recomendações do responsável.
