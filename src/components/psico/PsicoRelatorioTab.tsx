@@ -34,7 +34,6 @@ import {
   gerarRelatorio,
   getRelatorio,
   listarVersoes,
-  previewRelatorio,
   REL_STATUS_COLOR,
   REL_STATUS_LABEL,
   RelatorioVersaoStatus,
@@ -59,7 +58,6 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
   const [versoes, setVersoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [gerando, setGerando] = useState(false);
-  const [visualizando, setVisualizando] = useState(false);
   const [validacaoErro, setValidacaoErro] = useState<string | null>(null);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -228,13 +226,9 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
             <Button
               variant="outline"
               onClick={handlePreview}
-              disabled={!podeEmitir || !!emAndamento || gerando || visualizando}
+              disabled={!podeEmitir || !!emAndamento || gerando}
             >
-              {visualizando ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Eye className="h-4 w-4 mr-2" />
-              )}
+              <Eye className="h-4 w-4 mr-2" />
               Pré-visualizar
             </Button>
 
