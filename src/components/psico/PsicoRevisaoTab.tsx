@@ -21,9 +21,10 @@ import {
   salvarParecerConclusivo, traduzirErro, validarRevisao,
 } from "@/lib/psicoRevisao";
 import { formatDateTime } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 
 export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: () => void }) {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [rev, setRev] = useState<any>(null);
   const [fatores, setFatores] = useState<any[]>([]);
@@ -41,6 +42,58 @@ export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: 
   const [parecerHistory, setParecerHistory] = useState<any[]>([]);
   const [generatingOpinion, setGeneratingOpinion] = useState(false);
   const [uploadingSignature, setUploadingSignature] = useState(false);
+  const [ctxDados, setCtxDados] = useState<{ clienteNome?: string; totalRespondentes?: number } | null>(null);
+
+  function buildDefaults(revData: any, dados: { clienteNome?: string; totalRespondentes?: number }) {
+    const cliente = dados.clienteNome || "—";
+    const unidade = av?.unidade || "não informada";
+    const ini = av?.data_inicio_prevista ? formatDate(av.data_inicio_prevista) : "—";
+    const fim = av?.data_fim_prevista ? formatDate(av.data_fim_prevista) : "—";
+    const previstos = av?.quantidade_participantes_prevista ?? "—";
+    const respondentes = dados.totalRespondentes ?? 0;
+    const modoColeta = av?.modo_coleta === "publico_anonimo"
+      ? "coleta pública anônima (link único por avaliação)"
+      : "coleta nominal por convite individual";
+    const adesaoPct = previstos && Number(previstos) > 0
+      ? Math.round((respondentes / Number(previstos)) * 100)
+      : null;
+
+    const contexto =
+`Cliente: ${cliente}.
+Unidade avaliada: ${unidade}.
+Período previsto de coleta: ${ini} a ${fim}.
+Participantes previstos: ${previstos}. Respondentes válidos: ${respondentes}${adesaoPct !== null ? ` (adesão de ${adesaoPct}%)` : ""}.
+Modalidade: ${modoColeta}.`;
+
+    const limitacoesPartes: string[] = [];
+    if (revData?.amostra_reduzida) {
+      limitacoesPartes.push("Amostra reduzida: recortes por função, setor ou unidade com menos de 2 respondentes foram suprimidos para preservar o sigilo (NR-01).");
+    }
+    if (adesaoPct !== null && adesaoPct < 70) {
+      limitacoesPartes.push(`Adesão inferior a 70% (${adesaoPct}%): a leitura coletiva deve considerar possível viés de participação.`);
+    }
+    if (av?.modo_coleta === "publico_anonimo") {
+      limitacoesPartes.push("Coleta pública anônima: não é possível vincular respostas a indivíduos; a análise é estritamente coletiva.");
+    }
+    limitacoesPartes.push("O questionário mede percepções autorrelatadas em um recorte temporal específico e não substitui avaliação clínica individual.");
+
+    return {
+      contexto_organizacional: contexto,
+      limitacoes: limitacoesPartes.join(" "),
+    };
+  }
+
+  function preencherAutomaticamente() {
+    if (!rev || !ctxDados) return;
+    const defaults = buildDefaults(rev, ctxDados);
+    setForm((f: any) => ({
+      ...f,
+      contexto_organizacional: defaults.contexto_organizacional,
+      limitacoes: defaults.limitacoes,
+      responsavel_tecnico_id: f.responsavel_tecnico_id || (profiles.find((p) => p.id === user?.id)?.id ?? f.responsavel_tecnico_id),
+    }));
+    toast.success("Dados básicos preenchidos. Revise antes de salvar.");
+  }
 
   async function load() {
     setLoading(true);
@@ -54,13 +107,6 @@ export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: 
         recomendacoes: r?.recomendacao_geral || "",
         limitacoes: r?.limitacoes || "",
         conclusao: r?.conclusao_tecnica || r?.conclusao_sugerida || "",
-      });
-      setForm({
-        contexto_organizacional: r?.contexto_organizacional || "",
-        limitacoes: r?.limitacoes || "",
-        recomendacao_geral: r?.recomendacao_geral || "",
-        observacoes_internas: r?.observacoes_internas || "",
-        responsavel_tecnico_id: r?.responsavel_tecnico_id || "",
       });
       if (r) {
         const fs = await getRevisaoFatores(r.id);
@@ -81,6 +127,36 @@ export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: 
         setParecerHistory(history.data || []);
         const { data: val } = await validarRevisao(r.id);
         setValidacao(val);
+
+        // Contexto determinístico: cliente + totais do processamento
+        const [{ data: cli }, { data: proc }] = await Promise.all([
+          av?.cliente_id
+            ? (supabase as any).from("clients").select("razao_social, nome_fantasia").eq("id", av.cliente_id).maybeSingle()
+            : Promise.resolve({ data: null }),
+          (supabase as any).from("psico_resultado_processamentos").select("total_respondentes").eq("id", r.processamento_id).maybeSingle(),
+        ]);
+        const dados = {
+          clienteNome: cli?.nome_fantasia || cli?.razao_social || undefined,
+          totalRespondentes: proc?.total_respondentes ?? 0,
+        };
+        setCtxDados(dados);
+        const defaults = buildDefaults(r, dados);
+        const currentUserAsProfile = (p || []).find((prof: any) => prof.id === user?.id)?.id || "";
+        setForm({
+          contexto_organizacional: r?.contexto_organizacional || defaults.contexto_organizacional,
+          limitacoes: r?.limitacoes || defaults.limitacoes,
+          recomendacao_geral: r?.recomendacao_geral || "",
+          observacoes_internas: r?.observacoes_internas || "",
+          responsavel_tecnico_id: r?.responsavel_tecnico_id || currentUserAsProfile,
+        });
+      } else {
+        setForm({
+          contexto_organizacional: "",
+          limitacoes: "",
+          recomendacao_geral: "",
+          observacoes_internas: "",
+          responsavel_tecnico_id: "",
+        });
       }
     } finally { setLoading(false); }
   }
@@ -321,9 +397,14 @@ export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: 
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Cabeçalho técnico</CardTitle>
           {!readOnly && (
-            <Button size="sm" onClick={salvarCabecalho} disabled={saving}>
-              <Save className="h-4 w-4 mr-2" /> Salvar
-            </Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={preencherAutomaticamente} disabled={!ctxDados}>
+                <Sparkles className="h-4 w-4 mr-2" /> Preencher automaticamente
+              </Button>
+              <Button size="sm" onClick={salvarCabecalho} disabled={saving}>
+                <Save className="h-4 w-4 mr-2" /> Salvar
+              </Button>
+            </div>
           )}
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
