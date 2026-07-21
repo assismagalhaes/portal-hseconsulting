@@ -44,7 +44,12 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
 
   const publicUrl = useMemo(() => {
     if (!token) return null;
-    return `${window.location.origin}/avaliacao/publica#token=${encodeURIComponent(token)}`;
+    // Sempre publicar com o domínio institucional (não com URLs de preview do Lovable)
+    // e com rota curta /p#TOKEN para facilitar compartilhamento e QR Code.
+    const host = typeof window !== "undefined" && /(^|\.)hseconsulting\./.test(window.location.hostname)
+      ? window.location.origin
+      : "https://portal.hseconsulting.com.br";
+    return `${host}/p#${encodeURIComponent(token)}`;
   }, [token]);
 
   useEffect(() => {
