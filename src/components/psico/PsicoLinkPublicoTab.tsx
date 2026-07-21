@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import { AlertTriangle, Copy, RefreshCw, Link2, Users, Eye, EyeOff, QrCode, Download, Radio } from "lucide-react";
 import QRCode from "qrcode";
+import jsPDF from "jspdf";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip as RTooltip, CartesianGrid, LabelList } from "recharts";
 import * as XLSX from "xlsx";
 
@@ -205,6 +206,157 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
     a.click();
   }
 
+  async function baixarFlyer() {
+    if (!podeCompartilhar || !publicUrl) {
+      toast.info("Abra a coleta antes de gerar o flyer.");
+      return;
+    }
+    try {
+      // Busca nome do cliente para personalizar
+      let clienteNome = "";
+      if (av?.cliente_id) {
+        const { data: c } = await supabase.from("clients")
+          .select("razao_social, nome_fantasia").eq("id", av.cliente_id).maybeSingle();
+        clienteNome = (c?.nome_fantasia || c?.razao_social || "").toUpperCase();
+      }
+
+      // QR em alta resolução para impressão
+      const qrHi = await QRCode.toDataURL(publicUrl, { margin: 1, width: 1200, errorCorrectionLevel: "H" });
+
+      const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const W = 210, H = 297;
+      const NAVY: [number, number, number] = [15, 44, 74];
+      const NAVY_SOFT: [number, number, number] = [30, 64, 100];
+      const ACCENT: [number, number, number] = [16, 185, 129]; // emerald
+      const MUTED: [number, number, number] = [110, 120, 135];
+      const CREAM: [number, number, number] = [248, 245, 240];
+
+      // Fundo
+      doc.setFillColor(...CREAM);
+      doc.rect(0, 0, W, H, "F");
+
+      // Faixa superior navy
+      doc.setFillColor(...NAVY);
+      doc.rect(0, 0, W, 55, "F");
+      // Faixa fina de sotaque
+      doc.setFillColor(...ACCENT);
+      doc.rect(0, 55, W, 1.5, "F");
+
+      // Cabeçalho
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text("NR-01 · SAÚDE MENTAL NO TRABALHO", 18, 20);
+      doc.setFontSize(22);
+      doc.text("Sua opinião importa.", 18, 34);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.text("Participe da Avaliação de Fatores Psicossociais.", 18, 44);
+
+      // Bloco cliente
+      let y = 70;
+      if (clienteNome) {
+        doc.setTextColor(...MUTED);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.text("EMPRESA", 18, y);
+        doc.setTextColor(...NAVY);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text(doc.splitTextToSize(clienteNome, W - 36) as any, 18, y + 6);
+        y += 18;
+      }
+
+      // Texto convite
+      doc.setTextColor(...NAVY);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text("Como funciona", 18, y);
+      y += 6;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10.5);
+      doc.setTextColor(60, 68, 82);
+      const bullets = [
+        "É rápido: cerca de 8 a 12 minutos para responder.",
+        "É anônimo: suas respostas não são identificadas individualmente.",
+        "É importante: os resultados orientam melhorias no ambiente de trabalho.",
+        "Não há resposta certa ou errada — responda com sinceridade.",
+      ];
+      bullets.forEach((b) => {
+        doc.setFillColor(...ACCENT);
+        doc.circle(20, y - 1.2, 1.1, "F");
+        doc.text(b, 25, y);
+        y += 6;
+      });
+
+      y += 4;
+
+      // Caixa QR
+      const boxX = 18, boxY = y, boxW = W - 36, boxH = 100;
+      doc.setFillColor(255, 255, 255);
+      doc.setDrawColor(220, 216, 208);
+      doc.roundedRect(boxX, boxY, boxW, boxH, 3, 3, "FD");
+
+      // QR à esquerda
+      const qrSize = 78;
+      const qrX = boxX + 8;
+      const qrY = boxY + (boxH - qrSize) / 2;
+      doc.addImage(qrHi, "PNG", qrX, qrY, qrSize, qrSize);
+
+      // Texto ao lado
+      const tx = qrX + qrSize + 10;
+      doc.setTextColor(...NAVY);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text("Aponte a câmera", tx, boxY + 20);
+      doc.text("do celular no QR Code", tx, boxY + 28);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(...MUTED);
+      doc.text("Ou acesse o endereço:", tx, boxY + 40);
+      doc.setFont("courier", "bold");
+      doc.setFontSize(10.5);
+      doc.setTextColor(...NAVY);
+      const urlLines = doc.splitTextToSize(publicUrl, boxW - (tx - boxX) - 8) as string[];
+      urlLines.forEach((line, i) => doc.text(line, tx, boxY + 47 + i * 5));
+
+      // Prazo
+      if (av?.data_fim_prevista) {
+        const prazo = new Date(av.data_fim_prevista).toLocaleDateString("pt-BR");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(...ACCENT);
+        doc.text(`Responda até ${prazo}`, tx, boxY + boxH - 10);
+      }
+
+      y = boxY + boxH + 10;
+
+      // Rodapé confidencialidade
+      doc.setFillColor(...NAVY_SOFT);
+      doc.rect(0, H - 30, W, 30, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text("Confidencialidade garantida", 18, H - 20);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(220, 228, 240);
+      const conf = "As respostas são tratadas de forma agregada e anônima, conforme a NR-01 e a LGPD. Nenhum resultado individual é identificado ou compartilhado com gestores.";
+      const confLines = doc.splitTextToSize(conf, W - 36) as string[];
+      confLines.forEach((l, i) => doc.text(l, 18, H - 14 + i * 4));
+
+      // Marca inferior
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.setTextColor(255, 255, 255);
+      doc.text("HSE CONSULTING", W - 18, H - 4, { align: "right" });
+
+      doc.save(`flyer-avaliacao-${av.codigo || av.id}.pdf`);
+    } catch (e: any) {
+      toast.error("Falha ao gerar flyer: " + (e?.message || String(e)));
+    }
+  }
+
   function toggleCampo(k: keyof CamposIdent, chave: "ativo" | "obrigatorio") {
     setCampos((c) => {
       const atual = c[k];
@@ -305,9 +457,17 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
           {qrDataUrl && coletaAberta && (
             <div className="border rounded p-4 flex items-center gap-4">
               <img src={qrDataUrl} alt="QR Code" className="w-40 h-40" />
-              <div className="text-xs space-y-2">
+              <div className="text-xs space-y-2 flex-1">
                 <p><QrCode className="h-3 w-3 inline mr-1" /> QR Code do link público — pode ser impresso e afixado em murais internos.</p>
-                <Button size="sm" variant="outline" onClick={baixarQR}>Baixar PNG</Button>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <Button size="sm" onClick={baixarFlyer}>
+                    <Download className="h-4 w-4 mr-2" /> Baixar flyer (PDF A4)
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={baixarQR}>Baixar somente QR (PNG)</Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground pt-1">
+                  O flyer inclui QR Code, link curto, prazo e instruções — pronto para impressão em murais e comunicados.
+                </p>
               </div>
             </div>
           )}
