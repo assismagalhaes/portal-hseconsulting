@@ -323,11 +323,14 @@ function CatalogoRow({ m, fatoresRev, onAdd }: { m: any; fatoresRev: any[]; onAd
   const [codes, setCodes] = useState<string[]>([m.fator_codigo]);
   return (
     <div className="rounded border p-3 space-y-2">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-muted">{m.codigo}</span>
-        <Badge className={NIVEL_COLOR[m.nivel_recomendacao]}>{m.nivel_recomendacao}</Badge>
-        {m.grupo_transversal && <Badge variant="outline" className="text-[10px]">{m.grupo_transversal}</Badge>}
-        <span className="text-sm font-medium">{m.titulo}</span>
+      <div className="space-y-1.5">
+        <div className="text-sm font-medium">{m.titulo}</div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-muted">{m.codigo}</span>
+          <Badge className={NIVEL_COLOR[m.nivel_recomendacao]}>{nivelMedidaLabel(m.nivel_recomendacao)}</Badge>
+          <Badge variant="outline" className="text-[10px]">{fatorLabel(m.fator_codigo)}</Badge>
+          {m.grupo_transversal && <Badge variant="outline" className="text-[10px]">{grupoTransversalLabel(m.grupo_transversal)}</Badge>}
+        </div>
       </div>
       {m.o_que_significa && <p className="text-xs text-muted-foreground">{m.o_que_significa}</p>}
       <div className="flex flex-wrap items-center gap-2">
@@ -338,7 +341,7 @@ function CatalogoRow({ m, fatoresRev, onAdd }: { m: any; fatoresRev: any[]; onAd
             <button key={f.fator_codigo} type="button"
               className={`text-[11px] px-2 py-0.5 rounded border ${on ? "bg-primary text-primary-foreground border-primary" : "bg-background"}`}
               onClick={() => setCodes(on ? codes.filter((c) => c !== f.fator_codigo) : [...codes, f.fator_codigo])}>
-              {f.fator_codigo}
+              {fatorLabel(f.fator_codigo)}
             </button>
           );
         })}
@@ -366,23 +369,29 @@ function ItemCard({ item, fatores, readOnly, onToggle, onSave, onRemove }: {
         <div className="flex items-start gap-3">
           <Checkbox checked={item.selecionado} disabled={readOnly} onCheckedChange={(v) => onToggle(!!v)} className="mt-1" />
           <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              {item.codigo_origem && <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-muted">{item.codigo_origem}</span>}
-              {item.nivel_recomendacao && <Badge className={NIVEL_COLOR[item.nivel_recomendacao] || "bg-muted"}>{item.nivel_recomendacao}</Badge>}
-              {item.prioridade && <Badge className={PRIORIDADE_COLOR[item.prioridade] || "bg-muted"}>{item.prioridade}</Badge>}
-              {item.grupo_transversal && <Badge variant="outline" className="text-[10px]">{item.grupo_transversal}</Badge>}
-              {item.personalizado && <Badge variant="outline" className="text-[10px]">Personalizada</Badge>}
-              {missing && <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Pendente</Badge>}
-              <span className="text-sm font-medium">{item.titulo}</span>
-              <span className="ml-auto flex gap-2">
-                {fatores.map((c) => <span key={c} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-primary/10 text-primary">{c}</span>)}
-                <button className="text-muted-foreground" onClick={() => setOpen((v) => !v)}>
+            <div className="flex items-start gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium leading-snug">{item.titulo}</div>
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  {item.codigo_origem && <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-muted">{item.codigo_origem}</span>}
+                  {item.nivel_recomendacao && <Badge className={NIVEL_COLOR[item.nivel_recomendacao] || "bg-muted"}>{nivelMedidaLabel(item.nivel_recomendacao)}</Badge>}
+                  {item.prioridade && <Badge className={PRIORIDADE_COLOR[item.prioridade] || "bg-muted"}>{prioridadeLabel(item.prioridade)}</Badge>}
+                  {item.grupo_transversal && <Badge variant="outline" className="text-[10px]">{grupoTransversalLabel(item.grupo_transversal)}</Badge>}
+                  {fatores.map((c) => (
+                    <Badge key={c} variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/30">{fatorLabel(c)}</Badge>
+                  ))}
+                  {item.personalizado && <Badge variant="outline" className="text-[10px]">Personalizada</Badge>}
+                  {missing && <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Pendente</Badge>}
+                </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <button className="text-muted-foreground p-1" onClick={() => setOpen((v) => !v)}>
                   <ChevronDown className={`h-4 w-4 transition ${open ? "rotate-180" : ""}`} />
                 </button>
                 {!readOnly && item.personalizado && (
-                  <button className="text-destructive" onClick={onRemove}><Trash2 className="h-4 w-4" /></button>
+                  <button className="text-destructive p-1" onClick={onRemove}><Trash2 className="h-4 w-4" /></button>
                 )}
-              </span>
+              </div>
             </div>
             {item.objetivo && !open && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.objetivo}</p>}
 
@@ -429,6 +438,12 @@ function ItemCard({ item, fatores, readOnly, onToggle, onSave, onRemove }: {
                   <Label className="text-xs">Indicador</Label>
                   <Input defaultValue={item.indicador_sugerido || ""} disabled={readOnly}
                     onBlur={(e) => e.target.value !== (item.indicador_sugerido || "") && onSave({ indicador_sugerido: e.target.value || null })} />
+                  {item.indicadores_sugeridos?.length ? (
+                    <div className="mt-1">
+                      <span className="text-[11px] text-muted-foreground mr-1">Sugestões:</span>
+                      <ChipList items={item.indicadores_sugeridos} empty="Sem sugestões" />
+                    </div>
+                  ) : null}
                 </div>
               </div>
             )}
