@@ -74,7 +74,7 @@ export default function PsicoResponderPublico() {
 
     const raw = window.location.hash || "";
     const m = raw.match(/token=([^&]+)/);
-    const tk = m ? decodeURIComponent(m[1]) : "";
+    const tk = m ? decodeURIComponent(m[1]) : decodeURIComponent(raw.replace(/^#/, ""));
     if (tk) history.replaceState(null, "", window.location.pathname);
     setToken(tk);
 
