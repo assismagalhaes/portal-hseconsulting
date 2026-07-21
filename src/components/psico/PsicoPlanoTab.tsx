@@ -20,6 +20,7 @@ import {
   marcarPlanoRevisado, regenerarRecomendacoes,
 } from "@/lib/psicoPlano";
 import { getRevisaoAtiva, getRevisaoFatores, PRIORIDADE_COLOR } from "@/lib/psicoRevisao";
+import { fatorLabel, grupoTransversalLabel, nivelMedidaLabel, prioridadeLabel } from "@/lib/psicoLabels";
 import PsicoAprovacaoConsolidada from "./PsicoAprovacaoConsolidada";
 
 function ChipList({ items, empty = "—" }: { items?: string[] | null; empty?: string }) {
@@ -192,7 +193,7 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
                         <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">Todos os fatores</SelectItem>
-                          {fatorSet.map((f) => <SelectItem key={f.fator_codigo} value={f.fator_codigo}>{f.fator_codigo}</SelectItem>)}
+                          {fatorSet.map((f) => <SelectItem key={f.fator_codigo} value={f.fator_codigo}>{fatorLabel(f.fator_codigo)}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
@@ -226,7 +227,7 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
                               <button key={f.fator_codigo} type="button"
                                 className={`text-xs px-2 py-1 rounded border ${on ? "bg-primary text-primary-foreground border-primary" : "bg-background"}`}
                                 onClick={() => setNovo({ ...novo, fatores: on ? novo.fatores.filter((x: string) => x !== f.fator_codigo) : [...novo.fatores, f.fator_codigo] })}>
-                                {f.fator_codigo}
+                                {fatorLabel(f.fator_codigo)}
                               </button>
                             );
                           })}
@@ -272,7 +273,7 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
             <SelectTrigger className="w-[220px]"><SelectValue placeholder="Fator" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os fatores</SelectItem>
-              {fatorSet.map((f) => <SelectItem key={f.fator_codigo} value={f.fator_codigo}>{f.fator_codigo}</SelectItem>)}
+              {fatorSet.map((f) => <SelectItem key={f.fator_codigo} value={f.fator_codigo}>{fatorLabel(f.fator_codigo)}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={filtroNivel} onValueChange={setFiltroNivel}>
