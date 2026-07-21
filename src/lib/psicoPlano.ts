@@ -131,6 +131,7 @@ export async function adicionarMedidaDoModelo(planoId: string, medidaId: string,
     prazo_sugerido_dias: med.prazo_sugerido_dias,
     evidencias_recomendadas: med.evidencias_recomendadas,
     indicador_sugerido: (med.indicadores_sugeridos || [])[0] || null,
+    indicadores_sugeridos: med.indicadores_sugeridos || null,
     personalizado: false,
   }, fatoresCodes, resultadoFatorPorCodigo);
 }
