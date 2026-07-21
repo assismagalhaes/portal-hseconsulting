@@ -206,7 +206,12 @@ Modalidade: ${modoColeta}.`;
   async function gerarParecerIa() {
     if (!rev) return;
     const hasOpinion = Object.values(parecer).some((value) => value?.trim());
-    if (hasOpinion && !regenOpen) { setRegenOpen(true); return; }
+    if (hasOpinion) { setRegenOpen(true); return; }
+    await executarGeracaoParecer(false);
+  }
+
+  async function executarGeracaoParecer(substituir: boolean) {
+    if (!rev) return;
     setGeneratingOpinion(true);
     const headerSave = await atualizarRevisao(rev.id, {
       contexto_organizacional: form.contexto_organizacional || null,
@@ -220,7 +225,7 @@ Modalidade: ${modoColeta}.`;
       return;
     }
     const { data, error } = await supabase.functions.invoke("psico-gerar-parecer", {
-      body: { revisao_id: rev.id, confirmar_substituicao: hasOpinion },
+      body: { revisao_id: rev.id, confirmar_substituicao: substituir },
     });
     setGeneratingOpinion(false);
     if (error || !data?.parecer) { toast.error(data?.error || error?.message || "Não foi possível gerar a minuta"); return; }
