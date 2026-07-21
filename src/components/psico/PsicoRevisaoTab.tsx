@@ -253,7 +253,15 @@ Modalidade: ${modoColeta}.`;
     setGeneratingOpinion(false);
     if (error || !data?.parecer) { toast.error(data?.error || error?.message || "Não foi possível gerar a minuta"); return; }
     setParecer(data.parecer);
-    toast.success("Minuta gerada. Revise e salve antes de aprovar.");
+    if (data.cabecalho) {
+      setForm((f: any) => ({
+        ...f,
+        contexto_organizacional: data.cabecalho.contexto_organizacional ?? f.contexto_organizacional,
+        limitacoes: data.cabecalho.limitacoes ?? f.limitacoes,
+        recomendacao_geral: data.cabecalho.recomendacao_geral ?? f.recomendacao_geral,
+      }));
+    }
+    toast.success("Revisão preenchida pela IA. Revise antes de aprovar.");
     load();
   }
 
@@ -443,20 +451,18 @@ Modalidade: ${modoColeta}.`;
       )}
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Cabeçalho técnico</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between gap-2">
+          <div>
+            <CardTitle className="flex items-center gap-2"><FileSignature className="h-4 w-4" /> Responsável técnico e assinatura</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">Dados de responsabilidade técnica que serão congelados ao aprovar.</p>
+          </div>
           {!readOnly && (
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={preencherAutomaticamente} disabled={!ctxDados}>
-                <Sparkles className="h-4 w-4 mr-2" /> Preencher automaticamente
-              </Button>
-              <Button size="sm" onClick={salvarCabecalho} disabled={saving}>
-                <Save className="h-4 w-4 mr-2" /> Salvar
-              </Button>
-            </div>
+            <Button size="sm" variant="outline" onClick={salvarCabecalho} disabled={saving}>
+              <Save className="h-4 w-4 mr-2" /> Salvar responsável
+            </Button>
           )}
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
+        <CardContent className="space-y-3">
           <div>
             <Label>Responsável técnico *</Label>
             <Select value={form.responsavel_tecnico_id || ""} onValueChange={(v) => setForm({ ...form, responsavel_tecnico_id: v })} disabled={readOnly}>
@@ -470,69 +476,73 @@ Modalidade: ${modoColeta}.`;
                 Assinado por: <b>{rev.responsavel_snapshot.nome}</b> · {rev.responsavel_snapshot.cargo}
               </p>
             )}
-            {!readOnly && form.responsavel_tecnico_id && (
-              <div className="mt-3 rounded-md border p-3 space-y-2">
-                <div className="flex items-center gap-2 text-sm font-medium"><FileSignature className="h-4 w-4" /> Assinatura no relatório</div>
-                <p className="text-xs text-muted-foreground">A imagem é opcional, privada e será congelada como referência quando a revisão for aprovada.</p>
-                <div className="flex flex-wrap gap-2">
-                  <Button type="button" size="sm" variant="outline" disabled={uploadingSignature} onClick={() => configurarAssinatura("em_branco")}>Deixar espaço em branco</Button>
-                  <Label className="inline-flex h-9 cursor-pointer items-center rounded-md border border-input bg-background px-3 text-sm hover:bg-accent">
-                    <Upload className="mr-2 h-4 w-4" /> Enviar PNG/JPG
-                    <Input className="sr-only" type="file" accept="image/png,image/jpeg" disabled={uploadingSignature}
-                      onChange={(event) => { const file = event.target.files?.[0]; if (file) configurarAssinatura("imagem", file); event.target.value = ""; }} />
-                  </Label>
-                </div>
-                {(() => {
-                  const selected = profiles.find((profile) => profile.id === form.responsavel_tecnico_id);
-                  return selected ? <p className="text-xs text-muted-foreground">Modo atual: <b>{selected.assinatura_modo === "imagem" && selected.assinatura_ativa ? `imagem (${selected.assinatura_nome_arquivo || "arquivo protegido"})` : "em branco"}</b></p> : null;
-                })()}
+          </div>
+          {!readOnly && form.responsavel_tecnico_id && (
+            <div className="rounded-md border p-3 space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium"><FileSignature className="h-4 w-4" /> Assinatura no relatório</div>
+              <p className="text-xs text-muted-foreground">A imagem é opcional, privada e será congelada como referência quando a revisão for aprovada.</p>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" size="sm" variant="outline" disabled={uploadingSignature} onClick={() => configurarAssinatura("em_branco")}>Deixar espaço em branco</Button>
+                <Label className="inline-flex h-9 cursor-pointer items-center rounded-md border border-input bg-background px-3 text-sm hover:bg-accent">
+                  <Upload className="mr-2 h-4 w-4" /> Enviar PNG/JPG
+                  <Input className="sr-only" type="file" accept="image/png,image/jpeg" disabled={uploadingSignature}
+                    onChange={(event) => { const file = event.target.files?.[0]; if (file) configurarAssinatura("imagem", file); event.target.value = ""; }} />
+                </Label>
               </div>
-            )}
-          </div>
-          <div className="md:col-span-2">
-            <Label>Contexto organizacional</Label>
-            <Textarea rows={3} value={form.contexto_organizacional} disabled={readOnly}
-              onChange={(e) => setForm({ ...form, contexto_organizacional: e.target.value })}
-              placeholder="Descreva contexto relevante (mudanças recentes, sazonalidade, reestruturações etc.)" />
-          </div>
-          <div className="md:col-span-2">
-            <Label>Limitações do estudo *</Label>
-            <Textarea rows={2} value={form.limitacoes} disabled={readOnly}
-              onChange={(e) => setForm({ ...form, limitacoes: e.target.value })}
-              placeholder="Ex.: baixa adesão em determinada unidade, período curto de coleta…" />
-          </div>
-          <div className="md:col-span-2">
-            <Label>Recomendação geral</Label>
-            <Textarea rows={3} value={form.recomendacao_geral} disabled={readOnly}
-              onChange={(e) => setForm({ ...form, recomendacao_geral: e.target.value })} />
-          </div>
-          <div className="md:col-span-2">
-            <Label>Observações internas <span className="text-xs text-muted-foreground">(não sai no relatório)</span></Label>
-            <Textarea rows={2} value={form.observacoes_internas} disabled={readOnly}
-              onChange={(e) => setForm({ ...form, observacoes_internas: e.target.value })} />
-          </div>
+              {(() => {
+                const selected = profiles.find((profile) => profile.id === form.responsavel_tecnico_id);
+                return selected ? <p className="text-xs text-muted-foreground">Modo atual: <b>{selected.assinatura_modo === "imagem" && selected.assinatura_ativa ? `imagem (${selected.assinatura_nome_arquivo || "arquivo protegido"})` : "em branco"}</b></p> : null;
+              })()}
+            </div>
+          )}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <CardTitle>Parecer técnico conclusivo</CardTitle>
+            <div>
+              <CardTitle>Revisão técnica automatizada</CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">Contexto, limitações, recomendação geral e parecer conclusivo — tudo em um único fluxo.</p>
+            </div>
             {!readOnly && <div className="flex flex-wrap gap-2">
-              <Button type="button" size="sm" variant="outline" onClick={gerarParecerIa} disabled={generatingOpinion}>
-                <Sparkles className="mr-2 h-4 w-4" /> {generatingOpinion ? "Gerando…" : "Gerar minuta com IA"}
+              <Button type="button" size="sm" variant="outline" onClick={preencherAutomaticamente} disabled={!ctxDados}>
+                <Sparkles className="h-4 w-4 mr-2" /> Contexto automático
               </Button>
-              <Button type="button" size="sm" onClick={() => salvarParecer()} disabled={saving}>
-                <Save className="mr-2 h-4 w-4" /> Salvar parecer
+              <Button type="button" size="sm" onClick={gerarParecerIa} disabled={generatingOpinion}>
+                <Sparkles className="mr-2 h-4 w-4" /> {generatingOpinion ? "Gerando…" : "Gerar tudo com IA"}
+              </Button>
+              <Button type="button" size="sm" variant="secondary" onClick={async () => { await salvarCabecalho(); await salvarParecer(); }} disabled={saving}>
+                <Save className="mr-2 h-4 w-4" /> Salvar revisão
               </Button>
             </div>}
           </div>
           <Alert>
             <Info className="h-4 w-4" />
-            <AlertDescription>Texto sugerido por inteligência artificial. Revisão e aprovação técnica humanas são obrigatórias. Somente o parecer aprovado integra o relatório.</AlertDescription>
+            <AlertDescription>Textos sugeridos por inteligência artificial. Revisão e aprovação técnica humanas são obrigatórias. Somente o conteúdo aprovado integra o relatório.</AlertDescription>
           </Alert>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div>
+            <Label>Contexto organizacional</Label>
+            <Textarea rows={3} value={form.contexto_organizacional} disabled={readOnly}
+              onChange={(e) => setForm({ ...form, contexto_organizacional: e.target.value })}
+              placeholder="Descreva contexto relevante (mudanças recentes, sazonalidade, reestruturações etc.)" />
+          </div>
+          <div>
+            <Label>Limitações do estudo *</Label>
+            <Textarea rows={2} value={form.limitacoes} disabled={readOnly}
+              onChange={(e) => setForm({ ...form, limitacoes: e.target.value })}
+              placeholder="Ex.: baixa adesão em determinada unidade, período curto de coleta…" />
+          </div>
+          <div>
+            <Label>Recomendação geral</Label>
+            <Textarea rows={3} value={form.recomendacao_geral} disabled={readOnly}
+              onChange={(e) => setForm({ ...form, recomendacao_geral: e.target.value })} />
+          </div>
+          <div className="border-t pt-4">
+            <div className="text-sm font-semibold mb-2">Parecer conclusivo</div>
+          </div>
           {[
             ["sintese_resultados", "Síntese dos resultados", "Apresente participação, índice descritivo, fatores significativos e prioridades calculadas."],
             ["interpretacao_integrada", "Interpretação integrada", "Relacione os achados coletivos ao contexto informado, sem afirmar causalidade."],
@@ -547,6 +557,11 @@ Modalidade: ${modoColeta}.`;
               placeholder={placeholder}
               onChange={(event) => setParecer((current) => ({ ...current, [key]: event.target.value }))} />
           </div>)}
+          <div>
+            <Label>Observações internas <span className="text-xs text-muted-foreground">(não sai no relatório)</span></Label>
+            <Textarea rows={2} value={form.observacoes_internas} disabled={readOnly}
+              onChange={(e) => setForm({ ...form, observacoes_internas: e.target.value })} />
+          </div>
           {parecerHistory.length > 0 && <details className="rounded-md border p-3">
             <summary className="cursor-pointer text-sm font-medium inline-flex items-center gap-2"><History className="h-4 w-4" /> Histórico do parecer ({parecerHistory.length})</summary>
             <div className="mt-3 space-y-2">
