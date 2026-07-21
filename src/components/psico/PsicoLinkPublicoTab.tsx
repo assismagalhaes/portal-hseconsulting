@@ -44,6 +44,13 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
   const [campos, setCampos] = useState<CamposIdent>({ ...DEFAULT_CAMPOS, ...(av?.campos_identificacao || {}) });
   const [registrar, setRegistrar] = useState<boolean>(!!av?.registrar_participacao);
   const [saving, setSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+
+  // Mantém o estado local sincronizado quando `av` é recarregado pelo pai.
+  useEffect(() => {
+    setCampos({ ...DEFAULT_CAMPOS, ...(av?.campos_identificacao || {}) });
+    setRegistrar(!!av?.registrar_participacao);
+  }, [av?.id, av?.campos_identificacao, av?.registrar_participacao]);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [participantes, setParticipantes] = useState<{ nome: string; created_at: string }[]>([]);
   const [totalRespostas, setTotalRespostas] = useState<number>(0);
@@ -153,15 +160,19 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
     setConfirmarRotacao(true);
   }
 
-  async function salvarConfig() {
+  async function persistirConfig(next: { campos: CamposIdent; registrar: boolean }, opts?: { silencioso?: boolean }) {
     setSaving(true);
     const { error } = await supabase.from("psico_avaliacoes")
-      .update({ campos_identificacao: campos, registrar_participacao: registrar })
+      .update({ campos_identificacao: next.campos, registrar_participacao: next.registrar })
       .eq("id", av.id);
     setSaving(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("Configuração salva");
+    setSavedAt(new Date());
+    if (!opts?.silencioso) toast.success("Configuração salva");
     onReload();
+  }
+  async function salvarConfig() {
+    await persistirConfig({ campos, registrar });
   }
 
   function copiarLink() {
@@ -184,14 +195,25 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
   }
 
   function toggleCampo(k: keyof CamposIdent, chave: "ativo" | "obrigatorio") {
-    setCampos((c) => ({
-      ...c,
-      [k]: {
-        ...c[k],
-        [chave]: !c[k][chave],
-        ...(chave === "ativo" && c[k].ativo ? { obrigatorio: false } : {}),
-      },
-    }));
+    setCampos((c) => {
+      const atual = c[k];
+      const proximo: CampoCfg = {
+        ...atual,
+        [chave]: !atual[chave],
+        ...(chave === "ativo" && atual.ativo ? { obrigatorio: false } : {}),
+      };
+      const next = { ...c, [k]: proximo };
+      // Auto-save para evitar perda de configuração caso o usuário esqueça de clicar em "Salvar".
+      const nextRegistrar = k === "nome" && chave === "ativo" && !proximo.ativo ? false : registrar;
+      if (k === "nome" && chave === "ativo" && !proximo.ativo) setRegistrar(false);
+      void persistirConfig({ campos: next, registrar: nextRegistrar }, { silencioso: true });
+      return next;
+    });
+  }
+
+  function toggleRegistrar(v: boolean) {
+    setRegistrar(v);
+    void persistirConfig({ campos, registrar: v }, { silencioso: true });
   }
 
   if (modo !== "publico_anonimo") {
@@ -319,10 +341,13 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
                 Guarda apenas o nome de quem respondeu, em tabela separada das respostas. Serve para saber quem já participou. Desative para anonimato absoluto.
               </div>
             </div>
-            <Switch checked={registrar} onCheckedChange={setRegistrar} disabled={!campos.nome.ativo} />
+            <Switch checked={registrar} onCheckedChange={toggleRegistrar} disabled={!campos.nome.ativo} />
           </div>
-          <div className="flex justify-end">
-            <Button onClick={salvarConfig} disabled={saving}>Salvar configuração</Button>
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-xs text-muted-foreground">
+              {saving ? "Salvando..." : savedAt ? `Salvo automaticamente às ${savedAt.toLocaleTimeString()}` : "As alterações são salvas automaticamente."}
+            </span>
+            <Button variant="outline" size="sm" onClick={salvarConfig} disabled={saving}>Salvar novamente</Button>
           </div>
         </CardContent>
       </Card>
