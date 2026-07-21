@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const PROMPT_CODE = "HSE-PSICO-IA-PARECER-1.0";
+const PROMPT_CODE = "HSE-PSICO-IA-PARECER-1.1";
 const DEFAULT_MODEL = "google/gemini-3-flash-preview";
 const REQUIRED_KEYS = [
   "sintese_resultados",
@@ -15,6 +15,11 @@ const REQUIRED_KEYS = [
   "recomendacoes",
   "limitacoes",
   "conclusao",
+] as const;
+const HEADER_KEYS = [
+  "contexto_organizacional",
+  "limitacoes_estudo",
+  "recomendacao_geral",
 ] as const;
 
 function json(body: unknown, status = 200) {
@@ -31,12 +36,14 @@ function parseStructuredContent(raw: string): Record<string, string> {
   if (start < 0 || end <= start) throw new Error("IA_RESPOSTA_SEM_JSON");
   const parsed = JSON.parse(cleaned.slice(start, end + 1));
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("IA_ESTRUTURA_INVALIDA");
-  for (const key of REQUIRED_KEYS) {
+  for (const key of [...REQUIRED_KEYS, ...HEADER_KEYS]) {
     if (typeof parsed[key] !== "string" || parsed[key].trim().length < 20) {
       throw new Error(`IA_CAMPO_INVALIDO:${key}`);
     }
   }
-  return Object.fromEntries(REQUIRED_KEYS.map((key) => [key, parsed[key].trim()]));
+  return Object.fromEntries(
+    [...REQUIRED_KEYS, ...HEADER_KEYS].map((key) => [key, parsed[key].trim()]),
+  );
 }
 
 const systemPrompt = `Você atua como assistente especializada em fatores psicossociais relacionados ao trabalho, psicologia organizacional e do trabalho, ergonomia organizacional, saúde e segurança do trabalho e gerenciamento de riscos ocupacionais.
@@ -56,8 +63,13 @@ Regras obrigatórias:
 - Mencione verificação de eficácia, responsabilidade da empresa e integração com AEP, Inventário de Riscos e Plano de Ação do PGR, conforme aplicável.
 - Esclareça que os resultados são coletivos, o questionário não constitui diagnóstico e a implementação compete à empresa, salvo contratação específica.
 
+Você também deve compor três campos de CABEÇALHO técnico (todos obrigatórios, mínimo 20 caracteres cada):
+- "contexto_organizacional": descreva o contexto factual da avaliação (cliente, unidade, período, participantes previstos vs. respondentes, modalidade de coleta), extraído do contexto estruturado fornecido. Objetivo, sem interpretação.
+- "limitacoes_estudo": registre limites metodológicos observáveis (adesão, supressão por sigilo NR-01, natureza autorrelatada, coleta anônima quando aplicável).
+- "recomendacao_geral": recomendação-síntese objetiva integrando o resultado ao ciclo PGR (NR-01) — 2 a 4 frases.
+
 Retorne SOMENTE JSON válido, sem markdown, exatamente com as chaves:
-{"sintese_resultados":"...","interpretacao_integrada":"...","prioridades_intervencao":"...","recomendacoes":"...","limitacoes":"...","conclusao":"..."}`;
+{"contexto_organizacional":"...","limitacoes_estudo":"...","recomendacao_geral":"...","sintese_resultados":"...","interpretacao_integrada":"...","prioridades_intervencao":"...","recomendacoes":"...","limitacoes":"...","conclusao":"..."}`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -116,7 +128,21 @@ Deno.serve(async (req) => {
     }
 
     const aiData = await aiResponse.json();
-    const parecer = parseStructuredContent(String(aiData?.choices?.[0]?.message?.content ?? ""));
+    const full = parseStructuredContent(String(aiData?.choices?.[0]?.message?.content ?? ""));
+    const parecer = Object.fromEntries(REQUIRED_KEYS.map((k) => [k, full[k]]));
+    const cabecalho = {
+      contexto_organizacional: full.contexto_organizacional,
+      limitacoes: full.limitacoes_estudo,
+      recomendacao_geral: full.recomendacao_geral,
+    };
+
+    // Persist header fields (ignore silently if column set differs; parecer is the critical part)
+    const { error: headerError } = await userClient
+      .from("psico_revisoes_tecnicas")
+      .update(cabecalho)
+      .eq("id", revisaoId);
+    if (headerError) console.warn("[psico-gerar-parecer] cabeçalho não salvo:", headerError.message);
+
     const { data: saved, error: saveError } = await userClient.rpc("psico_salvar_parecer_conclusivo", {
       p_revisao_id: revisaoId,
       p_parecer: parecer,
@@ -126,7 +152,14 @@ Deno.serve(async (req) => {
     });
     if (saveError) return json({ error: "PARECER_NAO_SALVO", detalhe: saveError.message }, 400);
 
-    return json({ ok: true, parecer, prompt_codigo: PROMPT_CODE, modelo: model, versao: saved?.versao });
+    return json({
+      ok: true,
+      parecer,
+      cabecalho,
+      prompt_codigo: PROMPT_CODE,
+      modelo: model,
+      versao: saved?.versao,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("[psico-gerar-parecer]", { code: message.split(":")[0] });
