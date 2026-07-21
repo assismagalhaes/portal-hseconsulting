@@ -9261,6 +9261,15 @@ export type Database = {
         Returns: Json
       }
       psico_admin_correcao_ativa: { Args: never; Returns: boolean }
+      psico_aplicar_plano_ia: {
+        Args: {
+          p_modelo_ia?: string
+          p_prompt_codigo?: string
+          p_revisao_id: string
+          p_selecoes: Json
+        }
+        Returns: Json
+      }
       psico_aprovar_revisao_tecnica: {
         Args: { p_confirmacao: string; p_revisao_id: string }
         Returns: Json
@@ -9479,6 +9488,10 @@ export type Database = {
         Returns: Json
       }
       psico_obter_contexto_parecer_ia: {
+        Args: { p_revisao_id: string }
+        Returns: Json
+      }
+      psico_obter_contexto_plano_ia: {
         Args: { p_revisao_id: string }
         Returns: Json
       }
