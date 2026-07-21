@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const PROMPT_CODE = "HSE-PSICO-IA-PLANO-1.1";
+const PROMPT_CODE = "HSE-PSICO-IA-PLANO-1.2";
 const DEFAULT_MODEL = "google/gemini-3-flash-preview";
 
 function json(body: unknown, status = 200) {
@@ -30,12 +30,20 @@ Camadas do plano (obrigatório equilibrar níveis):
 - Sempre que o catálogo permitir, complemente com medidas "estruturante" (governança/processo) e/ou "complementar" (sustentação/cultura), especialmente em prioridade crítica/alta. Evite planos 100% "essencial": um plano maduro tem camadas essencial → estruturante → complementar.
 - Proporcionalidade: prioridade crítica/alta pode receber 2 a 3 medidas; média 1 a 2; monitoramento no máximo 1.
 
-Prazos ESCALONADOS (evite prazo uniforme para todos os críticos — é irrealista executar tudo em 30 dias):
-- Comunicação, jornada/pausas e clareza de papéis (quick wins): 30 dias.
-- Liderança, conflitos/respeito e participação/autonomia (envolvem treinamento e mediação): 60 dias.
-- Organização do trabalho, gestão de mudanças e reestruturações de processo (envolvem redesenho): 90 dias.
-- Prioridade "alta" segue a mesma lógica somando 30 dias; "media" 90; "monitoramento" 180.
-- Ajuste apenas com justificativa técnica explícita.
+Horizonte do plano — CICLO PGR DE 12 MESES (obrigatório):
+- O plano é integrado ao PGR (NR-01) e deve ser planejado para execução ao longo de 12 meses (365 dias).
+- Distribua as medidas em ondas escalonadas cobrindo o ano inteiro; NÃO concentre tudo nos primeiros 30–90 dias.
+- "prazo_dias" é a data-limite de implementação/entrega da medida, contada a partir de hoje. Faixas de referência:
+  * Onda 1 — Quick wins e comunicação inicial: 30 a 60 dias.
+  * Onda 2 — Capacitação de líderes, mediação de conflitos, clareza de papéis: 90 a 120 dias.
+  * Onda 3 — Redesenho de processos, organização do trabalho, gestão de mudanças: 150 a 210 dias.
+  * Onda 4 — Consolidação, cultura, governança contínua e reavaliação: 240 a 365 dias.
+- Toda medida "complementar" e a maior parte das "estruturantes" devem cair nas Ondas 3 ou 4.
+- Medidas de monitoramento preventivo devem se posicionar entre 270 e 365 dias (revisão dentro do ciclo anual).
+- Prioridade "crítica" tende ao início de cada onda; "alta" ao meio; "média" ao final; "monitoramento" sempre na Onda 4.
+- Quando houver 4 ou mais medidas selecionadas, o conjunto final de "prazo_dias" deve cobrir pelo menos 3 das 4 ondas.
+- Um plano concentrado só em 30–60 dias é considerado incorreto: rebalanceie antes de responder.
+- Ajuste de faixa apenas com justificativa técnica explícita (ex.: risco iminente que exige antecipação).
 
 Indicadores SMART com META NUMÉRICA (obrigatório):
 - "indicador_sugerido" deve conter meta quantificável e verificável. Exemplos: "≥ 90% dos líderes treinados em 60 dias", "≥ 1 reunião de alinhamento/mês por equipe", "100% das descrições de cargo revisadas até o prazo", "redução de ≥ 30% nas mediações reabertas em 6 meses".
