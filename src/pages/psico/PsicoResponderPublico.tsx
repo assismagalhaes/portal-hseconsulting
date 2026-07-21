@@ -110,10 +110,23 @@ export default function PsicoResponderPublico() {
     return null;
   }
 
-  function iniciar() {
+  const [verificando, setVerificando] = useState(false);
+  async function iniciar() {
     const e = validarIdentificacao();
     if (e) { setErro(e); return; }
     setErro(null);
+    // Verifica duplicidade pelo nome logo aqui, economizando tempo do respondente
+    if (cfg.nome?.ativo && ident.nome.trim().length >= 2) {
+      setVerificando(true);
+      try {
+        const { data } = await supabase.functions.invoke("psico-responder-publico", {
+          body: { action: "verificar_duplicado", token, identificacao: { nome: ident.nome } },
+        });
+        const d = data as any;
+        if (d?.duplicado) { setVerificando(false); setFase("ja_respondido"); return; }
+      } catch { /* segue fluxo mesmo se a checagem falhar */ }
+      setVerificando(false);
+    }
     setFase("intro");
   }
 
@@ -215,7 +228,9 @@ export default function PsicoResponderPublico() {
                 </div>
               )}
               {erro && <div className="text-sm text-destructive">{erro}</div>}
-              <Button className="w-full" onClick={iniciar}>Continuar</Button>
+              <Button className="w-full" onClick={iniciar} disabled={verificando}>
+                {verificando ? "Verificando…" : "Continuar"}
+              </Button>
             </CardContent></Card>
           </div>
         )}
