@@ -41,6 +41,48 @@ function previewSnapshotError(stage: string, error: SnapshotRpcError) {
   return failure;
 }
 
+// Sanitização em TS: remove chaves privadas do snapshot sem cair na RPC
+// recursiva de plpgsql (que é O(n²) por causa da concatenação `||` em jsonb
+// e provocava CPU Time exceeded no edge runtime).
+const FORBIDDEN_KEYS = new Set([
+  "nome","nome_completo","email","telefone","celular","matricula","cpf","rg",
+  "participante_id","convite_id","public_id","token","resposta_id",
+  "respondente","respondentes","participantes_lista","pendentes_lista","lista_nominal",
+  "ip","ip_address","user_agent","fingerprint",
+  "respostas","respostas_brutas","resposta","data_resposta","hora_resposta",
+  "respondido_em","submetido_em","observacoes_privadas",
+]);
+const RESPONSAVEL_ALLOWED = new Set([
+  "nome_responsavel","cargo","registro_profissional","aprovado_em",
+  "assinatura_modo","assinatura_storage_path","assinatura_mime_type","assinatura_hash_sha256",
+]);
+
+function sanitizeSnapshot(value: unknown): unknown {
+  if (value === null || value === undefined) return value;
+  if (Array.isArray(value)) return value.map(sanitizeSnapshot);
+  if (typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (k === "responsavel" && v && typeof v === "object" && !Array.isArray(v)) {
+        const src = v as Record<string, unknown>;
+        const safe: Record<string, unknown> = {};
+        for (const key of RESPONSAVEL_ALLOWED) {
+          const val = key === "nome_responsavel"
+            ? (src.nome_responsavel ?? src.nome)
+            : src[key];
+          if (val !== null && val !== undefined && val !== "") safe[key] = val;
+        }
+        out[k] = sanitizeSnapshot(safe);
+        continue;
+      }
+      if (FORBIDDEN_KEYS.has(k)) continue;
+      out[k] = sanitizeSnapshot(v);
+    }
+    return out;
+  }
+  return value;
+}
+
 // ============================================================================
 // HANDLER
 // ============================================================================
@@ -151,12 +193,9 @@ Deno.serve(async (req) => {
       if (conteudo.error || !conteudo.data) {
         throw previewSnapshotError("psico_obter_conteudo_aprovado_relatorio", conteudo.error);
       }
-      const sanitizado = await admin.rpc("psico_sanitize_snapshot", { p_data: conteudo.data });
-      if (sanitizado.error || !sanitizado.data) {
-        throw previewSnapshotError("psico_sanitize_snapshot", sanitizado.error);
-      }
+      const sanitized = sanitizeSnapshot(conteudo.data) as Record<string, unknown>;
       const snapshot = {
-        ...(sanitizado.data as Record<string, unknown>),
+        ...sanitized,
         modelo: { codigo: MODELO_CODIGO, versao: MODELO_VERSAO },
       };
 
