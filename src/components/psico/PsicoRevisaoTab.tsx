@@ -328,7 +328,7 @@ Modalidade: ${modoColeta}.`;
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground max-w-2xl">
-            A revisão técnica traz o tratamento de cada fator (ação recomendada, monitoramento preventivo ou sem ação), a conclusão do responsável técnico e as recomendações. O plano de ação é pré-populado com as medidas sugeridas da biblioteca vigente.
+            A revisão técnica consolida o tratamento por fator (definido na aba <b>Resultados</b>) e o <b>Plano de Ação</b> já elaborado, formalizando o parecer conclusivo, as limitações e a responsabilidade técnica.
           </p>
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => iniciar("rapida")} disabled={creating}>
