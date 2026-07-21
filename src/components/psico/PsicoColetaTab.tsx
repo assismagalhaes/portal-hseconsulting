@@ -74,8 +74,7 @@ export default function PsicoColetaTab({ av, onReload }: { av: any; onReload: ()
   }
   async function handleProrrogar() {
     if (!novaData) return toast.error("Informe a nova data");
-    if (motivoProrrogar.trim().length < 10) return toast.error("Motivo mínimo 10 caracteres");
-    const { error } = await prorrogarColeta(av.id, novaData, motivoProrrogar.trim());
+    const { error } = await prorrogarColeta(av.id, novaData, motivoProrrogar.trim() || "Prorrogação de prazo");
     if (error) return toast.error(error.message);
     toast.success("Prazo prorrogado");
     handleProrrogarOpenChange(false); onReload();
@@ -196,7 +195,7 @@ export default function PsicoColetaTab({ av, onReload }: { av: any; onReload: ()
           <div className="space-y-3 text-sm">
             <div>Prazo atual: <strong>{av.data_fim_prevista ? formatDate(av.data_fim_prevista) : "—"}</strong></div>
             <div><Label>Nova data</Label><Input type="date" value={novaData} onChange={(e) => setNovaData(e.target.value)} /></div>
-            <div><Label>Motivo (mín. 10 caracteres)</Label><Textarea rows={3} value={motivoProrrogar} onChange={(e) => setMotivoProrrogar(e.target.value)} /></div>
+            <div><Label>Motivo (opcional)</Label><Textarea rows={3} value={motivoProrrogar} onChange={(e) => setMotivoProrrogar(e.target.value)} /></div>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => handleProrrogarOpenChange(false)}>Cancelar</Button>
@@ -214,7 +213,7 @@ export default function PsicoColetaTab({ av, onReload }: { av: any; onReload: ()
           </DialogHeader>
           <div className="space-y-3 text-sm max-h-[60vh] overflow-y-auto">
             {openEncerrar && <PreviewEncerramento av={av} />}
-            <Label>Motivo (opcional, mín. 10 caracteres se informado)</Label>
+            <Label>Motivo (opcional)</Label>
             <Textarea rows={2} value={motivoEncerrar} onChange={(e) => setMotivoEncerrar(e.target.value)} />
           </div>
           <DialogFooter>
