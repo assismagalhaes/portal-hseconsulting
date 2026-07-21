@@ -168,7 +168,13 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
   if (loading) return <Card><CardContent className="py-10 text-center text-muted-foreground">Carregando…</CardContent></Card>;
 
   if (!rev) {
-    return <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">Crie a revisão técnica antes de acessar o plano de ação.</CardContent></Card>;
+    return (
+      <Card>
+        <CardContent className="py-10 text-center text-sm text-muted-foreground">
+          Vá até a aba <b>Resultados</b> e clique em <b>"Iniciar tratamento por fator"</b> para habilitar o plano de ação.
+        </CardContent>
+      </Card>
+    );
   }
   if (!plano) {
     return <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">Plano de ação indisponível.</CardContent></Card>;
