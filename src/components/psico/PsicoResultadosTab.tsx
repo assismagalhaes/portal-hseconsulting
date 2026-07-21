@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { AlertCircle, CheckCircle2, Loader2, Play, RefreshCcw } from "lucide-react";
 import { formatDateTime } from "@/lib/format";
 import PsicoDashboardResultados from "@/components/psico/resultados/PsicoDashboardResultados";
+import TratamentoPorFatorCard from "@/components/psico/resultados/TratamentoPorFatorCard";
 
 type Classificacao = "Risco Irrelevante" | "Risco Baixo" | "Risco Médio" | "Risco Alto" | "Risco Crítico";
 type Prioridade = "Monitoramento" | "Média" | "Alta" | "Crítica";
@@ -283,6 +284,10 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
 
       {jaProcessado && (
         <PsicoDashboardResultados avaliacaoId={av.id} />
+      )}
+
+      {jaProcessado && (
+        <TratamentoPorFatorCard av={av} onChange={onReload} />
       )}
 
       {jaProcessado === false && !podeProcessar && (
