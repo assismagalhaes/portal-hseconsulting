@@ -24,8 +24,6 @@ export default function PsicoColetaTab({ av, onReload }: { av: any; onReload: ()
   const [openAbrir, setOpenAbrir] = useState(false);
   const [openProrrogar, setOpenProrrogar] = useState(false);
   const [openEncerrar, setOpenEncerrar] = useState(false);
-  const [confAbrir, setConfAbrir] = useState("");
-  const [confEncerrar, setConfEncerrar] = useState("");
   const [novaData, setNovaData] = useState("");
   const [motivoProrrogar, setMotivoProrrogar] = useState("");
   const [motivoEncerrar, setMotivoEncerrar] = useState("");
@@ -53,7 +51,6 @@ export default function PsicoColetaTab({ av, onReload }: { av: any; onReload: ()
 
   function handleAbrirOpenChange(open: boolean) {
     setOpenAbrir(open);
-    if (!open) setConfAbrir("");
   }
 
   function handleProrrogarOpenChange(open: boolean) {
@@ -66,14 +63,11 @@ export default function PsicoColetaTab({ av, onReload }: { av: any; onReload: ()
 
   function handleEncerrarOpenChange(open: boolean) {
     setOpenEncerrar(open);
-    if (!open) {
-      setConfEncerrar("");
-      setMotivoEncerrar("");
-    }
+    if (!open) setMotivoEncerrar("");
   }
 
   async function handleAbrir() {
-    const { error } = await abrirColeta(av.id, confAbrir.trim());
+    const { error } = await abrirColeta(av.id, `ABRIR ${codigo}`);
     if (error) return toast.error(error.message);
     toast.success("Coleta aberta");
     handleAbrirOpenChange(false); onReload();
@@ -87,7 +81,7 @@ export default function PsicoColetaTab({ av, onReload }: { av: any; onReload: ()
     handleProrrogarOpenChange(false); onReload();
   }
   async function handleEncerrar() {
-    const { error } = await encerrarColeta(av.id, confEncerrar.trim(), motivoEncerrar.trim() || undefined);
+    const { error } = await encerrarColeta(av.id, `ENCERRAR ${codigo}`, motivoEncerrar.trim() || undefined);
     if (error) return toast.error(error.message);
     toast.success("Coleta encerrada");
     handleEncerrarOpenChange(false); onReload();
@@ -187,10 +181,7 @@ export default function PsicoColetaTab({ av, onReload }: { av: any; onReload: ()
               Após a abertura, os participantes poderão acessar e enviar o questionário. A versão metodológica permanecerá bloqueada.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 text-sm">
-            <div>Digite <span className="font-mono font-semibold">ABRIR {codigo}</span> para confirmar:</div>
-            <Input value={confAbrir} onChange={(e) => setConfAbrir(e.target.value)} placeholder={`ABRIR ${codigo}`} />
-          </div>
+          <div className="text-sm text-muted-foreground">Confirme para abrir a coleta.</div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => handleAbrirOpenChange(false)}>Cancelar</Button>
             <Button onClick={handleAbrir}>Abrir coleta</Button>
@@ -223,8 +214,6 @@ export default function PsicoColetaTab({ av, onReload }: { av: any; onReload: ()
           </DialogHeader>
           <div className="space-y-3 text-sm max-h-[60vh] overflow-y-auto">
             {openEncerrar && <PreviewEncerramento av={av} />}
-            <div>Digite <span className="font-mono font-semibold">ENCERRAR {codigo}</span>:</div>
-            <Input value={confEncerrar} onChange={(e) => setConfEncerrar(e.target.value)} placeholder={`ENCERRAR ${codigo}`} />
             <Label>Motivo (opcional, mín. 10 caracteres se informado)</Label>
             <Textarea rows={2} value={motivoEncerrar} onChange={(e) => setMotivoEncerrar(e.target.value)} />
           </div>

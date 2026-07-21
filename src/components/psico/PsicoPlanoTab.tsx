@@ -110,11 +110,10 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
 
   async function regenerar() {
     const esperado = `REGENERAR ${av.codigo}`;
-    if (regenText !== esperado) { toast.error(`Digite exatamente: ${esperado}`); return; }
-    const { error } = await regenerarRecomendacoes(rev.id, regenText);
+    const { error } = await regenerarRecomendacoes(rev.id, esperado);
     if (error) { toast.error(error.message); return; }
     toast.success("Recomendações regeneradas (personalizadas preservadas)");
-    setRegenOpen(false); setRegenText(""); load();
+    setRegenOpen(false); load();
   }
 
   async function marcarRevisado() {
@@ -247,14 +246,13 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Regenerar recomendações?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        As ações personalizadas serão preservadas. As geradas automaticamente serão recriadas a partir da biblioteca vigente. Confirme digitando: <b>REGENERAR {av.codigo}</b>
+                    <AlertDialogDescription>
+                        As ações personalizadas serão preservadas. As geradas automaticamente serão recriadas a partir da biblioteca vigente.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <Input value={regenText} onChange={(e) => setRegenText(e.target.value)} placeholder={`REGENERAR ${av.codigo}`} />
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={(e) => { e.preventDefault(); regenerar(); }}>Confirmar</AlertDialogAction>
+                      <AlertDialogAction onClick={(e) => { e.preventDefault(); regenerar(); }}>Sim, regenerar</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
