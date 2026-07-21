@@ -126,11 +126,12 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
 
   async function handlePreview() {
     const previewUrl = `/operacoes/avaliacao-fatores-psicossociais/avaliacoes/${av.id}/relatorio/preview`;
-    const previewWindow = window.open(previewUrl, "_blank", "noopener,noreferrer");
+    const previewWindow = window.open(previewUrl, "_blank");
     if (!previewWindow) {
       toast.error("Permita pop-ups para abrir a prévia do relatório.");
       return;
     }
+    previewWindow.opener = null;
     toast.info("A prévia será carregada na nova aba.");
   }
 
