@@ -127,24 +127,13 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
   }
 
   async function handlePreview() {
-    const previewWindow = window.open("about:blank", "_blank");
+    const previewUrl = `/operacoes/avaliacao-fatores-psicossociais/avaliacoes/${av.id}/relatorio/preview`;
+    const previewWindow = window.open(previewUrl, "_blank", "noopener,noreferrer");
     if (!previewWindow) {
       toast.error("Permita pop-ups para abrir a prévia do relatório.");
       return;
     }
-    previewWindow.opener = null;
-    setVisualizando(true);
-    const { blob, error } = await previewRelatorio(av.id);
-    setVisualizando(false);
-    if (error || !blob) {
-      previewWindow.close();
-      const mensagem = error instanceof Error ? error.message : "ERRO_RENDERIZACAO";
-      toast.error(traduzirErroEmissao(mensagem));
-      return;
-    }
-    const url = URL.createObjectURL(blob);
-    previewWindow.location.href = url;
-    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    toast.info("A prévia será carregada na nova aba.");
   }
 
   async function handleRevogar() {
