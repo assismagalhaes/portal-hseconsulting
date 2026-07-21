@@ -619,9 +619,14 @@ Modalidade: ${modoColeta}.`;
                           )}
                         </div>
                         <div className="mt-1 text-xs text-muted-foreground">
-                          {it.responsavel ? <>Responsável: <b>{it.responsavel}</b></> : "Sem responsável"}
+                          {(() => {
+                            const resp = it.responsavel_definido || it.responsaveis_sugeridos;
+                            return resp ? <>Responsável: <b>{resp}</b></> : "Sem responsável";
+                          })()}
                           {" · "}
-                          {it.prazo ? <>Prazo: <b>{formatDate(it.prazo)}</b></> : "Sem prazo"}
+                          {it.prazo_sugerido_dias
+                            ? <>Prazo: <b>{it.prazo_sugerido_dias} dias</b></>
+                            : (it.prazo_sugerido_texto ? <>Prazo: <b>{it.prazo_sugerido_texto}</b></> : "Sem prazo")}
                         </div>
                       </li>
                     ))}
