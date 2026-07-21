@@ -510,12 +510,7 @@ Modalidade: ${modoColeta}.`;
             <div className="mt-3 space-y-2">
               {parecerHistory.map((version) => <div key={version.id} className="flex flex-wrap items-center justify-between gap-2 rounded bg-muted/50 p-2 text-xs">
                 <span>Versão {version.numero} · {version.origem} · {formatDateTime(version.criado_em)}{version.prompt_codigo ? ` · ${version.prompt_codigo}` : ""}</span>
-                {!readOnly && <Button size="sm" variant="ghost" onClick={() => {
-                  if (window.confirm(`Restaurar a versão ${version.numero}? A versão atual continuará no histórico.`)) {
-                    setParecer(version.conteudo);
-                    salvarParecer("restaurado", version.conteudo);
-                  }
-                }}>Restaurar</Button>}
+                {!readOnly && <Button size="sm" variant="ghost" onClick={() => setRestoreVersion(version)}>Restaurar</Button>}
               </div>)}
             </div>
           </details>}
@@ -594,6 +589,42 @@ Modalidade: ${modoColeta}.`;
       <p className="text-[11px] text-muted-foreground border-t pt-2">
         A revisão não altera resultados matemáticos calculados. Apenas registra o tratamento técnico, a conclusão e as recomendações do responsável.
       </p>
+
+      <AlertDialog open={regenOpen} onOpenChange={setRegenOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Gerar nova minuta com IA?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Uma nova versão será gerada e substituirá o texto atual dos seis campos do parecer. A versão anterior é preservada no histórico para comparação e restauração.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setRegenOpen(false); void executarGeracaoParecer(true); }}>
+              Sim, gerar nova
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!restoreVersion} onOpenChange={(open) => !open && setRestoreVersion(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restaurar versão {restoreVersion?.numero}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O conteúdo desta versão substituirá o parecer atual. A versão em uso agora continuará disponível no histórico.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              const v = restoreVersion;
+              setRestoreVersion(null);
+              if (v) { setParecer(v.conteudo); salvarParecer("restaurado", v.conteudo); }
+            }}>Sim, restaurar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
