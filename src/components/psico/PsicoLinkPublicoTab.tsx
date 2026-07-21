@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Copy, RefreshCw, Link2, Users, Eye, EyeOff, QrCode } from "lucide-react";
+import { Copy, RefreshCw, Link2, Users, Eye, EyeOff, QrCode, Download, Radio } from "lucide-react";
 import QRCode from "qrcode";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip as RTooltip, CartesianGrid, LabelList } from "recharts";
 
 type CampoCfg = { ativo: boolean; obrigatorio: boolean };
 type CamposIdent = { nome: CampoCfg; funcao: CampoCfg; setor: CampoCfg; unidade: CampoCfg };
@@ -36,6 +37,9 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [participantes, setParticipantes] = useState<{ nome: string; created_at: string }[]>([]);
   const [totalRespostas, setTotalRespostas] = useState<number>(0);
+  const [respostas, setRespostas] = useState<Array<{ id: string; funcao: string | null; setor: string | null; unidade: string | null; funcao_normalizada: string | null; setor_normalizada: string | null; unidade_normalizada: string | null; created_at: string }>>([]);
+  const [realtimeAtivo, setRealtimeAtivo] = useState(false);
+  const [ultimaAtualizacao, setUltimaAtualizacao] = useState<Date | null>(null);
   const [mostrarNomes, setMostrarNomes] = useState(false);
 
   const publicUrl = useMemo(() => {
@@ -49,18 +53,71 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
   }, [publicUrl]);
 
   async function carregarAdesao() {
-    const [{ data: parts, count }, { count: qtdResp }] = await Promise.all([
+    const [{ data: parts }, { count: qtdResp }, { data: resps }] = await Promise.all([
       supabase.from("psico_registro_participacao")
         .select("nome, created_at", { count: "exact" })
         .eq("avaliacao_id", av.id).order("created_at", { ascending: false }).limit(500),
       supabase.from("psico_respostas_publicas")
         .select("id", { count: "exact", head: true })
         .eq("avaliacao_id", av.id),
+      supabase.from("psico_respostas_publicas")
+        .select("id, funcao, setor, unidade, funcao_normalizada, setor_normalizada, unidade_normalizada, created_at")
+        .eq("avaliacao_id", av.id)
+        .order("created_at", { ascending: false })
+        .limit(2000),
     ]);
     setParticipantes((parts || []) as any);
     setTotalRespostas(qtdResp || 0);
+    setRespostas((resps || []) as any);
+    setUltimaAtualizacao(new Date());
   }
   useEffect(() => { if (modo === "publico_anonimo") carregarAdesao(); }, [modo, av?.id]);
+
+  // Fase 4 — Realtime: escuta inserts em psico_respostas_publicas e psico_registro_participacao.
+  useEffect(() => {
+    if (modo !== "publico_anonimo" || !av?.id) return;
+    const channel = supabase
+      .channel(`psico-adesao-${av.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "psico_respostas_publicas", filter: `avaliacao_id=eq.${av.id}` }, () => carregarAdesao())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "psico_registro_participacao", filter: `avaliacao_id=eq.${av.id}` }, () => carregarAdesao())
+      .subscribe((status) => setRealtimeAtivo(status === "SUBSCRIBED"));
+    return () => { supabase.removeChannel(channel); setRealtimeAtivo(false); };
+  }, [modo, av?.id]);
+
+  // Agregações por dimensão (usa rótulo original quando disponível, senão normalizado).
+  const agregados = useMemo(() => {
+    function agg(dim: "funcao" | "setor" | "unidade") {
+      const map = new Map<string, { rotulo: string; total: number }>();
+      for (const r of respostas) {
+        const norm = (r as any)[`${dim}_normalizada`] as string | null;
+        const rot = ((r as any)[dim] as string | null) || norm || "Não informado";
+        const key = norm || "__na__";
+        const cur = map.get(key) || { rotulo: rot, total: 0 };
+        cur.total += 1;
+        map.set(key, cur);
+      }
+      return Array.from(map.values()).sort((a, b) => b.total - a.total);
+    }
+    return { funcao: agg("funcao"), setor: agg("setor"), unidade: agg("unidade") };
+  }, [respostas]);
+
+  function exportarCsv() {
+    const header = ["created_at", "funcao", "setor", "unidade"];
+    const linhas = respostas.map((r) => [
+      new Date(r.created_at).toISOString(),
+      (r.funcao || "").replace(/"/g, '""'),
+      (r.setor || "").replace(/"/g, '""'),
+      (r.unidade || "").replace(/"/g, '""'),
+    ]);
+    const csv = [header, ...linhas].map((row) => row.map((c) => `"${c}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `adesao-${av.codigo || av.id}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   async function ativarModoPublico() {
     setSaving(true);
@@ -215,8 +272,20 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2"><Users className="h-4 w-4" /> Adesão</CardTitle>
-          <Button size="sm" variant="ghost" onClick={carregarAdesao}><RefreshCw className="h-3 w-3 mr-1" /> Atualizar</Button>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-4 w-4" /> Adesão em tempo real
+            {realtimeAtivo && (
+              <Badge variant="outline" className="ml-2 border-emerald-400 text-emerald-600 gap-1 text-[10px]">
+                <Radio className="h-3 w-3 animate-pulse" /> Ao vivo
+              </Badge>
+            )}
+          </CardTitle>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={exportarCsv} disabled={respostas.length === 0}>
+              <Download className="h-3 w-3 mr-1" /> Exportar CSV
+            </Button>
+            <Button size="sm" variant="ghost" onClick={carregarAdesao}><RefreshCw className="h-3 w-3 mr-1" /> Atualizar</Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-3 gap-3 text-center">
@@ -235,6 +304,37 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
               <div className="text-xs text-muted-foreground">Adesão</div>
             </div>
           </div>
+
+          {ultimaAtualizacao && (
+            <div className="text-[10px] text-muted-foreground text-right">
+              Última atualização: {ultimaAtualizacao.toLocaleTimeString("pt-BR")}
+            </div>
+          )}
+
+          {respostas.length > 0 && (
+            <div className="grid gap-4 md:grid-cols-3 pt-2">
+              {(["setor", "funcao", "unidade"] as const).map((dim) => {
+                const dados = agregados[dim];
+                if (dados.length === 0) return null;
+                return (
+                  <div key={dim} className="border rounded p-2">
+                    <div className="text-xs font-medium mb-1 capitalize">Por {dim === "funcao" ? "função" : dim}</div>
+                    <ResponsiveContainer width="100%" height={Math.max(140, dados.length * 26)}>
+                      <BarChart data={dados.slice(0, 10)} layout="vertical" margin={{ left: 8, right: 24, top: 4, bottom: 4 }}>
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                        <XAxis type="number" allowDecimals={false} hide />
+                        <YAxis type="category" dataKey="rotulo" width={110} tick={{ fontSize: 10 }} />
+                        <RTooltip formatter={(v: any) => [`${v} resposta(s)`, ""]} />
+                        <Bar dataKey="total" fill="hsl(var(--primary))" radius={[0, 3, 3, 0]}>
+                          <LabelList dataKey="total" position="right" style={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {registrar ? (
             <div>
