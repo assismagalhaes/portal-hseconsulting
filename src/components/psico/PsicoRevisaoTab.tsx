@@ -507,11 +507,13 @@ Modalidade: ${modoColeta}.`;
               <p className="text-xs text-muted-foreground mt-1">Contexto, limitações, recomendação geral e parecer conclusivo — tudo em um único fluxo.</p>
             </div>
             {!readOnly && <div className="flex flex-wrap gap-2">
-              <Button type="button" size="sm" variant="outline" onClick={preencherAutomaticamente} disabled={!ctxDados}>
-                <Sparkles className="h-4 w-4 mr-2" /> Contexto automático
-              </Button>
               <Button type="button" size="sm" onClick={gerarParecerIa} disabled={generatingOpinion}>
-                <Sparkles className="mr-2 h-4 w-4" /> {generatingOpinion ? "Gerando…" : "Gerar tudo com IA"}
+                <Sparkles className="mr-2 h-4 w-4" />
+                {generatingOpinion
+                  ? "Gerando…"
+                  : Object.values(parecer).some((v) => v?.trim())
+                    ? "Regenerar com IA"
+                    : "Gerar tudo com IA"}
               </Button>
               <Button type="button" size="sm" variant="secondary" onClick={async () => { await salvarCabecalho(); await salvarParecer(); }} disabled={saving}>
                 <Save className="mr-2 h-4 w-4" /> Salvar revisão
