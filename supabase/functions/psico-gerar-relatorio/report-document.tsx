@@ -147,8 +147,36 @@ function riskColor(value: unknown) { const rank = priorityRank(value); return ra
 function deadlineFor(value: unknown) { const rank = priorityRank(value); return rank === 4 ? 30 : rank === 3 ? 60 : rank === 2 ? 90 : 180; }
 function pct(value: unknown) { const n = Number(value); return Number.isFinite(n) ? `${n.toFixed(1)}%` : "—"; }
 function score(value: unknown) { const n = Number(value); return Number.isFinite(n) ? n.toFixed(2) : "—"; }
-function list(value: unknown): string[] { return Array.isArray(value) ? value.map((x) => clean(x)).filter(Boolean) : usable(value) ? [clean(value)] : []; }
+function fixTypos(input: unknown): string {
+  const s = clean(input);
+  if (!s) return s;
+  return s
+    .replace(/\blidernaça\b/gi, "liderança")
+    .replace(/\blideranca\b/gi, "liderança")
+    .replace(/\bReduç[aã]o de e (\d)/gi, "Redução de $1")
+    .replace(/\bde e (\d+\s*%)/gi, "de $1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+function list(value: unknown): string[] { return Array.isArray(value) ? value.map((x) => fixTypos(x)).filter(Boolean) : usable(value) ? [fixTypos(value)] : []; }
 function evidenceText(value: unknown) { const items = list(value); return items.length ? items.join("; ") : "Definir evidência verificável no cronograma da organização."; }
+function normalizeText(v: unknown) { return clean(v).toLowerCase().replace(/[^a-z0-9]+/g, ""); }
+function isRedundantAction(title: unknown, action: unknown) {
+  const t = normalizeText(title); const a = normalizeText(action);
+  return a.length === 0 || t.length === 0 || t === a || (a.length < 80 && t.startsWith(a)) || (t.length < 80 && a.startsWith(t));
+}
+function questionHasAttention(q: any) {
+  return Number(q?.percentual_critico || 0) > 0
+    || Number(q?.percentual_alto_critico || 0) > 0
+    || Number(q?.percentual_desfavoravel || 0) > 0;
+}
+function bucketByPrazo(prazoDias: number | null | undefined, prioridade: unknown) {
+  const p = Number(prazoDias) > 0 ? Number(prazoDias) : deadlineFor(prioridade);
+  if (p <= 60) return "onda1";
+  if (p <= 120) return "onda2";
+  if (p <= 210) return "onda3";
+  return "onda4";
+}
 function originLabel(origin: any) { const value = clean(origin?.coleta); return value === "importacao_bruta" ? "Importação de formulário externo em dados brutos" : value === "importacao_agregada" ? "Importação agregada" : "Coleta realizada pelo Portal HSE"; }
 function criteriaActivated(f: any) { const out: string[] = []; if (f?.criterio_principal) out.push("M+A+C"); if (f?.criterio_agravamento) out.push("A+C"); if (f?.criterio_critico_automatico) out.push("crítico"); return out.length ? out.join(", ") : "nenhum critério"; }
 
