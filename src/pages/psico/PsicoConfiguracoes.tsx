@@ -88,7 +88,7 @@ export function PsicoConfiguracoes() {
 
   async function confirmarPublicacao() {
     setPublishing(true);
-    const { error } = await publicarQuestionario(cfg.quest.id, confirmText);
+    const { error } = await publicarQuestionario(cfg.quest.id, `PUBLICAR ${cfg.quest.codigo}`);
     setPublishing(false);
     if (error) return toast.error(error.message);
     toast.success("Questionário publicado!");
