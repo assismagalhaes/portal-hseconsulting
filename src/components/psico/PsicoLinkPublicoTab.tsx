@@ -267,6 +267,19 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
         y += 18;
       }
 
+      const unidadeNome = (av?.unidade || "").toString().trim();
+      if (unidadeNome) {
+        doc.setTextColor(...MUTED);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.text("UNIDADE", 18, y);
+        doc.setTextColor(...NAVY);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text(doc.splitTextToSize(unidadeNome, W - 36) as any, 18, y + 6);
+        y += 16;
+      }
+
       // Texto convite
       doc.setTextColor(...NAVY);
       doc.setFont("helvetica", "bold");
