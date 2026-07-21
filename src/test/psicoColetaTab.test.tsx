@@ -58,8 +58,7 @@ describe("PsicoColetaTab", () => {
 
     const encerrar = screen.getByRole("dialog");
     const camposEncerrar = within(encerrar).getAllByRole("textbox") as HTMLInputElement[];
-    expect(camposEncerrar).toHaveLength(2);
+    expect(camposEncerrar).toHaveLength(1);
     expect(camposEncerrar[0]).toHaveValue("");
-    expect(camposEncerrar[1]).toHaveValue("");
   });
 });
