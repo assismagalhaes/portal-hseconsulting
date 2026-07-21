@@ -17,7 +17,7 @@ import {
   PLANO_STATUS_COLOR, PLANO_STATUS_LABEL, NIVEL_COLOR, PlanoStatus,
   adicionarMedidaDoModelo, atualizarItem, atualizarPlano, criarItemPersonalizado, excluirItem,
   getMedidasCatalogo, getPlanoPorRevisao, getResultadoFatoresPorRevisao, listItens, listItemFatores,
-  marcarPlanoRevisado, regenerarRecomendacoes,
+  marcarPlanoRevisado, regenerarRecomendacoes, gerarPlanoIA,
 } from "@/lib/psicoPlano";
 import { getRevisaoAtiva, getRevisaoFatores, PRIORIDADE_COLOR } from "@/lib/psicoRevisao";
 import { fatorLabel, grupoTransversalLabel, nivelMedidaLabel, prioridadeLabel } from "@/lib/psicoLabels";
@@ -42,6 +42,8 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
   const [somenteSelecionados, setSomenteSelecionados] = useState(false);
   const [regenOpen, setRegenOpen] = useState(false);
   const [regenText, setRegenText] = useState("");
+  const [iaOpen, setIaOpen] = useState(false);
+  const [iaLoading, setIaLoading] = useState(false);
   const [catalogoOpen, setCatalogoOpen] = useState(false);
   const [novoOpen, setNovoOpen] = useState(false);
   const [novo, setNovo] = useState<any>({ titulo: "", acao_recomendada: "", objetivo: "", prazo_sugerido_dias: 30, evidencias_recomendadas: "", responsaveis_sugeridos: "", fatores: [] as string[] });
@@ -115,6 +117,18 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
     if (error) { toast.error(error.message); return; }
     toast.success("Recomendações regeneradas (personalizadas preservadas)");
     setRegenOpen(false); load();
+  }
+
+  async function gerarComIA() {
+    setIaLoading(true);
+    try {
+      const { data, error } = await gerarPlanoIA(rev.id);
+      if (error) { toast.error(error.message || "Falha ao gerar com IA"); return; }
+      if ((data as any)?.error) { toast.error((data as any).error); return; }
+      const n = (data as any)?.itens ?? 0;
+      toast.success(`IA sugeriu ${n} medida(s). Ações personalizadas preservadas.`);
+      setIaOpen(false); load();
+    } finally { setIaLoading(false); }
   }
 
   async function marcarRevisado() {
@@ -242,18 +256,37 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
                 </Dialog>
                 <AlertDialog open={regenOpen} onOpenChange={setRegenOpen}>
                   <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm"><Wand2 className="h-4 w-4 mr-2" /> Regenerar</Button>
+                    <Button variant="outline" size="sm"><RefreshCw className="h-4 w-4 mr-2" /> Gerar rápido</Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Regenerar recomendações?</AlertDialogTitle>
+                      <AlertDialogTitle>Gerar sugestões rápidas (biblioteca)?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        As ações personalizadas serão preservadas. As geradas automaticamente serão recriadas a partir da biblioteca vigente.
+                        Regenera automaticamente a partir da biblioteca vigente (uma medida por fator). Ações personalizadas são preservadas.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
                       <AlertDialogAction onClick={(e) => { e.preventDefault(); regenerar(); }}>Sim, regenerar</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                <AlertDialog open={iaOpen} onOpenChange={(v) => !iaLoading && setIaOpen(v)}>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="default" size="sm"><Wand2 className="h-4 w-4 mr-2" /> Gerar com IA</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Gerar plano de ação com IA?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        A IA analisa os resultados, o tratamento por fator e o catálogo completo da biblioteca vigente para sugerir medidas proporcionais à prioridade de cada fator (sem limite artificial de itens). As ações personalizadas já criadas serão preservadas; apenas as geradas automaticamente serão substituídas.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel disabled={iaLoading}>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction disabled={iaLoading} onClick={(e) => { e.preventDefault(); gerarComIA(); }}>
+                        {iaLoading ? "Gerando…" : "Sim, gerar com IA"}
+                      </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
