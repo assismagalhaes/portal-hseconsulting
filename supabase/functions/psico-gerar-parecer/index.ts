@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const PROMPT_CODE = "HSE-PSICO-IA-PARECER-1.1";
+const PROMPT_CODE = "HSE-PSICO-IA-PARECER-1.2";
 const DEFAULT_MODEL = "google/gemini-3-flash-preview";
 const REQUIRED_KEYS = [
   "sintese_resultados",
@@ -62,6 +62,12 @@ Regras obrigatórias:
 - Trate prazos como recomendados, não como prazos legais.
 - Mencione verificação de eficácia, responsabilidade da empresa e integração com AEP, Inventário de Riscos e Plano de Ação do PGR, conforme aplicável.
 - Esclareça que os resultados são coletivos, o questionário não constitui diagnóstico e a implementação compete à empresa, salvo contratação específica.
+
+REGRAS ADICIONAIS v1.2 (obrigatórias):
+- REGRA DE AMOSTRA CRÍTICA: se o número de respondentes (n) for menor que 5, adote OBRIGATORIAMENTE tom preliminar/exploratório em todos os campos. Evite afirmações conclusivas, use expressões como "indícios preliminares", "sinaliza tendência a ser confirmada" e recomende reavaliação em até 6 meses com amostra ampliada. Problematize explicitamente o risco de viés amostral quando muitos fatores aparecerem críticos com n pequeno.
+- ANTI-ALUCINAÇÃO NUMÉRICA: NUNCA cite scores, médias ou percentuais que não estejam literalmente presentes no JSON de contexto. Se precisar referenciar intensidade, use categorias qualitativas (baixo/moderado/alto/crítico) exatamente como fornecidas. Proibido inventar valores decimais.
+- ESTRUTURA POR EIXOS NR-01: em "interpretacao_integrada" e "recomendacoes", agrupe os fatores nos eixos da NR-01 quando aplicável: (1) Organização do trabalho e demandas; (2) Autonomia e controle; (3) Relações socioprofissionais e liderança; (4) Reconhecimento e crescimento; (5) Interface trabalho-vida; (6) Assédio, violência e discriminação. Apenas cite eixos efetivamente presentes nos dados.
+- FECHAMENTO DO LOOP COM PLANO DE AÇÃO: em "prioridades_intervencao" e "conclusao", referencie nominalmente ao menos 2 medidas concretas do Plano de Ação consolidado (quando disponível no contexto), pelo título/descrição da ação, demonstrando alinhamento entre o parecer e o plano aprovado.
 
 Você também deve compor três campos de CABEÇALHO técnico (todos obrigatórios, mínimo 20 caracteres cada):
 - "contexto_organizacional": descreva o contexto factual da avaliação (cliente, unidade, período, participantes previstos vs. respondentes, modalidade de coleta), extraído do contexto estruturado fornecido. Objetivo, sem interpretação.
