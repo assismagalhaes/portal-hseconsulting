@@ -7185,6 +7185,7 @@ export type Database = {
           grupo_transversal: string | null
           id: string
           indicador_sugerido: string | null
+          indicadores_sugeridos: string[] | null
           medida_modelo_id: string | null
           nivel_recomendacao: string
           objetivo: string
@@ -7213,6 +7214,7 @@ export type Database = {
           grupo_transversal?: string | null
           id?: string
           indicador_sugerido?: string | null
+          indicadores_sugeridos?: string[] | null
           medida_modelo_id?: string | null
           nivel_recomendacao: string
           objetivo: string
@@ -7241,6 +7243,7 @@ export type Database = {
           grupo_transversal?: string | null
           id?: string
           indicador_sugerido?: string | null
+          indicadores_sugeridos?: string[] | null
           medida_modelo_id?: string | null
           nivel_recomendacao?: string
           objetivo?: string

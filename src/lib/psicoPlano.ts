@@ -20,6 +20,9 @@ export const NIVEL_COLOR: Record<string, string> = {
   intermediaria: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200",
   avancada: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200",
   transversal: "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200",
+  essencial: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200",
+  estruturante: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200",
+  complementar: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
 };
 
 export async function getPlanoPorRevisao(revisaoId: string) {
@@ -128,6 +131,7 @@ export async function adicionarMedidaDoModelo(planoId: string, medidaId: string,
     prazo_sugerido_dias: med.prazo_sugerido_dias,
     evidencias_recomendadas: med.evidencias_recomendadas,
     indicador_sugerido: (med.indicadores_sugeridos || [])[0] || null,
+    indicadores_sugeridos: med.indicadores_sugeridos || null,
     personalizado: false,
   }, fatoresCodes, resultadoFatorPorCodigo);
 }
