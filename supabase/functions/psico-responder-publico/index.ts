@@ -51,8 +51,25 @@ async function hmac(secret: string, msg: string): Promise<string> {
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
+// Normalização robusta para evitar duplicatas por variações triviais de escrita:
+// - Remove acentos (NFD)
+// - Converte para minúsculas
+// - Remove pontuação/símbolos (mantém apenas letras, dígitos e espaço)
+// - Colapsa múltiplos espaços
+// - Ordena tokens alfabeticamente (ignora ordem: "Joao Silva" == "Silva Joao")
+// Ex.: "Nome A", "NOME A", "NOme A", "Nôme  A.", "nome-a" => todos geram o mesmo hash.
 function normalize(s: string): string {
-  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/\s+/g, ' ')
+  const base = s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (!base) return ''
+  const tokens = base.split(' ').filter((t) => t.length > 0)
+  tokens.sort()
+  return tokens.join(' ')
 }
 
 function invalid(origin: string | null, msg = 'Link inválido ou expirado.'): Response {
