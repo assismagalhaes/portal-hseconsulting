@@ -6,6 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Copy, RefreshCw, Link2, Users, Eye, EyeOff, QrCode, Download, Radio } from "lucide-react";
 import QRCode from "qrcode";
@@ -41,6 +51,7 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
   const [realtimeAtivo, setRealtimeAtivo] = useState(false);
   const [ultimaAtualizacao, setUltimaAtualizacao] = useState<Date | null>(null);
   const [mostrarNomes, setMostrarNomes] = useState(false);
+  const [confirmarRotacao, setConfirmarRotacao] = useState(false);
 
   const publicUrl = useMemo(() => {
     if (!token) return null;
@@ -136,8 +147,7 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
   }
 
   async function rotacionarLink() {
-    if (!confirm("Ao gerar um novo link, o link atual deixará de funcionar. Confirma?")) return;
-    await ativarModoPublico();
+    setConfirmarRotacao(true);
   }
 
   async function salvarConfig() {
@@ -211,6 +221,27 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
               <Input readOnly value={publicUrl || ""} className="font-mono text-xs" />
               <Button variant="outline" onClick={copiarLink}><Copy className="h-4 w-4" /></Button>
               <Button variant="outline" onClick={rotacionarLink} title="Gerar novo link (invalida o atual)"><RefreshCw className="h-4 w-4" /></Button>
+              <AlertDialog open={confirmarRotacao} onOpenChange={setConfirmarRotacao}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Gerar novo link público?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      O link atual deixará de funcionar imediatamente. Quem já respondeu não é afetado, mas quem ainda não abriu o link antigo precisará receber o novo.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={async () => {
+                        setConfirmarRotacao(false);
+                        await ativarModoPublico();
+                      }}
+                    >
+                      Gerar novo link
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
               Envie por WhatsApp, cole no mural interno ou imprima o QR Code abaixo. O link só funciona quando a coleta estiver aberta.
