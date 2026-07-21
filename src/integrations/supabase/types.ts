@@ -9444,6 +9444,10 @@ export type Database = {
         Args: { p_plano_id: string }
         Returns: Json
       }
+      psico_materializar_respostas_publicas: {
+        Args: { p_avaliacao_id: string }
+        Returns: number
+      }
       psico_norm_email: { Args: { v: string }; Returns: string }
       psico_norm_fone: { Args: { v: string }; Returns: string }
       psico_norm_texto: { Args: { v: string }; Returns: string }
