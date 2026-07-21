@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CheckCircle2, Pencil } from "lucide-react";
+import { CheckCircle2, Pencil, ShieldAlert } from "lucide-react";
 
 type Pergunta = { numero: number; texto: string; exemplo: string | null };
 type Opcao = { codigo: string; rotulo: string };
@@ -369,9 +369,17 @@ export default function PsicoResponderPublico() {
         )}
 
         {fase === "ja_respondido" && (
-          <div className="space-y-2">
-            <h2 className="text-lg font-semibold">Participação já registrada</h2>
-            <p className="text-sm">Já consta uma resposta com esse nome nesta avaliação.</p>
+          <div className="rounded-xl border-2 border-destructive/40 bg-destructive/5 p-6 space-y-3 shadow-sm">
+            <div className="mx-auto h-14 w-14 rounded-full bg-destructive/10 flex items-center justify-center">
+              <ShieldAlert className="h-8 w-8 text-destructive" />
+            </div>
+            <h2 className="text-lg font-semibold text-destructive">🚫 Participação já registrada</h2>
+            <p className="text-sm text-foreground">
+              Já existe uma resposta enviada com esse nome nesta avaliação.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Cada pessoa pode participar apenas uma vez. Se você acredita que isso é um engano, procure o responsável da sua empresa.
+            </p>
           </div>
         )}
 
