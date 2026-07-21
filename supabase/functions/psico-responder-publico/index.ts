@@ -177,6 +177,28 @@ Deno.serve(async (req) => {
     }
 
     // ===== SUBMETER =====
+    if (action === 'verificar_duplicado') {
+      if (!abertaParaColeta) return invalid(origin, 'Esta avaliação não está aberta.')
+      const ident = body?.identificacao || {}
+      const nome = typeof ident.nome === 'string' ? ident.nome.trim().slice(0, 200) : ''
+      if (!nome || nome.length < 2) {
+        return new Response(JSON.stringify({ ok: true, duplicado: false }),
+          { status: 200, headers: baseHeaders(origin) })
+      }
+      const hashNome = (await hmac(HASH_SECRET, `${av.id}:${normalize(nome)}`)).slice(0, 40)
+      const { data: existente } = await admin
+        .from('psico_respostas_publicas')
+        .select('id')
+        .eq('avaliacao_id', av.id)
+        .eq('hash_nome', hashNome)
+        .maybeSingle()
+      return new Response(JSON.stringify({
+        ok: true,
+        duplicado: !!existente,
+        mensagem: existente ? 'Uma resposta com esse nome já foi registrada nesta avaliação.' : null,
+      }), { status: 200, headers: baseHeaders(origin) })
+    }
+
     if (action === 'submeter') {
       if (!abertaParaColeta) return invalid(origin, 'Esta avaliação não está aberta.')
 
