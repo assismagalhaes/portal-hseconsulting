@@ -427,8 +427,27 @@ function ItemCard({ item, fatores, readOnly, onToggle, onSave, onRemove }: {
                 <button className="text-muted-foreground p-1" onClick={() => setOpen((v) => !v)}>
                   <ChevronDown className={`h-4 w-4 transition ${open ? "rotate-180" : ""}`} />
                 </button>
-                {!readOnly && item.personalizado && (
-                  <button className="text-destructive p-1" onClick={onRemove}><Trash2 className="h-4 w-4" /></button>
+                {!readOnly && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button className="text-destructive p-1" title="Excluir ação">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Excluir esta ação?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          A ação "{item.titulo}" será removida do plano. Você pode regerar
+                          as recomendações automáticas depois, se quiser.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={onRemove}>Excluir</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 )}
               </div>
             </div>
