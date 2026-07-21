@@ -545,7 +545,6 @@ function InterpretacaoExecutiva({ interp, loading }: { interp: PsicoInterpretaca
             )}
           </>
         )}
-        <AvisoMetodologico />
       </CardContent>
     </Card>
   );
