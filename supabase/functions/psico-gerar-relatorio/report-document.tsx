@@ -252,7 +252,8 @@ export function PsychosocialReportDocument({ snapshot, codigoRafp, codigoRev, co
   const logoSrc = empresa?.logo_url || HSE_LOGO_GREEN_DATA_URL;
   const companyContacts = [empresa?.telefone, empresa?.email, empresa?.site].filter(usable).join("  ·  ");
   const clientName = clean(cliente?.nome || cliente?.nome_fantasia || cliente?.razao_social, "Organização avaliada");
-  const priorityDeadline = deadlineFor(highest?.prioridade);
+  const actionDeadlines = actions.map((a) => Number(a?.prazo_dias) > 0 ? Number(a.prazo_dias) : deadlineFor(a?.prioridade)).filter((n) => Number.isFinite(n) && n > 0);
+  const priorityDeadline = actionDeadlines.length ? Math.min(...actionDeadlines) : deadlineFor(highest?.prioridade);
   const questionsByFactor = new Map<string, any[]>();
   questions.forEach((question) => {
     const key = clean(question?.fator_codigo);
