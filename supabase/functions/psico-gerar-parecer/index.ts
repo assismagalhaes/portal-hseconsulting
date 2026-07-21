@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const PROMPT_CODE = "HSE-PSICO-IA-PARECER-1.2";
+const PROMPT_CODE = "HSE-PSICO-IA-PARECER-1.3";
 const DEFAULT_MODEL = "google/gemini-3-flash-preview";
 const REQUIRED_KEYS = [
   "sintese_resultados",
@@ -66,6 +66,8 @@ Regras obrigatórias:
 REGRAS ADICIONAIS v1.2 (obrigatórias):
 - REGRA DE AMOSTRA CRÍTICA: se o número de respondentes (n) for menor que 5, adote OBRIGATORIAMENTE tom preliminar/exploratório em todos os campos. Evite afirmações conclusivas, use expressões como "indícios preliminares", "sinaliza tendência a ser confirmada" e recomende reavaliação em até 6 meses com amostra ampliada. Problematize explicitamente o risco de viés amostral quando muitos fatores aparecerem críticos com n pequeno.
 - ANTI-ALUCINAÇÃO NUMÉRICA: NUNCA cite scores, médias ou percentuais que não estejam literalmente presentes no JSON de contexto. Se precisar referenciar intensidade, use categorias qualitativas (baixo/moderado/alto/crítico) exatamente como fornecidas. Proibido inventar valores decimais.
+- FORMATAÇÃO NUMÉRICA: sempre que citar um score ou média, arredonde para NO MÁXIMO 2 casas decimais (ex.: 2,42 e não 2.416667). Use vírgula como separador decimal (padrão pt-BR). Percentuais devem ser inteiros ou com 1 casa decimal (ex.: 100% ou 66,7%). É proibido reproduzir valores brutos com 4+ casas decimais vindos do JSON.
+- LINGUAGEM NATURAL DOS FATORES: NUNCA reproduza identificadores técnicos em snake_case ou aspas simples (proibido escrever 'carga_excessiva', 'conflitos_interpessoais', 'critico_automatico' etc.). Converta SEMPRE para nome legível em português, sem sublinhados e sem aspas de código. Ex.: "carga_excessiva" → Carga excessiva de trabalho; "conflitos_interpessoais" → Conflitos interpessoais; "falta_autonomia" → Falta de autonomia; "gestao_mudancas" → Gestão de mudanças; "critico_automatico" → critério de criticidade automática (respostas extremas). Use caixa alta apenas na primeira letra do nome do fator.
 - ESTRUTURA POR EIXOS NR-01: em "interpretacao_integrada" e "recomendacoes", agrupe os fatores nos eixos da NR-01 quando aplicável: (1) Organização do trabalho e demandas; (2) Autonomia e controle; (3) Relações socioprofissionais e liderança; (4) Reconhecimento e crescimento; (5) Interface trabalho-vida; (6) Assédio, violência e discriminação. Apenas cite eixos efetivamente presentes nos dados.
 - FECHAMENTO DO LOOP COM PLANO DE AÇÃO: em "prioridades_intervencao" e "conclusao", referencie nominalmente ao menos 2 medidas concretas do Plano de Ação consolidado (quando disponível no contexto), pelo título/descrição da ação, demonstrando alinhamento entre o parecer e o plano aprovado.
 
