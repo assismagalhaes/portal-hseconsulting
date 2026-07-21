@@ -517,74 +517,13 @@ Modalidade: ${modoColeta}.`;
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader><CardTitle>Tratamento por fator</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          {fatores.map((f) => {
-            const o = orient[f.fator_codigo];
-            return (
-              <div key={f.id} className="rounded-lg border p-4 space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">{f.fator_codigo}</span>
-                    <span className="font-medium">{o?.nome || f.fator_codigo}</span>
-                    <Badge className={PRIORIDADE_COLOR[f.prioridade_calculada] || "bg-muted"}>{f.prioridade_calculada}</Badge>
-                    {f.significativo_calculado ? (
-                      <Badge className="bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200">Significativo</Badge>
-                    ) : (
-                      <Badge variant="outline">Não significativo</Badge>
-                    )}
-                  </div>
-                  <div className="text-xs text-muted-foreground inline-flex items-center gap-1">
-                    <Info className="h-3 w-3" /> Cálculo original imutável
-                  </div>
-                </div>
-
-                {o?.definicao_resumida && <p className="text-xs text-muted-foreground">{o.definicao_resumida}</p>}
-
-                <div className="grid gap-3 md:grid-cols-3">
-                  <div>
-                    <Label className="text-xs">Tratamento técnico</Label>
-                    <Select
-                      value={f.tratamento_tecnico}
-                      onValueChange={(v) => salvarFator(f, { tratamento_tecnico: v })}
-                      disabled={readOnly}
-                    >
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(TRATAMENTO_LABEL).map(([k, v]) => (
-                          <SelectItem key={k} value={k}>{v}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label className="text-xs">Observação técnica</Label>
-                    <Textarea
-                      rows={2}
-                      defaultValue={f.observacao_tecnica || ""}
-                      disabled={readOnly}
-                      onBlur={(e) => e.target.value !== (f.observacao_tecnica || "") && salvarFator(f, { observacao_tecnica: e.target.value || null })}
-                    />
-                  </div>
-                </div>
-
-                {f.tratamento_tecnico === "sem_acao_especifica" && (
-                  <div>
-                    <Label className="text-xs">Justificativa (obrigatória para "sem ação específica")</Label>
-                    <Textarea
-                      rows={2}
-                      defaultValue={f.justificativa || ""}
-                      disabled={readOnly}
-                      onBlur={(e) => e.target.value !== (f.justificativa || "") && salvarFator(f, { justificativa: e.target.value || null })}
-                    />
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </CardContent>
-      </Card>
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertTitle>Tratamento por fator</AlertTitle>
+        <AlertDescription>
+          O tratamento técnico de cada fator agora é definido na aba <b>Resultados</b> e alimenta automaticamente o Plano de Ação e esta revisão.
+        </AlertDescription>
+      </Alert>
 
       <p className="text-[11px] text-muted-foreground border-t pt-2">
         A revisão não altera resultados matemáticos calculados. Apenas registra o tratamento técnico, a conclusão e as recomendações do responsável.
