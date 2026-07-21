@@ -346,6 +346,24 @@ Modalidade: ${modoColeta}.`;
   const status: RevisaoStatus = rev.status;
   const erros: string[] = validacao?.erros || [];
 
+  const itensPorFator = useMemo(() => {
+    const byItem: Record<string, string[]> = {};
+    planoItemFatores.forEach((l: any) => {
+      byItem[l.plano_item_id] = byItem[l.plano_item_id] || [];
+      byItem[l.plano_item_id].push(l.fator_codigo);
+    });
+    const grupos: Record<string, any[]> = {};
+    planoItens.forEach((it: any) => {
+      const codes = byItem[it.id] && byItem[it.id].length ? byItem[it.id] : ["_sem_fator"];
+      codes.forEach((c) => {
+        grupos[c] = grupos[c] || [];
+        grupos[c].push(it);
+      });
+    });
+    return grupos;
+  }, [planoItens, planoItemFatores]);
+  const totalItens = planoItens.length;
+
   return (
     <div className="space-y-4">
       <PsicoAprovacaoConsolidada avaliacaoId={av.id} avaliacaoCodigo={av.codigo} refreshKey={rev?.updated_at || rev?.atualizada_em} />
