@@ -93,10 +93,6 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
   const codigoEsperado = `EMITIR ${av.codigo}`;
 
   async function handleEmitir() {
-    if (confirmTxt !== codigoEsperado) {
-      toast.error(`Digite exatamente: ${codigoEsperado}`);
-      return;
-    }
     if (!isPrimeira && descricao.trim().length < 10) {
       toast.error("Descreva o motivo da nova revisão (mín. 10 caracteres).");
       return;
@@ -116,7 +112,6 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
       toast.success(`Relatório emitido: ${(data as any)?.codigo} ${(data as any)?.codigo_revisao}`);
     }
     setConfirmOpen(false);
-    setConfirmTxt("");
     setDescricao("");
     await carregar();
     onReload?.();
@@ -266,8 +261,7 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
                   <AlertDialogTitle>Confirmar emissão do relatório</AlertDialogTitle>
                   <AlertDialogDescription>
                     Esta ação gera o PDF oficial e o registra imutavelmente como{" "}
-                    <span className="font-mono">{relatorio?.codigo || "novo"} {proximaRev}</span>. Para confirmar,
-                    digite exatamente <span className="font-mono font-bold">{codigoEsperado}</span> abaixo.
+                    <span className="font-mono">{relatorio?.codigo || "novo"} {proximaRev}</span>.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="space-y-3">
@@ -282,15 +276,6 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
                       />
                     </div>
                   )}
-                  <div>
-                    <Label>Confirmação</Label>
-                    <Input
-                      value={confirmTxt}
-                      onChange={(e) => setConfirmTxt(e.target.value)}
-                      placeholder={codigoEsperado}
-                      autoFocus
-                    />
-                  </div>
                 </div>
                 <AlertDialogFooter>
                   <AlertDialogCancel disabled={gerando}>Cancelar</AlertDialogCancel>

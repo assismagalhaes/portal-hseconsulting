@@ -185,8 +185,7 @@ export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: 
   async function aprovar() {
     if (!rev) return;
     const esperado = `APROVAR ${av.codigo}`;
-    if (approveText !== esperado) { toast.error(`Digite exatamente: ${esperado}`); return; }
-    const { error } = await aprovarRevisao(rev.id, approveText);
+    const { error } = await aprovarRevisao(rev.id, esperado);
     if (error) {
       const msg = String(error.message);
       if (msg.includes("CHECKLIST_INCOMPLETO")) toast.error("Checklist incompleto. Revise os itens pendentes.");
@@ -194,7 +193,7 @@ export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: 
       return;
     }
     toast.success("Revisão aprovada!");
-    setApproveOpen(false); setApproveText(""); load(); onReload?.();
+    setApproveOpen(false); load(); onReload?.();
   }
 
   async function reabrir() {
@@ -271,13 +270,12 @@ export default function PsicoRevisaoTab({ av, onReload }: { av: any; onReload?: 
                   <AlertDialogHeader>
                     <AlertDialogTitle>Aprovar revisão técnica?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      A aprovação torna a revisão e o plano de ação imutáveis. Para confirmar, digite: <b>APROVAR {av.codigo}</b>
+                      A aprovação torna a revisão e o plano de ação imutáveis. Deseja continuar?
                     </AlertDialogDescription>
                   </AlertDialogHeader>
-                  <Input value={approveText} onChange={(e) => setApproveText(e.target.value)} placeholder={`APROVAR ${av.codigo}`} />
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={(e) => { e.preventDefault(); aprovar(); }}>Confirmar aprovação</AlertDialogAction>
+                    <AlertDialogAction onClick={(e) => { e.preventDefault(); aprovar(); }}>Sim, aprovar</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>

@@ -388,14 +388,10 @@ export function PsicoConfiguracoes() {
                         Após a publicação, os fatores, perguntas, exemplos, pesos e regras desta versão não poderão ser alterados. Mudanças futuras deverão ser realizadas em uma nova versão.
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-2">
-                      <Label>Digite <span className="font-mono font-bold">PUBLICAR {cfg.quest.codigo}</span> para confirmar</Label>
-                      <Input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} placeholder={`PUBLICAR ${cfg.quest.codigo}`} />
-                    </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setPublishOpen(false)}>Cancelar</Button>
-                      <Button disabled={publishing || confirmText !== `PUBLICAR ${cfg.quest.codigo}`} onClick={confirmarPublicacao}>
-                        {publishing ? "Publicando…" : "Publicar definitivamente"}
+                      <Button disabled={publishing} onClick={confirmarPublicacao}>
+                        {publishing ? "Publicando…" : "Sim, publicar"}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
