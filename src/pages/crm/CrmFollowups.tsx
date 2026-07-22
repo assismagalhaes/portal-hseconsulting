@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSearchParams } from "react-router-dom";
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, AlertTriangle, CheckCircle2, CalendarClock, ListTodo, Search, LayoutList, KanbanSquare, Filter } from "lucide-react";
+import { Plus, AlertTriangle, CheckCircle2, CalendarClock, ListTodo, Search, LayoutList, KanbanSquare, Filter, CalendarPlus } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FUP_TIPOS, FUP_STATUS } from "@/lib/crm";
 import { formatDate } from "@/lib/format";
@@ -38,6 +39,7 @@ function bucketOf(f: any): Bucket {
 }
 
 export default function CrmFollowups() {
+  const [sp, setSp] = useSearchParams();
   const [list, setList] = useState<any[]>([]);
   const [leads, setLeads] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
@@ -56,8 +58,25 @@ export default function CrmFollowups() {
   const [concluirOpen, setConcluirOpen] = useState<any>(null);
   const [concluirForm, setConcluirForm] = useState<any>({ resumo: "", proxima_acao: "", proximo_followup_data: "", proximo_followup_hora: "", tipo_proximo: "ligacao" });
   const [formErr, setFormErr] = useState<string | null>(null);
+  const [reagOpen, setReagOpen] = useState<any>(null);
+  const [reagForm, setReagForm] = useState<any>({ data: "", hora: "", motivo: "" });
 
   useEffect(() => { document.title = "Follow-ups | CRM HSE"; reload(); }, []);
+
+  useEffect(() => {
+    if (sp.get("novo") === "1") {
+      const prefill: any = { ...empty };
+      const op = sp.get("oportunidade"); if (op) prefill.oportunidade_id = op;
+      const ld = sp.get("lead"); if (ld) prefill.lead_id = ld;
+      const cl = sp.get("cliente"); if (cl) prefill.client_id = cl;
+      setEditing(null); setForm(prefill); setOpen(true);
+      const next = new URLSearchParams(sp);
+      ["novo","oportunidade","lead","cliente"].forEach(k=>next.delete(k));
+      setSp(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function reload() {
     const [f, l, c, o, p] = await Promise.all([
       supabase.from("crm_followups").select("*"),
@@ -71,6 +90,32 @@ export default function CrmFollowups() {
 
   function openNew() { setEditing(null); setForm(empty); setOpen(true); }
   function openEdit(f:any) { setEditing(f); setForm({ ...empty, ...f }); setOpen(true); }
+
+  async function notifyResponsavel(payload: any, followupId?: string) {
+    if (!payload.responsavel_id) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.id && payload.responsavel_id === user.id) return;
+    const vinc =
+      oports.find(o=>o.id===payload.oportunidade_id)?.titulo
+      || clients.find(c=>c.id===payload.client_id)?.razao_social
+      || leads.find(l=>l.id===payload.lead_id)?.empresa
+      || "";
+    const tipoLabel = FUP_TIPOS.find(t=>t.value===payload.tipo)?.label || payload.tipo;
+    await supabase.from("notificacoes").insert({
+      user_id: payload.responsavel_id,
+      modulo: "crm",
+      tipo: "followup_agendado",
+      titulo: `Follow-up agendado: ${tipoLabel}${vinc ? " · " + vinc : ""}`,
+      mensagem: `${formatDate(payload.data)}${payload.hora ? " às " + String(payload.hora).slice(0,5) : ""}${payload.proxima_acao ? " — " + payload.proxima_acao : ""}`,
+      prioridade: payload.data <= todayISO() ? "alta" : "normal",
+      status: "nao_lida",
+      link: "/crm/followups",
+      entidade_tipo: "crm_followup",
+      entidade_id: followupId ?? null,
+      origem: "manual",
+      metadata: {},
+    });
+  }
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -88,10 +133,14 @@ export default function CrmFollowups() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.id) payload.created_by = user.id;
     }
-    const { error } = editing
-      ? await supabase.from("crm_followups").update(payload).eq("id", editing.id)
-      : await supabase.from("crm_followups").insert(payload);
-    if (error) return toast.error(error.message);
+    if (editing) {
+      const { error } = await supabase.from("crm_followups").update(payload).eq("id", editing.id);
+      if (error) return toast.error(error.message);
+    } else {
+      const { data, error } = await supabase.from("crm_followups").insert(payload).select("id").single();
+      if (error) return toast.error(error.message);
+      if (payload.status === "pendente") await notifyResponsavel(payload, data?.id);
+    }
     toast.success("Follow-up salvo"); setOpen(false); reload();
   }
 
@@ -125,11 +174,39 @@ export default function CrmFollowups() {
         status: "pendente",
         created_by: user?.id || null,
       };
-      const { error: e2 } = await supabase.from("crm_followups").insert(novo);
+      const { data: ins, error: e2 } = await supabase.from("crm_followups").insert(novo).select("id").single();
       if (e2) return toast.error(e2.message);
+      await notifyResponsavel(novo, ins?.id);
     }
     toast.success("Follow-up concluído");
     setConcluirOpen(null); reload();
+  }
+
+  function openReagendar(f: any) {
+    setReagOpen(f);
+    setReagForm({ data: f.data || "", hora: f.hora?.slice(0,5) || "", motivo: "" });
+  }
+  async function confirmarReagendar(e: React.FormEvent) {
+    e.preventDefault();
+    const f = reagOpen; if (!f) return;
+    if (!reagForm.data) return toast.error("Informe a nova data");
+    const nota = `\n[Reagendado de ${formatDate(f.data)}${f.hora ? " " + String(f.hora).slice(0,5) : ""}${reagForm.motivo ? " — " + reagForm.motivo : ""}]`;
+    const { error } = await supabase.from("crm_followups")
+      .update({ status: "reagendado", resumo: ((f.resumo||"") + nota).trim() })
+      .eq("id", f.id);
+    if (error) return toast.error(error.message);
+    const { data: { user } } = await supabase.auth.getUser();
+    const novo: any = {
+      lead_id: f.lead_id, client_id: f.client_id,
+      oportunidade_id: f.oportunidade_id, proposal_id: f.proposal_id,
+      tipo: f.tipo, data: reagForm.data, hora: reagForm.hora || null,
+      responsavel_id: f.responsavel_id, proxima_acao: f.proxima_acao,
+      status: "pendente", created_by: user?.id || null,
+    };
+    const { data: ins } = await supabase.from("crm_followups").insert(novo).select("id").single();
+    await notifyResponsavel(novo, ins?.id);
+    toast.success("Follow-up reagendado");
+    setReagOpen(null); reload();
   }
 
   const hoje = todayISO();
@@ -286,6 +363,11 @@ export default function CrmFollowups() {
                                 <CheckCircle2 className="h-3.5 w-3.5 mr-1"/>Concluir
                               </Button>
                             )}
+                            {(f.status === "pendente" || f.status === "sem_resposta") && (
+                              <Button variant="ghost" size="sm" onClick={()=>openReagendar(f)} className="text-sky-700 hover:text-sky-800">
+                                <CalendarPlus className="h-3.5 w-3.5 mr-1"/>Reagendar
+                              </Button>
+                            )}
                             <Button variant="ghost" size="sm" onClick={()=>openEdit(f)}>Editar</Button>
                           </td>
                         </tr>
@@ -328,6 +410,7 @@ export default function CrmFollowups() {
                           <span className="text-[10px] text-muted-foreground">{f.responsavel_id ? respNome(f.responsavel_id) : ""}</span>
                           <div className="flex gap-1">
                             <Button variant="ghost" size="sm" className="h-6 px-2 text-emerald-700" onClick={()=>openConcluir(f)}><CheckCircle2 className="h-3 w-3"/></Button>
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-sky-700" onClick={()=>openReagendar(f)}><CalendarPlus className="h-3 w-3"/></Button>
                             <Button variant="ghost" size="sm" className="h-6 px-2" onClick={()=>openEdit(f)}>Editar</Button>
                           </div>
                         </div>
@@ -394,6 +477,29 @@ export default function CrmFollowups() {
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={()=>setConcluirOpen(null)}>Cancelar</Button>
                 <Button type="submit"><CheckCircle2 className="h-4 w-4 mr-2"/>Concluir</Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo Reagendar */}
+      <Dialog open={!!reagOpen} onOpenChange={(v)=>!v && setReagOpen(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Reagendar follow-up</DialogTitle></DialogHeader>
+          {reagOpen && (
+            <form onSubmit={confirmarReagendar} className="space-y-3">
+              <div className="text-xs text-muted-foreground">
+                {vinculadoLabel(reagOpen)} · atualmente em {formatDate(reagOpen.data)}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <F label="Nova data" type="date" value={reagForm.data} onChange={(v:string)=>setReagForm({...reagForm,data:v})}/>
+                <F label="Nova hora" type="time" value={reagForm.hora} onChange={(v:string)=>setReagForm({...reagForm,hora:v})}/>
+              </div>
+              <F label="Motivo (opcional)" value={reagForm.motivo} onChange={(v:string)=>setReagForm({...reagForm,motivo:v})}/>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={()=>setReagOpen(null)}>Cancelar</Button>
+                <Button type="submit"><CalendarPlus className="h-4 w-4 mr-2"/>Reagendar</Button>
               </DialogFooter>
             </form>
           )}
