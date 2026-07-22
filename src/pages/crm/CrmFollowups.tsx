@@ -482,6 +482,29 @@ export default function CrmFollowups() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Diálogo Reagendar */}
+      <Dialog open={!!reagOpen} onOpenChange={(v)=>!v && setReagOpen(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Reagendar follow-up</DialogTitle></DialogHeader>
+          {reagOpen && (
+            <form onSubmit={confirmarReagendar} className="space-y-3">
+              <div className="text-xs text-muted-foreground">
+                {vinculadoLabel(reagOpen)} · atualmente em {formatDate(reagOpen.data)}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <F label="Nova data" type="date" value={reagForm.data} onChange={(v:string)=>setReagForm({...reagForm,data:v})}/>
+                <F label="Nova hora" type="time" value={reagForm.hora} onChange={(v:string)=>setReagForm({...reagForm,hora:v})}/>
+              </div>
+              <F label="Motivo (opcional)" value={reagForm.motivo} onChange={(v:string)=>setReagForm({...reagForm,motivo:v})}/>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={()=>setReagOpen(null)}>Cancelar</Button>
+                <Button type="submit"><CalendarPlus className="h-4 w-4 mr-2"/>Reagendar</Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
