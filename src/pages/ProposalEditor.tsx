@@ -642,12 +642,6 @@ export default function ProposalEditor() {
               <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
               <SelectContent>{Object.entries(proposalStatusLabel).map(([k,v])=><SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
             </Select>
-            {isInternal && !isMobile && (
-              <div className="flex items-center gap-2 ml-2 px-3 py-1.5 rounded-md bg-muted">
-                <Switch checked={clientView} onCheckedChange={setClientView} id="cv" />
-              <Label htmlFor="cv" className="text-xs cursor-pointer">Visualizar Proposta</Label>
-              </div>
-            )}
           </>
         } />
 
