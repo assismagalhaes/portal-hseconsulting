@@ -14,6 +14,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Plus, Trash2, Calculator, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown, Users, Eye } from "lucide-react";
+import { GripVertical } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { brl, pct, proposalStatusLabel, proposalOrigemLabel, proposalOrigemColor, formatCnpjCpf, formatDate, formatDateTime } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
 import {
@@ -64,6 +82,29 @@ import {
 
 const newId = () => Math.random().toString(36).slice(2, 10);
 
+function SortableItemRow({ id, children }: { id: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  };
+  return (
+    <div ref={setNodeRef} style={style} className="relative group">
+      <button
+        type="button"
+        aria-label="Arrastar para reordenar"
+        className="absolute -left-1 top-3 z-10 p-1 rounded hover:bg-muted text-muted-foreground cursor-grab active:cursor-grabbing opacity-40 group-hover:opacity-100 transition"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <div className="pl-5">{children}</div>
+    </div>
+  );
+}
+
 export default function ProposalEditor() {
   const { id } = useParams<{id:string}>();
   const nav = useNavigate();
@@ -86,6 +127,28 @@ export default function ProposalEditor() {
   const [saving, setSaving] = useState(false);
   const dirtyTimer = useRef<any>(null);
   const [docReady, setDocReady] = useState(false);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = items.findIndex((x) => x.id === active.id);
+    const newIndex = items.findIndex((x) => x.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const reordered = arrayMove(items, oldIndex, newIndex).map((x, i) => ({ ...x, numero_item: i + 1 }));
+    setItems(reordered);
+    try {
+      await Promise.all(
+        reordered.map((x) => updateProposalItemDb(x.id, { numero_item: x.numero_item })),
+      );
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao reordenar itens");
+      load();
+    }
+  }
 
   useEffect(() => { load(); }, [id]);
 
@@ -541,18 +604,24 @@ export default function ProposalEditor() {
                   })()}
                 </div>
                 {items.length === 0 && <Card className="p-8 text-center text-muted-foreground">Nenhum item ainda. Adicione o primeiro serviço.</Card>}
-                {items.map((it, idx) => (
-                  <ItemEditor key={it.id} item={it} numero={idx + 1} pricing={pricings[it.id]}
-                    onChange={(patch)=>updateItem(it, patch)}
-                    onRemove={()=>removeItem(it)}
-                    onOpenPricing={()=>setPricingOpen(it.id)}
-                    onSaveToCatalog={()=>saveItemAsService(it)}
-                    isInternal={isInternal}
-                    proposalClients={proposalClients}
-                    modoFaturamento={proposal.modo_faturamento}
-                    selected={!!selected[it.id]}
-                    onSelect={(v)=>setSelected(s=>({ ...s, [it.id]: v }))} />
-                ))}
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                    {items.map((it, idx) => (
+                      <SortableItemRow key={it.id} id={it.id}>
+                        <ItemEditor item={it} numero={idx + 1} pricing={pricings[it.id]}
+                          onChange={(patch)=>updateItem(it, patch)}
+                          onRemove={()=>removeItem(it)}
+                          onOpenPricing={()=>setPricingOpen(it.id)}
+                          onSaveToCatalog={()=>saveItemAsService(it)}
+                          isInternal={isInternal}
+                          proposalClients={proposalClients}
+                          modoFaturamento={proposal.modo_faturamento}
+                          selected={!!selected[it.id]}
+                          onSelect={(v)=>setSelected(s=>({ ...s, [it.id]: v }))} />
+                      </SortableItemRow>
+                    ))}
+                  </SortableContext>
+                </DndContext>
                 <Card>
                   <CardContent className="p-4 space-y-1.5">
                     <Label>Observações técnicas gerais</Label>
@@ -690,7 +759,16 @@ export default function ProposalEditor() {
 
       <Sheet open={!!pricingOpen} onOpenChange={(o)=>!o && setPricingOpen(null)}>
         <SheetContent side="right" className="w-full sm:max-w-3xl overflow-y-auto">
-          <SheetHeader><SheetTitle>Precificação interna do item</SheetTitle></SheetHeader>
+          <SheetHeader>
+            <SheetTitle>
+              Precificação interna do item
+              {pricingOpen && (() => {
+                const it = items.find(i => i.id === pricingOpen);
+                const nome = it?.nome || it?.descricao_comercial;
+                return nome ? <span className="block text-sm font-normal text-muted-foreground mt-1">#{it?.numero_item} · {nome}</span> : null;
+              })()}
+            </SheetTitle>
+          </SheetHeader>
           {pricingOpen && (
             <div className="mt-4">
               <InlinePricingPanel

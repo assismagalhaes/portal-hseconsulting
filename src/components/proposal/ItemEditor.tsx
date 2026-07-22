@@ -49,10 +49,6 @@ export default function ItemEditor({
           <Label className="text-xs">Descrição comercial (aparece na proposta)</Label>
           <Textarea rows={3} value={local.descricao_comercial || ""} onChange={(e) => setLocal({ ...local, descricao_comercial: e.target.value })} onBlur={() => onChange({ descricao_comercial: local.descricao_comercial })} placeholder="Descrição detalhada do serviço para o cliente" />
         </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">Escopo técnico (interno)</Label>
-          <Textarea rows={2} value={local.escopo_tecnico || ""} onChange={(e) => setLocal({ ...local, escopo_tecnico: e.target.value })} onBlur={() => onChange({ escopo_tecnico: local.escopo_tecnico })} />
-        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <div className="space-y-1.5">
             <Label className="text-xs">Entregáveis (um por linha)</Label>
