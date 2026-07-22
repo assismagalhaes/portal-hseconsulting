@@ -126,6 +126,7 @@ export default function ProposalEditor() {
   const [collapsedItems, setCollapsedItems] = useState<Record<string, boolean>>({});
   const [groupOpen, setGroupOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [, setSavedTick] = useState(0);
   useEffect(() => {
@@ -159,6 +160,32 @@ export default function ProposalEditor() {
   }
 
   useEffect(() => { load(); }, [id]);
+
+  // Atalhos de teclado (somente na edição interna, evita conflito com formulários do cliente)
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      const isField = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable;
+      // Ctrl+Shift+N — novo item (funciona mesmo dentro de campos)
+      if (e.shiftKey && (e.key === "N" || e.key === "n")) {
+        e.preventDefault();
+        addItem();
+        return;
+      }
+      if (isField) return;
+      if (e.key === "p" || e.key === "P") { e.preventDefault(); setPreviewOpen(true); }
+      else if (e.key === "e" || e.key === "E") {
+        e.preventDefault();
+        const allCollapsed = items.length > 0 && items.every(i => collapsedItems[i.id]);
+        if (allCollapsed) setCollapsedItems({});
+        else setCollapsedItems(Object.fromEntries(items.map(i => [i.id, true])));
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, collapsedItems, proposal?.id]);
 
   async function load() {
     if (!id) return;
