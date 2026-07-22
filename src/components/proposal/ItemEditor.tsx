@@ -8,13 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bookmark, Calculator, Trash2 } from "lucide-react";
+import { Bookmark, Calculator, Copy, Trash2 } from "lucide-react";
 import { brl } from "@/lib/format";
 import { statusMargemMeta } from "@/lib/pricing";
 import CategoryCombobox from "@/components/CategoryCombobox";
 
 export default function ItemEditor({
-  item, pricing, onChange, onRemove, onOpenPricing, onSaveToCatalog, numero,
+  item, pricing, onChange, onRemove, onDuplicate, onOpenPricing, onSaveToCatalog, numero,
   isInternal, selected, onSelect, proposalClients, modoFaturamento,
 }: any) {
   const [local, setLocal] = useState(item);
@@ -41,7 +41,14 @@ export default function ItemEditor({
             <Input value={local.nome || ""} onChange={(e) => setLocal({ ...local, nome: e.target.value })} onBlur={() => onChange({ nome: local.nome })} className="font-display font-semibold text-base" placeholder="Nome do serviço (ex.: Visita Técnica)" />
             </div>
           </div>
-          <Button variant="ghost" size="icon" aria-label="Remover item" onClick={onRemove}><Trash2 className="h-4 w-4 text-danger" /></Button>
+          <div className="flex items-center gap-1">
+            {onDuplicate && (
+              <Button variant="ghost" size="icon" aria-label="Duplicar item" title="Duplicar item" onClick={onDuplicate}>
+                <Copy className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" aria-label="Remover item" onClick={onRemove}><Trash2 className="h-4 w-4 text-danger" /></Button>
+          </div>
         </div>
         <div className="space-y-1"><Label className="text-xs">Categoria</Label>
           <CategoryCombobox value={local.categoria || ""} onChange={(v) => { setLocal({ ...local, categoria: v }); onChange({ categoria: v }); }} /></div>
