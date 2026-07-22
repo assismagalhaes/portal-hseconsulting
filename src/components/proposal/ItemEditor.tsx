@@ -8,7 +8,18 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bookmark, Calculator, ChevronDown, ChevronRight, Copy, Trash2 } from "lucide-react";
+import { Bookmark, Calculator, ChevronDown, ChevronRight, Copy, Trash2, AlertTriangle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { brl } from "@/lib/format";
 import { statusMargemMeta } from "@/lib/pricing";
 import CategoryCombobox from "@/components/CategoryCombobox";
@@ -43,6 +54,8 @@ export default function ItemEditor({
   useEffect(() => setLocal(item), [item.id, item.valor_unitario, item.valor_total]);
   const margem = pricing?.indicadores?.status_margem;
   const meta = margem ? statusMargemMeta[margem as keyof typeof statusMargemMeta] : null;
+  const margemPct = Number(pricing?.indicadores?.margem_real ?? pricing?.indicadores?.margem_final ?? NaN);
+  const margemBaixa = !!pricing && (margem === "abaixo" || margem === "negativa" || (Number.isFinite(margemPct) && margemPct < 0));
   const showCnpjPicker = modoFaturamento === "por_cnpj" && Array.isArray(proposalClients) && proposalClients.length > 1;
   return (
     <Card className="shadow-elegant">
@@ -69,6 +82,11 @@ export default function ItemEditor({
               <Badge variant="outline" className="font-mono">#{numero ?? item.numero_item}</Badge>
               {item.categoria && <Badge variant="secondary">{item.categoria}</Badge>}
               {meta && <Badge className={`border ${meta.color}`}>{meta.label}</Badge>}
+              {isInternal && margemBaixa && (
+                <Badge variant="outline" className="border-danger text-danger gap-1" title="Margem abaixo do mínimo — revise a precificação">
+                  <AlertTriangle className="h-3 w-3" /> margem baixa
+                </Badge>
+              )}
               {collapsed && (
                 <span className="ml-auto text-xs font-mono text-muted-foreground">
                   {Number(local.quantidade || 0)} × {brl(Number(local.valor_unitario || 0))} = <span className="text-foreground font-semibold">{brl(Number(local.quantidade || 0) * Number(local.valor_unitario || 0))}</span>
@@ -95,7 +113,28 @@ export default function ItemEditor({
                 <Copy className="h-4 w-4 text-muted-foreground" />
               </Button>
             )}
-            <Button variant="ghost" size="icon" aria-label="Remover item" onClick={onRemove}><Trash2 className="h-4 w-4 text-danger" /></Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Remover item" title="Remover item">
+                  <Trash2 className="h-4 w-4 text-danger" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Remover este item?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {local.nome ? <><strong>{local.nome}</strong> será removido da proposta. </> : "O item será removido da proposta. "}
+                    A precificação interna vinculada também é apagada. Esta ação não pode ser desfeita.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={onRemove} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Remover
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
         {!collapsed && (<>
