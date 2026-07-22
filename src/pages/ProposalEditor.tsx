@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Plus, Trash2, Calculator, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown, Users, Eye, Check } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Calculator, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown, Users, Eye, Check, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import { GripVertical } from "lucide-react";
 import {
   DndContext,
@@ -123,6 +123,7 @@ export default function ProposalEditor() {
   const clientView = isMobile ? false : clientViewRaw;
   const [pricingOpen, setPricingOpen] = useState<string | null>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [collapsedItems, setCollapsedItems] = useState<Record<string, boolean>>({});
   const [groupOpen, setGroupOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
@@ -659,6 +660,16 @@ export default function ProposalEditor() {
                     <SelectTrigger className="w-72"><SelectValue placeholder="…ou adicionar do catálogo" /></SelectTrigger>
                     <SelectContent>{services.map(s=><SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}</SelectContent>
                   </Select>
+                  {items.length > 1 && (
+                    <>
+                      <Button size="sm" variant="ghost" onClick={() => setCollapsedItems(Object.fromEntries(items.map(i => [i.id, true])))}>
+                        <ChevronsDownUp className="h-4 w-4 mr-1" /> Recolher todos
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setCollapsedItems({})}>
+                        <ChevronsUpDown className="h-4 w-4 mr-1" /> Expandir todos
+                      </Button>
+                    </>
+                  )}
                   {isInternal && (() => {
                     const count = Object.values(selected).filter(Boolean).length;
                     return (
@@ -686,7 +697,9 @@ export default function ProposalEditor() {
                           proposalClients={proposalClients}
                           modoFaturamento={proposal.modo_faturamento}
                           selected={!!selected[it.id]}
-                          onSelect={(v)=>setSelected(s=>({ ...s, [it.id]: v }))} />
+                          onSelect={(v)=>setSelected(s=>({ ...s, [it.id]: v }))}
+                          collapsed={!!collapsedItems[it.id]}
+                          onToggleCollapsed={(v: boolean) => setCollapsedItems(s => ({ ...s, [it.id]: v }))} />
                       </SortableItemRow>
                     ))}
                   </SortableContext>
