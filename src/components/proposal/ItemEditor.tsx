@@ -30,9 +30,16 @@ function CharCount({ value, max }: { value: string; max: number }) {
 export default function ItemEditor({
   item, pricing, onChange, onRemove, onDuplicate, onOpenPricing, onSaveToCatalog, numero,
   isInternal, selected, onSelect, proposalClients, modoFaturamento,
+  collapsed: collapsedProp, onToggleCollapsed,
 }: any) {
   const [local, setLocal] = useState(item);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsedLocal, setCollapsedLocal] = useState(false);
+  const controlled = typeof collapsedProp === "boolean";
+  const collapsed = controlled ? collapsedProp : collapsedLocal;
+  const setCollapsed = (v: boolean | ((p: boolean) => boolean)) => {
+    const next = typeof v === "function" ? (v as any)(collapsed) : v;
+    if (controlled) onToggleCollapsed?.(next); else setCollapsedLocal(next);
+  };
   useEffect(() => setLocal(item), [item.id, item.valor_unitario, item.valor_total]);
   const margem = pricing?.indicadores?.status_margem;
   const meta = margem ? statusMargemMeta[margem as keyof typeof statusMargemMeta] : null;
