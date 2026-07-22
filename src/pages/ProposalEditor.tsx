@@ -13,6 +13,8 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { ArrowLeft, Plus, Trash2, Calculator, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown, Users, Eye, Check, ChevronsDownUp, ChevronsUpDown, ChevronDown, ChevronRight } from "lucide-react";
 import { GripVertical } from "lucide-react";
 import {
@@ -127,6 +129,8 @@ export default function ProposalEditor() {
   const [groupOpen, setGroupOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [duplicateSource, setDuplicateSource] = useState<any | null>(null);
+  const [duplicatePickServiceId, setDuplicatePickServiceId] = useState<string | "__blank__" | "__keep__">("__keep__");
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [internalOpen, setInternalOpen] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
@@ -353,19 +357,43 @@ export default function ProposalEditor() {
     setItems(next); updateTotal(next);
   }
 
-  async function duplicateItem(it: any) {
+  async function duplicateItem(it: any, mode: "keep" | "blank" | string = "keep") {
     const numero_item = (items[items.length - 1]?.numero_item || 0) + 1;
+    // `mode` = "keep"  → copia dados do item original com sufixo "(cópia)"
+    //         "blank" → cria item em branco (usuário digita depois)
+    //         <uuid>  → usa dados de um serviço do catálogo
+    const svc = mode !== "keep" && mode !== "blank" ? services.find((s) => s.id === mode) : null;
+    const base: any = svc
+      ? {
+          service_id: svc.id,
+          categoria: svc.categoria || null,
+          nome: svc.nome || "Novo item",
+          descricao_comercial: svc.descricao_comercial || svc.nome || "",
+          escopo_tecnico: svc.escopo_tecnico || "",
+          entregaveis: svc.entregaveis || "",
+          observacoes_escopo: svc.observacoes_escopo || "",
+          quantidade_tecnica: svc.quantidade_tecnica || "",
+        }
+      : mode === "blank"
+        ? {
+            service_id: null, categoria: null, nome: "Novo item",
+            descricao_comercial: "", escopo_tecnico: "",
+            entregaveis: "", observacoes_escopo: "", quantidade_tecnica: "",
+          }
+        : {
+            service_id: it.service_id || null,
+            categoria: it.categoria || null,
+            nome: it.nome ? `${it.nome} (cópia)` : "Novo item",
+            descricao_comercial: it.descricao_comercial || "",
+            escopo_tecnico: it.escopo_tecnico || "",
+            entregaveis: it.entregaveis || "",
+            observacoes_escopo: it.observacoes_escopo || "",
+            quantidade_tecnica: it.quantidade_tecnica || "",
+          };
     const payload: any = {
       proposal_id: proposal.id,
       numero_item,
-      service_id: it.service_id || null,
-      categoria: it.categoria || null,
-      nome: it.nome ? `${it.nome} (cópia)` : "Novo item",
-      descricao_comercial: it.descricao_comercial || "",
-      escopo_tecnico: it.escopo_tecnico || "",
-      entregaveis: it.entregaveis || "",
-      observacoes_escopo: it.observacoes_escopo || "",
-      quantidade_tecnica: it.quantidade_tecnica || "",
+      ...base,
       quantidade: Number(it.quantidade) || 1,
       valor_unitario: Number(it.valor_unitario) || 0,
       valor_total: Number(it.valor_total) || 0,
@@ -382,7 +410,9 @@ export default function ProposalEditor() {
     setItems(next);
     updateTotal(next);
 
-    // Copia a precificação interna, se existir no item original.
+    // Copia a precificação interna, se existir no item original (essa é a razão
+    // principal do "duplicar" no fluxo real — reaproveitar custos/margem já
+    // calculados independentemente do serviço escolhido).
     const src = pricings[it.id];
     if (src && data) {
       try {
@@ -402,7 +432,7 @@ export default function ProposalEditor() {
         if (pr) setPricings((prev) => ({ ...prev, [data.id]: pr }));
       } catch { /* best-effort */ }
     }
-    toast.success("Item duplicado");
+    toast.success(svc ? `Item duplicado com dados de "${svc.nome}"` : "Item duplicado");
   }
 
   async function saveItemAsService(it: any) {
@@ -721,7 +751,7 @@ export default function ProposalEditor() {
                         <ItemEditor item={it} numero={idx + 1} pricing={pricings[it.id]}
                           onChange={(patch)=>updateItem(it, patch)}
                           onRemove={()=>removeItem(it)}
-                          onDuplicate={()=>duplicateItem(it)}
+                          onDuplicate={()=>{ setDuplicatePickServiceId("__keep__"); setDuplicateSource(it); }}
                           onOpenPricing={()=>setPricingOpen(it.id)}
                           onSaveToCatalog={()=>saveItemAsService(it)}
                           isInternal={isInternal}
@@ -944,6 +974,66 @@ export default function ProposalEditor() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <Dialog open={!!duplicateSource} onOpenChange={(o) => { if (!o) setDuplicateSource(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Duplicar item</DialogTitle>
+            <DialogDescription>
+              A precificação interna (custos, horas, margem e valor) do item
+              <strong> #{duplicateSource?.numero_item} {duplicateSource?.nome}</strong> será copiada.
+              Escolha qual serviço aplicar ao novo item.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label className="text-xs">Serviço para o novo item</Label>
+            <Command className="border rounded-md">
+              <CommandInput placeholder="Buscar no catálogo…" />
+              <CommandList className="max-h-64">
+                <CommandEmpty>Nenhum serviço encontrado.</CommandEmpty>
+                <CommandGroup heading="Opções">
+                  <CommandItem value="keep manter copia mesmo item" onSelect={() => setDuplicatePickServiceId("__keep__")}>
+                    <div className="flex items-center justify-between w-full gap-2">
+                      <span>Manter o mesmo serviço <span className="text-muted-foreground">(cópia)</span></span>
+                      {duplicatePickServiceId === "__keep__" && <Check className="h-4 w-4 text-primary" />}
+                    </div>
+                  </CommandItem>
+                  <CommandItem value="blank novo em branco vazio" onSelect={() => setDuplicatePickServiceId("__blank__")}>
+                    <div className="flex items-center justify-between w-full gap-2">
+                      <span>Item novo em branco <span className="text-muted-foreground">(cadastrar depois)</span></span>
+                      {duplicatePickServiceId === "__blank__" && <Check className="h-4 w-4 text-primary" />}
+                    </div>
+                  </CommandItem>
+                </CommandGroup>
+                <CommandGroup heading="Catálogo de serviços">
+                  {services.map((s) => (
+                    <CommandItem key={s.id} value={`${s.nome} ${s.categoria || ""}`} onSelect={() => setDuplicatePickServiceId(s.id)}>
+                      <div className="flex items-center justify-between w-full gap-2">
+                        <div className="min-w-0">
+                          <div className="truncate">{s.nome}</div>
+                          {s.categoria && <div className="text-xs text-muted-foreground truncate">{s.categoria}</div>}
+                        </div>
+                        {duplicatePickServiceId === s.id && <Check className="h-4 w-4 text-primary shrink-0" />}
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDuplicateSource(null)}>Cancelar</Button>
+            <Button onClick={async () => {
+              const src = duplicateSource;
+              const pick = duplicatePickServiceId;
+              setDuplicateSource(null);
+              if (src) await duplicateItem(src, pick === "__keep__" ? "keep" : pick === "__blank__" ? "blank" : pick);
+            }}>
+              <Plus className="h-4 w-4 mr-1" /> Duplicar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
