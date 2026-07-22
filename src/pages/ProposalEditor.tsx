@@ -82,6 +82,29 @@ import {
 
 const newId = () => Math.random().toString(36).slice(2, 10);
 
+function SortableItemRow({ id, children }: { id: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  };
+  return (
+    <div ref={setNodeRef} style={style} className="relative group">
+      <button
+        type="button"
+        aria-label="Arrastar para reordenar"
+        className="absolute -left-1 top-3 z-10 p-1 rounded hover:bg-muted text-muted-foreground cursor-grab active:cursor-grabbing opacity-40 group-hover:opacity-100 transition"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <div className="pl-5">{children}</div>
+    </div>
+  );
+}
+
 export default function ProposalEditor() {
   const { id } = useParams<{id:string}>();
   const nav = useNavigate();
