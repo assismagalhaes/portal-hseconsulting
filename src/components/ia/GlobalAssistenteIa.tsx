@@ -34,7 +34,7 @@ export default function GlobalAssistenteIa() {
   return (
     <>
       <Button onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-40 shadow-lg rounded-full h-12 px-5" size="lg">
+        className="fixed bottom-6 right-6 z-40 shadow-lg rounded-full h-12 px-5" size="lg">
         <Sparkles className="h-4 w-4 mr-2" />
         Assistente IA
       </Button>

@@ -338,7 +338,7 @@ function SidebarShell({
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out border-r border-sidebar-border",
+        "hidden md:flex flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out border-r border-sidebar-border sticky top-0 h-dvh self-start",
         collapsed ? "w-[68px]" : "w-64",
       )}
     >
@@ -534,7 +534,7 @@ export default function AppLayout() {
           </DropdownMenu>
         </header>
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 pb-24">
           <Outlet />
         </div>
         <GlobalAssistenteIa />
