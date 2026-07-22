@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Plus, Trash2, Calculator, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown, Users, Eye } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Calculator, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown, Users, Eye, Check } from "lucide-react";
 import { GripVertical } from "lucide-react";
 import {
   DndContext,
@@ -125,6 +125,7 @@ export default function ProposalEditor() {
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [groupOpen, setGroupOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const dirtyTimer = useRef<any>(null);
   const [docReady, setDocReady] = useState(false);
   const sensors = useSensors(
@@ -180,6 +181,7 @@ export default function ProposalEditor() {
     try {
       await updateProposal(proposal.id, patch);
       setProposal({ ...proposal, ...patch });
+      setLastSavedAt(Date.now());
       return true;
     } catch (e: any) {
       toast.error(e?.message || "Falha ao salvar");
@@ -203,6 +205,7 @@ export default function ProposalEditor() {
       const saved = await upsertProposalClient(proposal.id, c);
       if (!c.id) setProposal((p: any) => ({ ...p, client_id: saved.id }));
       setClient(saved);
+      setLastSavedAt(Date.now());
     } catch (e: any) {
       toast.error(e?.message || "Falha ao salvar cliente");
     } finally {
@@ -271,6 +274,7 @@ export default function ProposalEditor() {
   async function updateItem(it: any, patch: any) {
     const merged = { ...it, ...patch };
     merged.valor_total = Number(merged.quantidade||0) * Number(merged.valor_unitario||0);
+    setSaving(true);
     try {
       await updateProposalItemDb(it.id, {
         categoria: merged.categoria || null,
@@ -287,8 +291,11 @@ export default function ProposalEditor() {
         rateado: merged.rateado ?? false,
       });
     } catch (e: any) {
+      setSaving(false);
       return toast.error(e?.message || "Falha ao salvar item");
     }
+    setSaving(false);
+    setLastSavedAt(Date.now());
     const next = items.map(x => x.id === it.id ? merged : x);
     setItems(next); updateTotal(next);
   }
@@ -303,6 +310,58 @@ export default function ProposalEditor() {
         .map(x => updateProposalItemDb(x.id, { numero_item: x.numero_item }))
     );
     setItems(next); updateTotal(next);
+  }
+
+  async function duplicateItem(it: any) {
+    const numero_item = (items[items.length - 1]?.numero_item || 0) + 1;
+    const payload: any = {
+      proposal_id: proposal.id,
+      numero_item,
+      service_id: it.service_id || null,
+      categoria: it.categoria || null,
+      nome: it.nome ? `${it.nome} (cópia)` : "Novo item",
+      descricao_comercial: it.descricao_comercial || "",
+      escopo_tecnico: it.escopo_tecnico || "",
+      entregaveis: it.entregaveis || "",
+      observacoes_escopo: it.observacoes_escopo || "",
+      quantidade_tecnica: it.quantidade_tecnica || "",
+      quantidade: Number(it.quantidade) || 1,
+      valor_unitario: Number(it.valor_unitario) || 0,
+      valor_total: Number(it.valor_total) || 0,
+      client_id: it.client_id || null,
+      rateado: !!it.rateado,
+    };
+    let data: any;
+    try {
+      data = await insertProposalItem(payload);
+    } catch (e: any) {
+      return toast.error(e?.message || "Falha ao duplicar item");
+    }
+    const next = [...items, data];
+    setItems(next);
+    updateTotal(next);
+
+    // Copia a precificação interna, se existir no item original.
+    const src = pricings[it.id];
+    if (src && data) {
+      try {
+        const pr = await insertItemPricing({
+          proposal_item_id: data.id,
+          custos: src.custos || [],
+          horas: src.horas || [],
+          aliquota_imposto: src.aliquota_imposto,
+          margem_desejada: src.margem_desejada,
+          lucro_desejado: src.lucro_desejado,
+          desconto_comercial: src.desconto_comercial,
+          preco_sugerido: src.preco_sugerido,
+          preco_arredondado: src.preco_arredondado,
+          preco_aprovado: src.preco_aprovado,
+          indicadores: src.indicadores || {},
+        });
+        if (pr) setPricings((prev) => ({ ...prev, [data.id]: pr }));
+      } catch { /* best-effort */ }
+    }
+    toast.success("Item duplicado");
   }
 
   async function saveItemAsService(it: any) {
@@ -529,6 +588,9 @@ export default function ProposalEditor() {
           <>
             <Button variant="ghost" size="sm" asChild><Link to="/propostas"><ArrowLeft className="h-4 w-4 mr-1" /> Voltar</Link></Button>
             {saving && <span className="text-xs text-muted-foreground flex items-center gap-1"><Save className="h-3 w-3 animate-pulse" /> salvando…</span>}
+            {!saving && lastSavedAt && (Date.now() - lastSavedAt) < 4000 && (
+              <span className="text-xs text-success flex items-center gap-1"><Check className="h-3 w-3" /> salvo</span>
+            )}
             <Button variant="outline" size="sm" onClick={handlePrint} disabled={!docReady}>
               <FileDown className="h-4 w-4 mr-1" /> Gerar PDF
             </Button>
