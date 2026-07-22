@@ -628,6 +628,9 @@ export default function ProposalEditor() {
             <Button variant="outline" size="sm" onClick={handlePrint} disabled={!docReady}>
               <FileDown className="h-4 w-4 mr-1" /> Gerar PDF
             </Button>
+            <Button variant="outline" size="sm" onClick={() => setPreviewOpen(true)} disabled={!docReady} title="Pré-visualizar (Ctrl/⌘+P)">
+              <Eye className="h-4 w-4 mr-1" /> Pré-visualizar
+            </Button>
             <Select value={proposal.status} onValueChange={changeStatus}>
               <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
               <SelectContent>{Object.entries(proposalStatusLabel).map(([k,v])=><SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
