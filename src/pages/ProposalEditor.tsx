@@ -13,6 +13,8 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { ArrowLeft, Plus, Trash2, Calculator, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown, Users, Eye, Check, ChevronsDownUp, ChevronsUpDown, ChevronDown, ChevronRight } from "lucide-react";
 import { GripVertical } from "lucide-react";
 import {
@@ -127,6 +129,8 @@ export default function ProposalEditor() {
   const [groupOpen, setGroupOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [duplicateSource, setDuplicateSource] = useState<any | null>(null);
+  const [duplicatePickServiceId, setDuplicatePickServiceId] = useState<string | "__blank__" | "__keep__">("__keep__");
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [internalOpen, setInternalOpen] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
@@ -353,19 +357,43 @@ export default function ProposalEditor() {
     setItems(next); updateTotal(next);
   }
 
-  async function duplicateItem(it: any) {
+  async function duplicateItem(it: any, mode: "keep" | "blank" | string = "keep") {
     const numero_item = (items[items.length - 1]?.numero_item || 0) + 1;
+    // `mode` = "keep"  → copia dados do item original com sufixo "(cópia)"
+    //         "blank" → cria item em branco (usuário digita depois)
+    //         <uuid>  → usa dados de um serviço do catálogo
+    const svc = mode !== "keep" && mode !== "blank" ? services.find((s) => s.id === mode) : null;
+    const base: any = svc
+      ? {
+          service_id: svc.id,
+          categoria: svc.categoria || null,
+          nome: svc.nome || "Novo item",
+          descricao_comercial: svc.descricao_comercial || svc.nome || "",
+          escopo_tecnico: svc.escopo_tecnico || "",
+          entregaveis: svc.entregaveis || "",
+          observacoes_escopo: svc.observacoes_escopo || "",
+          quantidade_tecnica: svc.quantidade_tecnica || "",
+        }
+      : mode === "blank"
+        ? {
+            service_id: null, categoria: null, nome: "Novo item",
+            descricao_comercial: "", escopo_tecnico: "",
+            entregaveis: "", observacoes_escopo: "", quantidade_tecnica: "",
+          }
+        : {
+            service_id: it.service_id || null,
+            categoria: it.categoria || null,
+            nome: it.nome ? `${it.nome} (cópia)` : "Novo item",
+            descricao_comercial: it.descricao_comercial || "",
+            escopo_tecnico: it.escopo_tecnico || "",
+            entregaveis: it.entregaveis || "",
+            observacoes_escopo: it.observacoes_escopo || "",
+            quantidade_tecnica: it.quantidade_tecnica || "",
+          };
     const payload: any = {
       proposal_id: proposal.id,
       numero_item,
-      service_id: it.service_id || null,
-      categoria: it.categoria || null,
-      nome: it.nome ? `${it.nome} (cópia)` : "Novo item",
-      descricao_comercial: it.descricao_comercial || "",
-      escopo_tecnico: it.escopo_tecnico || "",
-      entregaveis: it.entregaveis || "",
-      observacoes_escopo: it.observacoes_escopo || "",
-      quantidade_tecnica: it.quantidade_tecnica || "",
+      ...base,
       quantidade: Number(it.quantidade) || 1,
       valor_unitario: Number(it.valor_unitario) || 0,
       valor_total: Number(it.valor_total) || 0,
@@ -382,7 +410,9 @@ export default function ProposalEditor() {
     setItems(next);
     updateTotal(next);
 
-    // Copia a precificação interna, se existir no item original.
+    // Copia a precificação interna, se existir no item original (essa é a razão
+    // principal do "duplicar" no fluxo real — reaproveitar custos/margem já
+    // calculados independentemente do serviço escolhido).
     const src = pricings[it.id];
     if (src && data) {
       try {
@@ -402,7 +432,7 @@ export default function ProposalEditor() {
         if (pr) setPricings((prev) => ({ ...prev, [data.id]: pr }));
       } catch { /* best-effort */ }
     }
-    toast.success("Item duplicado");
+    toast.success(svc ? `Item duplicado com dados de "${svc.nome}"` : "Item duplicado");
   }
 
   async function saveItemAsService(it: any) {
