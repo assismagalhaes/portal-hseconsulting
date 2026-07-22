@@ -974,6 +974,66 @@ export default function ProposalEditor() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <Dialog open={!!duplicateSource} onOpenChange={(o) => { if (!o) setDuplicateSource(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Duplicar item</DialogTitle>
+            <DialogDescription>
+              A precificação interna (custos, horas, margem e valor) do item
+              <strong> #{duplicateSource?.numero_item} {duplicateSource?.nome}</strong> será copiada.
+              Escolha qual serviço aplicar ao novo item.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label className="text-xs">Serviço para o novo item</Label>
+            <Command className="border rounded-md">
+              <CommandInput placeholder="Buscar no catálogo…" />
+              <CommandList className="max-h-64">
+                <CommandEmpty>Nenhum serviço encontrado.</CommandEmpty>
+                <CommandGroup heading="Opções">
+                  <CommandItem value="keep manter copia mesmo item" onSelect={() => setDuplicatePickServiceId("__keep__")}>
+                    <div className="flex items-center justify-between w-full gap-2">
+                      <span>Manter o mesmo serviço <span className="text-muted-foreground">(cópia)</span></span>
+                      {duplicatePickServiceId === "__keep__" && <Check className="h-4 w-4 text-primary" />}
+                    </div>
+                  </CommandItem>
+                  <CommandItem value="blank novo em branco vazio" onSelect={() => setDuplicatePickServiceId("__blank__")}>
+                    <div className="flex items-center justify-between w-full gap-2">
+                      <span>Item novo em branco <span className="text-muted-foreground">(cadastrar depois)</span></span>
+                      {duplicatePickServiceId === "__blank__" && <Check className="h-4 w-4 text-primary" />}
+                    </div>
+                  </CommandItem>
+                </CommandGroup>
+                <CommandGroup heading="Catálogo de serviços">
+                  {services.map((s) => (
+                    <CommandItem key={s.id} value={`${s.nome} ${s.categoria || ""}`} onSelect={() => setDuplicatePickServiceId(s.id)}>
+                      <div className="flex items-center justify-between w-full gap-2">
+                        <div className="min-w-0">
+                          <div className="truncate">{s.nome}</div>
+                          {s.categoria && <div className="text-xs text-muted-foreground truncate">{s.categoria}</div>}
+                        </div>
+                        {duplicatePickServiceId === s.id && <Check className="h-4 w-4 text-primary shrink-0" />}
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDuplicateSource(null)}>Cancelar</Button>
+            <Button onClick={async () => {
+              const src = duplicateSource;
+              const pick = duplicatePickServiceId;
+              setDuplicateSource(null);
+              if (src) await duplicateItem(src, pick === "__keep__" ? "keep" : pick === "__blank__" ? "blank" : pick);
+            }}>
+              <Plus className="h-4 w-4 mr-1" /> Duplicar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
