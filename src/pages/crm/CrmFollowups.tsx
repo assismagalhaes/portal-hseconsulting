@@ -196,7 +196,7 @@ export default function CrmFollowups() {
       .eq("id", f.id);
     if (error) return toast.error(error.message);
     const { data: { user } } = await supabase.auth.getUser();
-    const novo = {
+    const novo: any = {
       lead_id: f.lead_id, client_id: f.client_id,
       oportunidade_id: f.oportunidade_id, proposal_id: f.proposal_id,
       tipo: f.tipo, data: reagForm.data, hora: reagForm.hora || null,
