@@ -65,7 +65,7 @@ export default function ItemEditor({
                 <Checkbox checked={!!selected} onCheckedChange={(v) => onSelect?.(!!v)} aria-label="Selecionar para cálculo em grupo" />
               </div>
             )}
-            <div className="flex-1 space-y-2">
+            <div className="flex-1 space-y-2 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <Button
                 variant="ghost"
@@ -86,18 +86,6 @@ export default function ItemEditor({
                 </span>
               )}
             </div>
-            {collapsed ? (
-              <button
-                type="button"
-                onClick={() => setCollapsed(false)}
-                className="w-full text-left font-display font-semibold text-base truncate hover:underline"
-                title="Clique para expandir"
-              >
-                {local.nome || <span className="text-muted-foreground italic">Sem nome</span>}
-              </button>
-            ) : (
-              <Input value={local.nome || ""} onChange={(e) => setLocal({ ...local, nome: e.target.value })} onBlur={() => onChange({ nome: local.nome })} className="font-display font-semibold text-base" placeholder="Nome do serviço (ex.: Visita Técnica)" />
-            )}
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -130,6 +118,18 @@ export default function ItemEditor({
             </AlertDialog>
           </div>
         </div>
+        {collapsed ? (
+          <button
+            type="button"
+            onClick={() => setCollapsed(false)}
+            className="w-full text-left font-display font-semibold text-base truncate hover:underline"
+            title="Clique para expandir"
+          >
+            {local.nome || <span className="text-muted-foreground italic">Sem nome</span>}
+          </button>
+        ) : (
+          <Input value={local.nome || ""} onChange={(e) => setLocal({ ...local, nome: e.target.value })} onBlur={() => onChange({ nome: local.nome })} className="font-display font-semibold text-base" placeholder="Nome do serviço (ex.: Visita Técnica)" />
+        )}
         {!collapsed && (<>
         <div className="space-y-1"><Label className="text-xs">Categoria</Label>
           <CategoryCombobox value={local.categoria || ""} onChange={(v) => { setLocal({ ...local, categoria: v }); onChange({ categoria: v }); }} /></div>
