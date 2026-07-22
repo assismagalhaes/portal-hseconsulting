@@ -907,6 +907,29 @@ export default function ProposalEditor() {
           onApplied={()=>{ setSelected({}); load(); }}
         />
       )}
+
+      <Sheet open={previewOpen} onOpenChange={setPreviewOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-[900px] p-0 overflow-hidden flex flex-col">
+          <SheetHeader className="px-6 py-3 border-b flex-row items-center justify-between space-y-0">
+            <SheetTitle className="text-base">Pré-visualização da proposta</SheetTitle>
+            <Button size="sm" variant="outline" onClick={handlePrint} disabled={!docReady}>
+              <FileDown className="h-4 w-4 mr-1" /> Gerar PDF
+            </Button>
+          </SheetHeader>
+          <div className="flex-1 overflow-auto bg-muted/40 p-4">
+            <div className="mx-auto shadow-elegant bg-white" style={{ width: "210mm", transformOrigin: "top center" }}>
+              <ProposalDocument
+                proposal={proposal}
+                client={client}
+                items={items}
+                revisions={revisions}
+                proposalClients={proposalClients}
+                onReady={() => setDocReady(true)}
+              />
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
