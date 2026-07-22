@@ -8,16 +8,31 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bookmark, Calculator, Copy, Trash2 } from "lucide-react";
+import { Bookmark, Calculator, ChevronDown, ChevronRight, Copy, Trash2 } from "lucide-react";
 import { brl } from "@/lib/format";
 import { statusMargemMeta } from "@/lib/pricing";
 import CategoryCombobox from "@/components/CategoryCombobox";
+
+const MAX_DESCRICAO = 800;
+const MAX_ESCOPO = 500;
+
+function CharCount({ value, max }: { value: string; max: number }) {
+  const len = (value || "").length;
+  const over = len > max;
+  const near = !over && len > max * 0.9;
+  return (
+    <span className={`text-[10px] font-mono ${over ? "text-danger" : near ? "text-warning" : "text-muted-foreground"}`}>
+      {len}/{max}
+    </span>
+  );
+}
 
 export default function ItemEditor({
   item, pricing, onChange, onRemove, onDuplicate, onOpenPricing, onSaveToCatalog, numero,
   isInternal, selected, onSelect, proposalClients, modoFaturamento,
 }: any) {
   const [local, setLocal] = useState(item);
+  const [collapsed, setCollapsed] = useState(false);
   useEffect(() => setLocal(item), [item.id, item.valor_unitario, item.valor_total]);
   const margem = pricing?.indicadores?.status_margem;
   const meta = margem ? statusMargemMeta[margem as keyof typeof statusMargemMeta] : null;
@@ -34,11 +49,37 @@ export default function ItemEditor({
             )}
             <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 -ml-1"
+                aria-label={collapsed ? "Expandir item" : "Recolher item"}
+                title={collapsed ? "Expandir" : "Recolher"}
+                onClick={() => setCollapsed((v) => !v)}
+              >
+                {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
               <Badge variant="outline" className="font-mono">#{numero ?? item.numero_item}</Badge>
               {item.categoria && <Badge variant="secondary">{item.categoria}</Badge>}
               {meta && <Badge className={`border ${meta.color}`}>{meta.label}</Badge>}
+              {collapsed && (
+                <span className="ml-auto text-xs font-mono text-muted-foreground">
+                  {Number(local.quantidade || 0)} × {brl(Number(local.valor_unitario || 0))} = <span className="text-foreground font-semibold">{brl(Number(local.quantidade || 0) * Number(local.valor_unitario || 0))}</span>
+                </span>
+              )}
             </div>
-            <Input value={local.nome || ""} onChange={(e) => setLocal({ ...local, nome: e.target.value })} onBlur={() => onChange({ nome: local.nome })} className="font-display font-semibold text-base" placeholder="Nome do serviço (ex.: Visita Técnica)" />
+            {collapsed ? (
+              <button
+                type="button"
+                onClick={() => setCollapsed(false)}
+                className="w-full text-left font-display font-semibold text-base truncate hover:underline"
+                title="Clique para expandir"
+              >
+                {local.nome || <span className="text-muted-foreground italic">Sem nome</span>}
+              </button>
+            ) : (
+              <Input value={local.nome || ""} onChange={(e) => setLocal({ ...local, nome: e.target.value })} onBlur={() => onChange({ nome: local.nome })} className="font-display font-semibold text-base" placeholder="Nome do serviço (ex.: Visita Técnica)" />
+            )}
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -50,19 +91,29 @@ export default function ItemEditor({
             <Button variant="ghost" size="icon" aria-label="Remover item" onClick={onRemove}><Trash2 className="h-4 w-4 text-danger" /></Button>
           </div>
         </div>
+        {!collapsed && (<>
         <div className="space-y-1"><Label className="text-xs">Categoria</Label>
           <CategoryCombobox value={local.categoria || ""} onChange={(v) => { setLocal({ ...local, categoria: v }); onChange({ categoria: v }); }} /></div>
         <div className="space-y-1.5">
-          <Label className="text-xs">Descrição comercial (aparece na proposta)</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Descrição comercial (aparece na proposta)</Label>
+            <CharCount value={local.descricao_comercial || ""} max={MAX_DESCRICAO} />
+          </div>
           <Textarea rows={3} value={local.descricao_comercial || ""} onChange={(e) => setLocal({ ...local, descricao_comercial: e.target.value })} onBlur={() => onChange({ descricao_comercial: local.descricao_comercial })} placeholder="Descrição detalhada do serviço para o cliente" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <div className="space-y-1.5">
-            <Label className="text-xs">Entregáveis (um por linha)</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Entregáveis (um por linha)</Label>
+              <CharCount value={local.entregaveis || ""} max={MAX_ESCOPO} />
+            </div>
             <Textarea rows={3} value={local.entregaveis || ""} onChange={(e) => setLocal({ ...local, entregaveis: e.target.value })} onBlur={() => onChange({ entregaveis: local.entregaveis })} placeholder={"Relatório técnico\nRegistro dos resultados"} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Observações de escopo (cliente)</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Observações de escopo (cliente)</Label>
+              <CharCount value={local.observacoes_escopo || ""} max={MAX_ESCOPO} />
+            </div>
             <Textarea rows={3} value={local.observacoes_escopo || ""} onChange={(e) => setLocal({ ...local, observacoes_escopo: e.target.value })} onBlur={() => onChange({ observacoes_escopo: local.observacoes_escopo })} placeholder="Observações específicas deste serviço" />
           </div>
         </div>
@@ -125,6 +176,7 @@ export default function ItemEditor({
             </Button>
           </div>
         )}
+        </>)}
       </CardContent>
     </Card>
   );
