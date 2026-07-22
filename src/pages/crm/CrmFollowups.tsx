@@ -174,11 +174,39 @@ export default function CrmFollowups() {
         status: "pendente",
         created_by: user?.id || null,
       };
-      const { error: e2 } = await supabase.from("crm_followups").insert(novo);
+      const { data: ins, error: e2 } = await supabase.from("crm_followups").insert(novo).select("id").single();
       if (e2) return toast.error(e2.message);
+      await notifyResponsavel(novo, ins?.id);
     }
     toast.success("Follow-up concluído");
     setConcluirOpen(null); reload();
+  }
+
+  function openReagendar(f: any) {
+    setReagOpen(f);
+    setReagForm({ data: f.data || "", hora: f.hora?.slice(0,5) || "", motivo: "" });
+  }
+  async function confirmarReagendar(e: React.FormEvent) {
+    e.preventDefault();
+    const f = reagOpen; if (!f) return;
+    if (!reagForm.data) return toast.error("Informe a nova data");
+    const nota = `\n[Reagendado de ${formatDate(f.data)}${f.hora ? " " + String(f.hora).slice(0,5) : ""}${reagForm.motivo ? " — " + reagForm.motivo : ""}]`;
+    const { error } = await supabase.from("crm_followups")
+      .update({ status: "reagendado", resumo: ((f.resumo||"") + nota).trim() })
+      .eq("id", f.id);
+    if (error) return toast.error(error.message);
+    const { data: { user } } = await supabase.auth.getUser();
+    const novo = {
+      lead_id: f.lead_id, client_id: f.client_id,
+      oportunidade_id: f.oportunidade_id, proposal_id: f.proposal_id,
+      tipo: f.tipo, data: reagForm.data, hora: reagForm.hora || null,
+      responsavel_id: f.responsavel_id, proxima_acao: f.proxima_acao,
+      status: "pendente", created_by: user?.id || null,
+    };
+    const { data: ins } = await supabase.from("crm_followups").insert(novo).select("id").single();
+    await notifyResponsavel(novo, ins?.id);
+    toast.success("Follow-up reagendado");
+    setReagOpen(null); reload();
   }
 
   const hoje = todayISO();
