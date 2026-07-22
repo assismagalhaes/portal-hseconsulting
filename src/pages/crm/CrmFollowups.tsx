@@ -363,6 +363,11 @@ export default function CrmFollowups() {
                                 <CheckCircle2 className="h-3.5 w-3.5 mr-1"/>Concluir
                               </Button>
                             )}
+                            {(f.status === "pendente" || f.status === "sem_resposta") && (
+                              <Button variant="ghost" size="sm" onClick={()=>openReagendar(f)} className="text-sky-700 hover:text-sky-800">
+                                <CalendarPlus className="h-3.5 w-3.5 mr-1"/>Reagendar
+                              </Button>
+                            )}
                             <Button variant="ghost" size="sm" onClick={()=>openEdit(f)}>Editar</Button>
                           </td>
                         </tr>
@@ -405,6 +410,7 @@ export default function CrmFollowups() {
                           <span className="text-[10px] text-muted-foreground">{f.responsavel_id ? respNome(f.responsavel_id) : ""}</span>
                           <div className="flex gap-1">
                             <Button variant="ghost" size="sm" className="h-6 px-2 text-emerald-700" onClick={()=>openConcluir(f)}><CheckCircle2 className="h-3 w-3"/></Button>
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-sky-700" onClick={()=>openReagendar(f)}><CalendarPlus className="h-3 w-3"/></Button>
                             <Button variant="ghost" size="sm" className="h-6 px-2" onClick={()=>openEdit(f)}>Editar</Button>
                           </div>
                         </div>
