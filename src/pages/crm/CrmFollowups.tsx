@@ -91,6 +91,32 @@ export default function CrmFollowups() {
   function openNew() { setEditing(null); setForm(empty); setOpen(true); }
   function openEdit(f:any) { setEditing(f); setForm({ ...empty, ...f }); setOpen(true); }
 
+  async function notifyResponsavel(payload: any, followupId?: string) {
+    if (!payload.responsavel_id) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.id && payload.responsavel_id === user.id) return;
+    const vinc =
+      oports.find(o=>o.id===payload.oportunidade_id)?.titulo
+      || clients.find(c=>c.id===payload.client_id)?.razao_social
+      || leads.find(l=>l.id===payload.lead_id)?.empresa
+      || "";
+    const tipoLabel = FUP_TIPOS.find(t=>t.value===payload.tipo)?.label || payload.tipo;
+    await supabase.from("notificacoes").insert({
+      user_id: payload.responsavel_id,
+      modulo: "crm",
+      tipo: "followup_agendado",
+      titulo: `Follow-up agendado: ${tipoLabel}${vinc ? " · " + vinc : ""}`,
+      mensagem: `${formatDate(payload.data)}${payload.hora ? " às " + String(payload.hora).slice(0,5) : ""}${payload.proxima_acao ? " — " + payload.proxima_acao : ""}`,
+      prioridade: payload.data <= todayISO() ? "alta" : "normal",
+      status: "nao_lida",
+      link: "/crm/followups",
+      entidade_tipo: "crm_followup",
+      entidade_id: followupId ?? null,
+      origem: "manual",
+      metadata: {},
+    });
+  }
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setFormErr(null);
@@ -107,10 +133,14 @@ export default function CrmFollowups() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.id) payload.created_by = user.id;
     }
-    const { error } = editing
-      ? await supabase.from("crm_followups").update(payload).eq("id", editing.id)
-      : await supabase.from("crm_followups").insert(payload);
-    if (error) return toast.error(error.message);
+    if (editing) {
+      const { error } = await supabase.from("crm_followups").update(payload).eq("id", editing.id);
+      if (error) return toast.error(error.message);
+    } else {
+      const { data, error } = await supabase.from("crm_followups").insert(payload).select("id").single();
+      if (error) return toast.error(error.message);
+      if (payload.status === "pendente") await notifyResponsavel(payload, data?.id);
+    }
     toast.success("Follow-up salvo"); setOpen(false); reload();
   }
 
