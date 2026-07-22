@@ -57,13 +57,111 @@ export function formatCnpj(v: string): string {
 /** Normaliza cidade vinda em CAIXA ALTA / sem acento para Title Case ("Fortaleza"). */
 export function normalizeCidade(v: string | null): string | null {
   if (!v) return v;
-  const s = String(v).trim().toLowerCase();
-  if (!s) return null;
-  const lower = new Set(["de", "da", "do", "das", "dos", "e"]);
-  return s
-    .split(/\s+/)
-    .map((w, i) => (i > 0 && lower.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)))
-    .join(" ");
+  return smartTitleCase(v);
+}
+
+/* ============================================================
+ * Normalização tipográfica dos textos vindos da Receita
+ * A base pública devolve tudo em CAIXA ALTA e sem acentos.
+ * Aqui reconstruímos acentuação por dicionário + Title Case,
+ * preservando siglas, tipos societários, UFs e numerais.
+ * ============================================================ */
+const LOWERCASE_WORDS = new Set([
+  "de","da","do","das","dos","e","em","na","no","nas","nos",
+  "para","por","com","a","o","as","os","à","às","ao","aos",
+  "sob","sobre","entre","sem",
+]);
+const UPPERCASE_TOKENS = new Set([
+  "LTDA","ME","EPP","EIRELI","SA","S/A","MEI","CIA","EPI","EPC",
+  "CNPJ","CPF","CEP","UF","BR",
+  "SP","RJ","MG","RS","PR","SC","BA","PE","CE","GO","DF","PA","AM","MT","MS",
+  "ES","MA","PI","RN","PB","AL","SE","TO","AP","AC","RO","RR",
+  "II","III","IV","VI","VII","VIII","IX","XI","XII","XIII","XIV","XV","XX",
+]);
+const ACCENT_DICT: Record<string,string> = {
+  "comercio":"Comércio","comercial":"Comercial","servico":"Serviço","servicos":"Serviços",
+  "industria":"Indústria","industrial":"Industrial","producao":"Produção",
+  "construcao":"Construção","construcoes":"Construções","engenharia":"Engenharia",
+  "administracao":"Administração","gestao":"Gestão","operacao":"Operação","operacoes":"Operações",
+  "solucao":"Solução","solucoes":"Soluções","importacao":"Importação","exportacao":"Exportação",
+  "distribuicao":"Distribuição","representacao":"Representação","representacoes":"Representações",
+  "participacao":"Participação","participacoes":"Participações",
+  "consultoria":"Consultoria","assessoria":"Assessoria","auditoria":"Auditoria",
+  "tecnologia":"Tecnologia","tecnologias":"Tecnologias","informatica":"Informática",
+  "logistica":"Logística","transportes":"Transportes","veiculos":"Veículos",
+  "medico":"Médico","medica":"Médica","medicos":"Médicos","medicas":"Médicas",
+  "juridico":"Jurídico","juridica":"Jurídica","publico":"Público","publica":"Pública",
+  "publicos":"Públicos","publicas":"Públicas",
+  "saude":"Saúde","seguranca":"Segurança","trabalho":"Trabalho","educacao":"Educação",
+  "alimentacao":"Alimentação","conservacao":"Conservação","manutencao":"Manutenção",
+  "instalacao":"Instalação","instalacoes":"Instalações","reparacao":"Reparação",
+  "fabricacao":"Fabricação","confeccao":"Confecção","confeccoes":"Confecções",
+  "associacao":"Associação","cooperativa":"Cooperativa","fundacao":"Fundação",
+  "instituicao":"Instituição","organizacao":"Organização",
+  "avenida":"Avenida","praca":"Praça","travessa":"Travessa","rodovia":"Rodovia",
+  "estrada":"Estrada","alameda":"Alameda","quadra":"Quadra","conjunto":"Conjunto",
+  "condominio":"Condomínio","edificio":"Edifício","residencial":"Residencial",
+  "sao":"São","santo":"Santo","santa":"Santa","andre":"André","antonio":"Antônio",
+  "americo":"Américo","cassio":"Cássio","cicero":"Cícero","eugenio":"Eugênio",
+  "fabio":"Fábio","flavio":"Flávio","ines":"Inês","italo":"Ítalo",
+  "julio":"Júlio","junior":"Júnior","mario":"Mário","otavio":"Otávio",
+  "sergio":"Sérgio","vinicius":"Vinícius",
+  "brasil":"Brasil","america":"América","goias":"Goiás","maranhao":"Maranhão",
+  "amapa":"Amapá","ceara":"Ceará","piaui":"Piauí","parana":"Paraná","rondonia":"Rondônia",
+  "belem":"Belém","vitoria":"Vitória","brasilia":"Brasília","goiania":"Goiânia",
+  "florianopolis":"Florianópolis","maceio":"Maceió","cuiaba":"Cuiabá","teresina":"Teresina",
+  "tecnico":"Técnico","tecnica":"Técnica","tecnicos":"Técnicos","tecnicas":"Técnicas",
+  "atividades":"Atividades","especializados":"Especializados","especializado":"Especializado",
+  "especializada":"Especializada","escritorio":"Escritório","gerencia":"Gerência",
+  "diretoria":"Diretoria","unidade":"Unidade","matriz":"Matriz","filial":"Filial",
+  "atacado":"Atacado","varejo":"Varejo","mercadorias":"Mercadorias",
+  "maquinas":"Máquinas","equipamentos":"Equipamentos","materiais":"Materiais",
+  "quimico":"Químico","quimica":"Química","quimicos":"Químicos","quimicas":"Químicas",
+  "eletrico":"Elétrico","eletrica":"Elétrica","eletronicos":"Eletrônicos",
+  "hidraulica":"Hidráulica","hidraulicos":"Hidráulicos","petroleo":"Petróleo",
+  "energia":"Energia","combustivel":"Combustível","combustiveis":"Combustíveis",
+  "familia":"Família","genero":"Gênero","numero":"Número",
+  "geral":"Geral","gerais":"Gerais",
+};
+
+function titleCaseWord(w: string): string {
+  if (!w) return w;
+  return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+}
+
+/**
+ * Title Case inteligente com reacentuação de termos usuais da Receita.
+ * Preserva siglas, numerais romanos, dígitos, tipos societários e conectivos.
+ * Se o texto já vier em mixed-case, respeita a formatação original.
+ */
+export function smartTitleCase(input: string | null | undefined): string | null {
+  if (input == null) return null;
+  const raw = String(input).trim();
+  if (!raw) return null;
+  const hasLower = /[a-zà-ÿ]/.test(raw);
+  const hasUpper = /[A-ZÀ-Ÿ]/.test(raw);
+  if (hasLower && hasUpper) return raw;
+  const tokens = raw.split(/(\s+|[\/\-,])/);
+  const out = tokens.map((tok, idx) => {
+    if (!tok || /^\s+$/.test(tok) || /^[\/\-,]$/.test(tok)) return tok;
+    const upper = tok.toUpperCase();
+    const lower = tok.toLowerCase();
+    if (UPPERCASE_TOKENS.has(upper)) return upper;
+    if (/^\d+[ºª°]?$/.test(tok)) return tok;
+    if (/^\d+[A-Za-z]{1,2}$/.test(tok)) return tok.toUpperCase();
+    if (/^[A-Za-z]\.([A-Za-z]\.)+$/.test(tok)) return upper;
+    if (LOWERCASE_WORDS.has(lower) && idx > 0) return lower;
+    if (ACCENT_DICT[lower]) return ACCENT_DICT[lower];
+    return titleCaseWord(tok);
+  });
+  return out.join("");
+}
+
+function fixCnae(v: string | null | undefined): string | null {
+  if (!v) return v ?? null;
+  const m = String(v).match(/^(\d[\d\/\.\-]*)\s*(?:[—\-–])\s*(.+)$/);
+  if (m) return `${m[1]} — ${smartTitleCase(m[2]) || ""}`.trim();
+  return smartTitleCase(v);
 }
 
 /** True quando a situação cadastral está ativa. */
@@ -107,37 +205,37 @@ async function fetchBrasilApi(cnpj: string): Promise<CnpjLookupResult> {
   const raw: any = await resp.json().catch(() => null);
   if (!raw) return { status: "erro", message: "Resposta inválida da API." };
 
-  const logradouro = raw.logradouro || null;
+  const logradouro = smartTitleCase(raw.logradouro || null);
   const numero = raw.numero ? String(raw.numero) : null;
-  const complemento = raw.complemento || null;
+  const complemento = smartTitleCase(raw.complemento || null);
   const endereco = [logradouro, numero, complemento].filter(Boolean).join(", ").trim() || null;
 
   const cnaesSec = Array.isArray(raw.cnaes_secundarios)
     ? raw.cnaes_secundarios
         .filter((x: any) => x?.codigo)
-        .map((x: any) => ({ codigo: String(x.codigo), descricao: x.descricao || "" }))
+        .map((x: any) => ({ codigo: String(x.codigo), descricao: smartTitleCase(x.descricao || "") || "" }))
     : [];
 
   const cnaePrincipal = raw.cnae_fiscal
-    ? `${raw.cnae_fiscal} — ${raw.cnae_fiscal_descricao || ""}`.trim()
+    ? `${raw.cnae_fiscal} — ${smartTitleCase(raw.cnae_fiscal_descricao || "") || ""}`.trim()
     : null;
 
   const data: CnpjLookupData = {
     cnpj: formatCnpj(c),
-    razao_social: raw.razao_social || raw.nome_empresarial || "",
-    nome_fantasia: raw.nome_fantasia || raw.fantasia || "",
-    situacao_cadastral: raw.descricao_situacao_cadastral || raw.situacao || null,
+    razao_social: smartTitleCase(raw.razao_social || raw.nome_empresarial || "") || "",
+    nome_fantasia: smartTitleCase(raw.nome_fantasia || raw.fantasia || "") || "",
+    situacao_cadastral: smartTitleCase(raw.descricao_situacao_cadastral || raw.situacao || null),
     data_abertura: raw.data_inicio_atividade || raw.abertura || null,
     cnae_principal: cnaePrincipal,
     cnaes_secundarios: cnaesSec,
-    natureza_juridica: raw.natureza_juridica || raw.codigo_natureza_juridica || null,
-    porte: raw.porte || raw.descricao_porte || null,
+    natureza_juridica: smartTitleCase(raw.natureza_juridica || raw.codigo_natureza_juridica || null),
+    porte: smartTitleCase(raw.porte || raw.descricao_porte || null),
     cep: raw.cep ? onlyDigits(raw.cep).replace(/^(\d{5})(\d{3})$/, "$1-$2") : null,
     endereco,
     logradouro,
     numero,
     complemento,
-    bairro: raw.bairro || null,
+    bairro: smartTitleCase(raw.bairro || null),
     cidade: normalizeCidade(raw.municipio || raw.cidade || null),
     uf: raw.uf || null,
     email: raw.email || null,
@@ -170,22 +268,22 @@ async function fetchPublicaCnpjWs(cnpj: string): Promise<CnpjLookupResult> {
   if (!raw) return { status: "erro", message: "Resposta inválida da API secundária." };
 
   const est = raw.estabelecimento || {};
-  const logradouro = [est.tipo_logradouro, est.logradouro].filter(Boolean).join(" ").trim() || null;
+  const logradouro = smartTitleCase([est.tipo_logradouro, est.logradouro].filter(Boolean).join(" ").trim() || null);
   const numero = est.numero ? String(est.numero) : null;
-  const complemento = est.complemento || null;
+  const complemento = smartTitleCase(est.complemento || null);
   const endereco = [logradouro, numero, complemento].filter(Boolean).join(", ").trim() || null;
 
   const ap = est.atividade_principal;
   const cnaePrincipal = ap?.subclasse
-    ? `${String(ap.subclasse).replace(/\D/g, "")} — ${ap.descricao || ""}`.trim()
-    : (ap?.descricao || null);
+    ? `${String(ap.subclasse).replace(/\D/g, "")} — ${smartTitleCase(ap.descricao || "") || ""}`.trim()
+    : smartTitleCase(ap?.descricao || null);
 
   const cnaesSec = Array.isArray(est.atividades_secundarias)
     ? est.atividades_secundarias
         .filter((x: any) => x?.subclasse || x?.descricao)
         .map((x: any) => ({
           codigo: String(x.subclasse || "").replace(/\D/g, ""),
-          descricao: x.descricao || "",
+          descricao: smartTitleCase(x.descricao || "") || "",
         }))
     : [];
 
@@ -196,20 +294,20 @@ async function fetchPublicaCnpjWs(cnpj: string): Promise<CnpjLookupResult> {
 
   const data: CnpjLookupData = {
     cnpj: formatCnpj(c),
-    razao_social: raw.razao_social || "",
-    nome_fantasia: est.nome_fantasia || "",
-    situacao_cadastral: est.situacao_cadastral || null,
+    razao_social: smartTitleCase(raw.razao_social || "") || "",
+    nome_fantasia: smartTitleCase(est.nome_fantasia || "") || "",
+    situacao_cadastral: smartTitleCase(est.situacao_cadastral || null),
     data_abertura: est.data_inicio_atividade || null,
     cnae_principal: cnaePrincipal,
     cnaes_secundarios: cnaesSec,
-    natureza_juridica: raw.natureza_juridica?.descricao || null,
-    porte: raw.porte?.descricao || null,
+    natureza_juridica: smartTitleCase(raw.natureza_juridica?.descricao || null),
+    porte: smartTitleCase(raw.porte?.descricao || null),
     cep: est.cep ? onlyDigits(est.cep).replace(/^(\d{5})(\d{3})$/, "$1-$2") : null,
     endereco,
     logradouro,
     numero,
     complemento,
-    bairro: est.bairro || null,
+    bairro: smartTitleCase(est.bairro || null),
     cidade: normalizeCidade(est.cidade?.nome || null),
     uf: est.estado?.sigla || null,
     email: est.email || null,
