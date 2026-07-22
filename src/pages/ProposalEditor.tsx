@@ -126,6 +126,12 @@ export default function ProposalEditor() {
   const [groupOpen, setGroupOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  const [, setSavedTick] = useState(0);
+  useEffect(() => {
+    if (!lastSavedAt) return;
+    const t = setTimeout(() => setSavedTick((x) => x + 1), 4100);
+    return () => clearTimeout(t);
+  }, [lastSavedAt]);
   const dirtyTimer = useRef<any>(null);
   const [docReady, setDocReady] = useState(false);
   const sensors = useSensors(
@@ -673,6 +679,7 @@ export default function ProposalEditor() {
                         <ItemEditor item={it} numero={idx + 1} pricing={pricings[it.id]}
                           onChange={(patch)=>updateItem(it, patch)}
                           onRemove={()=>removeItem(it)}
+                          onDuplicate={()=>duplicateItem(it)}
                           onOpenPricing={()=>setPricingOpen(it.id)}
                           onSaveToCatalog={()=>saveItemAsService(it)}
                           isInternal={isInternal}
