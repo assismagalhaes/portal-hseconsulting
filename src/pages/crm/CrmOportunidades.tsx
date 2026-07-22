@@ -159,6 +159,43 @@ export default function CrmOportunidades() {
               <Label>Observações</Label>
               <Textarea rows={3} value={form.observacoes||""} onChange={e=>setForm({...form,observacoes:e.target.value})}/>
             </div>
+            {editing && (
+              <div className="sm:col-span-2 space-y-2 border-t pt-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold">Histórico de follow-ups</Label>
+                  <Button asChild type="button" size="sm" variant="outline">
+                    <Link to={`/crm/followups?novo=1&oportunidade=${editing.id}`}>
+                      <CalendarPlus className="h-3.5 w-3.5 mr-1"/>Novo follow-up
+                    </Link>
+                  </Button>
+                </div>
+                {(() => {
+                  const items = followups.filter(f => f.oportunidade_id === editing.id).slice(0,10);
+                  if (!items.length) return <p className="text-xs text-muted-foreground py-3">Nenhum follow-up registrado.</p>;
+                  return (
+                    <ul className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                      {items.map(f => {
+                        const tipo = FUP_TIPOS.find(t=>t.value===f.tipo)?.label || f.tipo;
+                        const st = FUP_STATUS.find(s=>s.value===f.status);
+                        const Icon = f.status === "realizado" ? CheckCircle2 : Clock;
+                        return (
+                          <li key={f.id} className="rounded-md border p-2 text-xs bg-muted/30">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Icon className="h-3.5 w-3.5 text-muted-foreground"/>
+                              <span className="font-medium">{formatDate(f.data)}{f.hora && ` · ${String(f.hora).slice(0,5)}`}</span>
+                              <span className="px-1.5 py-0.5 rounded bg-muted">{tipo}</span>
+                              <span className={`px-1.5 py-0.5 rounded ${st?.color}`}>{st?.label}</span>
+                            </div>
+                            {f.resumo && <div className="text-muted-foreground mt-1 whitespace-pre-wrap">{f.resumo}</div>}
+                            {f.proxima_acao && <div className="italic text-muted-foreground mt-0.5">→ {f.proxima_acao}</div>}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  );
+                })()}
+              </div>
+            )}
             <div className="sm:col-span-2 flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={()=>setOpen(false)}>Cancelar</Button>
               <Button type="submit">Salvar</Button>
