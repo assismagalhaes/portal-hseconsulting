@@ -976,7 +976,7 @@ export default function ProposalEditor() {
       </Sheet>
 
       <Dialog open={!!duplicateSource} onOpenChange={(o) => { if (!o) setDuplicateSource(null); }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-xl max-h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Duplicar item</DialogTitle>
             <DialogDescription>
@@ -985,11 +985,11 @@ export default function ProposalEditor() {
               Escolha qual serviço aplicar ao novo item.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
+          <div className="space-y-2 flex-1 min-h-0 flex flex-col">
             <Label className="text-xs">Serviço para o novo item</Label>
-            <Command className="border rounded-md">
+            <Command className="border rounded-md flex-1 min-h-0">
               <CommandInput placeholder="Buscar no catálogo…" />
-              <CommandList className="max-h-64">
+              <CommandList className="max-h-none flex-1 overflow-y-auto">
                 <CommandEmpty>Nenhum serviço encontrado.</CommandEmpty>
                 <CommandGroup heading="Opções">
                   <CommandItem value="keep manter copia mesmo item" onSelect={() => setDuplicatePickServiceId("__keep__")}>
