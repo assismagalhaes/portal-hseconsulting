@@ -129,7 +129,7 @@ export default function ItemEditor({
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={onRemove} className="bg-danger text-danger-foreground hover:bg-danger/90">
+                  <AlertDialogAction onClick={onRemove} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                     Remover
                   </AlertDialogAction>
                 </AlertDialogFooter>
