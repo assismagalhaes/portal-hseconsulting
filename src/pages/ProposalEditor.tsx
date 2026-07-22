@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Plus, Trash2, Calculator, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown, Users, Eye, Check, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Calculator, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown, Users, Eye, Check, ChevronsDownUp, ChevronsUpDown, ChevronDown, ChevronRight } from "lucide-react";
 import { GripVertical } from "lucide-react";
 import {
   DndContext,
@@ -128,6 +128,13 @@ export default function ProposalEditor() {
   const [saving, setSaving] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  const [internalOpen, setInternalOpen] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return window.localStorage.getItem("proposal.internalSummary.open") !== "0";
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem("proposal.internalSummary.open", internalOpen ? "1" : "0"); } catch {}
+  }, [internalOpen]);
   const [, setSavedTick] = useState(0);
   useEffect(() => {
     if (!lastSavedAt) return;
@@ -831,7 +838,20 @@ export default function ProposalEditor() {
               {isInternal && !clientView && (
                 <>
                   <hr/>
-                  <InternalSummary items={items} pricings={pricings} descontoRevisao={calcDescontoRevisao(total, revisions)} />
+                  <button
+                    type="button"
+                    onClick={() => setInternalOpen(v => !v)}
+                    className="w-full flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition"
+                    aria-expanded={internalOpen}
+                  >
+                    <span className="flex items-center gap-1">
+                      <Calculator className="h-3.5 w-3.5" /> Resumo interno
+                    </span>
+                    {internalOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                  </button>
+                  {internalOpen && (
+                    <InternalSummary items={items} pricings={pricings} descontoRevisao={calcDescontoRevisao(total, revisions)} />
+                  )}
                 </>
               )}
             </CardContent>
