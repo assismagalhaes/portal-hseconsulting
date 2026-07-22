@@ -171,15 +171,15 @@ export default function ProposalEditor() {
   // Atalhos de teclado (somente na edição interna, evita conflito com formulários do cliente)
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (!(e.ctrlKey || e.metaKey)) return;
       const tag = (e.target as HTMLElement)?.tagName;
       const isField = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable;
-      // Ctrl+Shift+N — novo item (funciona mesmo dentro de campos)
-      if (e.shiftKey && (e.key === "N" || e.key === "n")) {
+      // Alt+N — novo item (funciona mesmo dentro de campos)
+      if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && (e.key === "n" || e.key === "N")) {
         e.preventDefault();
         addItem();
         return;
       }
+      if (!(e.ctrlKey || e.metaKey)) return;
       if (isField) return;
       if (e.key === "p" || e.key === "P") { e.preventDefault(); setPreviewOpen(true); }
       else if (e.key === "e" || e.key === "E") {
