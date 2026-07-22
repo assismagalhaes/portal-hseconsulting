@@ -205,37 +205,37 @@ async function fetchBrasilApi(cnpj: string): Promise<CnpjLookupResult> {
   const raw: any = await resp.json().catch(() => null);
   if (!raw) return { status: "erro", message: "Resposta inválida da API." };
 
-  const logradouro = raw.logradouro || null;
+  const logradouro = smartTitleCase(raw.logradouro || null);
   const numero = raw.numero ? String(raw.numero) : null;
-  const complemento = raw.complemento || null;
+  const complemento = smartTitleCase(raw.complemento || null);
   const endereco = [logradouro, numero, complemento].filter(Boolean).join(", ").trim() || null;
 
   const cnaesSec = Array.isArray(raw.cnaes_secundarios)
     ? raw.cnaes_secundarios
         .filter((x: any) => x?.codigo)
-        .map((x: any) => ({ codigo: String(x.codigo), descricao: x.descricao || "" }))
+        .map((x: any) => ({ codigo: String(x.codigo), descricao: smartTitleCase(x.descricao || "") || "" }))
     : [];
 
   const cnaePrincipal = raw.cnae_fiscal
-    ? `${raw.cnae_fiscal} — ${raw.cnae_fiscal_descricao || ""}`.trim()
+    ? `${raw.cnae_fiscal} — ${smartTitleCase(raw.cnae_fiscal_descricao || "") || ""}`.trim()
     : null;
 
   const data: CnpjLookupData = {
     cnpj: formatCnpj(c),
-    razao_social: raw.razao_social || raw.nome_empresarial || "",
-    nome_fantasia: raw.nome_fantasia || raw.fantasia || "",
-    situacao_cadastral: raw.descricao_situacao_cadastral || raw.situacao || null,
+    razao_social: smartTitleCase(raw.razao_social || raw.nome_empresarial || "") || "",
+    nome_fantasia: smartTitleCase(raw.nome_fantasia || raw.fantasia || "") || "",
+    situacao_cadastral: smartTitleCase(raw.descricao_situacao_cadastral || raw.situacao || null),
     data_abertura: raw.data_inicio_atividade || raw.abertura || null,
     cnae_principal: cnaePrincipal,
     cnaes_secundarios: cnaesSec,
-    natureza_juridica: raw.natureza_juridica || raw.codigo_natureza_juridica || null,
-    porte: raw.porte || raw.descricao_porte || null,
+    natureza_juridica: smartTitleCase(raw.natureza_juridica || raw.codigo_natureza_juridica || null),
+    porte: smartTitleCase(raw.porte || raw.descricao_porte || null),
     cep: raw.cep ? onlyDigits(raw.cep).replace(/^(\d{5})(\d{3})$/, "$1-$2") : null,
     endereco,
     logradouro,
     numero,
     complemento,
-    bairro: raw.bairro || null,
+    bairro: smartTitleCase(raw.bairro || null),
     cidade: normalizeCidade(raw.municipio || raw.cidade || null),
     uf: raw.uf || null,
     email: raw.email || null,
@@ -268,22 +268,22 @@ async function fetchPublicaCnpjWs(cnpj: string): Promise<CnpjLookupResult> {
   if (!raw) return { status: "erro", message: "Resposta inválida da API secundária." };
 
   const est = raw.estabelecimento || {};
-  const logradouro = [est.tipo_logradouro, est.logradouro].filter(Boolean).join(" ").trim() || null;
+  const logradouro = smartTitleCase([est.tipo_logradouro, est.logradouro].filter(Boolean).join(" ").trim() || null);
   const numero = est.numero ? String(est.numero) : null;
-  const complemento = est.complemento || null;
+  const complemento = smartTitleCase(est.complemento || null);
   const endereco = [logradouro, numero, complemento].filter(Boolean).join(", ").trim() || null;
 
   const ap = est.atividade_principal;
   const cnaePrincipal = ap?.subclasse
-    ? `${String(ap.subclasse).replace(/\D/g, "")} — ${ap.descricao || ""}`.trim()
-    : (ap?.descricao || null);
+    ? `${String(ap.subclasse).replace(/\D/g, "")} — ${smartTitleCase(ap.descricao || "") || ""}`.trim()
+    : smartTitleCase(ap?.descricao || null);
 
   const cnaesSec = Array.isArray(est.atividades_secundarias)
     ? est.atividades_secundarias
         .filter((x: any) => x?.subclasse || x?.descricao)
         .map((x: any) => ({
           codigo: String(x.subclasse || "").replace(/\D/g, ""),
-          descricao: x.descricao || "",
+          descricao: smartTitleCase(x.descricao || "") || "",
         }))
     : [];
 
@@ -294,20 +294,20 @@ async function fetchPublicaCnpjWs(cnpj: string): Promise<CnpjLookupResult> {
 
   const data: CnpjLookupData = {
     cnpj: formatCnpj(c),
-    razao_social: raw.razao_social || "",
-    nome_fantasia: est.nome_fantasia || "",
-    situacao_cadastral: est.situacao_cadastral || null,
+    razao_social: smartTitleCase(raw.razao_social || "") || "",
+    nome_fantasia: smartTitleCase(est.nome_fantasia || "") || "",
+    situacao_cadastral: smartTitleCase(est.situacao_cadastral || null),
     data_abertura: est.data_inicio_atividade || null,
     cnae_principal: cnaePrincipal,
     cnaes_secundarios: cnaesSec,
-    natureza_juridica: raw.natureza_juridica?.descricao || null,
-    porte: raw.porte?.descricao || null,
+    natureza_juridica: smartTitleCase(raw.natureza_juridica?.descricao || null),
+    porte: smartTitleCase(raw.porte?.descricao || null),
     cep: est.cep ? onlyDigits(est.cep).replace(/^(\d{5})(\d{3})$/, "$1-$2") : null,
     endereco,
     logradouro,
     numero,
     complemento,
-    bairro: est.bairro || null,
+    bairro: smartTitleCase(est.bairro || null),
     cidade: normalizeCidade(est.cidade?.nome || null),
     uf: est.estado?.sigla || null,
     email: est.email || null,
