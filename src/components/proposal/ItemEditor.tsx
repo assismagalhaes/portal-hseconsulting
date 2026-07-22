@@ -70,7 +70,7 @@ export default function ItemEditor({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 -ml-1"
+                className="h-6 w-6"
                 aria-label={collapsed ? "Expandir item" : "Recolher item"}
                 title={collapsed ? "Expandir" : "Recolher"}
                 onClick={() => setCollapsed((v) => !v)}
