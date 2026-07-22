@@ -39,6 +39,7 @@ function bucketOf(f: any): Bucket {
 }
 
 export default function CrmFollowups() {
+  const [sp, setSp] = useSearchParams();
   const [list, setList] = useState<any[]>([]);
   const [leads, setLeads] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
@@ -57,8 +58,25 @@ export default function CrmFollowups() {
   const [concluirOpen, setConcluirOpen] = useState<any>(null);
   const [concluirForm, setConcluirForm] = useState<any>({ resumo: "", proxima_acao: "", proximo_followup_data: "", proximo_followup_hora: "", tipo_proximo: "ligacao" });
   const [formErr, setFormErr] = useState<string | null>(null);
+  const [reagOpen, setReagOpen] = useState<any>(null);
+  const [reagForm, setReagForm] = useState<any>({ data: "", hora: "", motivo: "" });
 
   useEffect(() => { document.title = "Follow-ups | CRM HSE"; reload(); }, []);
+
+  useEffect(() => {
+    if (sp.get("novo") === "1") {
+      const prefill: any = { ...empty };
+      const op = sp.get("oportunidade"); if (op) prefill.oportunidade_id = op;
+      const ld = sp.get("lead"); if (ld) prefill.lead_id = ld;
+      const cl = sp.get("cliente"); if (cl) prefill.client_id = cl;
+      setEditing(null); setForm(prefill); setOpen(true);
+      const next = new URLSearchParams(sp);
+      ["novo","oportunidade","lead","cliente"].forEach(k=>next.delete(k));
+      setSp(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function reload() {
     const [f, l, c, o, p] = await Promise.all([
       supabase.from("crm_followups").select("*"),
