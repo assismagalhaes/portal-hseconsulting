@@ -751,7 +751,7 @@ export default function ProposalEditor() {
                         <ItemEditor item={it} numero={idx + 1} pricing={pricings[it.id]}
                           onChange={(patch)=>updateItem(it, patch)}
                           onRemove={()=>removeItem(it)}
-                          onDuplicate={()=>duplicateItem(it)}
+                          onDuplicate={()=>{ setDuplicatePickServiceId("__keep__"); setDuplicateSource(it); }}
                           onOpenPricing={()=>setPricingOpen(it.id)}
                           onSaveToCatalog={()=>saveItemAsService(it)}
                           isInternal={isInternal}
