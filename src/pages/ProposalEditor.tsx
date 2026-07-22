@@ -126,6 +126,7 @@ export default function ProposalEditor() {
   const [collapsedItems, setCollapsedItems] = useState<Record<string, boolean>>({});
   const [groupOpen, setGroupOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [, setSavedTick] = useState(0);
   useEffect(() => {
@@ -159,6 +160,32 @@ export default function ProposalEditor() {
   }
 
   useEffect(() => { load(); }, [id]);
+
+  // Atalhos de teclado (somente na edição interna, evita conflito com formulários do cliente)
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      const isField = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable;
+      // Ctrl+Shift+N — novo item (funciona mesmo dentro de campos)
+      if (e.shiftKey && (e.key === "N" || e.key === "n")) {
+        e.preventDefault();
+        addItem();
+        return;
+      }
+      if (isField) return;
+      if (e.key === "p" || e.key === "P") { e.preventDefault(); setPreviewOpen(true); }
+      else if (e.key === "e" || e.key === "E") {
+        e.preventDefault();
+        const allCollapsed = items.length > 0 && items.every(i => collapsedItems[i.id]);
+        if (allCollapsed) setCollapsedItems({});
+        else setCollapsedItems(Object.fromEntries(items.map(i => [i.id, true])));
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, collapsedItems, proposal?.id]);
 
   async function load() {
     if (!id) return;
@@ -601,6 +628,9 @@ export default function ProposalEditor() {
             <Button variant="outline" size="sm" onClick={handlePrint} disabled={!docReady}>
               <FileDown className="h-4 w-4 mr-1" /> Gerar PDF
             </Button>
+            <Button variant="outline" size="sm" onClick={() => setPreviewOpen(true)} disabled={!docReady} title="Pré-visualizar (Ctrl/⌘+P)">
+              <Eye className="h-4 w-4 mr-1" /> Pré-visualizar
+            </Button>
             <Select value={proposal.status} onValueChange={changeStatus}>
               <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
               <SelectContent>{Object.entries(proposalStatusLabel).map(([k,v])=><SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
@@ -877,6 +907,29 @@ export default function ProposalEditor() {
           onApplied={()=>{ setSelected({}); load(); }}
         />
       )}
+
+      <Sheet open={previewOpen} onOpenChange={setPreviewOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-[900px] p-0 overflow-hidden flex flex-col">
+          <SheetHeader className="px-6 py-3 border-b flex-row items-center justify-between space-y-0">
+            <SheetTitle className="text-base">Pré-visualização da proposta</SheetTitle>
+            <Button size="sm" variant="outline" onClick={handlePrint} disabled={!docReady}>
+              <FileDown className="h-4 w-4 mr-1" /> Gerar PDF
+            </Button>
+          </SheetHeader>
+          <div className="flex-1 overflow-auto bg-muted/40 p-4">
+            <div className="mx-auto shadow-elegant bg-white" style={{ width: "210mm", transformOrigin: "top center" }}>
+              <ProposalDocument
+                proposal={proposal}
+                client={client}
+                items={items}
+                revisions={revisions}
+                proposalClients={proposalClients}
+                onReady={() => setDocReady(true)}
+              />
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
