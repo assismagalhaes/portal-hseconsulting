@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSearchParams } from "react-router-dom";
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, AlertTriangle, CheckCircle2, CalendarClock, ListTodo, Search, LayoutList, KanbanSquare, Filter } from "lucide-react";
+import { Plus, AlertTriangle, CheckCircle2, CalendarClock, ListTodo, Search, LayoutList, KanbanSquare, Filter, CalendarPlus } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FUP_TIPOS, FUP_STATUS } from "@/lib/crm";
 import { formatDate } from "@/lib/format";
