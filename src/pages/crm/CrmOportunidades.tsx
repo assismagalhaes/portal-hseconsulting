@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -8,8 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, CalendarPlus, CheckCircle2, Clock } from "lucide-react";
 import { ETAPAS, etapaColor, etapaLabel, TEMPERATURAS } from "@/lib/crm";
+import { FUP_TIPOS, FUP_STATUS } from "@/lib/crm";
 import { prioridadeLabel, prioridadeColor, brl, formatDate } from "@/lib/format";
 import { toast } from "sonner";
 
@@ -29,6 +31,7 @@ export default function CrmOportunidades() {
   const [leads, setLeads] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [motivos, setMotivos] = useState<any[]>([]);
+  const [followups, setFollowups] = useState<any[]>([]);
   const [fEtapa, setFEtapa] = useState("__all");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
@@ -37,13 +40,14 @@ export default function CrmOportunidades() {
 
   useEffect(() => { document.title = "Oportunidades | CRM HSE"; reload(); }, []);
   async function reload() {
-    const [o, l, c, m] = await Promise.all([
+    const [o, l, c, m, f] = await Promise.all([
       supabase.from("crm_oportunidades").select("*").order("created_at",{ascending:false}),
       supabase.from("crm_leads").select("id, empresa"),
       supabase.from("clients").select("id, razao_social, nome_fantasia"),
       supabase.from("crm_motivos_perda").select("*").eq("ativo", true).order("ordem"),
+      supabase.from("crm_followups").select("*").order("data",{ascending:false}),
     ]);
-    setList(o.data||[]); setLeads(l.data||[]); setClients(c.data||[]); setMotivos(m.data||[]);
+    setList(o.data||[]); setLeads(l.data||[]); setClients(c.data||[]); setMotivos(m.data||[]); setFollowups(f.data||[]);
   }
 
   function openNew() { setEditing(null); setForm(empty); setOpen(true); }
