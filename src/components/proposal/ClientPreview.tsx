@@ -69,7 +69,7 @@ export default function ClientPreview({ proposal, client, items }: any) {
         {(proposal.condicoes_pagamento || proposal.outras_condicoes || proposal.observacoes_comerciais) && (
           <section className="space-y-3 text-sm">
             {proposal.condicoes_pagamento && <div><div className="font-semibold mb-0.5">Condições de pagamento</div><p className="text-muted-foreground whitespace-pre-line">{proposal.condicoes_pagamento}</p></div>}
-            {proposal.outras_condicoes && <div><div className="font-semibold mb-0.5">Outras condições</div><p className="text-muted-foreground whitespace-pre-line">{proposal.outras_condicoes}</p></div>}
+            {proposal.outras_condicoes && <div><div className="font-semibold mb-0.5">Premissas e Condições do Serviço</div><p className="text-muted-foreground whitespace-pre-line">{proposal.outras_condicoes}</p></div>}
             {proposal.observacoes_comerciais && <div><div className="font-semibold mb-0.5">Observações</div><p className="text-muted-foreground whitespace-pre-line">{proposal.observacoes_comerciais}</p></div>}
           </section>
         )}

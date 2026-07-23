@@ -27,6 +27,7 @@ import Projetos from "./pages/Projetos";
 import ProjetoEditor from "./pages/ProjetoEditor";
 import Profissionais from "./pages/Profissionais";
 import Settings from "./pages/Settings";
+import PremissasProposta from "./pages/PremissasProposta";
 import ProposalExample from "./pages/ProposalExample";
 import PropostaAceitePublica from "./pages/PropostaAceitePublica";
 import OrdemServicoEditor from "./pages/OrdemServicoEditor";
@@ -192,6 +193,7 @@ const App = () => (
              <Route path="/operacoes/avaliacao-fatores-psicossociais/biblioteca-medidas" element={<RequireRole><PsicoBibliotecaLista /></RequireRole>} />
              <Route path="/operacoes/avaliacao-fatores-psicossociais/biblioteca-medidas/:id" element={<RequireRole><PsicoBibliotecaDetalhe /></RequireRole>} />
               <Route path="/configuracoes" element={<RequireRole allow="admin"><Settings /></RequireRole>} />
+              <Route path="/configuracoes/premissas" element={<RequireRole allow="admin"><PremissasProposta /></RequireRole>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
