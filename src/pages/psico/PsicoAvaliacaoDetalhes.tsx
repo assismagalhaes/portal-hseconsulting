@@ -21,6 +21,13 @@ import PsicoRevisaoTab from "@/components/psico/PsicoRevisaoTab";
 import PsicoPlanoTab from "@/components/psico/PsicoPlanoTab";
 import PsicoRelatorioTab from "@/components/psico/PsicoRelatorioTab";
 import PsicoLinkPublicoTab from "@/components/psico/PsicoLinkPublicoTab";
+import {
+  PSICO_MODALIDADE_LABEL,
+  isModalidadeIndividual,
+  descreverInstrumento,
+  type PsicoIndividualInstrumentoVigente,
+} from "@/lib/psicoIndividual";
+import { Lock, ShieldAlert } from "lucide-react";
 
 const BASE = "/operacoes/avaliacao-fatores-psicossociais";
 
@@ -47,6 +54,8 @@ export default function PsicoAvaliacaoDetalhes() {
   const [motivo, setMotivo] = useState("");
   const [cancelOpen, setCancelOpen] = useState(false);
   const [vigente, setVigente] = useState<any>(null);
+  const [instrEmp, setInstrEmp] = useState<PsicoIndividualInstrumentoVigente | null>(null);
+  const [instrRep, setInstrRep] = useState<PsicoIndividualInstrumentoVigente | null>(null);
   const dataInicioRef = useRef<HTMLInputElement>(null);
   const dataFimRef = useRef<HTMLInputElement>(null);
 
@@ -91,6 +100,21 @@ export default function PsicoAvaliacaoDetalhes() {
     setCli(c.data); setResp(r.data); setMetod(m.data); setQuest(q.data); setAuditoria(aud.data || []);
     const { data: v } = await getVersaoVigente();
     setVigente(v);
+    if (isModalidadeIndividual(data.modalidade) && (data.instrumento_empregado_versao_id || data.instrumento_empregador_versao_id)) {
+      const ids = [data.instrumento_empregado_versao_id, data.instrumento_empregador_versao_id].filter(Boolean);
+      const { data: instrs } = await (supabase as any)
+        .from("psico_individual_instrumentos_versoes")
+        .select("id, codigo, versao, nome")
+        .in("id", ids);
+      const findMap = (id: string | null, papel: "empregado" | "empregador") => {
+        const row = (instrs || []).find((x: any) => x.id === id);
+        return row ? { id: row.id, codigo: row.codigo, versao: row.versao, nome: row.nome, papel } : null;
+      };
+      setInstrEmp(findMap(data.instrumento_empregado_versao_id, "empregado"));
+      setInstrRep(findMap(data.instrumento_empregador_versao_id, "empregador"));
+    } else {
+      setInstrEmp(null); setInstrRep(null);
+    }
   }
 
   async function salvarEdicao() {
@@ -146,6 +170,7 @@ export default function PsicoAvaliacaoDetalhes() {
   const podeEditar = av.status === "rascunho";
   const podeCancelar = av.status !== "cancelada" && av.status !== "relatorio_emitido";
   const clienteNome = cli?.nome_fantasia || cli?.razao_social || "—";
+  const individual = isModalidadeIndividual(av.modalidade);
 
   return (
     <div>
@@ -187,12 +212,42 @@ export default function PsicoAvaliacaoDetalhes() {
       <div className="p-6 space-y-6">
         <div className="flex items-center gap-2">
           <Badge className={statusColor(av.status)}>{statusLabel(av.status)}</Badge>
+          <Badge variant="outline" className="text-xs">
+            {PSICO_MODALIDADE_LABEL[(av.modalidade as keyof typeof PSICO_MODALIDADE_LABEL) || "coletiva_hse"]}
+          </Badge>
           {av.status === "cancelada" && av.motivo_cancelamento && (
             <span className="text-sm text-muted-foreground">Motivo: {av.motivo_cancelamento}</span>
           )}
         </div>
 
-        {av.status === "rascunho" && !av.questionario_versao_id && (
+        {individual && (
+          <>
+            <Card className="border-sky-300 bg-sky-50 dark:bg-sky-900/10">
+              <CardContent className="py-4 text-sm flex items-start gap-3">
+                <Lock className="h-5 w-5 text-sky-700 shrink-0 mt-0.5" />
+                <div className="flex-1 space-y-1">
+                  <div className="font-medium">Instrumentos congelados nesta avaliação</div>
+                  <div className="text-xs">Empregado: {descreverInstrumento(instrEmp)}</div>
+                  <div className="text-xs">Empregador: {descreverInstrumento(instrRep)}</div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-amber-300 bg-amber-50 dark:bg-amber-900/10">
+              <CardContent className="py-4 text-sm flex items-start gap-3">
+                <ShieldAlert className="h-5 w-5 text-amber-700 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <div className="font-medium mb-1">Sem anonimato estatístico</div>
+                  <div className="text-xs">
+                    Modalidade individual: as duas visões (empregado e empregador) são nominais. Segmentações, importação
+                    histórica e link público coletivo ficam indisponíveis. Convites e coleta chegarão no próximo PR.
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {!individual && av.status === "rascunho" && !av.questionario_versao_id && (
           <Card className="border-amber-300 bg-amber-50 dark:bg-amber-900/10">
             <CardContent className="py-4 flex items-center justify-between gap-3 text-sm">
               {vigente ? (
@@ -224,21 +279,30 @@ export default function PsicoAvaliacaoDetalhes() {
           <Card><CardContent className="py-4"><Field label="Período previsto" value={`${av.data_inicio_prevista ? formatDate(av.data_inicio_prevista) : "—"} → ${av.data_fim_prevista ? formatDate(av.data_fim_prevista) : "—"}`} /></CardContent></Card>
           <Card><CardContent className="py-4"><Field label="Participantes previstos" value={av.quantidade_participantes_prevista} /></CardContent></Card>
           <Card><CardContent className="py-4"><Field label="Responsável HSE" value={resp?.nome || resp?.email || "—"} /></CardContent></Card>
-          <Card><CardContent className="py-4"><Field label="Questionário" value={quest ? `${quest.codigo} v${quest.versao}` : "—"} /></CardContent></Card>
-          <Card><CardContent className="py-4"><Field label="Metodologia" value={metod ? `${metod.codigo} v${metod.versao}` : "—"} /></CardContent></Card>
+          {individual ? (
+            <>
+              <Card><CardContent className="py-4"><Field label="Instrumento empregado" value={instrEmp ? `${instrEmp.codigo} v${instrEmp.versao}` : "—"} /></CardContent></Card>
+              <Card><CardContent className="py-4"><Field label="Instrumento empregador" value={instrRep ? `${instrRep.codigo} v${instrRep.versao}` : "—"} /></CardContent></Card>
+            </>
+          ) : (
+            <>
+              <Card><CardContent className="py-4"><Field label="Questionário" value={quest ? `${quest.codigo} v${quest.versao}` : "—"} /></CardContent></Card>
+              <Card><CardContent className="py-4"><Field label="Metodologia" value={metod ? `${metod.codigo} v${metod.versao}` : "—"} /></CardContent></Card>
+            </>
+          )}
           <Card><CardContent className="py-4"><Field label="Última atualização" value={formatDateTime(av.updated_at)} /></CardContent></Card>
         </div>
 
         <Tabs defaultValue="visao">
           <TabsList className="w-full justify-start overflow-x-auto">
             <TabsTrigger value="visao">Visão Geral</TabsTrigger>
-            <TabsTrigger value="participantes">Participantes</TabsTrigger>
-            <TabsTrigger value="link-publico">Link Público</TabsTrigger>
-            <TabsTrigger value="coleta">Coleta</TabsTrigger>
-            <TabsTrigger value="resultados">Resultados</TabsTrigger>
-            <TabsTrigger value="plano">Plano de Ação</TabsTrigger>
-            <TabsTrigger value="revisao">Revisão Técnica</TabsTrigger>
-            <TabsTrigger value="relatorio">Relatório</TabsTrigger>
+            {!individual && <TabsTrigger value="participantes">Participantes</TabsTrigger>}
+            {!individual && <TabsTrigger value="link-publico">Link Público</TabsTrigger>}
+            {!individual && <TabsTrigger value="coleta">Coleta</TabsTrigger>}
+            {!individual && <TabsTrigger value="resultados">Resultados</TabsTrigger>}
+            {!individual && <TabsTrigger value="plano">Plano de Ação</TabsTrigger>}
+            {!individual && <TabsTrigger value="revisao">Revisão Técnica</TabsTrigger>}
+            {!individual && <TabsTrigger value="relatorio">Relatório</TabsTrigger>}
             <TabsTrigger value="historico">Histórico</TabsTrigger>
           </TabsList>
 
@@ -299,7 +363,7 @@ export default function PsicoAvaliacaoDetalhes() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="participantes">
+          {!individual && <TabsContent value="participantes">
             <PsicoParticipantes
               avaliacaoId={av.id}
               clienteNome={clienteNome}
@@ -313,25 +377,25 @@ export default function PsicoAvaliacaoDetalhes() {
               temVersaoPublicada={!!av.questionario_versao_id}
               codigoAvaliacao={av.codigo}
             />
-          </TabsContent>
-          <TabsContent value="link-publico">
+          </TabsContent>}
+          {!individual && <TabsContent value="link-publico">
             <PsicoLinkPublicoTab av={av} onReload={load} />
-          </TabsContent>
-          <TabsContent value="coleta">
+          </TabsContent>}
+          {!individual && <TabsContent value="coleta">
             <PsicoColetaTab av={av} onReload={load} />
-          </TabsContent>
-          <TabsContent value="resultados">
+          </TabsContent>}
+          {!individual && <TabsContent value="resultados">
             <PsicoResultadosTab av={av} onReload={load} />
-          </TabsContent>
-          <TabsContent value="plano">
+          </TabsContent>}
+          {!individual && <TabsContent value="plano">
             <PsicoPlanoTab av={av} onReload={load} />
-          </TabsContent>
-          <TabsContent value="revisao">
+          </TabsContent>}
+          {!individual && <TabsContent value="revisao">
             <PsicoRevisaoTab av={av} onReload={load} />
-          </TabsContent>
-          <TabsContent value="relatorio">
+          </TabsContent>}
+          {!individual && <TabsContent value="relatorio">
             <PsicoRelatorioTab av={av} onReload={load} />
-          </TabsContent>
+          </TabsContent>}
 
           <TabsContent value="historico">
             <Card>
