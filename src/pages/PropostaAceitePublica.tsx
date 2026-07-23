@@ -260,7 +260,7 @@ export default function PropostaAceitePublica() {
               <InfoRow label="Emissão" value={proposta.data_emissao ? new Date(proposta.data_emissao).toLocaleDateString("pt-BR") : "—"} />
               <InfoRow label="Validade" value={proposta.validade ? new Date(proposta.validade).toLocaleDateString("pt-BR") : "—"} />
               <InfoRow label="Condições de pagamento" value={proposta.condicoes_pagamento} full />
-              {proposta.outras_condicoes && <InfoRow label="Outras condições" value={proposta.outras_condicoes} full />}
+              {proposta.outras_condicoes && <InfoRow label="Premissas e Condições do Serviço" value={proposta.outras_condicoes} full />}
             </div>
 
             {coligadas.length > 0 && (
