@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { AlertTriangle, Copy, RefreshCw, Link2, Users, Eye, EyeOff, QrCode, Download, Radio } from "lucide-react";
+import { Pencil } from "lucide-react";
 import QRCode from "qrcode";
 import jsPDF from "jspdf";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip as RTooltip, CartesianGrid, LabelList } from "recharts";
@@ -58,6 +59,28 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
   const [totalRespostas, setTotalRespostas] = useState<number>(0);
   const [respostas, setRespostas] = useState<Array<{ id: string; funcao: string | null; setor: string | null; unidade: string | null; funcao_normalizada: string | null; setor_normalizada: string | null; unidade_normalizada: string | null; created_at: string }>>([]);
   const [realtimeAtivo, setRealtimeAtivo] = useState(false);
+  const [ajustarOpen, setAjustarOpen] = useState(false);
+  const [novaPrevisao, setNovaPrevisao] = useState<number>(Number(av?.quantidade_participantes_prevista) || 1);
+  const [salvandoPrevisao, setSalvandoPrevisao] = useState(false);
+  const podeAjustarPrevisao = av?.status !== "cancelada" && av?.status !== "relatorio_emitido";
+
+  async function salvarPrevisao() {
+    const val = Math.max(1, Math.floor(Number(novaPrevisao) || 0));
+    if (val < totalRespostas) {
+      toast.error(`A previsão não pode ser menor que ${totalRespostas} respostas já recebidas.`);
+      return;
+    }
+    setSalvandoPrevisao(true);
+    const { error } = await supabase
+      .from("psico_avaliacoes")
+      .update({ quantidade_participantes_prevista: val })
+      .eq("id", av.id);
+    setSalvandoPrevisao(false);
+    if (error) return toast.error(error.message);
+    toast.success("Previsão atualizada");
+    setAjustarOpen(false);
+    onReload();
+  }
   const [ultimaAtualizacao, setUltimaAtualizacao] = useState<Date | null>(null);
   const [mostrarNomes, setMostrarNomes] = useState(true);
   const [confirmarRotacao, setConfirmarRotacao] = useState(false);
