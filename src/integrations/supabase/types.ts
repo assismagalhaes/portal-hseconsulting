@@ -6920,6 +6920,109 @@ export type Database = {
           },
         ]
       }
+      psico_ind_relatorios: {
+        Row: {
+          avaliacao_id: string
+          codigo: string
+          codigo_validacao: string
+          created_at: string
+          emitido_em: string | null
+          emitido_por: string | null
+          erro_codigo: string | null
+          id: string
+          modelo_codigo: string
+          modelo_versao: string
+          motivo_revogacao: string | null
+          nome_arquivo: string | null
+          pdf_hash: string | null
+          processamento_id: string | null
+          quantidade_paginas: number | null
+          revisao_id: string
+          revogado_em: string | null
+          revogado_por: string | null
+          snapshot_conteudo: Json
+          status: string
+          storage_path: string | null
+          tamanho_bytes: number | null
+          updated_at: string
+          versao: number
+        }
+        Insert: {
+          avaliacao_id: string
+          codigo: string
+          codigo_validacao: string
+          created_at?: string
+          emitido_em?: string | null
+          emitido_por?: string | null
+          erro_codigo?: string | null
+          id?: string
+          modelo_codigo: string
+          modelo_versao: string
+          motivo_revogacao?: string | null
+          nome_arquivo?: string | null
+          pdf_hash?: string | null
+          processamento_id?: string | null
+          quantidade_paginas?: number | null
+          revisao_id: string
+          revogado_em?: string | null
+          revogado_por?: string | null
+          snapshot_conteudo: Json
+          status?: string
+          storage_path?: string | null
+          tamanho_bytes?: number | null
+          updated_at?: string
+          versao?: number
+        }
+        Update: {
+          avaliacao_id?: string
+          codigo?: string
+          codigo_validacao?: string
+          created_at?: string
+          emitido_em?: string | null
+          emitido_por?: string | null
+          erro_codigo?: string | null
+          id?: string
+          modelo_codigo?: string
+          modelo_versao?: string
+          motivo_revogacao?: string | null
+          nome_arquivo?: string | null
+          pdf_hash?: string | null
+          processamento_id?: string | null
+          quantidade_paginas?: number | null
+          revisao_id?: string
+          revogado_em?: string | null
+          revogado_por?: string | null
+          snapshot_conteudo?: Json
+          status?: string
+          storage_path?: string | null
+          tamanho_bytes?: number | null
+          updated_at?: string
+          versao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_ind_relatorios_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_ind_relatorios_processamento_id_fkey"
+            columns: ["processamento_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_processamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_ind_relatorios_revisao_id_fkey"
+            columns: ["revisao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_revisoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psico_ind_sugestoes_ia: {
         Row: {
           avaliacao_id: string
@@ -7569,33 +7672,60 @@ export type Database = {
         Row: {
           aprovado_em: string | null
           aprovado_por: string | null
+          assinatura_hash_sha256: string | null
+          assinatura_mime_type: string | null
+          assinatura_storage_path: string | null
           ativa: boolean
           avaliacao_id: string
           created_at: string
           id: string
+          imutavel: boolean
+          modelo_ia: string | null
           observacoes: string | null
+          parecer: Json | null
+          parecer_versao: number
+          prompt_codigo: string | null
+          responsavel_profissional_id: string | null
           status: string
           updated_at: string
         }
         Insert: {
           aprovado_em?: string | null
           aprovado_por?: string | null
+          assinatura_hash_sha256?: string | null
+          assinatura_mime_type?: string | null
+          assinatura_storage_path?: string | null
           ativa?: boolean
           avaliacao_id: string
           created_at?: string
           id?: string
+          imutavel?: boolean
+          modelo_ia?: string | null
           observacoes?: string | null
+          parecer?: Json | null
+          parecer_versao?: number
+          prompt_codigo?: string | null
+          responsavel_profissional_id?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
           aprovado_em?: string | null
           aprovado_por?: string | null
+          assinatura_hash_sha256?: string | null
+          assinatura_mime_type?: string | null
+          assinatura_storage_path?: string | null
           ativa?: boolean
           avaliacao_id?: string
           created_at?: string
           id?: string
+          imutavel?: boolean
+          modelo_ia?: string | null
           observacoes?: string | null
+          parecer?: Json | null
+          parecer_versao?: number
+          prompt_codigo?: string | null
+          responsavel_profissional_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -10320,9 +10450,29 @@ export type Database = {
         Args: { p_processamento: string }
         Returns: undefined
       }
+      psico_ind_aprovar_revisao: {
+        Args: { p_responsavel_profissional: string; p_revisao: string }
+        Returns: undefined
+      }
+      psico_ind_concluir_relatorio: {
+        Args: {
+          p_emitido_por: string
+          p_id: string
+          p_nome_arquivo: string
+          p_pdf_hash: string
+          p_quantidade_paginas: number
+          p_storage_path: string
+          p_tamanho_bytes: number
+        }
+        Returns: undefined
+      }
       psico_ind_contexto_para_ia: {
         Args: { p_avaliacao: string }
         Returns: Json
+      }
+      psico_ind_falhar_relatorio: {
+        Args: { p_erro: string; p_id: string }
+        Returns: undefined
       }
       psico_ind_finalizar_submissao: {
         Args: {
@@ -10337,6 +10487,7 @@ export type Database = {
         }
         Returns: Json
       }
+      psico_ind_gates_emissao: { Args: { p_avaliacao: string }; Returns: Json }
       psico_ind_ler_entradas_para_motor: {
         Args: { p_avaliacao: string }
         Returns: Json
@@ -10383,6 +10534,41 @@ export type Database = {
           revisado_em: string
           revisado_por: string
         }[]
+      }
+      psico_ind_listar_relatorios: {
+        Args: { p_avaliacao: string }
+        Returns: {
+          avaliacao_id: string
+          codigo: string
+          codigo_validacao: string
+          created_at: string
+          emitido_em: string | null
+          emitido_por: string | null
+          erro_codigo: string | null
+          id: string
+          modelo_codigo: string
+          modelo_versao: string
+          motivo_revogacao: string | null
+          nome_arquivo: string | null
+          pdf_hash: string | null
+          processamento_id: string | null
+          quantidade_paginas: number | null
+          revisao_id: string
+          revogado_em: string | null
+          revogado_por: string | null
+          snapshot_conteudo: Json
+          status: string
+          storage_path: string | null
+          tamanho_bytes: number | null
+          updated_at: string
+          versao: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "psico_ind_relatorios"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       psico_ind_log_sugestao_ia: {
         Args: {
@@ -10450,6 +10636,27 @@ export type Database = {
           titulo: string
           updated_at: string
         }[]
+      }
+      psico_ind_preparar_relatorio: {
+        Args: {
+          p_avaliacao: string
+          p_modelo_codigo: string
+          p_modelo_versao: string
+        }
+        Returns: Json
+      }
+      psico_ind_salvar_parecer: {
+        Args: {
+          p_avaliacao: string
+          p_modelo_ia: string
+          p_parecer: Json
+          p_prompt_codigo: string
+        }
+        Returns: Json
+      }
+      psico_ind_snapshot_relatorio: {
+        Args: { p_avaliacao: string }
+        Returns: Json
       }
       psico_listar_escopos_resultado: {
         Args: { p_avaliacao_id: string }

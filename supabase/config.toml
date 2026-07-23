@@ -50,3 +50,9 @@ verify_jwt = true
 
 [functions.psico-individual-sugerir-plano]
 verify_jwt = true
+
+[functions.psico-gerar-parecer-individual]
+verify_jwt = true
+
+[functions.psico-gerar-relatorio-individual]
+verify_jwt = true
