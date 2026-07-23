@@ -5697,6 +5697,7 @@ export type Database = {
           observacoes_tecnicas: string | null
           origem_cadastro: Database["public"]["Enums"]["proposal_origem"]
           outras_condicoes: string | null
+          premissas_ids: string[]
           proximo_followup: string | null
           revisao_atual: number
           status: Database["public"]["Enums"]["proposal_status"]
@@ -5728,6 +5729,7 @@ export type Database = {
           observacoes_tecnicas?: string | null
           origem_cadastro?: Database["public"]["Enums"]["proposal_origem"]
           outras_condicoes?: string | null
+          premissas_ids?: string[]
           proximo_followup?: string | null
           revisao_atual?: number
           status?: Database["public"]["Enums"]["proposal_status"]
@@ -5759,6 +5761,7 @@ export type Database = {
           observacoes_tecnicas?: string | null
           origem_cadastro?: Database["public"]["Enums"]["proposal_origem"]
           outras_condicoes?: string | null
+          premissas_ids?: string[]
           proximo_followup?: string | null
           revisao_atual?: number
           status?: Database["public"]["Enums"]["proposal_status"]
@@ -5776,6 +5779,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      proposta_premissas: {
+        Row: {
+          ativa: boolean
+          categorias: string[]
+          created_at: string
+          id: string
+          ordem: number
+          sempre_aplicavel: boolean
+          texto: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativa?: boolean
+          categorias?: string[]
+          created_at?: string
+          id?: string
+          ordem?: number
+          sempre_aplicavel?: boolean
+          texto: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativa?: boolean
+          categorias?: string[]
+          created_at?: string
+          id?: string
+          ordem?: number
+          sempre_aplicavel?: boolean
+          texto?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       psico_auditoria: {
         Row: {
