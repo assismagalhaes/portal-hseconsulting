@@ -804,7 +804,7 @@ export default function ProposalEditor() {
                   </div>
                   <PremissasPicker
                     selectedIds={proposal.premissas_ids || []}
-                    extraText={extractExtraPremissas(proposal.outras_condicoes, proposal.premissas_ids || [], items)}
+                    extraText={(proposal.premissas_ids?.length ? "" : (proposal.outras_condicoes || ""))}
                     itemCategorias={items.map((i: any) => i.categoria).filter(Boolean)}
                     onChange={(patch) => {
                       setProposal((p: any) => ({ ...p, ...patch }));
