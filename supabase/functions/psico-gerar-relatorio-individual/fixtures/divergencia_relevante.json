@@ -1,0 +1,66 @@
+{
+  "empresa": {
+    "razao_social": "EMPRESA MODELO LTDA",
+    "cnpj": "00.000.000/0001-00",
+    "porte": "microempresa",
+    "cnae_principal": "9999-9/99"
+  },
+  "avaliacao": {
+    "codigo": "AFP-PILOTO-0001",
+    "modalidade": "individual_microempresa",
+    "unidade": "Matriz",
+    "data_inicio": "2026-07-01",
+    "data_fim": "2026-07-15"
+  },
+  "revisao": {
+    "parecer": {
+      "sintese_caso": "Caso individual microempresa: um empregado e um empregador. Achados construídos por convergência entre as duas visões e revisão técnica.",
+      "interpretacao_convergencia": "As percepções foram majoritariamente convergentes; divergências pontuais foram tratadas com prevalência da maior exposição.",
+      "prioridades": "Prioridade organizacional conforme achados.",
+      "recomendacoes_organizacionais": "Recomendações agrupadas pelos eixos da NR-01 aplicáveis a microempresa.",
+      "limitacoes": "n=2, autorrelato, ausência de estatística coletiva.",
+      "conclusao": "Fechamento integrando parecer, plano e ciclo PGR/NR-01."
+    },
+    "parecer_versao": 1,
+    "prompt_codigo": "HSE-PSICO-IA-PARECER-INDIVIDUAL-1.0",
+    "responsavel": {
+      "nome": "PROFISSIONAL RESPONSÁVEL",
+      "registro": "CRP 00/00000",
+      "assinatura_hash_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "assinatura_mime_type": "image/png"
+    }
+  },
+  "achados": [
+    {
+      "id": "22222222-0000-0000-0000-000000000001",
+      "fator_codigo": "carga_excessiva",
+      "estado_final": "prioritario",
+      "condicao_preliminar": "divergencia_forte",
+      "evidencia": "Empregado percebe carga alta; empregador percebe carga adequada.",
+      "necessita_acao": true
+    },
+    {
+      "id": "00000000-0000-0000-0000-utonomia",
+      "fator_codigo": "autonomia",
+      "estado_final": "controlado",
+      "condicao_preliminar": "ok",
+      "evidencia": "",
+      "necessita_acao": false
+    }
+  ],
+  "plano": [
+    {
+      "id": "11111111-0000-0000-0000-000000000001",
+      "achado_id": "22222222-0000-0000-0000-000000000001",
+      "titulo": "Ação 1",
+      "objetivo": "Objetivo organizacional",
+      "acao": "Descrição da ação organizacional a executar.",
+      "responsavel_sugerido": "Empregador / Gestão",
+      "prazo_dias": 15,
+      "evidencia": "Registro documental",
+      "indicador_eficacia": "Verificação em revisão",
+      "justificativa": "Responde diretamente ao achado."
+    }
+  ],
+  "codigo_validacao": "PILOTO-DIVERGENCIA_RELEVANTE-VALIDACAO"
+}

@@ -25,6 +25,7 @@ import {
   excluirItemPlanoIndividual, gatesPlanoIndividual, listarAchadosDaAvaliacao,
   listarPlanoIndividual, sugerirPlanoIA, sugestaoToPatch,
 } from "@/lib/psicoIndividualPlano";
+import { PSICO_INDIVIDUAL_AI_PLAN_ENABLED } from "@/lib/psicoIndividual";
 
 type Achado = {
   id: string; fator_codigo: string; estado_final: string;
@@ -239,7 +240,7 @@ export default function PsicoIndividualPlanoTab({ avaliacaoId }: { avaliacaoId: 
                   </DialogContent>
                 </Dialog>
 
-                {sugestoes.length > 0 ? (
+                {!PSICO_INDIVIDUAL_AI_PLAN_ENABLED ? null : sugestoes.length > 0 ? (
                   <AlertDialog open={regenerarOpen} onOpenChange={setRegenerarOpen}>
                     <AlertDialogTrigger asChild>
                       <Button variant="outline" size="sm" disabled={iaLoading}>

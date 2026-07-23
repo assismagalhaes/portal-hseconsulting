@@ -1,0 +1,77 @@
+{
+  "empresa": {
+    "razao_social": "EMPRESA MODELO LTDA",
+    "cnpj": "00.000.000/0001-00",
+    "porte": "microempresa",
+    "cnae_principal": "9999-9/99"
+  },
+  "avaliacao": {
+    "codigo": "AFP-PILOTO-0001",
+    "modalidade": "individual_microempresa",
+    "unidade": "Matriz",
+    "data_inicio": "2026-07-01",
+    "data_fim": "2026-07-15"
+  },
+  "revisao": {
+    "parecer": {
+      "sintese_caso": "Caso individual microempresa: um empregado e um empregador. Achados construídos por convergência entre as duas visões e revisão técnica.",
+      "interpretacao_convergencia": "As percepções foram majoritariamente convergentes; divergências pontuais foram tratadas com prevalência da maior exposição.",
+      "prioridades": "Prioridade organizacional conforme achados.",
+      "recomendacoes_organizacionais": "Recomendações agrupadas pelos eixos da NR-01 aplicáveis a microempresa.",
+      "limitacoes": "n=2, autorrelato, ausência de estatística coletiva.",
+      "conclusao": "Fechamento integrando parecer, plano e ciclo PGR/NR-01."
+    },
+    "parecer_versao": 1,
+    "prompt_codigo": "HSE-PSICO-IA-PARECER-INDIVIDUAL-1.0",
+    "responsavel": {
+      "nome": "PROFISSIONAL RESPONSÁVEL",
+      "registro": "CRP 00/00000",
+      "assinatura_hash_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "assinatura_mime_type": "image/png"
+    }
+  },
+  "achados": [
+    {
+      "id": "00000000-0000-0000-0000-0fator_1",
+      "fator_codigo": "fator_1",
+      "estado_final": "controlado",
+      "condicao_preliminar": "ok",
+      "evidencia": "",
+      "necessita_acao": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0fator_2",
+      "fator_codigo": "fator_2",
+      "estado_final": "controlado",
+      "condicao_preliminar": "ok",
+      "evidencia": "",
+      "necessita_acao": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0fator_3",
+      "fator_codigo": "fator_3",
+      "estado_final": "controlado",
+      "condicao_preliminar": "ok",
+      "evidencia": "",
+      "necessita_acao": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0fator_4",
+      "fator_codigo": "fator_4",
+      "estado_final": "controlado",
+      "condicao_preliminar": "ok",
+      "evidencia": "",
+      "necessita_acao": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0fator_5",
+      "fator_codigo": "fator_5",
+      "estado_final": "controlado",
+      "condicao_preliminar": "ok",
+      "evidencia": "",
+      "necessita_acao": false
+    }
+  ],
+  "plano": [],
+  "codigo_validacao": "PILOTO-TODOS_CONTROLADOS-VALIDACAO"
+}
