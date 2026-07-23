@@ -673,6 +673,35 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={ajustarOpen} onOpenChange={setAjustarOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ajustar previsão de participantes</AlertDialogTitle>
+            <AlertDialogDescription>
+              Atualize o número previsto quando a quantidade real diferir do planejado (ex.: mais pessoas responderam do que o estimado). Isso mantém o cálculo de adesão coerente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-2">
+            <Label>Nova previsão</Label>
+            <Input
+              type="number"
+              min={Math.max(1, totalRespostas)}
+              value={novaPrevisao}
+              onChange={(e) => setNovaPrevisao(Number(e.target.value) || 1)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Respostas já recebidas: <strong>{totalRespostas}</strong>. A previsão não pode ser menor que esse valor.
+            </p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={salvandoPrevisao}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={(e) => { e.preventDefault(); salvarPrevisao(); }} disabled={salvandoPrevisao}>
+              {salvandoPrevisao ? "Salvando…" : "Salvar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
