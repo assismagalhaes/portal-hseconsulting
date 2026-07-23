@@ -364,7 +364,7 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: condSnap ? 12 : 0 }}>
       {!condSnap && proposal.condicoes_pagamento && <ConditionCard title="Forma de pagamento" body={proposal.condicoes_pagamento} icon={<ShieldCheck size={18} />} primary={primary} accent={accent} neutral={neutral} />}
       {proposal.validade && <ConditionCard title="Validade da proposta" body={new Date(proposal.validade).toLocaleDateString("pt-BR")} icon={<CheckCircle2 size={18} />} primary={primary} accent={accent} neutral={neutral} />}
-      {proposal.outras_condicoes && <ConditionCard title="Outras condições" body={proposal.outras_condicoes} icon={<FileSignature size={18} />} primary={primary} accent={accent} neutral={neutral} fullWidth />}
+      {proposal.outras_condicoes && <ConditionCard title="Premissas e Condições do Serviço" body={proposal.outras_condicoes} icon={<FileSignature size={18} />} primary={primary} accent={accent} neutral={neutral} fullWidth />}
     </div>
   ));
   push("Condições & Aceite", "ac-title", (
