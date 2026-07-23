@@ -66,11 +66,15 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}))
     const avaliacao_id = String(body?.avaliacao_id || '')
     const nome = String(body?.nome || '')
+    const dryRun = Boolean(body?.dry_run)
     if (!avaliacao_id || !nome.trim()) {
       return new Response(JSON.stringify({ error: 'avaliacao_id e nome são obrigatórios' }), { status: 400, headers: CORS })
     }
 
     const hashNome = (await hmac(HASH_SECRET, `${avaliacao_id}:${normalize(nome)}`)).slice(0, 40)
+    if (dryRun) {
+      return new Response(JSON.stringify({ ok: true, dry_run: true, hash: hashNome }), { headers: CORS })
+    }
     const { data: encontrado, error: selErr } = await admin
       .from('psico_respostas_publicas')
       .select('id, created_at, funcao')
