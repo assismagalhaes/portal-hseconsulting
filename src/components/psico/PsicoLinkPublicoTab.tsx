@@ -570,6 +570,11 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
             )}
           </CardTitle>
           <div className="flex gap-2">
+            {podeAjustarPrevisao && (
+              <Button size="sm" variant="outline" onClick={() => { setNovaPrevisao(Number(av?.quantidade_participantes_prevista) || 1); setAjustarOpen(true); }}>
+                <Pencil className="h-3 w-3 mr-1" /> Ajustar previsão
+              </Button>
+            )}
             <Button size="sm" variant="outline" onClick={exportarXlsx} disabled={respostas.length === 0 && participantes.length === 0}>
               <Download className="h-3 w-3 mr-1" /> Exportar Excel
             </Button>
@@ -587,10 +592,25 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
               <div className="text-xs text-muted-foreground">Previstos</div>
             </div>
             <div className="border rounded p-3">
-              <div className="text-2xl font-semibold">
-                {av.quantidade_participantes_prevista ? Math.round((totalRespostas / av.quantidade_participantes_prevista) * 100) : 0}%
-              </div>
-              <div className="text-xs text-muted-foreground">Adesão</div>
+              {(() => {
+                const prev = Number(av.quantidade_participantes_prevista) || 0;
+                const pct = prev ? Math.round((totalRespostas / prev) * 100) : 0;
+                const excedeu = prev > 0 && totalRespostas > prev;
+                return (
+                  <>
+                    <div className={`text-2xl font-semibold ${excedeu ? "text-amber-600" : ""}`}>
+                      {Math.min(pct, 100)}%
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {excedeu ? (
+                        <span className="text-amber-600">Excedeu previsão (+{totalRespostas - prev})</span>
+                      ) : (
+                        "Adesão"
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
