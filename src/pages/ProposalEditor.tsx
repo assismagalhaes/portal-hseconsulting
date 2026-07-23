@@ -48,6 +48,7 @@ import {
   normalizarHorasTecnicas,
 } from "@/lib/pricing";
 import { toast } from "sonner";
+import PremissasPicker from "@/components/proposal/PremissasPicker";
 import logo from "@/assets/hse-logo-navy.png";
 import ProposalDocument from "@/components/proposal/ProposalDocument";
 import CnpjLookupField from "@/components/CnpjLookupField";
