@@ -10,6 +10,15 @@ export const PSICO_INDIVIDUAL_ENABLED: boolean =
     .toString()
     .toLowerCase() === "true";
 
+// Sub-flag: libera a geração de plano de ação por IA para a modalidade individual.
+// Coleta/processamento/parecer continuam funcionando com a modalidade habilitada;
+// apenas o botão "Sugerir com IA" no plano é gated por esta flag.
+// Default: false (ordem de liberação do PR7 — coleta → plano manual → IA de plano → parecer).
+export const PSICO_INDIVIDUAL_AI_PLAN_ENABLED: boolean =
+  ((import.meta as any).env?.VITE_PSICO_INDIVIDUAL_AI_PLAN_ENABLED ?? "false")
+    .toString()
+    .toLowerCase() === "true";
+
 export type PsicoModalidade = "coletiva_hse" | "individual_microempresa";
 
 export const PSICO_MODALIDADE_LABEL: Record<PsicoModalidade, string> = {
