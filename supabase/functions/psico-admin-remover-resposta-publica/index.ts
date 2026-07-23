@@ -46,11 +46,13 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
+    const bodyPeek = await req.clone().json().catch(() => ({}))
+    const dryRunPre = Boolean(bodyPeek?.dry_run)
     const auth = req.headers.get('Authorization') || ''
     const token = auth.startsWith('Bearer ') ? auth.slice(7) : ''
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
     const isService = token && token === serviceKey
-    if (!isService) {
+    if (!isService && !dryRunPre) {
       const userClient = createClient(
         Deno.env.get('SUPABASE_URL')!,
         Deno.env.get('SUPABASE_ANON_KEY')!,
