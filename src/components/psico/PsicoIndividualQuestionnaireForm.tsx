@@ -65,7 +65,8 @@ export default function PsicoIndividualQuestionnaireForm({
     return () => window.removeEventListener("beforeunload", handler);
   }, [fase, respostas, livres]);
 
-  const totalObrigLikert = formulario.perguntas.filter((p) => p.obrigatoria && p.tipo === "likert").length;
+  const isEscala = (t: string) => t === "escala" || t === "likert";
+  const totalObrigLikert = formulario.perguntas.filter((p) => p.obrigatoria && isEscala(p.tipo)).length;
   const totalRespondidas = Object.keys(respostas).length;
 
   function marcar(pid: string, oid: string) {
@@ -79,8 +80,8 @@ export default function PsicoIndividualQuestionnaireForm({
   function validarObrigatorias(): { ok: boolean; pid?: string } {
     for (const p of formulario.perguntas) {
       if (!p.obrigatoria) continue;
-      if (p.tipo === "likert" && !respostas[p.id]) return { ok: false, pid: p.id };
-      if (p.tipo !== "likert" && !(livres[p.id] || "").trim()) return { ok: false, pid: p.id };
+      if (isEscala(p.tipo) && !respostas[p.id]) return { ok: false, pid: p.id };
+      if (!isEscala(p.tipo) && !(livres[p.id] || "").trim()) return { ok: false, pid: p.id };
     }
     return { ok: true };
   }
@@ -208,14 +209,17 @@ export default function PsicoIndividualQuestionnaireForm({
             <CardContent className="p-4 md:p-6 space-y-6">
               <div className="text-xs uppercase tracking-widest text-muted-foreground">Fator {g.codigo}</div>
               {g.perguntas.map((p) => {
-                const pendente = erro && ((p.tipo === "likert" && !respostas[p.id]) || (p.tipo !== "likert" && p.obrigatoria && !(livres[p.id] || "").trim()));
+                const pendente = erro && (
+                  (isEscala(p.tipo) && p.obrigatoria && !respostas[p.id]) ||
+                  (!isEscala(p.tipo) && p.obrigatoria && !(livres[p.id] || "").trim())
+                );
                 return (
                   <div key={p.id} ref={pendente ? primeiraPendenteRef : undefined} className={pendente ? "border-l-2 border-destructive pl-3" : ""}>
                     <div className="text-sm font-medium mb-2">
                       {p.numero ? `${p.numero}. ` : ""}{p.texto}
                       {p.obrigatoria && <span className="text-destructive ml-1">*</span>}
                     </div>
-                    {p.tipo === "likert" ? (
+                    {isEscala(p.tipo) ? (
                       <RadioGroup
                         value={respostas[p.id] || ""}
                         onValueChange={(v) => marcar(p.id, v)}
@@ -231,14 +235,14 @@ export default function PsicoIndividualQuestionnaireForm({
                     ) : (
                       <div className="space-y-1">
                         <Textarea
-                          maxLength={p.limite_texto}
+                          maxLength={p.limite_texto || 500}
                           value={livres[p.id] || ""}
                           onChange={(e) => escrever(p.id, e.target.value)}
                           placeholder="Escreva sua resposta"
                           rows={3}
                         />
                         <div className="text-[11px] text-muted-foreground text-right">
-                          {(livres[p.id] || "").length}/{p.limite_texto}
+                          {(livres[p.id] || "").length}/{p.limite_texto || 500}
                         </div>
                       </div>
                     )}
