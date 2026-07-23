@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.psico-individual-processar]
 verify_jwt = true
+
+[functions.psico-individual-sugerir-plano]
+verify_jwt = true
