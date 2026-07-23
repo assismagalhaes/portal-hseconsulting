@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { AlertTriangle, Copy, RefreshCw, Link2, Users, Eye, EyeOff, QrCode, Download, Radio } from "lucide-react";
+import { Pencil } from "lucide-react";
 import QRCode from "qrcode";
 import jsPDF from "jspdf";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip as RTooltip, CartesianGrid, LabelList } from "recharts";
@@ -58,6 +59,28 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
   const [totalRespostas, setTotalRespostas] = useState<number>(0);
   const [respostas, setRespostas] = useState<Array<{ id: string; funcao: string | null; setor: string | null; unidade: string | null; funcao_normalizada: string | null; setor_normalizada: string | null; unidade_normalizada: string | null; created_at: string }>>([]);
   const [realtimeAtivo, setRealtimeAtivo] = useState(false);
+  const [ajustarOpen, setAjustarOpen] = useState(false);
+  const [novaPrevisao, setNovaPrevisao] = useState<number>(Number(av?.quantidade_participantes_prevista) || 1);
+  const [salvandoPrevisao, setSalvandoPrevisao] = useState(false);
+  const podeAjustarPrevisao = av?.status !== "cancelada" && av?.status !== "relatorio_emitido";
+
+  async function salvarPrevisao() {
+    const val = Math.max(1, Math.floor(Number(novaPrevisao) || 0));
+    if (val < totalRespostas) {
+      toast.error(`A previsão não pode ser menor que ${totalRespostas} respostas já recebidas.`);
+      return;
+    }
+    setSalvandoPrevisao(true);
+    const { error } = await supabase
+      .from("psico_avaliacoes")
+      .update({ quantidade_participantes_prevista: val })
+      .eq("id", av.id);
+    setSalvandoPrevisao(false);
+    if (error) return toast.error(error.message);
+    toast.success("Previsão atualizada");
+    setAjustarOpen(false);
+    onReload();
+  }
   const [ultimaAtualizacao, setUltimaAtualizacao] = useState<Date | null>(null);
   const [mostrarNomes, setMostrarNomes] = useState(true);
   const [confirmarRotacao, setConfirmarRotacao] = useState(false);
@@ -547,6 +570,11 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
             )}
           </CardTitle>
           <div className="flex gap-2">
+            {podeAjustarPrevisao && (
+              <Button size="sm" variant="outline" onClick={() => { setNovaPrevisao(Number(av?.quantidade_participantes_prevista) || 1); setAjustarOpen(true); }}>
+                <Pencil className="h-3 w-3 mr-1" /> Ajustar previsão
+              </Button>
+            )}
             <Button size="sm" variant="outline" onClick={exportarXlsx} disabled={respostas.length === 0 && participantes.length === 0}>
               <Download className="h-3 w-3 mr-1" /> Exportar Excel
             </Button>
@@ -564,10 +592,25 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
               <div className="text-xs text-muted-foreground">Previstos</div>
             </div>
             <div className="border rounded p-3">
-              <div className="text-2xl font-semibold">
-                {av.quantidade_participantes_prevista ? Math.round((totalRespostas / av.quantidade_participantes_prevista) * 100) : 0}%
-              </div>
-              <div className="text-xs text-muted-foreground">Adesão</div>
+              {(() => {
+                const prev = Number(av.quantidade_participantes_prevista) || 0;
+                const pct = prev ? Math.round((totalRespostas / prev) * 100) : 0;
+                const excedeu = prev > 0 && totalRespostas > prev;
+                return (
+                  <>
+                    <div className={`text-2xl font-semibold ${excedeu ? "text-amber-600" : ""}`}>
+                      {Math.min(pct, 100)}%
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {excedeu ? (
+                        <span className="text-amber-600">Excedeu previsão (+{totalRespostas - prev})</span>
+                      ) : (
+                        "Adesão"
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
@@ -630,6 +673,35 @@ export default function PsicoLinkPublicoTab({ av, onReload }: { av: any; onReloa
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={ajustarOpen} onOpenChange={setAjustarOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ajustar previsão de participantes</AlertDialogTitle>
+            <AlertDialogDescription>
+              Atualize o número previsto quando a quantidade real diferir do planejado (ex.: mais pessoas responderam do que o estimado). Isso mantém o cálculo de adesão coerente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-2">
+            <Label>Nova previsão</Label>
+            <Input
+              type="number"
+              min={Math.max(1, totalRespostas)}
+              value={novaPrevisao}
+              onChange={(e) => setNovaPrevisao(Number(e.target.value) || 1)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Respostas já recebidas: <strong>{totalRespostas}</strong>. A previsão não pode ser menor que esse valor.
+            </p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={salvandoPrevisao}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={(e) => { e.preventDefault(); salvarPrevisao(); }} disabled={salvandoPrevisao}>
+              {salvandoPrevisao ? "Salvando…" : "Salvar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
