@@ -11,6 +11,7 @@ import { Plus } from "lucide-react";
 import { formatCnpjCpf } from "@/lib/format";
 import { toast } from "sonner";
 import CnpjLookupField from "@/components/CnpjLookupField";
+import CepLookupField from "@/components/CepLookupField";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const empty = { razao_social:"", nome_fantasia:"", cnpj_cpf:"", email:"", telefone:"", whatsapp:"", endereco:"", cidade:"", uf:"", solicitante:"", cargo:"", qtd_funcionarios:0, observacoes:"" };
@@ -98,7 +99,12 @@ export default function Clients() {
                 <Field label="WhatsApp" value={form.whatsapp} onChange={v=>setForm({...form,whatsapp:v})} />
                 <Field label="Endereço" className="sm:col-span-2" value={form.endereco} onChange={v=>setForm({...form,endereco:v})} />
                 <Field label="Bairro" value={form.bairro||""} onChange={v=>setForm({...form,bairro:v})} />
-                <Field label="CEP" value={form.cep||""} onChange={v=>setForm({...form,cep:v})} />
+                <CepLookupField
+                  value={form.cep || ""}
+                  onChange={(v)=>setForm({...form, cep:v})}
+                  formSnapshot={form}
+                  onAutofill={(patch)=>setForm({...form, ...patch})}
+                />
                 <Field label="Cidade" value={form.cidade} onChange={v=>setForm({...form,cidade:v})} />
                 <Field label="UF" value={form.uf} onChange={v=>setForm({...form,uf:v.toUpperCase().slice(0,2)})} />
                 <Field label="Solicitante" value={form.solicitante} onChange={v=>setForm({...form,solicitante:v})} />
