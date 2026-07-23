@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.psico-individual-enviar-respostas]
 verify_jwt = false
+
+[functions.psico-individual-processar]
+verify_jwt = true

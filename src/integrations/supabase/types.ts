@@ -6808,20 +6808,66 @@ export type Database = {
           },
         ]
       }
+      psico_individual_achado_historico: {
+        Row: {
+          achado_id: string
+          alterado_por: string | null
+          created_at: string
+          estado_anterior: string | null
+          estado_novo: string
+          id: string
+          justificativa: string
+          regra_codigo: string | null
+        }
+        Insert: {
+          achado_id: string
+          alterado_por?: string | null
+          created_at?: string
+          estado_anterior?: string | null
+          estado_novo: string
+          id?: string
+          justificativa: string
+          regra_codigo?: string | null
+        }
+        Update: {
+          achado_id?: string
+          alterado_por?: string | null
+          created_at?: string
+          estado_anterior?: string | null
+          estado_novo?: string
+          id?: string
+          justificativa?: string
+          regra_codigo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_achado_historico_achado_id_fkey"
+            columns: ["achado_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_achados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psico_individual_achados: {
         Row: {
           avaliacao_id: string
           condicao_preliminar: string | null
           controle_existente: string | null
           created_at: string
+          decisao_tecnica: string | null
           descricao_organizacional: string | null
           eficacia_controle: string | null
           estado_convergencia: string | null
+          estado_final: string | null
+          estado_original: string | null
           fator_codigo: string
           frequencia_exposicao: string | null
           fundamentacao_sanitizada: string | null
           id: string
           intensidade_exigencia: string | null
+          justificativa_alteracao: string | null
+          necessita_acao: boolean
           nivel_evidencia: string | null
           perigo_codigo: string | null
           processamento_id: string
@@ -6836,14 +6882,19 @@ export type Database = {
           condicao_preliminar?: string | null
           controle_existente?: string | null
           created_at?: string
+          decisao_tecnica?: string | null
           descricao_organizacional?: string | null
           eficacia_controle?: string | null
           estado_convergencia?: string | null
+          estado_final?: string | null
+          estado_original?: string | null
           fator_codigo: string
           frequencia_exposicao?: string | null
           fundamentacao_sanitizada?: string | null
           id?: string
           intensidade_exigencia?: string | null
+          justificativa_alteracao?: string | null
+          necessita_acao?: boolean
           nivel_evidencia?: string | null
           perigo_codigo?: string | null
           processamento_id: string
@@ -6858,14 +6909,19 @@ export type Database = {
           condicao_preliminar?: string | null
           controle_existente?: string | null
           created_at?: string
+          decisao_tecnica?: string | null
           descricao_organizacional?: string | null
           eficacia_controle?: string | null
           estado_convergencia?: string | null
+          estado_final?: string | null
+          estado_original?: string | null
           fator_codigo?: string
           frequencia_exposicao?: string | null
           fundamentacao_sanitizada?: string | null
           id?: string
           intensidade_exigencia?: string | null
+          justificativa_alteracao?: string | null
+          necessita_acao?: boolean
           nivel_evidencia?: string | null
           perigo_codigo?: string | null
           processamento_id?: string
@@ -7168,34 +7224,58 @@ export type Database = {
       }
       psico_individual_processamentos: {
         Row: {
+          aprovado_em: string | null
+          aprovado_por: string | null
           avaliacao_id: string
           concluido_em: string | null
           created_at: string
+          engine_versao: string | null
           erro: string | null
           id: string
+          imutavel: boolean
           iniciado_em: string
+          instrumento_versao_empregado_id: string | null
+          instrumento_versao_empregador_id: string | null
+          resultado_hash: string | null
+          snapshot_entradas: Json | null
           status: string
           updated_at: string
           versao_regra: string
         }
         Insert: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
           avaliacao_id: string
           concluido_em?: string | null
           created_at?: string
+          engine_versao?: string | null
           erro?: string | null
           id?: string
+          imutavel?: boolean
           iniciado_em?: string
+          instrumento_versao_empregado_id?: string | null
+          instrumento_versao_empregador_id?: string | null
+          resultado_hash?: string | null
+          snapshot_entradas?: Json | null
           status?: string
           updated_at?: string
           versao_regra: string
         }
         Update: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
           avaliacao_id?: string
           concluido_em?: string | null
           created_at?: string
+          engine_versao?: string | null
           erro?: string | null
           id?: string
+          imutavel?: boolean
           iniciado_em?: string
+          instrumento_versao_empregado_id?: string | null
+          instrumento_versao_empregador_id?: string | null
+          resultado_hash?: string | null
+          snapshot_entradas?: Json | null
           status?: string
           updated_at?: string
           versao_regra?: string
@@ -10050,6 +10130,18 @@ export type Database = {
         Returns: undefined
       }
       psico_importacao_testes_integridade: { Args: never; Returns: Json }
+      psico_ind_alterar_classificacao: {
+        Args: {
+          p_achado: string
+          p_justificativa: string
+          p_novo_estado: string
+        }
+        Returns: undefined
+      }
+      psico_ind_aprovar_processamento: {
+        Args: { p_processamento: string }
+        Returns: undefined
+      }
       psico_ind_finalizar_submissao: {
         Args: {
           p_instrumento_versao_id: string
@@ -10061,6 +10153,10 @@ export type Database = {
           p_token_version: number
           p_ua_hash?: string
         }
+        Returns: Json
+      }
+      psico_ind_ler_entradas_para_motor: {
+        Args: { p_avaliacao: string }
         Returns: Json
       }
       psico_ind_ler_respostas_livres: {
@@ -10080,6 +10176,44 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      psico_ind_listar_achados: {
+        Args: { p_avaliacao: string }
+        Returns: {
+          condicao_preliminar: string
+          controle_existente: string
+          eficacia_controle: string
+          estado_convergencia: string
+          estado_final: string
+          estado_original: string
+          fator_codigo: string
+          frequencia_exposicao: string
+          fundamentacao_sanitizada: string
+          id: string
+          imutavel: boolean
+          intensidade_exigencia: string
+          justificativa_alteracao: string
+          necessita_acao: boolean
+          nivel_evidencia: string
+          processamento_id: string
+          regra_codigo: string
+          regra_versao: string
+          revisado_em: string
+          revisado_por: string
+        }[]
+      }
+      psico_ind_persistir_processamento: {
+        Args: {
+          p_achados: Json
+          p_avaliacao: string
+          p_engine_versao: string
+          p_hash: string
+          p_instrumento_emp: string
+          p_instrumento_rep: string
+          p_snapshot: Json
+          p_versao_regra: string
+        }
+        Returns: string
       }
       psico_listar_escopos_resultado: {
         Args: { p_avaliacao_id: string }
