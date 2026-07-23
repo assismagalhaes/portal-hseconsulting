@@ -5879,6 +5879,7 @@ export type Database = {
           link_publico_token: string | null
           mensagem_convite: string | null
           metodologia_versao_id: string | null
+          modalidade: string
           modo_coleta: Database["public"]["Enums"]["psico_modo_coleta"]
           motivo_cancelamento: string | null
           motivo_encerramento: string | null
@@ -5933,6 +5934,7 @@ export type Database = {
           link_publico_token?: string | null
           mensagem_convite?: string | null
           metodologia_versao_id?: string | null
+          modalidade?: string
           modo_coleta?: Database["public"]["Enums"]["psico_modo_coleta"]
           motivo_cancelamento?: string | null
           motivo_encerramento?: string | null
@@ -5987,6 +5989,7 @@ export type Database = {
           link_publico_token?: string | null
           mensagem_convite?: string | null
           metodologia_versao_id?: string | null
+          modalidade?: string
           modo_coleta?: Database["public"]["Enums"]["psico_modo_coleta"]
           motivo_cancelamento?: string | null
           motivo_encerramento?: string | null
@@ -6778,6 +6781,522 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "psico_importacoes_participantes_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_achados: {
+        Row: {
+          avaliacao_id: string
+          condicao_preliminar: string | null
+          controle_existente: string | null
+          created_at: string
+          descricao_organizacional: string | null
+          eficacia_controle: string | null
+          estado_convergencia: string | null
+          fator_codigo: string
+          frequencia_exposicao: string | null
+          fundamentacao_sanitizada: string | null
+          id: string
+          intensidade_exigencia: string | null
+          nivel_evidencia: string | null
+          perigo_codigo: string | null
+          processamento_id: string
+          regra_codigo: string | null
+          regra_versao: string | null
+          revisado_em: string | null
+          revisado_por: string | null
+          updated_at: string
+        }
+        Insert: {
+          avaliacao_id: string
+          condicao_preliminar?: string | null
+          controle_existente?: string | null
+          created_at?: string
+          descricao_organizacional?: string | null
+          eficacia_controle?: string | null
+          estado_convergencia?: string | null
+          fator_codigo: string
+          frequencia_exposicao?: string | null
+          fundamentacao_sanitizada?: string | null
+          id?: string
+          intensidade_exigencia?: string | null
+          nivel_evidencia?: string | null
+          perigo_codigo?: string | null
+          processamento_id: string
+          regra_codigo?: string | null
+          regra_versao?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avaliacao_id?: string
+          condicao_preliminar?: string | null
+          controle_existente?: string | null
+          created_at?: string
+          descricao_organizacional?: string | null
+          eficacia_controle?: string | null
+          estado_convergencia?: string | null
+          fator_codigo?: string
+          frequencia_exposicao?: string | null
+          fundamentacao_sanitizada?: string | null
+          id?: string
+          intensidade_exigencia?: string | null
+          nivel_evidencia?: string | null
+          perigo_codigo?: string | null
+          processamento_id?: string
+          regra_codigo?: string | null
+          regra_versao?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_achados_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_individual_achados_processamento_id_fkey"
+            columns: ["processamento_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_processamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_convites: {
+        Row: {
+          avaliacao_id: string
+          consumido_em: string | null
+          created_at: string
+          criado_por: string | null
+          expira_em: string | null
+          id: string
+          observacoes: string | null
+          papel: string
+          token_hash: string
+          token_prefixo: string | null
+          updated_at: string
+        }
+        Insert: {
+          avaliacao_id: string
+          consumido_em?: string | null
+          created_at?: string
+          criado_por?: string | null
+          expira_em?: string | null
+          id?: string
+          observacoes?: string | null
+          papel: string
+          token_hash: string
+          token_prefixo?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avaliacao_id?: string
+          consumido_em?: string | null
+          created_at?: string
+          criado_por?: string | null
+          expira_em?: string | null
+          id?: string
+          observacoes?: string | null
+          papel?: string
+          token_hash?: string
+          token_prefixo?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_convites_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_formularios: {
+        Row: {
+          avaliacao_id: string
+          concluido_em: string | null
+          convite_id: string
+          created_at: string
+          id: string
+          iniciado_em: string | null
+          instrumento_versao_id: string
+          ip_hash: string | null
+          papel: string
+          updated_at: string
+          user_agent_hash: string | null
+        }
+        Insert: {
+          avaliacao_id: string
+          concluido_em?: string | null
+          convite_id: string
+          created_at?: string
+          id?: string
+          iniciado_em?: string | null
+          instrumento_versao_id: string
+          ip_hash?: string | null
+          papel: string
+          updated_at?: string
+          user_agent_hash?: string | null
+        }
+        Update: {
+          avaliacao_id?: string
+          concluido_em?: string | null
+          convite_id?: string
+          created_at?: string
+          id?: string
+          iniciado_em?: string | null
+          instrumento_versao_id?: string
+          ip_hash?: string | null
+          papel?: string
+          updated_at?: string
+          user_agent_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_formularios_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_individual_formularios_convite_id_fkey"
+            columns: ["convite_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_convites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_individual_formularios_instrumento_versao_id_fkey"
+            columns: ["instrumento_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_instrumentos_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_instrumentos_versoes: {
+        Row: {
+          codigo: string
+          created_at: string
+          id: string
+          nome: string
+          observacoes: string | null
+          publicado_em: string | null
+          publicado_por: string | null
+          updated_at: string
+          versao: string
+          vigente: boolean
+        }
+        Insert: {
+          codigo: string
+          created_at?: string
+          id?: string
+          nome: string
+          observacoes?: string | null
+          publicado_em?: string | null
+          publicado_por?: string | null
+          updated_at?: string
+          versao: string
+          vigente?: boolean
+        }
+        Update: {
+          codigo?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          publicado_em?: string | null
+          publicado_por?: string | null
+          updated_at?: string
+          versao?: string
+          vigente?: boolean
+        }
+        Relationships: []
+      }
+      psico_individual_opcoes: {
+        Row: {
+          created_at: string
+          id: string
+          ordem: number
+          pergunta_id: string
+          rotulo: string
+          significa_exposicao: boolean | null
+          updated_at: string
+          valor_numerico: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ordem: number
+          pergunta_id: string
+          rotulo: string
+          significa_exposicao?: boolean | null
+          updated_at?: string
+          valor_numerico?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ordem?: number
+          pergunta_id?: string
+          rotulo?: string
+          significa_exposicao?: boolean | null
+          updated_at?: string
+          valor_numerico?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_opcoes_pergunta_id_fkey"
+            columns: ["pergunta_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_perguntas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_perguntas: {
+        Row: {
+          ativa: boolean
+          created_at: string
+          fator_codigo: string
+          id: string
+          instrumento_versao_id: string
+          numero: string | null
+          obrigatoria: boolean
+          ordem: number
+          papel: string
+          texto: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          ativa?: boolean
+          created_at?: string
+          fator_codigo: string
+          id?: string
+          instrumento_versao_id: string
+          numero?: string | null
+          obrigatoria?: boolean
+          ordem: number
+          papel: string
+          texto: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          ativa?: boolean
+          created_at?: string
+          fator_codigo?: string
+          id?: string
+          instrumento_versao_id?: string
+          numero?: string | null
+          obrigatoria?: boolean
+          ordem?: number
+          papel?: string
+          texto?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_perguntas_instrumento_versao_id_fkey"
+            columns: ["instrumento_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_instrumentos_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_processamentos: {
+        Row: {
+          avaliacao_id: string
+          concluido_em: string | null
+          created_at: string
+          erro: string | null
+          id: string
+          iniciado_em: string
+          status: string
+          updated_at: string
+          versao_regra: string
+        }
+        Insert: {
+          avaliacao_id: string
+          concluido_em?: string | null
+          created_at?: string
+          erro?: string | null
+          id?: string
+          iniciado_em?: string
+          status?: string
+          updated_at?: string
+          versao_regra: string
+        }
+        Update: {
+          avaliacao_id?: string
+          concluido_em?: string | null
+          created_at?: string
+          erro?: string | null
+          id?: string
+          iniciado_em?: string
+          status?: string
+          updated_at?: string
+          versao_regra?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_processamentos_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_respostas: {
+        Row: {
+          created_at: string
+          formulario_id: string
+          id: string
+          opcao_id: string | null
+          pergunta_id: string
+          updated_at: string
+          valor_numerico: number | null
+        }
+        Insert: {
+          created_at?: string
+          formulario_id: string
+          id?: string
+          opcao_id?: string | null
+          pergunta_id: string
+          updated_at?: string
+          valor_numerico?: number | null
+        }
+        Update: {
+          created_at?: string
+          formulario_id?: string
+          id?: string
+          opcao_id?: string | null
+          pergunta_id?: string
+          updated_at?: string
+          valor_numerico?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_respostas_formulario_id_fkey"
+            columns: ["formulario_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_formularios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_individual_respostas_opcao_id_fkey"
+            columns: ["opcao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_opcoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_individual_respostas_pergunta_id_fkey"
+            columns: ["pergunta_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_perguntas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_respostas_livres: {
+        Row: {
+          conteudo: string
+          created_at: string
+          formulario_id: string
+          id: string
+          pergunta_id: string
+          sanitizado_em: string | null
+          updated_at: string
+        }
+        Insert: {
+          conteudo: string
+          created_at?: string
+          formulario_id: string
+          id?: string
+          pergunta_id: string
+          sanitizado_em?: string | null
+          updated_at?: string
+        }
+        Update: {
+          conteudo?: string
+          created_at?: string
+          formulario_id?: string
+          id?: string
+          pergunta_id?: string
+          sanitizado_em?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_respostas_livres_formulario_id_fkey"
+            columns: ["formulario_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_formularios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_individual_respostas_livres_pergunta_id_fkey"
+            columns: ["pergunta_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_perguntas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_revisoes: {
+        Row: {
+          aprovado_em: string | null
+          aprovado_por: string | null
+          ativa: boolean
+          avaliacao_id: string
+          created_at: string
+          id: string
+          observacoes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          ativa?: boolean
+          avaliacao_id: string
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          ativa?: boolean
+          avaliacao_id?: string
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_revisoes_avaliacao_id_fkey"
             columns: ["avaliacao_id"]
             isOneToOne: false
             referencedRelation: "psico_avaliacoes"
@@ -9484,6 +10003,24 @@ export type Database = {
         Returns: undefined
       }
       psico_importacao_testes_integridade: { Args: never; Returns: Json }
+      psico_ind_ler_respostas_livres: {
+        Args: { _formulario_id: string }
+        Returns: {
+          conteudo: string
+          created_at: string
+          formulario_id: string
+          id: string
+          pergunta_id: string
+          sanitizado_em: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "psico_individual_respostas_livres"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       psico_listar_escopos_resultado: {
         Args: { p_avaliacao_id: string }
         Returns: {
