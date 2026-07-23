@@ -187,6 +187,39 @@ export function isValidCnpj(value: string): boolean {
   return d1 === Number(c[12]) && d2 === Number(c[13]);
 }
 
+/** Valida CPF pelos dígitos verificadores. */
+export function isValidCpf(value: string): boolean {
+  const c = onlyDigits(value);
+  if (c.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(c)) return false;
+  const calc = (slice: string) => {
+    const size = slice.length;
+    const sum = slice.split("").reduce((a, ch, i) => a + Number(ch) * (size + 1 - i), 0);
+    const r = (sum * 10) % 11;
+    return r === 10 ? 0 : r;
+  };
+  const d1 = calc(c.slice(0, 9));
+  const d2 = calc(c.slice(0, 9) + d1);
+  return d1 === Number(c[9]) && d2 === Number(c[10]);
+}
+
+/**
+ * Detecta CAEPF (Cadastro de Atividade Econômica de Pessoa Física).
+ * Estrutura: 14 dígitos = CPF válido (11) + sufixo do estabelecimento (3).
+ * Regra prática: se os 11 primeiros formam um CPF válido *e* o número não
+ * passa na validação de CNPJ, tratamos como CAEPF.
+ */
+export function isCaepf(value: string): boolean {
+  const c = onlyDigits(value);
+  if (c.length !== 14) return false;
+  return isValidCpf(c.slice(0, 11)) && !isValidCnpj(c);
+}
+
+/** Formata um CAEPF no padrão 000.000.000/001-01 (mesma máscara do CNPJ). */
+export function formatCaepf(value: string): string {
+  return formatCnpj(value);
+}
+
 /* ------------ providers ------------ */
 async function fetchBrasilApi(cnpj: string): Promise<CnpjLookupResult> {
   const c = onlyDigits(cnpj);

@@ -10,7 +10,7 @@ import { Search, Loader2, CheckCircle2, AlertCircle, Info } from "lucide-react";
 import { toast } from "sonner";
 import {
   consultarCnpj, formatCnpj, onlyDigits, aplicarDadosCnpj,
-  buscarClienteExistentePorCnpj, hasConflict, isSituacaoAtiva, type CnpjLookupData,
+  buscarClienteExistentePorCnpj, hasConflict, isSituacaoAtiva, isCaepf, type CnpjLookupData,
 } from "@/lib/cnpjLookup";
 
 type Props = {
@@ -48,10 +48,18 @@ export default function CnpjLookupField({
 
   const digits = onlyDigits(value);
   const isPossible = digits.length === 14;
+  const caepf = isPossible && isCaepf(digits);
 
   async function handleLookup() {
     if (!isPossible) {
       toast.error("Informe um CNPJ com 14 dígitos para buscar.");
+      return;
+    }
+    if (caepf) {
+      toast.info(
+        "CAEPF detectado (Pessoa Física). Não existe base pública gratuita para consulta automática — preencha os dados manualmente.",
+        { duration: 7000 }
+      );
       return;
     }
     setLoading(true);
@@ -132,7 +140,7 @@ export default function CnpjLookupField({
           type="button"
           variant="outline"
           size={compact ? "sm" : "default"}
-          disabled={!isPossible || loading}
+          disabled={!isPossible || loading || caepf}
           onClick={handleLookup}
           className="shrink-0"
         >
@@ -141,6 +149,15 @@ export default function CnpjLookupField({
             : <><Search className="h-4 w-4 mr-1" /> Buscar dados</>}
         </Button>
       </div>
+      {caepf && (
+        <p className="text-[11px] text-warning flex items-start gap-1">
+          <AlertCircle className="h-3 w-3 mt-0.5 shrink-0" />
+          <span>
+            <strong>CAEPF (Pessoa Física)</strong> — cadastro de atividade econômica vinculado ao CPF do titular.
+            Sem base pública gratuita para consulta; preencha razão social (nome do titular), endereço e demais dados manualmente.
+          </span>
+        </p>
+      )}
       {ultimaConsulta && (
         <p className="text-[11px] text-muted-foreground flex items-center gap-1">
           <Info className="h-3 w-3" />
