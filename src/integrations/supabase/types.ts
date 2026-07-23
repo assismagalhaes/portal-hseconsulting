@@ -5876,6 +5876,8 @@ export type Database = {
           importacao_avaliacao_id: string | null
           importado_em: string | null
           importado_por: string | null
+          instrumento_empregado_versao_id: string | null
+          instrumento_empregador_versao_id: string | null
           link_publico_token: string | null
           mensagem_convite: string | null
           metodologia_versao_id: string | null
@@ -5931,6 +5933,8 @@ export type Database = {
           importacao_avaliacao_id?: string | null
           importado_em?: string | null
           importado_por?: string | null
+          instrumento_empregado_versao_id?: string | null
+          instrumento_empregador_versao_id?: string | null
           link_publico_token?: string | null
           mensagem_convite?: string | null
           metodologia_versao_id?: string | null
@@ -5986,6 +5990,8 @@ export type Database = {
           importacao_avaliacao_id?: string | null
           importado_em?: string | null
           importado_por?: string | null
+          instrumento_empregado_versao_id?: string | null
+          instrumento_empregador_versao_id?: string | null
           link_publico_token?: string | null
           mensagem_convite?: string | null
           metodologia_versao_id?: string | null
@@ -6031,6 +6037,20 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_avaliacoes_instrumento_empregado_versao_id_fkey"
+            columns: ["instrumento_empregado_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_instrumentos_versoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_avaliacoes_instrumento_empregador_versao_id_fkey"
+            columns: ["instrumento_empregador_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_instrumentos_versoes"
             referencedColumns: ["id"]
           },
           {
@@ -7069,42 +7089,60 @@ export type Database = {
       psico_individual_perguntas: {
         Row: {
           ativa: boolean
+          chave_pareamento: string | null
+          codigo: string | null
           created_at: string
           fator_codigo: string
           id: string
           instrumento_versao_id: string
+          limite_texto: number | null
           numero: string | null
           obrigatoria: boolean
           ordem: number
           papel: string
+          periodo_referencia: string | null
+          regra_condicional: Json | null
+          status: string
           texto: string
           tipo: string
           updated_at: string
         }
         Insert: {
           ativa?: boolean
+          chave_pareamento?: string | null
+          codigo?: string | null
           created_at?: string
           fator_codigo: string
           id?: string
           instrumento_versao_id: string
+          limite_texto?: number | null
           numero?: string | null
           obrigatoria?: boolean
           ordem: number
           papel: string
+          periodo_referencia?: string | null
+          regra_condicional?: Json | null
+          status?: string
           texto: string
           tipo: string
           updated_at?: string
         }
         Update: {
           ativa?: boolean
+          chave_pareamento?: string | null
+          codigo?: string | null
           created_at?: string
           fator_codigo?: string
           id?: string
           instrumento_versao_id?: string
+          limite_texto?: number | null
           numero?: string | null
           obrigatoria?: boolean
           ordem?: number
           papel?: string
+          periodo_referencia?: string | null
+          regra_condicional?: Json | null
+          status?: string
           texto?: string
           tipo?: string
           updated_at?: string
