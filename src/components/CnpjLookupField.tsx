@@ -10,7 +10,7 @@ import { Search, Loader2, CheckCircle2, AlertCircle, Info } from "lucide-react";
 import { toast } from "sonner";
 import {
   consultarCnpj, formatCnpj, onlyDigits, aplicarDadosCnpj,
-  buscarClienteExistentePorCnpj, hasConflict, isSituacaoAtiva, isCaepf, type CnpjLookupData,
+  buscarClienteExistentePorCnpj, hasConflict, isSituacaoAtiva, isCaepf, formatCaepf, type CnpjLookupData,
 } from "@/lib/cnpjLookup";
 
 type Props = {
@@ -130,7 +130,10 @@ export default function CnpjLookupField({
       <div className="flex gap-2">
         <Input
           value={value || ""}
-          onChange={(e) => onChange(formatCnpj(e.target.value))}
+          onChange={(e) => {
+            const raw = e.target.value;
+            onChange(isCaepf(raw) ? formatCaepf(raw) : formatCnpj(raw));
+          }}
           placeholder="00.000.000/0000-00"
           inputMode="numeric"
           maxLength={18}

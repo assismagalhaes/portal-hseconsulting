@@ -205,19 +205,29 @@ export function isValidCpf(value: string): boolean {
 
 /**
  * Detecta CAEPF (Cadastro de Atividade Econômica de Pessoa Física).
- * Estrutura: 14 dígitos = CPF válido (11) + sufixo do estabelecimento (3).
- * Regra prática: se os 11 primeiros formam um CPF válido *e* o número não
- * passa na validação de CNPJ, tratamos como CAEPF.
+ * Estrutura: 14 dígitos no formato CPF(9) + estabelecimento(3) + DV(2), com
+ * algoritmo de DV próprio da Receita — diferente do CNPJ e do CPF.
+ * Como não replicamos o algoritmo oficial no cliente, usamos heurística:
+ * quando o input tem 14 dígitos, o padrão do "estabelecimento" (posições
+ * 9–11) começa por "0" (ex.: 001, 002…) e o número **não** passa na
+ * validação de CNPJ, tratamos como CAEPF.
  */
 export function isCaepf(value: string): boolean {
   const c = onlyDigits(value);
   if (c.length !== 14) return false;
-  return isValidCpf(c.slice(0, 11)) && !isValidCnpj(c);
+  if (isValidCnpj(c)) return false;
+  // Estabelecimentos CAEPF são sequenciais partindo de 001.
+  return /^0\d\d$/.test(c.slice(9, 12));
 }
 
 /** Formata um CAEPF no padrão 000.000.000/001-01 (mesma máscara do CNPJ). */
 export function formatCaepf(value: string): string {
-  return formatCnpj(value);
+  const d = onlyDigits(value).slice(0, 14);
+  if (d.length <= 3) return d;
+  if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+  if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+  if (d.length <= 12) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}/${d.slice(9)}`;
+  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}/${d.slice(9, 12)}-${d.slice(12)}`;
 }
 
 /* ------------ providers ------------ */
