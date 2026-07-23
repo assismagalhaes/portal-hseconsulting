@@ -24,6 +24,7 @@ import PsicoLinkPublicoTab from "@/components/psico/PsicoLinkPublicoTab";
 import PsicoIndividualConvitesTab from "@/components/psico/PsicoIndividualConvitesTab";
 import PsicoIndividualConciliacaoTab from "@/components/psico/PsicoIndividualConciliacaoTab";
 import PsicoIndividualPlanoTab from "@/components/psico/PsicoIndividualPlanoTab";
+import PsicoIndividualRelatorioTab from "@/components/psico/PsicoIndividualRelatorioTab";
 import {
   PSICO_MODALIDADE_LABEL,
   isModalidadeIndividual,
@@ -305,6 +306,7 @@ export default function PsicoAvaliacaoDetalhes() {
             {individual && <TabsTrigger value="convites">Convites</TabsTrigger>}
             {individual && <TabsTrigger value="conciliacao">Conciliação</TabsTrigger>}
             {individual && <TabsTrigger value="plano-ind">Plano de Ação</TabsTrigger>}
+            {individual && <TabsTrigger value="relatorio-ind">Relatório</TabsTrigger>}
             {!individual && <TabsTrigger value="participantes">Participantes</TabsTrigger>}
             {!individual && <TabsTrigger value="link-publico">Link Público</TabsTrigger>}
             {!individual && <TabsTrigger value="coleta">Coleta</TabsTrigger>}
@@ -395,6 +397,9 @@ export default function PsicoAvaliacaoDetalhes() {
           </TabsContent>}
           {individual && <TabsContent value="plano-ind">
             <PsicoIndividualPlanoTab avaliacaoId={av.id} />
+          </TabsContent>}
+          {individual && <TabsContent value="relatorio-ind">
+            <PsicoIndividualRelatorioTab avaliacaoId={av.id} />
           </TabsContent>}
           {!individual && <TabsContent value="link-publico">
             <PsicoLinkPublicoTab av={av} onReload={load} />
