@@ -100,7 +100,9 @@ Deno.serve(async (req) => {
         const ins = await admin.from('psico_individual_convites').insert({
           avaliacao_id: avaliacaoId,
           papel,
-          token_hash: 'v2', // não usamos hash; guardamos marcador
+          // token_hash é UNIQUE; não usamos verificação por hash (assinamos com HMAC),
+          // então gravamos um marcador único apenas para satisfazer o índice.
+          token_hash: `v2:${crypto.randomUUID()}`,
           expira_em: expira,
           criado_por: claims.claims.sub,
           status: 'ativo',
