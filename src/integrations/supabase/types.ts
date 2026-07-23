@@ -6808,6 +6808,184 @@ export type Database = {
           },
         ]
       }
+      psico_ind_plano_itens: {
+        Row: {
+          acao_recomendada: string
+          achado_id: string
+          aprovado: boolean
+          aprovado_em: string | null
+          aprovado_por: string | null
+          avaliacao_id: string
+          created_at: string
+          created_by: string | null
+          evidencia_definida: string | null
+          evidencia_recomendada: string | null
+          fator_codigo: string
+          id: string
+          imutavel: boolean
+          indicador_eficacia: string | null
+          justificativa: string | null
+          medida_modelo_id: string | null
+          nivel_recomendacao: string | null
+          objetivo: string
+          ordem: number
+          origem: string
+          perigo_codigo: string | null
+          prazo_definido: string | null
+          prazo_sugerido_dias: number | null
+          responsavel_definido: string | null
+          responsavel_sugerido: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          acao_recomendada: string
+          achado_id: string
+          aprovado?: boolean
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          avaliacao_id: string
+          created_at?: string
+          created_by?: string | null
+          evidencia_definida?: string | null
+          evidencia_recomendada?: string | null
+          fator_codigo: string
+          id?: string
+          imutavel?: boolean
+          indicador_eficacia?: string | null
+          justificativa?: string | null
+          medida_modelo_id?: string | null
+          nivel_recomendacao?: string | null
+          objetivo: string
+          ordem?: number
+          origem?: string
+          perigo_codigo?: string | null
+          prazo_definido?: string | null
+          prazo_sugerido_dias?: number | null
+          responsavel_definido?: string | null
+          responsavel_sugerido?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          acao_recomendada?: string
+          achado_id?: string
+          aprovado?: boolean
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          avaliacao_id?: string
+          created_at?: string
+          created_by?: string | null
+          evidencia_definida?: string | null
+          evidencia_recomendada?: string | null
+          fator_codigo?: string
+          id?: string
+          imutavel?: boolean
+          indicador_eficacia?: string | null
+          justificativa?: string | null
+          medida_modelo_id?: string | null
+          nivel_recomendacao?: string | null
+          objetivo?: string
+          ordem?: number
+          origem?: string
+          perigo_codigo?: string | null
+          prazo_definido?: string | null
+          prazo_sugerido_dias?: number | null
+          responsavel_definido?: string | null
+          responsavel_sugerido?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_ind_plano_itens_achado_id_fkey"
+            columns: ["achado_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_achados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_ind_plano_itens_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_ind_plano_itens_medida_modelo_id_fkey"
+            columns: ["medida_modelo_id"]
+            isOneToOne: false
+            referencedRelation: "psico_medidas_modelos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_ind_sugestoes_ia: {
+        Row: {
+          avaliacao_id: string
+          created_at: string
+          criado_por: string | null
+          erro: string | null
+          id: string
+          modelo: string
+          processamento_id: string | null
+          prompt_sistema: string
+          prompt_usuario: string
+          prompt_versao: string
+          rejeitadas: Json
+          resposta_bruta: Json | null
+          status: string
+          sugestoes: Json
+        }
+        Insert: {
+          avaliacao_id: string
+          created_at?: string
+          criado_por?: string | null
+          erro?: string | null
+          id?: string
+          modelo: string
+          processamento_id?: string | null
+          prompt_sistema: string
+          prompt_usuario: string
+          prompt_versao: string
+          rejeitadas?: Json
+          resposta_bruta?: Json | null
+          status: string
+          sugestoes?: Json
+        }
+        Update: {
+          avaliacao_id?: string
+          created_at?: string
+          criado_por?: string | null
+          erro?: string | null
+          id?: string
+          modelo?: string
+          processamento_id?: string | null
+          prompt_sistema?: string
+          prompt_usuario?: string
+          prompt_versao?: string
+          rejeitadas?: Json
+          resposta_bruta?: Json | null
+          status?: string
+          sugestoes?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_ind_sugestoes_ia_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_ind_sugestoes_ia_processamento_id_fkey"
+            columns: ["processamento_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_processamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psico_individual_achado_historico: {
         Row: {
           achado_id: string
@@ -10142,6 +10320,10 @@ export type Database = {
         Args: { p_processamento: string }
         Returns: undefined
       }
+      psico_ind_contexto_para_ia: {
+        Args: { p_avaliacao: string }
+        Returns: Json
+      }
       psico_ind_finalizar_submissao: {
         Args: {
           p_instrumento_versao_id: string
@@ -10202,6 +10384,22 @@ export type Database = {
           revisado_por: string
         }[]
       }
+      psico_ind_log_sugestao_ia: {
+        Args: {
+          p_avaliacao: string
+          p_erro: string
+          p_modelo: string
+          p_processamento: string
+          p_prompt_sistema: string
+          p_prompt_usuario: string
+          p_prompt_versao: string
+          p_rejeitadas: Json
+          p_resposta: Json
+          p_status: string
+          p_sugestoes: Json
+        }
+        Returns: string
+      }
       psico_ind_persistir_processamento: {
         Args: {
           p_achados: Json
@@ -10214,6 +10412,44 @@ export type Database = {
           p_versao_regra: string
         }
         Returns: string
+      }
+      psico_ind_plano_aprovar: {
+        Args: { p_avaliacao: string }
+        Returns: undefined
+      }
+      psico_ind_plano_gates: { Args: { p_avaliacao: string }; Returns: Json }
+      psico_ind_plano_listar: {
+        Args: { p_avaliacao: string }
+        Returns: {
+          acao_recomendada: string
+          achado_estado: string
+          achado_id: string
+          achado_necessita_acao: boolean
+          aprovado: boolean
+          aprovado_em: string
+          aprovado_por: string
+          avaliacao_id: string
+          created_at: string
+          evidencia_definida: string
+          evidencia_recomendada: string
+          fator_codigo: string
+          id: string
+          imutavel: boolean
+          indicador_eficacia: string
+          justificativa: string
+          medida_modelo_id: string
+          nivel_recomendacao: string
+          objetivo: string
+          ordem: number
+          origem: string
+          perigo_codigo: string
+          prazo_definido: string
+          prazo_sugerido_dias: number
+          responsavel_definido: string
+          responsavel_sugerido: string
+          titulo: string
+          updated_at: string
+        }[]
       }
       psico_listar_escopos_resultado: {
         Args: { p_avaliacao_id: string }
