@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 import CnpjLookupField from "@/components/CnpjLookupField";
+import CepLookupField from "@/components/CepLookupField";
 
 export function Field({ label, value, onChange, type = "text", className }: any) {
   return (
@@ -39,7 +40,13 @@ export default function ClientCard({ client, setClient, onSave }: any) {
         <Field label="Qtd. funcionários" type="number" value={c.qtd_funcionarios} onChange={(v: any) => set({ qtd_funcionarios: v })} />
         <Field label="Endereço" value={c.endereco} onChange={(v: any) => set({ endereco: v })} className="sm:col-span-2" />
         <Field label="Bairro" value={c.bairro} onChange={(v: any) => set({ bairro: v })} />
-        <Field label="CEP" value={c.cep} onChange={(v: any) => set({ cep: v })} />
+        <CepLookupField
+          value={c.cep || ""}
+          onChange={(v) => set({ cep: v })}
+          formSnapshot={c}
+          onAutofill={(patch) => setClient({ ...c, ...patch })}
+          compact
+        />
         <Field label="Cidade" value={c.cidade} onChange={(v: any) => set({ cidade: v })} />
         <Field label="UF" value={c.uf} onChange={(v: any) => set({ uf: (v || "").toUpperCase().slice(0, 2) })} />
         <Field label="Solicitante" value={c.solicitante} onChange={(v: any) => set({ solicitante: v })} />
