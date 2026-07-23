@@ -187,6 +187,17 @@ Deno.serve(async (req) => {
     return json(503, { error: "ia_indisponivel", detail: "LOVABLE_API_KEY ausente." });
   }
 
+  // Feature-flag de liberação (PR7 — ordem: coleta → plano manual → IA de plano → parecer).
+  // Default: desabilitado. Habilite com PSICO_INDIVIDUAL_AI_PLAN_ENABLED=true no ambiente da função.
+  const aiPlanEnabled = (Deno.env.get("PSICO_INDIVIDUAL_AI_PLAN_ENABLED") ?? "false")
+    .toLowerCase() === "true";
+  if (!aiPlanEnabled) {
+    return json(503, {
+      error: "ia_plano_desabilitada",
+      detail: "A geração de plano por IA está desabilitada pela flag PSICO_INDIVIDUAL_AI_PLAN_ENABLED. Crie ações manualmente ou solicite a liberação.",
+    });
+  }
+
   const prompt_sistema = montarPromptSistema();
   const prompt_usuario = montarPromptUsuario({ ...(ctx as any), achados: achadosAcao });
 
