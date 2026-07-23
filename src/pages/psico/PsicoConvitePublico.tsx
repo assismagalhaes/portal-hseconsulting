@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import PsicoPublicQuestionnaireForm, { QuestionarioPublico } from "@/components/psico/PsicoPublicQuestionnaireForm";
+import PsicoIndividualQuestionnaireForm, { FormularioIndividual } from "@/components/psico/PsicoIndividualQuestionnaireForm";
 
 type Resultado = {
   valido: boolean;
@@ -10,6 +11,9 @@ type Resultado = {
   mensagem?: string;
   sessao?: string;
   questionario?: QuestionarioPublico;
+  modalidade?: string;
+  tipo?: "empregado" | "empregador";
+  formulario?: FormularioIndividual;
 };
 
 export default function PsicoConvitePublico() {
@@ -35,9 +39,10 @@ export default function PsicoConvitePublico() {
 
     (async () => {
       try {
-        const { data, error } = await supabase.functions.invoke("psico-validar-convite", {
-          body: { token },
-        });
+        // Token v2 (individual) começa com "v2."; caso contrário, tenta v1 (coletivo).
+        const isV2 = token.startsWith("v2.");
+        const fn = isV2 ? "psico-individual-validar-convite" : "psico-validar-convite";
+        const { data, error } = await supabase.functions.invoke(fn, { body: { token } });
         if (error) throw error;
         setRes(data as Resultado);
       } catch {
@@ -47,6 +52,18 @@ export default function PsicoConvitePublico() {
       }
     })();
   }, []);
+
+  // Render individual form fullscreen
+  if (!loading && res?.valido && res.estado === "disponivel" && res.modalidade === "individual" && res.sessao && res.formulario && res.tipo) {
+    return (
+      <PsicoIndividualQuestionnaireForm
+        formulario={res.formulario}
+        sessao={res.sessao}
+        tipo={res.tipo}
+        empresa={res.empresa || null}
+      />
+    );
+  }
 
   return (
     <div className="min-h-dvh bg-background flex items-center justify-center p-6">

@@ -35,3 +35,12 @@ verify_jwt = true
 
 [functions.psico-assinatura-upload]
 verify_jwt = true
+
+[functions.psico-individual-invite-token]
+verify_jwt = true
+
+[functions.psico-individual-validar-convite]
+verify_jwt = false
+
+[functions.psico-individual-enviar-respostas]
+verify_jwt = false
