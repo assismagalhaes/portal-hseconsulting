@@ -383,6 +383,9 @@ export default function PsicoAvaliacaoDetalhes() {
               codigoAvaliacao={av.codigo}
             />
           </TabsContent>}
+          {individual && <TabsContent value="convites">
+            <PsicoIndividualConvitesTab avaliacaoId={av.id} />
+          </TabsContent>}
           {!individual && <TabsContent value="link-publico">
             <PsicoLinkPublicoTab av={av} onReload={load} />
           </TabsContent>}
