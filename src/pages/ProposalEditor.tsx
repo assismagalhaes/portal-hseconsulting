@@ -802,8 +802,15 @@ export default function ProposalEditor() {
                       onSaved={(texto) => setProposal((p: any) => ({ ...p, condicoes_pagamento: texto }))}
                     />
                   </div>
-                  <div className="space-y-1.5"><Label>Outras condições</Label>
-                    <Textarea rows={6} value={proposal.outras_condicoes||""} onChange={e=>scheduleProposalSave({ outras_condicoes: e.target.value })} /></div>
+                  <PremissasPicker
+                    selectedIds={proposal.premissas_ids || []}
+                    extraText={extractExtraPremissas(proposal.outras_condicoes, proposal.premissas_ids || [], items)}
+                    itemCategorias={items.map((i: any) => i.categoria).filter(Boolean)}
+                    onChange={(patch) => {
+                      setProposal((p: any) => ({ ...p, ...patch }));
+                      scheduleProposalSave(patch);
+                    }}
+                  />
                   <div className="space-y-1.5"><Label>Observações para o cliente</Label>
                     <Textarea rows={3} value={proposal.observacoes_comerciais||""} onChange={e=>scheduleProposalSave({ observacoes_comerciais: e.target.value })} /></div>
                 </CardContent></Card>
