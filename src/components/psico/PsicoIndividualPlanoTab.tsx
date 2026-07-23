@@ -25,6 +25,7 @@ import {
   excluirItemPlanoIndividual, gatesPlanoIndividual, listarAchadosDaAvaliacao,
   listarPlanoIndividual, sugerirPlanoIA, sugestaoToPatch,
 } from "@/lib/psicoIndividualPlano";
+import { fatorLabel } from "@/lib/psicoLabels";
 import { PSICO_INDIVIDUAL_AI_PLAN_ENABLED } from "@/lib/psicoIndividual";
 
 type Achado = {
@@ -216,7 +217,7 @@ export default function PsicoIndividualPlanoTab({ avaliacaoId }: { avaliacaoId: 
                           <SelectContent>
                             {achadosAcao.map((a) => (
                               <SelectItem key={a.id} value={a.id}>
-                                {a.fator_codigo} — {a.estado_final}
+                                {fatorLabel(a.fator_codigo)} — {a.estado_final}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -337,7 +338,7 @@ export default function PsicoIndividualPlanoTab({ avaliacaoId }: { avaliacaoId: 
                 return (
                   <div key={idx} className="border rounded-md p-3 text-sm space-y-1">
                     <div className="flex items-center gap-2">
-                      <Badge className={ESTADO_BADGE[ach?.estado_final ?? ""] ?? "bg-muted"}>{ach?.fator_codigo}</Badge>
+                      <Badge className={ESTADO_BADGE[ach?.estado_final ?? ""] ?? "bg-muted"}>{fatorLabel(ach?.fator_codigo)}</Badge>
                       <span className="text-xs text-muted-foreground">{ach?.estado_final}</span>
                       <span className="ml-auto text-xs text-muted-foreground">prazo {s.prazo_dias}d</span>
                     </div>
@@ -388,7 +389,7 @@ function ItemCard({
   return (
     <div className={`border rounded-md p-3 text-sm ${item.imutavel ? "opacity-90" : ""}`}>
       <div className="flex items-center gap-2 mb-1">
-        <Badge variant="outline">{item.fator_codigo}</Badge>
+        <Badge variant="outline">{fatorLabel(item.fator_codigo)}</Badge>
         <Badge className={ESTADO_BADGE[item.achado_estado] ?? "bg-muted"}>{item.achado_estado}</Badge>
         <Badge variant="secondary" className="uppercase text-[10px]">{item.origem}</Badge>
         {item.imutavel && <Badge className="gap-1"><Lock className="h-3 w-3" /> imutável</Badge>}

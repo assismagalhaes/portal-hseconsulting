@@ -6,7 +6,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const PSICO_INDIVIDUAL_ENABLED: boolean =
-  ((import.meta as any).env?.VITE_PSICO_INDIVIDUAL_ENABLED ?? "false")
+  (import.meta.env.VITE_PSICO_INDIVIDUAL_ENABLED ?? "true")
     .toString()
     .toLowerCase() === "true";
 
@@ -15,7 +15,7 @@ export const PSICO_INDIVIDUAL_ENABLED: boolean =
 // apenas o botão "Sugerir com IA" no plano é gated por esta flag.
 // Default: false (ordem de liberação do PR7 — coleta → plano manual → IA de plano → parecer).
 export const PSICO_INDIVIDUAL_AI_PLAN_ENABLED: boolean =
-  ((import.meta as any).env?.VITE_PSICO_INDIVIDUAL_AI_PLAN_ENABLED ?? "false")
+  (import.meta.env.VITE_PSICO_INDIVIDUAL_AI_PLAN_ENABLED ?? "false")
     .toString()
     .toLowerCase() === "true";
 
@@ -38,13 +38,13 @@ export type PsicoIndividualEstadoConvergencia =
 // Textos oficiais de aviso — mostrados antes da confirmação de criação.
 export const PSICO_INDIVIDUAL_AVISO_METODOLOGICO =
   "A modalidade Assistida Individual — Microempresa não usa a metodologia coletiva HSE. " +
-  "Por envolver apenas 1 empregado e 1 empregador, o resultado é sempre nominal e não há tratamento estatístico ou anonimato. " +
+  "Por envolver apenas 1 empregado e 1 empregador, não há tratamento estatístico nem garantia de anonimato por grupo. " +
   "Os achados são construídos por convergência entre as duas visões e complementados por revisão técnica.";
 
 export const PSICO_INDIVIDUAL_AVISO_PRIVACIDADE =
-  "Não haverá anonimato: o empregador saberá que a avaliação se refere ao empregado convidado e vice-versa. " +
-  "As respostas ficam armazenadas com identificação e são acessadas apenas pela equipe técnica interna e pelas rotinas do sistema. " +
-  "Campos livres podem conter conteúdo sensível — trate com o mesmo cuidado de uma entrevista clínica.";
+  "As respostas são confidenciais, mas não podem ser consideradas anônimas em uma empresa com apenas um empregado. " +
+  "O relatório deve apresentar condições organizacionais e medidas de prevenção, sem reproduzir respostas livres nem atribuir frases a uma pessoa. " +
+  "Campos livres podem conter conteúdo sensível e são restritos à equipe técnica autorizada.";
 
 // ---------- Instrumentos vigentes ----------
 
@@ -56,6 +56,8 @@ export type PsicoIndividualInstrumentoVigente = {
   papel: PsicoIndividualPapel;
 };
 
+type InstrumentoRow = Pick<PsicoIndividualInstrumentoVigente, "id" | "codigo" | "versao" | "nome">;
+
 /**
  * Retorna o par (empregado + empregador) de instrumentos vigentes da modalidade individual.
  * A associação de papel é feita pelo sufixo do código: `AQI-EMPREGADO*` → empregado.
@@ -65,16 +67,21 @@ export async function listarInstrumentosVigentes(): Promise<{
   empregador: PsicoIndividualInstrumentoVigente | null;
   erro?: string;
 }> {
+  // A tabela será incorporada aos tipos gerados após a migração no projeto alvo.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from("psico_individual_instrumentos_versoes")
     .select("id, codigo, versao, nome")
-    .eq("vigente", true);
+    .eq("vigente", true)
+    .not("publicado_em", "is", null)
+    .order("publicado_em", { ascending: false });
   if (error) return { empregado: null, empregador: null, erro: error.message };
-  const map = (row: any, papel: PsicoIndividualPapel): PsicoIndividualInstrumentoVigente => ({
+  const rows = (data || []) as InstrumentoRow[];
+  const map = (row: InstrumentoRow, papel: PsicoIndividualPapel): PsicoIndividualInstrumentoVigente => ({
     id: row.id, codigo: row.codigo, versao: row.versao, nome: row.nome, papel,
   });
-  const empregado = (data || []).find((r: any) => /EMPREGADO(?!R)/i.test(r.codigo));
-  const empregador = (data || []).find((r: any) => /EMPREGADOR/i.test(r.codigo));
+  const empregado = rows.find((r) => /EMPREGADO(?!R)/i.test(r.codigo));
+  const empregador = rows.find((r) => /EMPREGADOR/i.test(r.codigo));
   return {
     empregado: empregado ? map(empregado, "empregado") : null,
     empregador: empregador ? map(empregador, "empregador") : null,
@@ -104,6 +111,7 @@ export async function criarAvaliacaoIndividual(
   if (!input.instrumento_empregado_versao_id || !input.instrumento_empregador_versao_id) {
     return { id: null, erro: "Instrumentos AQI vigentes não encontrados. Verifique com a equipe técnica." };
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from("psico_avaliacoes")
     .insert({

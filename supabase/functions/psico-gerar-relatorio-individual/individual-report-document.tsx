@@ -16,6 +16,20 @@ const C = {
 Font.registerHyphenationCallback((w) => [w]);
 
 const FACTOR_LABELS: Record<string, string> = {
+  demandas: "Demandas",
+  controle: "Controle sobre o trabalho",
+  apoio_chefia: "Apoio da chefia",
+  apoio_operacional: "Apoio operacional",
+  relacionamentos: "Relacionamentos",
+  papel: "Clareza de papel",
+  mudancas: "Gestão de mudanças",
+  F1: "Demandas e carga de trabalho (AQI 1.0)",
+  F2: "Controle e autonomia (AQI 1.0)",
+  F3: "Apoio e liderança (AQI 1.0)",
+  F4: "Relacionamentos (AQI 1.0)",
+  F5: "Reconhecimento e crescimento (AQI 1.0)",
+  F6: "Justiça organizacional (AQI 1.0)",
+  F7: "Trabalho e vida pessoal (AQI 1.0)",
   carga_excessiva: "Carga excessiva de trabalho",
   falta_autonomia: "Falta de autonomia no trabalho",
   conflitos_hierarquicos: "Conflitos hierárquicos",
