@@ -72,7 +72,8 @@ export function FlowPages({ ctx, blocks, onReady }: { ctx: any; blocks: Block[];
     }
   }, [pages, onReady]);
 
-  const pageLabelFor = (idxs: number[]) => (idxs.length ? blocks[idxs[0]].label : "");
+  const pageLabelFor = (idxs: number[]) =>
+    idxs.length && blocks[idxs[0]] ? blocks[idxs[0]].label : "";
 
   return (
     <>
