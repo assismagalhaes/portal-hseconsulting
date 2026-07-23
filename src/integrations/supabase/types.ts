@@ -6902,8 +6902,11 @@ export type Database = {
           id: string
           observacoes: string | null
           papel: string
+          public_id: string
+          status: string
           token_hash: string
           token_prefixo: string | null
+          token_version: number
           updated_at: string
         }
         Insert: {
@@ -6915,8 +6918,11 @@ export type Database = {
           id?: string
           observacoes?: string | null
           papel: string
+          public_id?: string
+          status?: string
           token_hash: string
           token_prefixo?: string | null
+          token_version?: number
           updated_at?: string
         }
         Update: {
@@ -6928,8 +6934,11 @@ export type Database = {
           id?: string
           observacoes?: string | null
           papel?: string
+          public_id?: string
+          status?: string
           token_hash?: string
           token_prefixo?: string | null
+          token_version?: number
           updated_at?: string
         }
         Relationships: [
@@ -10041,6 +10050,19 @@ export type Database = {
         Returns: undefined
       }
       psico_importacao_testes_integridade: { Args: never; Returns: Json }
+      psico_ind_finalizar_submissao: {
+        Args: {
+          p_instrumento_versao_id: string
+          p_ip_hash?: string
+          p_livres?: Json
+          p_papel: string
+          p_public_id: string
+          p_respostas: Json
+          p_token_version: number
+          p_ua_hash?: string
+        }
+        Returns: Json
+      }
       psico_ind_ler_respostas_livres: {
         Args: { _formulario_id: string }
         Returns: {
