@@ -42,24 +42,26 @@ function normalize(s: string): string {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
   try {
-    const auth = req.headers.get('Authorization') || ''
-    if (!auth.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'não autenticado' }), { status: 401, headers: CORS })
-    }
     const admin = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
-    const userClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: auth } } },
-    )
-    const { data: userData } = await userClient.auth.getUser()
-    const uid = userData?.user?.id
-    if (!uid) return new Response(JSON.stringify({ error: 'sessão inválida' }), { status: 401, headers: CORS })
-    const { data: interno } = await admin.rpc('can_see_internal', { _uid: uid })
-    if (!interno) return new Response(JSON.stringify({ error: 'acesso negado' }), { status: 403, headers: CORS })
+    const auth = req.headers.get('Authorization') || ''
+    const token = auth.startsWith('Bearer ') ? auth.slice(7) : ''
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+    const isService = token && token === serviceKey
+    if (!isService) {
+      const userClient = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_ANON_KEY')!,
+        { global: { headers: { Authorization: auth } } },
+      )
+      const { data: userData } = await userClient.auth.getUser()
+      const uid = userData?.user?.id
+      if (!uid) return new Response(JSON.stringify({ error: 'não autenticado' }), { status: 401, headers: CORS })
+      const { data: interno } = await admin.rpc('can_see_internal', { _uid: uid })
+      if (!interno) return new Response(JSON.stringify({ error: 'acesso negado' }), { status: 403, headers: CORS })
+    }
 
     const body = await req.json().catch(() => ({}))
     const avaliacao_id = String(body?.avaliacao_id || '')
