@@ -2,6 +2,20 @@
 // Sempre exibir estes rótulos no lugar dos códigos crus (carga_excessiva, jornada_pausas, ...).
 
 export const FATOR_LABEL: Record<string, string> = {
+  demandas: "Demandas",
+  controle: "Controle sobre o trabalho",
+  apoio_chefia: "Apoio da chefia",
+  apoio_operacional: "Apoio operacional",
+  relacionamentos: "Relacionamentos",
+  papel: "Clareza de papel",
+  mudancas: "Gestão de mudanças",
+  F1: "Demandas e carga de trabalho (AQI 1.0)",
+  F2: "Controle e autonomia (AQI 1.0)",
+  F3: "Apoio e liderança (AQI 1.0)",
+  F4: "Relacionamentos (AQI 1.0)",
+  F5: "Reconhecimento e crescimento (AQI 1.0)",
+  F6: "Justiça organizacional (AQI 1.0)",
+  F7: "Trabalho e vida pessoal (AQI 1.0)",
   carga_excessiva: "Carga excessiva de trabalho",
   conflitos_hierarquicos: "Conflitos hierárquicos",
   conflitos_interpessoais: "Conflitos interpessoais",

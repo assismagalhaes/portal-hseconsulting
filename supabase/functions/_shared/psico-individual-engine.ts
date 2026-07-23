@@ -15,8 +15,8 @@
 //     * outros — ignorados pelo motor de conciliação (usados só na fundamentação).
 // - Texto livre NUNCA entra aqui.
 
-export const ENGINE_VERSAO = "HSE-PSICO-IND-ENGINE-1.0";
-export const REGRAS_VERSAO = "HSE-PSICO-IND-REGRAS-1.0";
+export const ENGINE_VERSAO = "HSE-PSICO-IND-ENGINE-2.0";
+export const REGRAS_VERSAO = "HSE-PSICO-IND-REGRAS-2.0";
 
 export type EstadoAchado =
   | "controlado"
@@ -44,6 +44,7 @@ export interface RespostaEstruturada {
   periodo?: string | null;
   valor: number | null;
   significa_exposicao: boolean | null;
+  opcao_codigo?: string | null;
 }
 
 export interface EntradaMotor {
@@ -148,13 +149,26 @@ function agrupaPorFator(respostas: RespostaEstruturada[]): Map<string, RespostaE
   return m;
 }
 
+function agrupaPorChave(respostas: RespostaEstruturada[]): Map<string, RespostaEstruturada[]> {
+  const m = new Map<string, RespostaEstruturada[]>();
+  for (const r of respostas) {
+    const chave = r.chave?.trim();
+    if (!chave) continue;
+    const arr = m.get(chave) ?? [];
+    arr.push(r);
+    m.set(chave, arr);
+  }
+  return m;
+}
+
 function filtraChave(arr: RespostaEstruturada[], chave: string): RespostaEstruturada[] {
   return arr.filter((r) => (r.chave || "").toLowerCase() === chave);
 }
 
-function canonSort<T extends { fator_codigo: string; regra_codigo: string }>(arr: T[]): T[] {
+function canonSort<T extends { fator_codigo: string; perigo_codigo?: string | null; regra_codigo: string }>(arr: T[]): T[] {
   return [...arr].sort((a, b) =>
     a.fator_codigo.localeCompare(b.fator_codigo) ||
+    (a.perigo_codigo || "").localeCompare(b.perigo_codigo || "") ||
     a.regra_codigo.localeCompare(b.regra_codigo),
   );
 }
@@ -275,48 +289,38 @@ export async function processar(entrada: EntradaMotor): Promise<SaidaMotor> {
     };
   }
 
-  const empPorFator = agrupaPorFator(entrada.respostas_empregado);
-  const repPorFator = agrupaPorFator(entrada.respostas_empregador);
-  const fatores = new Set<string>([...empPorFator.keys(), ...repPorFator.keys()]);
+  const empPorChave = agrupaPorChave(entrada.respostas_empregado);
+  const repPorChave = agrupaPorChave(entrada.respostas_empregador);
+  const chaves = new Set<string>([...empPorChave.keys(), ...repPorChave.keys()]);
 
   const achados: Achado[] = [];
   const convergencias: string[] = [];
   const divergencias: string[] = [];
   const evInsuf: string[] = [];
 
-  for (const fator of [...fatores].sort()) {
-    const emp = empPorFator.get(fator) ?? [];
-    const rep = repPorFator.get(fator) ?? [];
+  for (const chave of [...chaves].sort()) {
+    const emp = empPorChave.get(chave) ?? [];
+    const rep = repPorChave.get(chave) ?? [];
+    const fator = emp[0]?.fator || rep[0]?.fator || "nao_informado";
 
-    const freqEmp = maxExposicao(filtraChave(emp, "frequencia_exposicao"));
-    const intEmp = maxExposicao(filtraChave(emp, "intensidade_exigencia"));
-    const freqRep = maxExposicao(filtraChave(rep, "frequencia_exposicao"));
-    const intRep = maxExposicao(filtraChave(rep, "intensidade_exigencia"));
+    // O instrumento publicado usa chaves PAR-*. As respostas do empregado
+    // representam exposição; as do empregador representam controles.
+    const freqEmp = maxExposicao(emp);
+    const intEmp = freqEmp;
+    const controle = agregaControle(rep);
+    const efic = controle;
+    const temAmbos = emp.length > 0 && rep.length > 0;
+    const conflitoForte = temAmbos && freqEmp === "alta" && controle === "eficaz";
+    const conflito =
+      conflitoForte ||
+      (temAmbos && freqEmp === "nenhuma" &&
+        (controle === "inexistente" || controle === "ineficaz"));
+    const convergencia: EstadoConvergencia = !temAmbos
+      ? (emp.length ? "apenas_empregado" : rep.length ? "apenas_empregador" : "indeterminado")
+      : conflito ? "divergente" : "convergente";
 
-    // Exposição = combinação frequência + intensidade (maior dos dois).
-    const expEmp = nivelRank(freqEmp) >= nivelRank(intEmp) ? freqEmp : intEmp;
-    const expRep = nivelRank(freqRep) >= nivelRank(intRep) ? freqRep : intRep;
-
-    const combi = combinarExposicao(expEmp, expRep);
-
-    const ctrlRep = agregaControle(filtraChave(rep, "controle_existente"));
-    const ctrlEmp = agregaControle(filtraChave(emp, "controle_existente"));
-    // Se ambos declararem, prevalece o pior; se só um, usa o único.
-    const controle = (function combinar() {
-      const rank: Record<NivelControle, number> = {
-        inexistente: 4, ineficaz: 3, parcial: 2, eficaz: 1, desconhecido: 0,
-      };
-      const a = rank[ctrlRep], b = rank[ctrlEmp];
-      if (a === 0 && b === 0) return "desconhecido" as NivelControle;
-      if (a === 0) return ctrlEmp;
-      if (b === 0) return ctrlRep;
-      return a >= b ? ctrlRep : ctrlEmp;
-    })();
-
-    const efic = agregaControle(filtraChave(rep, "eficacia_controle"));
-
-    const decisao = decidirEstado(combi.nivel, controle, combi.convergencia, combi.divergenciaForte);
-    const evid = nivelEvidencia(emp.length > 0, rep.length > 0, combi.convergencia);
+    const decisao = decidirEstado(freqEmp, controle, convergencia, conflitoForte);
+    const evid = nivelEvidencia(emp.length > 0, rep.length > 0, convergencia);
 
     let estadoFinal: EstadoAchado = decisao.estado;
     let regra = decisao.regra;
@@ -325,19 +329,19 @@ export async function processar(entrada: EntradaMotor): Promise<SaidaMotor> {
       regra = "R100-EVIDENCIA-INSUFICIENTE";
     }
 
-    const fund = fundamentacao(fator, combi.nivel, controle, combi.convergencia, regra);
+    const fund = fundamentacao(fator, freqEmp, controle, convergencia, regra);
 
     const achado: Achado = {
       fator_codigo: fator,
-      perigo_codigo: null,
-      descricao_organizacional: null,
-      frequencia_exposicao: nivelRank(freqEmp) >= nivelRank(freqRep) ? freqEmp : freqRep,
-      intensidade_exigencia: nivelRank(intEmp) >= nivelRank(intRep) ? intEmp : intRep,
+      perigo_codigo: chave,
+      descricao_organizacional: `Condição organizacional avaliada no fator ${fator}.`,
+      frequencia_exposicao: freqEmp,
+      intensidade_exigencia: intEmp,
       controle_existente: controle,
       eficacia_controle: efic,
       condicao_preliminar: decisao.estado,
       nivel_evidencia: evid,
-      estado_convergencia: combi.convergencia,
+      estado_convergencia: convergencia,
       fundamentacao_sanitizada: fund,
       regra_codigo: regra,
       regra_versao: REGRAS_VERSAO,
@@ -346,9 +350,9 @@ export async function processar(entrada: EntradaMotor): Promise<SaidaMotor> {
     };
     achados.push(achado);
 
-    if (estadoFinal === "evidencia_insuficiente") evInsuf.push(fator);
-    else if (estadoFinal === "divergente") divergencias.push(fator);
-    else if (combi.convergencia === "convergente") convergencias.push(fator);
+    if (estadoFinal === "evidencia_insuficiente") evInsuf.push(chave);
+    else if (estadoFinal === "divergente") divergencias.push(chave);
+    else if (convergencia === "convergente") convergencias.push(chave);
   }
 
   const canonico = JSON.stringify({
@@ -356,6 +360,7 @@ export async function processar(entrada: EntradaMotor): Promise<SaidaMotor> {
     r: REGRAS_VERSAO,
     achados: canonSort(achados).map((a) => ({
       f: a.fator_codigo,
+      p: a.perigo_codigo,
       exp: a.frequencia_exposicao, int: a.intensidade_exigencia,
       ctrl: a.controle_existente, efi: a.eficacia_controle,
       cp: a.condicao_preliminar, ev: a.nivel_evidencia,
@@ -391,7 +396,7 @@ export async function runSelfTests(): Promise<{ ok: boolean; details: string[] }
 
   const cenarios: Array<{ nome: string; exp: number; ctrl: number; ctrlSign: boolean; esperado: EstadoAchado }> = [
     { nome: "alta + sem controle", exp: 5, ctrl: 5, ctrlSign: true, esperado: "prioritario" },
-    { nome: "alta + controle eficaz", exp: 5, ctrl: 5, ctrlSign: false, esperado: "atencao_preventiva" },
+    { nome: "alta + controle eficaz declarado", exp: 5, ctrl: 5, ctrlSign: false, esperado: "divergente" },
     { nome: "media + sem controle", exp: 3, ctrl: 5, ctrlSign: true, esperado: "requer_intervencao" },
     { nome: "baixa + controle eficaz", exp: 2, ctrl: 5, ctrlSign: false, esperado: "controlado" },
     { nome: "sem exposicao", exp: 1, ctrl: 5, ctrlSign: false, esperado: "nao_aplicavel" },
@@ -400,11 +405,10 @@ export async function runSelfTests(): Promise<{ ok: boolean; details: string[] }
   for (const c of cenarios) {
     const entrada = mk("empregado");
     entrada.respostas_empregado = [
-      { pergunta_id: "p1", fator: "F1", chave: "frequencia_exposicao", valor: c.exp, significa_exposicao: c.exp >= 2 },
+      { pergunta_id: "p1", fator: "F1", chave: "PAR-F1-TESTE", valor: c.exp, significa_exposicao: c.exp >= 2 },
     ];
     entrada.respostas_empregador = [
-      { pergunta_id: "p2", fator: "F1", chave: "frequencia_exposicao", valor: c.exp, significa_exposicao: c.exp >= 2 },
-      { pergunta_id: "p3", fator: "F1", chave: "controle_existente", valor: c.ctrl, significa_exposicao: c.ctrlSign },
+      { pergunta_id: "p2", fator: "F1", chave: "PAR-F1-TESTE", valor: c.ctrl, significa_exposicao: c.ctrlSign },
     ];
     const out = await processar(entrada);
     const estado = out.achados[0]?.estado_final;
@@ -415,8 +419,8 @@ export async function runSelfTests(): Promise<{ ok: boolean; details: string[] }
 
   // Idempotência
   const e1 = mk("empregado");
-  e1.respostas_empregado = [{ pergunta_id: "p1", fator: "F1", chave: "frequencia_exposicao", valor: 4, significa_exposicao: true }];
-  e1.respostas_empregador = [{ pergunta_id: "p2", fator: "F1", chave: "controle_existente", valor: 5, significa_exposicao: true }];
+  e1.respostas_empregado = [{ pergunta_id: "p1", fator: "F1", chave: "PAR-F1-TESTE", valor: 4, significa_exposicao: true }];
+  e1.respostas_empregador = [{ pergunta_id: "p2", fator: "F1", chave: "PAR-F1-TESTE", valor: 5, significa_exposicao: true }];
   const h1 = (await processar(e1)).resultado_hash;
   const h2 = (await processar(e1)).resultado_hash;
   if (h1 !== h2) details.push("falha idempotência: hashes distintos para mesma entrada");

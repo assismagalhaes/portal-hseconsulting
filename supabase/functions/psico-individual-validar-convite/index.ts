@@ -1,4 +1,5 @@
 // Valida convite individual (token v2 assinado) sem autenticação.
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // - CORS restrito por PSICO_PUBLIC_ALLOWED_ORIGINS
 // - Verifica assinatura HMAC do token v2 e reconfere estado no banco
 // - O tipo de respondente vem SEMPRE do payload assinado, nunca do cliente
@@ -137,7 +138,12 @@ Deno.serve(async (req) => {
       .from('psico_individual_convites')
       .select('id, status, token_version, avaliacao_id, papel, expira_em')
       .eq('public_id', parsed.pid).maybeSingle()
-    if (!conv || conv.token_version !== parsed.tv || conv.papel !== parsed.tipo) return invalid(origin)
+    if (
+      !conv ||
+      conv.token_version !== parsed.tv ||
+      conv.papel !== parsed.tipo ||
+      conv.avaliacao_id !== parsed.av
+    ) return invalid(origin)
 
     let estado = 'disponivel'
     if (conv.status === 'revogado') estado = 'revogado'
@@ -153,8 +159,14 @@ Deno.serve(async (req) => {
     }
 
     const { data: av } = await admin
-      .from('psico_avaliacoes').select('id, titulo, status, cliente_id, modalidade').eq('id', conv.avaliacao_id).maybeSingle()
+      .from('psico_avaliacoes')
+      .select('id, titulo, status, cliente_id, modalidade, instrumento_empregado_versao_id, instrumento_empregador_versao_id')
+      .eq('id', conv.avaliacao_id).maybeSingle()
     if (!av || av.modalidade !== 'individual_microempresa') return invalid(origin)
+    const instrumentoEsperado = parsed.tipo === 'empregado'
+      ? av.instrumento_empregado_versao_id
+      : av.instrumento_empregador_versao_id
+    if (!instrumentoEsperado || instrumentoEsperado !== parsed.iv) return invalid(origin)
     if (av.status === 'cancelada') estado = 'cancelado'
 
     let empresa: string | null = null

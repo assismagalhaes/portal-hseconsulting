@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { AlertTriangle, CheckCircle2, Cpu, Lock, RefreshCcw, ShieldAlert } from "lucide-react";
+import { fatorLabel } from "@/lib/psicoLabels";
 
 type Achado = {
   id: string;
@@ -217,7 +218,7 @@ function AchadoCard({ a, onChanged, disabled }: { a: Achado; onChanged: () => vo
   return (
     <div className="rounded-md border p-3 space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="font-medium">{a.fator_codigo}</div>
+        <div className="font-medium">{fatorLabel(a.fator_codigo)}</div>
         <Badge className={info.tone}>{info.label}</Badge>
         {a.necessita_acao && <Badge variant="outline" className="text-orange-700 border-orange-300 gap-1"><AlertTriangle className="h-3 w-3" /> requer ação</Badge>}
         {alterou && <Badge variant="outline" className="text-purple-700 border-purple-300">alterado tecnicamente</Badge>}
