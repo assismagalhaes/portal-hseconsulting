@@ -299,6 +299,7 @@ export default function PsicoAvaliacaoDetalhes() {
         <Tabs defaultValue="visao">
           <TabsList className="w-full justify-start overflow-x-auto">
             <TabsTrigger value="visao">Visão Geral</TabsTrigger>
+            {individual && <TabsTrigger value="convites">Convites</TabsTrigger>}
             {!individual && <TabsTrigger value="participantes">Participantes</TabsTrigger>}
             {!individual && <TabsTrigger value="link-publico">Link Público</TabsTrigger>}
             {!individual && <TabsTrigger value="coleta">Coleta</TabsTrigger>}
