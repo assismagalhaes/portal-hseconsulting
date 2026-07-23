@@ -281,7 +281,7 @@ export default function CondicaoPagamentoPicker({
                   <Input type="number" step="0.01" className="h-8" value={p.percentual}
                     onChange={(e) => updateDraft(idx, { percentual: Number(e.target.value) })} />
                 </div>
-                <div className="col-span-8">
+                <div className="col-span-5">
                   <Label className="text-[10px]">Marco</Label>
                   <Select value={p.marco} onValueChange={(v) => updateDraft(idx, { marco: v as CondPagMarco })}>
                     <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
@@ -290,6 +290,25 @@ export default function CondicaoPagamentoPicker({
                     </SelectContent>
                   </Select>
                 </div>
+                {p.marco === "mensal_recorrente" ? (
+                  <div className="col-span-3">
+                    <Label className="text-[10px]">Dia do mês</Label>
+                    <Input
+                      type="number" min={1} max={31} className="h-8"
+                      value={p.dia_mes ?? ""}
+                      onChange={(e) => updateDraft(idx, { dia_mes: e.target.value ? Number(e.target.value) : null })}
+                    />
+                  </div>
+                ) : (
+                  <div className="col-span-3">
+                    <Label className="text-[10px]">Dias após marco</Label>
+                    <Input
+                      type="number" min={0} className="h-8"
+                      value={p.dias_apos_marco}
+                      onChange={(e) => updateDraft(idx, { dias_apos_marco: Number(e.target.value || 0) })}
+                    />
+                  </div>
+                )}
                 <div className="col-span-1 flex justify-end">
                   <Button type="button" size="icon" variant="ghost" aria-label="Remover parcela" onClick={() => removeDraft(idx)}>
                     <Trash2 className="h-3.5 w-3.5" />
@@ -332,7 +351,14 @@ export default function CondicaoPagamentoPicker({
                   <td className="px-3 py-1.5">{p.numero}</td>
                   <td className="px-3 py-1.5">{Number(p.percentual).toFixed(2)}%</td>
                   <td className="px-3 py-1.5 text-right font-mono">{brl(Number(p.valor ?? (p.percentual / 100) * total))}</td>
-                  <td className="px-3 py-1.5">{MARCO_LABEL[p.marco as CondPagMarco]}</td>
+                  <td className="px-3 py-1.5">
+                    {MARCO_LABEL[p.marco as CondPagMarco]}
+                    {p.marco === "mensal_recorrente" && p.dia_mes
+                      ? ` (dia ${p.dia_mes})`
+                      : Number(p.dias_apos_marco) > 0
+                        ? ` (+${p.dias_apos_marco} dias)`
+                        : ""}
+                  </td>
                 </tr>
               ))}
             </tbody>
