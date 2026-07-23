@@ -2,7 +2,7 @@
 // @deno-types="npm:@types/react@18.3.3"
 import React from "npm:react@18.3.1";
 import { Document, Page, Text, View, StyleSheet, Font, Image } from "npm:@react-pdf/renderer@3.4.5";
-import { HSE_LOGO_GREEN_DATA_URL } from "../psico-gerar-relatorio/brand-assets.ts";
+import { HSE_LOGO_GREEN_DATA_URL } from "./brand-assets.ts";
 
 export const IND_MODEL_CODE = "HSE-PSICO-REL-IND-1.0";
 export const IND_MODEL_VERSION = "1.0.0";
