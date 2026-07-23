@@ -7,9 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Trash2 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { ChevronsUpDown, Plus, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function ChecklistCard({ osId, items, onChange }: any) {
   const [desc, setDesc] = useState("");
@@ -17,6 +19,7 @@ export function ChecklistCard({ osId, items, onChange }: any) {
   const [presets, setPresets] = useState<string[]>([]);
   const [newPresetOpen, setNewPresetOpen] = useState(false);
   const [newPreset, setNewPreset] = useState("");
+  const [presetOpen, setPresetOpen] = useState(false);
   const obrigId = useId();
   const loadPresets = async () => {
     const { data } = await supabase
@@ -73,12 +76,35 @@ export function ChecklistCard({ osId, items, onChange }: any) {
       <Progress value={total ? (done / total) * 100 : 0} />
       <div className="flex flex-wrap items-center gap-2 rounded-md border border-dashed p-2">
         <span className="text-xs text-muted-foreground">Itens sugeridos:</span>
-        <Select value="" onValueChange={(v) => v && addPreset(v)}>
-          <SelectTrigger className="h-9 w-[280px]"><SelectValue placeholder="Adicionar item sugerido…" /></SelectTrigger>
-          <SelectContent>
-            {presets.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <Popover open={presetOpen} onOpenChange={setPresetOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              role="combobox"
+              aria-expanded={presetOpen}
+              className={cn("h-9 w-[280px] justify-between font-normal text-muted-foreground")}
+            >
+              <span className="truncate">Adicionar item sugerido…</span>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="p-0 w-[320px]" align="start">
+            <Command>
+              <CommandInput placeholder="Buscar item…" />
+              <CommandList>
+                <CommandEmpty>Nenhum item encontrado.</CommandEmpty>
+                <CommandGroup>
+                  {presets.map((p) => (
+                    <CommandItem key={p} value={p} onSelect={() => { addPreset(p); setPresetOpen(false); }}>
+                      {p}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
         <Button type="button" size="sm" variant="secondary" onClick={addAllPresets}>
           <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar todos
         </Button>
