@@ -128,8 +128,11 @@ export default function PsicoAvaliacaoDetalhes() {
       unidade: form.unidade || "Matriz",
       data_inicio_prevista: dataInicioPrevista,
       data_fim_prevista: dataFimPrevista,
-      quantidade_participantes_prevista: Number(form.quantidade_participantes_prevista) || 1,
-      responsavel_hse_id: form.responsavel_hse_id,
+      quantidade_participantes_prevista: individual
+        ? 1
+        : Number(form.quantidade_participantes_prevista) || 1,
+      responsavel_hse_id: form.responsavel_hse_id ?? null,
+      responsavel_profissional_id: form.responsavel_profissional_id ?? null,
       observacoes_internas: form.observacoes_internas || null,
     };
     const { data: atualizado, error } = await supabase.from("psico_avaliacoes")
