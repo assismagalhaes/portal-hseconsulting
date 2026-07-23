@@ -100,7 +100,7 @@ export default function PsicoIndividualRelatorioTab({ avaliacaoId }: { avaliacao
           .order("created_at", { ascending: false }).limit(1).maybeSingle(),
         supabase.rpc("psico_ind_listar_relatorios", { p_avaliacao: avaliacaoId }),
         supabase.from("execucao_profissionais").select("id,nome,cargo").order("nome"),
-        supabase.from("profiles").select("id,full_name,cargo").order("full_name"),
+        supabase.from("profiles").select("id,nome,cargo").order("nome"),
       ]);
       if (gatesErr) throw gatesErr;
       setGates(gatesData as Gates);
@@ -112,8 +112,11 @@ export default function PsicoIndividualRelatorioTab({ avaliacaoId }: { avaliacao
       setRelatorios((relRes.data as Relatorio[]) || []);
       const opts: ProfOption[] = [];
       (profs.data || []).forEach((p: any) => opts.push({ id: p.id, label: `${p.nome}${p.cargo ? ` — ${p.cargo}` : ""}` }));
-      (users.data || []).forEach((u: any) => opts.push({ id: u.id, label: `${u.full_name || "Usuário"}${u.cargo ? ` — ${u.cargo}` : ""}` }));
-      setResponsaveis(opts);
+      (users.data || []).forEach((u: any) => opts.push({ id: u.id, label: `${u.nome || "Usuário"}${u.cargo ? ` — ${u.cargo}` : ""}` }));
+      // Deduplica por id (evita chave duplicada caso um profissional também exista como perfil de usuário)
+      const uniq = new Map<string, ProfOption>();
+      for (const o of opts) if (!uniq.has(o.id)) uniq.set(o.id, o);
+      setResponsaveis(Array.from(uniq.values()));
     } catch (e: any) {
       toast.error("Falha ao carregar", { description: e.message });
     } finally {
