@@ -61,7 +61,7 @@ export function FlowPages({ ctx, blocks, onReady }: { ctx: any; blocks: Block[];
     }
     if (result[result.length - 1].length === 0) result.pop();
     setPages(result);
-  }, [blocks.length]);
+  }, [blocks.length, blocks.map((b) => b.key).join("|")]);
 
   // Notify parent when pages are actually rendered in the DOM, so printers
   // can safely snapshot the full document (avoids missing middle pages).
@@ -72,7 +72,8 @@ export function FlowPages({ ctx, blocks, onReady }: { ctx: any; blocks: Block[];
     }
   }, [pages, onReady]);
 
-  const pageLabelFor = (idxs: number[]) => (idxs.length ? blocks[idxs[0]].label : "");
+  const pageLabelFor = (idxs: number[]) =>
+    idxs.length && blocks[idxs[0]] ? blocks[idxs[0]].label : "";
 
   return (
     <>
@@ -102,9 +103,11 @@ export function FlowPages({ ctx, blocks, onReady }: { ctx: any; blocks: Block[];
             pageLabel={pageLabelFor(idxs)}
             pageNum={String(pi + 1).padStart(2, "0")}
           >
-            {idxs.map((i) => (
-              <div key={blocks[i].key}>{blocks[i].node}</div>
-            ))}
+            {idxs
+              .filter((i) => i < blocks.length && blocks[i])
+              .map((i) => (
+                <div key={blocks[i].key}>{blocks[i].node}</div>
+              ))}
           </DocPage>
         ))}
     </>
