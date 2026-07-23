@@ -21,6 +21,7 @@ import PsicoRevisaoTab from "@/components/psico/PsicoRevisaoTab";
 import PsicoPlanoTab from "@/components/psico/PsicoPlanoTab";
 import PsicoRelatorioTab from "@/components/psico/PsicoRelatorioTab";
 import PsicoLinkPublicoTab from "@/components/psico/PsicoLinkPublicoTab";
+import PsicoIndividualConvitesTab from "@/components/psico/PsicoIndividualConvitesTab";
 import {
   PSICO_MODALIDADE_LABEL,
   isModalidadeIndividual,
