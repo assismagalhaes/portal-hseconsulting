@@ -7299,6 +7299,7 @@ export type Database = {
           instrumento_versao_id: string
           ip_hash: string | null
           papel: string
+          status: string
           updated_at: string
           user_agent_hash: string | null
         }
@@ -7312,6 +7313,7 @@ export type Database = {
           instrumento_versao_id: string
           ip_hash?: string | null
           papel: string
+          status?: string
           updated_at?: string
           user_agent_hash?: string | null
         }
@@ -7325,6 +7327,7 @@ export type Database = {
           instrumento_versao_id?: string
           ip_hash?: string | null
           papel?: string
+          status?: string
           updated_at?: string
           user_agent_hash?: string | null
         }
@@ -10487,6 +10490,10 @@ export type Database = {
         }
         Returns: Json
       }
+      psico_ind_formulario_concluido: {
+        Args: { p_avaliacao: string; p_papel: string }
+        Returns: boolean
+      }
       psico_ind_gates_emissao: { Args: { p_avaliacao: string }; Returns: Json }
       psico_ind_ler_entradas_para_motor: {
         Args: { p_avaliacao: string }
@@ -10585,6 +10592,10 @@ export type Database = {
           p_sugestoes: Json
         }
         Returns: string
+      }
+      psico_ind_parecer_completo: {
+        Args: { p_parecer: Json }
+        Returns: boolean
       }
       psico_ind_persistir_processamento: {
         Args: {
