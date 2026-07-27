@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { AutoGrowTextarea } from "@/components/ui/auto-grow-textarea";
 import { PercentInput } from "@/components/ui/percent-input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -281,7 +282,7 @@ export default function GroupPricingDrawer({
                 </div>
                 <div className="col-span-4">
                   <Label className="text-[11px]">Descrição</Label>
-                  <Input className="h-8" value={s.descricao} onChange={(e) => setDiretos((arr) => arr.map((x) => x.id === s.id ? { ...x, descricao: e.target.value } : x))} />
+                  <AutoGrowTextarea value={s.descricao} onChange={(e) => setDiretos((arr) => arr.map((x) => x.id === s.id ? { ...x, descricao: e.target.value } : x))} />
                 </div>
                 <div className="col-span-2">
                   <Label className="text-[11px]">Valor</Label>
@@ -290,7 +291,7 @@ export default function GroupPricingDrawer({
                 </div>
                 <div className="col-span-2">
                   <Label className="text-[11px]">Observação</Label>
-                  <Input className="h-8" value={s.observacao} onChange={(e) => setDiretos((arr) => arr.map((x) => x.id === s.id ? { ...x, observacao: e.target.value } : x))} />
+                  <AutoGrowTextarea value={s.observacao} onChange={(e) => setDiretos((arr) => arr.map((x) => x.id === s.id ? { ...x, observacao: e.target.value } : x))} />
                 </div>
                 <Button variant="ghost" size="icon" className="col-span-1 h-8" aria-label="Remover custo direto" onClick={() => setDiretos((arr) => arr.filter((x) => x.id !== s.id))}>
                   <Trash2 className="h-4 w-4 text-danger" />
@@ -334,7 +335,7 @@ export default function GroupPricingDrawer({
                   </div>
                   <div className="col-span-3">
                     <Label className="text-[11px]">Descrição</Label>
-                    <Input className="h-8" value={s.descricao} onChange={(e) => setHorasShared((arr) => arr.map((x) => x.id === s.id ? { ...x, descricao: e.target.value } : x))} />
+                    <AutoGrowTextarea value={s.descricao} onChange={(e) => setHorasShared((arr) => arr.map((x) => x.id === s.id ? { ...x, descricao: e.target.value } : x))} />
                   </div>
                   <div className="col-span-2">
                     <Label className="text-[11px]">Horas</Label>
