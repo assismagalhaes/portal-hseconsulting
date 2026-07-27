@@ -226,7 +226,7 @@ export default function ProposalEditor() {
     setSaving(true);
     try {
       await updateProposal(proposal.id, patch);
-      setProposal({ ...proposal, ...patch });
+      setProposal((p: any) => ({ ...(p || proposal), ...patch }));
       setLastSavedAt(Date.now());
       return true;
     } catch (e: any) {
