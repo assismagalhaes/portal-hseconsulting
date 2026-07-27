@@ -85,6 +85,28 @@ function possuiAcaoObrigatoria(contexto: any) {
     && contexto.fatores.some((fator: FatorPlanoIA) => fator.tratamento === "acao_recomendada");
 }
 
+async function planoSemSugestoesAutomaticas(
+  userClient: ReturnType<typeof createClient>,
+  revisaoId: string,
+) {
+  const { data: plano, error: planoError } = await userClient
+    .from("psico_planos_acao")
+    .select("id")
+    .eq("revisao_id", revisaoId)
+    .maybeSingle();
+  if (planoError) return false;
+  if (!plano) return true;
+
+  const { count, error: itensError } = await userClient
+    .from("psico_plano_acao_itens")
+    .select("id", { count: "exact", head: true })
+    .eq("plano_id", plano.id)
+    .eq("gerado_automaticamente", true)
+    .eq("personalizado", false);
+
+  return !itensError && count === 0;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "METODO_NAO_PERMITIDO" }, 405);
@@ -166,6 +188,26 @@ Deno.serve(async (req) => {
       Array.isArray(contexto?.fatores) ? contexto.fatores as FatorPlanoIA[] : [],
       Array.isArray(contexto?.catalogo_medidas) ? contexto.catalogo_medidas as MedidaPlanoIA[] : [],
     );
+
+    // Sem ação obrigatória, sem nova sugestão e sem sugestão automática antiga:
+    // o estado desejado já existe. Evita uma escrita desnecessária e mantém o
+    // plano vazio válido mesmo quando a RPC de aplicação estiver indisponível.
+    if (
+      !acaoObrigatoria
+      && normalizadas.selecoes.length === 0
+      && await planoSemSugestoesAutomaticas(userClient, revisaoId)
+    ) {
+      return json({
+        ok: true,
+        itens: 0,
+        itens_selecionados: 0,
+        descartadas: normalizadas.descartadas,
+        aviso: iaOpcionalFalhou ? "IA_OPCIONAL_INDISPONIVEL" : null,
+        modelo: model,
+        prompt_codigo: PROMPT_CODE,
+        alteracao_banco: false,
+      });
+    }
 
     const { data: aplicado, error: aplErr } = await userClient.rpc("psico_aplicar_plano_ia", {
       p_revisao_id: revisaoId,

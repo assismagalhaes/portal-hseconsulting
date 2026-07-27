@@ -71,4 +71,18 @@ describe("política das sugestões de plano por IA", () => {
     expect(sql).toContain("true, _selecionado, false, _ordem");
     expect(sql).toContain("'itens_selecionados', _itens_selecionados");
   });
+
+  it("evita gravar novamente quando o plano vazio já é o estado desejado", () => {
+    const edgeFunction = fs.readFileSync(
+      path.resolve(
+        process.cwd(),
+        "supabase/functions/psico-gerar-plano-ia/index.ts",
+      ),
+      "utf8",
+    );
+
+    expect(edgeFunction).toContain("planoSemSugestoesAutomaticas");
+    expect(edgeFunction).toContain("normalizadas.selecoes.length === 0");
+    expect(edgeFunction).toContain("alteracao_banco: false");
+  });
 });
