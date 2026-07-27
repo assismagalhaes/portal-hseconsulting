@@ -95,3 +95,38 @@ export function normalizarSelecoesPlanoIA(
 
   return { selecoes: aceitas, descartadas };
 }
+
+export function garantirLimiteFinalMonitoramento(
+  selecoes: SelecaoPlanoIA[],
+  fatores: FatorPlanoIA[],
+) {
+  const tratamentoPorFator = new Map(fatores.map((fator) => [fator.codigo, fator.tratamento]));
+  const monitoramentosUsados = new Set<string>();
+  const seguras: SelecaoPlanoIA[] = [];
+  let vinculosDescartados = 0;
+
+  for (const selecao of selecoes) {
+    const codigosSeguros = [...new Set(selecao.fatores_codes)].filter((codigo) => {
+      const tratamento = tratamentoPorFator.get(codigo);
+      if (tratamento === "acao_recomendada") return true;
+      if (tratamento !== "monitoramento_preventivo") {
+        vinculosDescartados += 1;
+        return false;
+      }
+      if (monitoramentosUsados.has(codigo)) {
+        vinculosDescartados += 1;
+        return false;
+      }
+      monitoramentosUsados.add(codigo);
+      return true;
+    });
+
+    if (codigosSeguros.length > 0) {
+      seguras.push({ ...selecao, fatores_codes: codigosSeguros });
+    } else {
+      vinculosDescartados += 1;
+    }
+  }
+
+  return { selecoes: seguras, vinculosDescartados };
+}

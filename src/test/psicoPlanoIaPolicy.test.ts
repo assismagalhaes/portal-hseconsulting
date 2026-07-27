@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { normalizarSelecoesPlanoIA } from "../../supabase/functions/_shared/psico-plano-ia-policy";
+import {
+  garantirLimiteFinalMonitoramento,
+  normalizarSelecoesPlanoIA,
+} from "../../supabase/functions/_shared/psico-plano-ia-policy";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -103,5 +106,17 @@ describe("política das sugestões de plano por IA", () => {
     expect(edgeFunction).toContain("planoSemSugestoesAutomaticas");
     expect(edgeFunction).toContain("normalizadas.selecoes.length === 0");
     expect(edgeFunction).toContain("alteracao_banco: false");
+  });
+
+  it("aplica um limite final independente de uma medida por fator em monitoramento", () => {
+    const resultado = garantirLimiteFinalMonitoramento([
+      { medida_modelo_id: "m-demandas-essencial", fatores_codes: ["demandas"] },
+      { medida_modelo_id: "m-demandas-estruturante", fatores_codes: ["demandas", "papel"] },
+    ], fatores);
+
+    expect(resultado.selecoes).toHaveLength(2);
+    expect(resultado.selecoes[0].fatores_codes).toEqual(["demandas"]);
+    expect(resultado.selecoes[1].fatores_codes).toEqual(["papel"]);
+    expect(resultado.vinculosDescartados).toBe(1);
   });
 });

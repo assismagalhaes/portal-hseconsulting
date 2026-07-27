@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.108.2";
 import {
+  garantirLimiteFinalMonitoramento,
   normalizarSelecoesPlanoIA,
   type FatorPlanoIA,
   type MedidaPlanoIA,
@@ -220,6 +221,14 @@ Deno.serve(async (req) => {
         normalizadas.descartadas += normalizadasContexto.descartadas;
       }
     }
+    const fatoresAtuais = Array.isArray(contexto?.fatores)
+      ? contexto.fatores as FatorPlanoIA[]
+      : [];
+    const limiteFinal = garantirLimiteFinalMonitoramento(normalizadas.selecoes, fatoresAtuais);
+    normalizadas = {
+      selecoes: limiteFinal.selecoes,
+      descartadas: normalizadas.descartadas + limiteFinal.vinculosDescartados,
+    };
 
     // Sem ação obrigatória, sem nova sugestão e sem sugestão automática antiga:
     // o estado desejado já existe. Evita uma escrita desnecessária e mantém o
