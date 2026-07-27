@@ -10577,6 +10577,15 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      psico_ind_listar_responsaveis: {
+        Args: never
+        Returns: {
+          cargo: string
+          id: string
+          nome: string
+          origem: string
+        }[]
+      }
       psico_ind_log_sugestao_ia: {
         Args: {
           p_avaliacao: string
