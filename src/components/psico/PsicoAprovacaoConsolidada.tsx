@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle2, XCircle, Circle } from "lucide-react";
+import { CheckCircle2, XCircle, Circle, ClipboardCheck, ShieldCheck, Clock3 } from "lucide-react";
 import {
   STATUS_REVISAO_COLOR, STATUS_REVISAO_LABEL, RevisaoStatus,
   traduzirErro, validarRevisao, getRevisaoAtiva,
@@ -96,6 +96,7 @@ export default function PsicoAprovacaoConsolidada({
   const planoSemAcoesValido = etapa === "plano"
     && val?.itens === 0
     && errosPorEtapa.plano.length === 0;
+  const checklistCompleto = [...checklist, ...detalheItens].every((item) => item.ok);
 
   return (
     <div className="space-y-3">
@@ -128,30 +129,53 @@ export default function PsicoAprovacaoConsolidada({
             <div className="text-xs text-muted-foreground">de 7 fatores avaliados</div>
           </div>
 
-          <div className="md:col-span-3 space-y-1">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Checklist técnico</div>
-            <ul className="text-sm space-y-1.5">
-              {[...checklist, ...detalheItens].map((c, i) => (
-                <li key={i} className="flex items-center gap-2">
-                  {c.ok ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <XCircle className="h-4 w-4 text-destructive" />}
-                  <span className={c.ok ? "" : "text-destructive"}>{c.label}</span>
-                </li>
-              ))}
-              {!val && <li className="text-xs text-muted-foreground flex items-center gap-2"><Circle className="h-3 w-3" /> Calculando validação…</li>}
-            </ul>
+          <div className="md:col-span-3 rounded-lg border bg-muted/20 p-3">
+            <div className="flex items-center gap-2">
+              <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+              <div className="text-sm font-medium">Checklist técnico</div>
+              {val && checklistCompleto && (
+                <Badge variant="outline" className="ml-auto border-emerald-200 bg-emerald-50 text-emerald-700">
+                  Verificações atendidas
+                </Badge>
+              )}
+            </div>
+            {!val ? (
+              <div className="mt-2 text-xs text-muted-foreground flex items-center gap-2">
+                <Circle className="h-3 w-3" /> Calculando validação…
+              </div>
+            ) : checklistCompleto ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Não há pendência técnica nesta etapa. Os detalhes reaparecem somente quando exigirem atenção.
+              </p>
+            ) : (
+              <ul className="mt-2 grid gap-1.5 text-sm md:grid-cols-2">
+                {[...checklist, ...detalheItens].filter((c) => !c.ok).map((c, i) => (
+                  <li key={i} className="flex items-center gap-2 text-destructive">
+                    <XCircle className="h-4 w-4 shrink-0" />
+                    <span>{c.label}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </CardContent>
       </Card>
 
       {planoSemAcoesValido && (
-        <Alert>
-          <CheckCircle2 className="h-4 w-4" />
-          <AlertTitle>Nenhuma ação específica obrigatória</AlertTitle>
-          <AlertDescription>
-            Nenhum fator recebeu tratamento “Ação recomendada”. O plano pode ser revisado sem itens;
-            a manutenção e o monitoramento preventivo permanecem registrados no tratamento por fator.
-          </AlertDescription>
-        </Alert>
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-900 dark:bg-emerald-950/20">
+          <div className="flex items-start gap-3">
+            <div className="rounded-full bg-emerald-100 p-2 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-medium text-emerald-950 dark:text-emerald-100">Plano preventivo sem ação obrigatória</h3>
+              <p className="mt-1 text-sm text-emerald-900/75 dark:text-emerald-200/75">
+                Nenhum fator exige ação corretiva. O plano pode seguir sem itens; os tratamentos de manutenção
+                e monitoramento preventivo continuam registrados por fator.
+              </p>
+            </div>
+          </div>
+        </div>
       )}
 
       {errosBloqueantes.length > 0 && !aprovada && (
@@ -169,16 +193,32 @@ export default function PsicoAprovacaoConsolidada({
       )}
 
       {pendenciasEtapaPosterior.length > 0 && !aprovada && (
-        <Alert>
-          <Circle className="h-4 w-4" />
-          <AlertTitle>Pendências para a aprovação final</AlertTitle>
-          <AlertDescription>
-            Estes campos serão concluídos na etapa <b>Revisão Técnica</b> e não impedem revisar o plano:
-            <ul className="list-disc pl-5 mt-1 text-sm">
-              {pendenciasEtapaPosterior.map((e, i) => <li key={i}>{traduzirErro(e)}</li>)}
-            </ul>
-          </AlertDescription>
-        </Alert>
+        <div className="rounded-xl border border-sky-200 bg-sky-50/60 p-4 dark:border-sky-900 dark:bg-sky-950/20">
+          <div className="flex items-start gap-3">
+            <div className="rounded-full bg-sky-100 p-2 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300">
+              <Clock3 className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="font-medium text-sky-950 dark:text-sky-100">Itens da próxima etapa</h3>
+                <Badge variant="outline" className="border-sky-200 bg-white/70 text-sky-700">
+                  Não bloqueiam o plano
+                </Badge>
+              </div>
+              <p className="mt-1 text-sm text-sky-900/70 dark:text-sky-200/75">
+                Serão preenchidos na Revisão Técnica antes da aprovação final.
+              </p>
+              <ul className="mt-2 grid gap-1 text-sm text-sky-950/80 dark:text-sky-100/80 md:grid-cols-2">
+                {pendenciasEtapaPosterior.map((e, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <Circle className="mt-1 h-2.5 w-2.5 shrink-0 fill-current" />
+                    {traduzirErro(e)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

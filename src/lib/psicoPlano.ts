@@ -98,7 +98,46 @@ export async function gerarPlanoIA(revisaoId: string) {
   const { data, error } = await sb.functions.invoke("psico-gerar-plano-ia", {
     body: { revisao_id: revisaoId },
   });
-  return { data, error };
+  if (!error) return { data, error: null };
+
+  let codigo = "";
+  let detalhe = "";
+  const response = (error as { context?: Response })?.context;
+  if (response instanceof Response) {
+    try {
+      const body = await response.clone().json();
+      codigo = typeof body?.error === "string" ? body.error : "";
+      detalhe = typeof body?.detalhe === "string" ? body.detalhe : "";
+    } catch {
+      // A resposta pode não ser JSON (falha de gateway/startup).
+    }
+  }
+
+  return {
+    data,
+    error: {
+      ...error,
+      code: codigo,
+      detail: detalhe,
+      message: mensagemErroPlanoIA(codigo, detalhe),
+    },
+  };
+}
+
+export function mensagemErroPlanoIA(codigo?: string, detalhe?: string) {
+  const mensagens: Record<string, string> = {
+    IA_NAO_CONFIGURADA: "O serviço de IA ainda não está configurado. O plano pode ser preenchido manualmente.",
+    IA_LIMITE_ATINGIDO: "O limite temporário da IA foi atingido. Aguarde alguns minutos e tente novamente.",
+    IA_CREDITOS_ESGOTADOS: "Os créditos do serviço de IA estão esgotados. Use o catálogo ou tente novamente após a regularização.",
+    IA_INDISPONIVEL: "A IA está temporariamente indisponível. Tente novamente ou prossiga pelo catálogo.",
+    CONTEXTO_INDISPONIVEL: "Não foi possível preparar os dados desta avaliação para a IA.",
+    PLANO_NAO_APLICADO: "A sugestão foi gerada, mas não pôde ser aplicada ao plano.",
+    PLANO_IA_INVALIDO: "A IA retornou uma sugestão inválida. Nenhuma alteração foi aplicada ao plano.",
+    NAO_AUTENTICADO: "Sua sessão expirou. Entre novamente para gerar o plano com IA.",
+  };
+  if (codigo && mensagens[codigo]) return mensagens[codigo];
+  if (detalhe) return `Não foi possível gerar o plano com IA: ${detalhe}`;
+  return "Não foi possível gerar o plano com IA. Nenhuma alteração foi aplicada.";
 }
 
 export async function getMedidasCatalogo(bibliotecaVersaoId: string) {
