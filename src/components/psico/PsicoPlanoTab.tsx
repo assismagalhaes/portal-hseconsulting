@@ -126,7 +126,14 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
       if (error) { toast.error(error.message || "Falha ao gerar com IA"); return; }
       if ((data as any)?.error) { toast.error((data as any).error); return; }
       const n = (data as any)?.itens ?? 0;
-      toast.success(`IA sugeriu ${n} medida(s). Ações personalizadas preservadas.`);
+      const selecionadas = (data as any)?.itens_selecionados ?? n;
+      if (n === 0) {
+        toast.success("A IA não identificou medida necessária. O plano pode permanecer sem ações.");
+      } else if (selecionadas < n) {
+        toast.success(`IA sugeriu ${n} medida(s); ${n - selecionadas} aguarda(m) seleção técnica.`);
+      } else {
+        toast.success(`IA sugeriu ${n} medida(s). Ações personalizadas preservadas.`);
+      }
       setIaOpen(false); load();
     } finally { setIaLoading(false); }
   }
