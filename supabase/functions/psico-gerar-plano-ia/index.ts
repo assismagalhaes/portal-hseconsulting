@@ -1,4 +1,9 @@
 import { createClient } from "npm:@supabase/supabase-js@2.108.2";
+import {
+  normalizarSelecoesPlanoIA,
+  type FatorPlanoIA,
+  type MedidaPlanoIA,
+} from "../_shared/psico-plano-ia-policy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,7 +11,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const PROMPT_CODE = "HSE-PSICO-IA-PLANO-1.2";
+const PROMPT_CODE = "HSE-PSICO-IA-PLANO-1.3";
 const DEFAULT_MODEL = "google/gemini-3-flash-preview";
 
 function json(body: unknown, status = 200) {
@@ -29,6 +34,8 @@ Camadas do plano (obrigatório equilibrar níveis):
 - Para cada fator com ação recomendada, inclua ao menos uma medida "essencial".
 - Sempre que o catálogo permitir, complemente com medidas "estruturante" (governança/processo) e/ou "complementar" (sustentação/cultura), especialmente em prioridade crítica/alta. Evite planos 100% "essencial": um plano maduro tem camadas essencial → estruturante → complementar.
 - Proporcionalidade: prioridade crítica/alta pode receber 2 a 3 medidas; média 1 a 2; monitoramento no máximo 1.
+- Se nenhuma medida for necessária, retorne {"selecoes":[]}. Nunca invente uma ação apenas para preencher o plano.
+- Sugestões para monitoramento são opcionais e dependerão de seleção humana posterior.
 
 Horizonte do plano — CICLO PGR DE 12 MESES (obrigatório):
 - O plano é integrado ao PGR (NR-01) e deve ser planejado para execução ao longo de 12 meses (365 dias).
@@ -69,7 +76,7 @@ function parseSelecoes(raw: string): any[] {
   if (start < 0 || end <= start) throw new Error("IA_RESPOSTA_SEM_JSON");
   const parsed = JSON.parse(cleaned.slice(start, end + 1));
   const arr = Array.isArray(parsed?.selecoes) ? parsed.selecoes : null;
-  if (!arr || arr.length === 0) throw new Error("IA_SEM_SELECOES");
+  if (!arr) throw new Error("IA_SELECOES_INVALIDAS");
   return arr;
 }
 
@@ -133,17 +140,29 @@ Deno.serve(async (req) => {
       );
     }
     const aiData = await aiResponse.json();
-    const selecoes = parseSelecoes(String(aiData?.choices?.[0]?.message?.content ?? ""));
+    const selecoesBrutas = parseSelecoes(String(aiData?.choices?.[0]?.message?.content ?? ""));
+    const normalizadas = normalizarSelecoesPlanoIA(
+      selecoesBrutas,
+      Array.isArray(contexto?.fatores) ? contexto.fatores as FatorPlanoIA[] : [],
+      Array.isArray(contexto?.catalogo_medidas) ? contexto.catalogo_medidas as MedidaPlanoIA[] : [],
+    );
 
     const { data: aplicado, error: aplErr } = await userClient.rpc("psico_aplicar_plano_ia", {
       p_revisao_id: revisaoId,
-      p_selecoes: selecoes,
+      p_selecoes: normalizadas.selecoes,
       p_prompt_codigo: PROMPT_CODE,
       p_modelo_ia: model,
     });
     if (aplErr) return json({ error: "PLANO_NAO_APLICADO", detalhe: aplErr.message }, 400);
 
-    return json({ ok: true, itens: aplicado?.itens ?? 0, modelo: model, prompt_codigo: PROMPT_CODE });
+    return json({
+      ok: true,
+      itens: aplicado?.itens ?? 0,
+      itens_selecionados: aplicado?.itens_selecionados ?? 0,
+      descartadas: normalizadas.descartadas,
+      modelo: model,
+      prompt_codigo: PROMPT_CODE,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("[psico-gerar-plano-ia]", { code: message.split(":")[0] });
