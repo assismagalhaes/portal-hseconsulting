@@ -34,6 +34,20 @@ export type ParcelaForm = {
   descricao: string | null;
 };
 
+type ParcelaMarco = Pick<ParcelaForm, "marco" | "dias_apos_marco" | "dia_mes">;
+
+/** Formata o marco com o prazo específico da parcela para tela, PDF e textos. */
+export function formatarMarcoParcela(parcela: ParcelaMarco) {
+  const label = MARCO_LABEL[parcela.marco];
+
+  if (parcela.marco === "mensal_recorrente" && parcela.dia_mes) {
+    return `${label} (dia ${parcela.dia_mes})`;
+  }
+
+  const dias = Number(parcela.dias_apos_marco) || 0;
+  return dias > 0 ? `${label} (+${dias} dias)` : label;
+}
+
 export function somaPercentuais(parcelas: ParcelaForm[]) {
   return parcelas.reduce((s, p) => s + (Number(p.percentual) || 0), 0);
 }
@@ -64,7 +78,7 @@ export function buildTextoCondicao(
 ) {
   const linhas = parcelas.map((p) => {
     const valor = (Number(p.percentual) / 100) * (total || 0);
-    return `${p.numero}) ${p.percentual}% (${fmtBRL(valor)}) — ${MARCO_LABEL[p.marco]}`;
+    return `${p.numero}) ${p.percentual}% (${fmtBRL(valor)}) — ${formatarMarcoParcela(p)}`;
   });
   const cab = nome ? `${nome}\n` : "";
   const comp = complemento ? `\n\n${complemento}` : "";
