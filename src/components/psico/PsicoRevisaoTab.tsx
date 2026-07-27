@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
@@ -128,8 +128,19 @@ Modalidade: ${modoColeta}.`;
           (o || []).forEach((x: any) => { map[x.fator_codigo] = x; });
           setOrient(map);
         }
-        const { data: p } = await (supabase as any).from("profiles").select("id, nome, email, cargo, registro_profissional, assinatura_modo, assinatura_ativa, assinatura_nome_arquivo, assinatura_mime_type").order("nome");
-        setProfiles(p || []);
+        const [{ data: responsaveis }, { data: perfis }] = await Promise.all([
+          (supabase as any).rpc("psico_ind_listar_responsaveis"),
+          (supabase as any).from("profiles")
+            .select("id, nome, email, cargo, registro_profissional, assinatura_modo, assinatura_ativa, assinatura_nome_arquivo, assinatura_mime_type")
+            .order("nome"),
+        ]);
+        const perfilPorId = new Map((perfis || []).map((perfil: any) => [perfil.id, perfil]));
+        const listaResponsaveis = (responsaveis || []).map((responsavel: any) => (
+          responsavel.origem === "perfil"
+            ? { ...responsavel, ...perfilPorId.get(responsavel.id) }
+            : responsavel
+        ));
+        setProfiles(listaResponsaveis);
         const history = await getParecerHistorico(r.id);
         setParecerHistory(history.data || []);
         const { data: val } = await validarRevisao(r.id);
@@ -164,7 +175,9 @@ Modalidade: ${modoColeta}.`;
         };
         setCtxDados(dados);
         const defaults = buildDefaults(r, dados);
-        const currentUserAsProfile = (p || []).find((prof: any) => prof.id === user?.id)?.id || "";
+        const currentUserAsProfile = listaResponsaveis.find(
+          (prof: any) => prof.origem === "perfil" && prof.id === user?.id,
+        )?.id || "";
         setForm({
           contexto_organizacional: r?.contexto_organizacional || defaults.contexto_organizacional,
           limitacoes: r?.limitacoes || defaults.limitacoes,
@@ -474,7 +487,23 @@ Modalidade: ${modoColeta}.`;
             <Select value={form.responsavel_tecnico_id || ""} onValueChange={(v) => setForm({ ...form, responsavel_tecnico_id: v })} disabled={readOnly}>
               <SelectTrigger><SelectValue placeholder="Selecionar responsável" /></SelectTrigger>
               <SelectContent>
-                {profiles.map((p) => <SelectItem key={p.id} value={p.id}>{p.nome || p.email}</SelectItem>)}
+                <SelectGroup>
+                  <SelectLabel>Profissionais cadastrados</SelectLabel>
+                  {profiles.filter((p) => p.origem === "profissional").map((p) => (
+                    <SelectItem key={`profissional-${p.id}`} value={p.id}>
+                      {p.nome}{p.cargo ? ` · ${p.cargo}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+                <SelectSeparator />
+                <SelectGroup>
+                  <SelectLabel>Usuários do sistema</SelectLabel>
+                  {profiles.filter((p) => p.origem === "perfil").map((p) => (
+                    <SelectItem key={`perfil-${p.id}`} value={p.id}>
+                      {p.nome || p.email}{p.cargo ? ` · ${p.cargo}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
             {rev.responsavel_snapshot && (
@@ -483,7 +512,23 @@ Modalidade: ${modoColeta}.`;
               </p>
             )}
           </div>
-          {!readOnly && form.responsavel_tecnico_id && (
+          {!readOnly && form.responsavel_tecnico_id && (() => {
+            const selected = profiles.find((profile) => profile.id === form.responsavel_tecnico_id);
+            if (!selected) return null;
+            if (selected.origem === "profissional") {
+              return (
+                <div className="rounded-md border bg-muted/30 p-3">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <FileSignature className="h-4 w-4" /> Assinatura no relatório
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Profissional cadastrado sem usuário do sistema. O relatório reservará o espaço para assinatura
+                    manual e congelará nome, cargo e registro profissional na aprovação.
+                  </p>
+                </div>
+              );
+            }
+            return (
             <div className="rounded-md border p-3 space-y-2">
               <div className="flex items-center gap-2 text-sm font-medium"><FileSignature className="h-4 w-4" /> Assinatura no relatório</div>
               <p className="text-xs text-muted-foreground">A imagem é opcional, privada e será congelada como referência quando a revisão for aprovada.</p>
@@ -496,11 +541,11 @@ Modalidade: ${modoColeta}.`;
                 </Label>
               </div>
               {(() => {
-                const selected = profiles.find((profile) => profile.id === form.responsavel_tecnico_id);
                 return selected ? <p className="text-xs text-muted-foreground">Modo atual: <b>{selected.assinatura_modo === "imagem" && selected.assinatura_ativa ? `imagem (${selected.assinatura_nome_arquivo || "arquivo protegido"})` : "em branco"}</b></p> : null;
               })()}
             </div>
-          )}
+            );
+          })()}
         </CardContent>
       </Card>
 
