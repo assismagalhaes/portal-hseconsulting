@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Info, RefreshCcw, Wrench, Plus, Trash2, Undo2, History, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
-import { MARCO_LABEL, MARCOS, buildTextoCondicao, somaPercentuais, validarParcelas, type CondPagMarco, type ParcelaForm } from "@/lib/condicoesPagamento";
+import { MARCO_LABEL, MARCOS, buildTextoCondicao, formatarMarcoParcela, somaPercentuais, validarParcelas, type CondPagMarco, type ParcelaForm } from "@/lib/condicoesPagamento";
 
 type CondRow = {
   id: string; nome: string; descricao: string | null;
@@ -352,12 +352,7 @@ export default function CondicaoPagamentoPicker({
                   <td className="px-3 py-1.5">{Number(p.percentual).toFixed(2)}%</td>
                   <td className="px-3 py-1.5 text-right font-mono">{brl(Number(p.valor ?? (p.percentual / 100) * total))}</td>
                   <td className="px-3 py-1.5">
-                    {MARCO_LABEL[p.marco as CondPagMarco]}
-                    {p.marco === "mensal_recorrente" && p.dia_mes
-                      ? ` (dia ${p.dia_mes})`
-                      : Number(p.dias_apos_marco) > 0
-                        ? ` (+${p.dias_apos_marco} dias)`
-                        : ""}
+                    {formatarMarcoParcela(p)}
                   </td>
                 </tr>
               ))}
@@ -428,7 +423,7 @@ export default function CondicaoPagamentoPicker({
                         <div key={p.numero} className="flex gap-2">
                           <span className="font-mono w-6">{p.numero})</span>
                           <span className="font-mono">{Number(p.percentual).toFixed(2)}%</span>
-                          <span>· {MARCO_LABEL[p.marco as CondPagMarco]}</span>
+                          <span>· {formatarMarcoParcela(p)}</span>
                           {p.valor ? <span className="ml-auto font-mono">{brl(Number(p.valor))}</span> : null}
                         </div>
                       ))}

@@ -1,6 +1,6 @@
 import { brl, formatCnpjCpf } from "@/lib/format";
 import { ClipboardList, Hash, Info, Package, ShieldCheck } from "lucide-react";
-import { MARCO_LABEL, type CondPagMarco } from "@/lib/condicoesPagamento";
+import { formatarMarcoParcela } from "@/lib/condicoesPagamento";
 
 /**
  * Átomos visuais do ProposalDocument.
@@ -110,7 +110,7 @@ export function ParcelasCard({ snap, total, primary, accent, neutral, textoPadra
               <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "monospace", fontWeight: 600, color: primary }}>
                 {brl(Number(p.valor ?? (p.percentual / 100) * (total || 0)))}
               </td>
-              <td style={{ padding: "8px 12px", color: accent, fontWeight: 600 }}>{MARCO_LABEL[p.marco as CondPagMarco]}</td>
+              <td style={{ padding: "8px 12px", color: accent, fontWeight: 600 }}>{formatarMarcoParcela(p)}</td>
             </tr>
           ))}
         </tbody>
