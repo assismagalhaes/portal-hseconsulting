@@ -93,14 +93,13 @@ export default function PsicoIndividualRelatorioTab({ avaliacaoId }: { avaliacao
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [{ data: gatesData, error: gatesErr }, revRes, relRes, profs, users] = await Promise.all([
+      const [{ data: gatesData, error: gatesErr }, revRes, relRes, respRes] = await Promise.all([
         supabase.rpc("psico_ind_gates_emissao", { p_avaliacao: avaliacaoId }),
         supabase.from("psico_individual_revisoes")
           .select("*").eq("avaliacao_id", avaliacaoId).eq("ativa", true)
           .order("created_at", { ascending: false }).limit(1).maybeSingle(),
         supabase.rpc("psico_ind_listar_relatorios", { p_avaliacao: avaliacaoId }),
-        supabase.from("execucao_profissionais").select("id,nome,cargo").order("nome"),
-        supabase.from("profiles").select("id,nome,cargo").order("nome"),
+        supabase.rpc("psico_ind_listar_responsaveis"),
       ]);
       if (gatesErr) throw gatesErr;
       setGates(gatesData as Gates);
@@ -110,10 +109,11 @@ export default function PsicoIndividualRelatorioTab({ avaliacaoId }: { avaliacao
       setSelRespId(rev?.responsavel_profissional_id || "");
       setDirty(false);
       setRelatorios((relRes.data as Relatorio[]) || []);
-      const opts: ProfOption[] = [];
-      (profs.data || []).forEach((p: any) => opts.push({ id: p.id, label: `${p.nome}${p.cargo ? ` — ${p.cargo}` : ""}` }));
-      (users.data || []).forEach((u: any) => opts.push({ id: u.id, label: `${u.nome || "Usuário"}${u.cargo ? ` — ${u.cargo}` : ""}` }));
-      // Deduplica por id (evita chave duplicada caso um profissional também exista como perfil de usuário)
+      const opts: ProfOption[] = ((respRes.data as any[]) || []).map((r) => ({
+        id: r.id,
+        label: `${r.nome || "Sem nome"}${r.cargo ? ` — ${r.cargo}` : ""}`,
+      }));
+      // Deduplica por id (profissional pode existir também como perfil de usuário)
       const uniq = new Map<string, ProfOption>();
       for (const o of opts) if (!uniq.has(o.id)) uniq.set(o.id, o);
       setResponsaveis(Array.from(uniq.values()));
