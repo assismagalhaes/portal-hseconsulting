@@ -183,11 +183,43 @@ Deno.serve(async (req) => {
       iaOpcionalFalhou = true;
       selecoesBrutas = [];
     }
-    const normalizadas = normalizarSelecoesPlanoIA(
+    const normalizadasContexto = normalizarSelecoesPlanoIA(
       selecoesBrutas,
       Array.isArray(contexto?.fatores) ? contexto.fatores as FatorPlanoIA[] : [],
       Array.isArray(contexto?.catalogo_medidas) ? contexto.catalogo_medidas as MedidaPlanoIA[] : [],
     );
+    const medidaIds = normalizadasContexto.selecoes.map((selecao) => selecao.medida_modelo_id);
+    let normalizadas = normalizadasContexto;
+
+    if (medidaIds.length > 0) {
+      const { data: catalogoAtual, error: catalogoError } = await userClient
+        .from("psico_medidas_modelos")
+        .select("id,fator_codigo,nivel_recomendacao,grupo_transversal")
+        .in("id", medidaIds)
+        .eq("ativo", true);
+
+      if (catalogoError) {
+        if (acaoObrigatoria) {
+          return json({ error: "CATALOGO_IA_INDISPONIVEL" }, 502);
+        }
+        normalizadas = {
+          selecoes: [],
+          descartadas: normalizadasContexto.descartadas + medidaIds.length,
+        };
+      } else {
+        normalizadas = normalizarSelecoesPlanoIA(
+          normalizadasContexto.selecoes,
+          Array.isArray(contexto?.fatores) ? contexto.fatores as FatorPlanoIA[] : [],
+          (catalogoAtual || []).map((medida: any) => ({
+            id: medida.id,
+            fator_codigo: medida.fator_codigo,
+            nivel: medida.nivel_recomendacao,
+            grupo_transversal: medida.grupo_transversal,
+          })),
+        );
+        normalizadas.descartadas += normalizadasContexto.descartadas;
+      }
+    }
 
     // Sem ação obrigatória, sem nova sugestão e sem sugestão automática antiga:
     // o estado desejado já existe. Evita uma escrita desnecessária e mantém o

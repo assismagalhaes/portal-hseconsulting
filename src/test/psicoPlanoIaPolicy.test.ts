@@ -49,6 +49,25 @@ describe("política das sugestões de plano por IA", () => {
     expect(resultado.descartadas).toBe(0);
   });
 
+  it("remove o monitoramento de uma medida não essencial usada também em ação recomendada", () => {
+    const resultado = normalizarSelecoesPlanoIA([
+      {
+        medida_modelo_id: "m-papel-2",
+        fatores_codes: ["papel", "demandas"],
+      },
+    ], fatores, [
+      {
+        id: "m-papel-2",
+        fator_codigo: "papel",
+        nivel: "estruturante",
+        grupo_transversal: "governanca",
+      },
+    ]);
+
+    expect(resultado.selecoes).toHaveLength(1);
+    expect(resultado.selecoes[0].fatores_codes).toEqual(["papel"]);
+  });
+
   it("aceita resposta vazia como plano sem ações", () => {
     expect(normalizarSelecoesPlanoIA([], fatores, catalogo)).toEqual({
       selecoes: [],

@@ -58,8 +58,17 @@ export function normalizarSelecoesPlanoIA(
     );
 
     if (codigosAcao.length > 0) {
-      aceitas.push({ ...selecao, medida_modelo_id: medidaId, fatores_codes: codigosPermitidos });
+      const codigosMonitoramentoValidos = medida.nivel === "essencial"
+        ? codigosPermitidos.filter(
+          (codigo) =>
+            fatorPorCodigo.get(codigo)?.tratamento === "monitoramento_preventivo"
+            && !monitoramentosUsados.has(codigo),
+        )
+        : [];
+      const codigosFinais = [...codigosAcao, ...codigosMonitoramentoValidos];
+      aceitas.push({ ...selecao, medida_modelo_id: medidaId, fatores_codes: codigosFinais });
       medidasUsadas.add(medidaId);
+      codigosMonitoramentoValidos.forEach((codigo) => monitoramentosUsados.add(codigo));
       continue;
     }
 
