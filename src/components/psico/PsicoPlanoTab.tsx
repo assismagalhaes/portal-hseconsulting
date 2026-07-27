@@ -123,12 +123,24 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
     setIaLoading(true);
     try {
       const { data, error } = await gerarPlanoIA(rev.id);
-      if (error) { toast.error(error.message || "Falha ao gerar com IA"); return; }
+      if (error) {
+        toast.error(error.message || "Falha ao gerar com IA", {
+          description: "O plano atual foi preservado. Você pode tentar novamente ou usar o catálogo.",
+          duration: 7000,
+        });
+        return;
+      }
       if ((data as any)?.error) { toast.error((data as any).error); return; }
       const n = (data as any)?.itens ?? 0;
       const selecionadas = (data as any)?.itens_selecionados ?? n;
       if (n === 0) {
-        toast.success("A IA não identificou medida necessária. O plano pode permanecer sem ações.");
+        const aviso = (data as any)?.aviso;
+        toast.success("Nenhuma medida obrigatória foi adicionada.", {
+          description: aviso
+            ? "A IA estava indisponível, mas este cenário permite seguir com o plano sem ações."
+            : "A análise não identificou medida necessária; o plano pode permanecer sem ações.",
+          duration: 7000,
+        });
       } else if (selecionadas < n) {
         toast.success(`IA sugeriu ${n} medida(s); ${n - selecionadas} aguarda(m) seleção técnica.`);
       } else {
@@ -297,7 +309,10 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
                     <AlertDialogHeader>
                       <AlertDialogTitle>Gerar plano de ação com IA?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        A IA analisa os resultados, o tratamento por fator e o catálogo completo da biblioteca vigente para sugerir medidas proporcionais à prioridade de cada fator (sem limite artificial de itens). As ações personalizadas já criadas serão preservadas; apenas as geradas automaticamente serão substituídas.
+                        A IA analisa os resultados, o tratamento por fator e o catálogo vigente. Fatores em
+                        monitoramento podem receber no máximo uma sugestão preventiva, que ficará desmarcada até
+                        validação técnica. Se nenhuma medida for necessária, o plano permanecerá sem ações.
+                        Ações personalizadas serão preservadas.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

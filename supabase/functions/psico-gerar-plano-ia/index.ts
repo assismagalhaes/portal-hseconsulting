@@ -80,6 +80,11 @@ function parseSelecoes(raw: string): any[] {
   return arr;
 }
 
+function possuiAcaoObrigatoria(contexto: any) {
+  return Array.isArray(contexto?.fatores)
+    && contexto.fatores.some((fator: FatorPlanoIA) => fator.tratamento === "acao_recomendada");
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "METODO_NAO_PERMITIDO" }, 405);
@@ -112,20 +117,26 @@ Deno.serve(async (req) => {
     const model =
       typeof body?.model === "string" && body.model.length < 100 ? body.model : DEFAULT_MODEL;
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${gatewayKey}` },
-      body: JSON.stringify({
-        model,
-        stream: false,
-        temperature: 0.2,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `CONTEXTO COLETIVO E CATÁLOGO:\n${JSON.stringify(contexto)}` },
-        ],
-      }),
-    });
-    if (!aiResponse.ok) {
+    const acaoObrigatoria = possuiAcaoObrigatoria(contexto);
+    let aiResponse: Response | null = null;
+    try {
+      aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${gatewayKey}` },
+        body: JSON.stringify({
+          model,
+          stream: false,
+          temperature: 0.2,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `CONTEXTO COLETIVO E CATÁLOGO:\n${JSON.stringify(contexto)}` },
+          ],
+        }),
+      });
+    } catch (error) {
+      if (acaoObrigatoria) throw error;
+    }
+    if (aiResponse && !aiResponse.ok && acaoObrigatoria) {
       const status = aiResponse.status === 429 ? 429 : aiResponse.status === 402 ? 402 : 502;
       return json(
         {
@@ -139,8 +150,17 @@ Deno.serve(async (req) => {
         status,
       );
     }
-    const aiData = await aiResponse.json();
-    const selecoesBrutas = parseSelecoes(String(aiData?.choices?.[0]?.message?.content ?? ""));
+    let iaOpcionalFalhou = !aiResponse || !aiResponse.ok;
+    let selecoesBrutas: any[] = [];
+    try {
+      selecoesBrutas = iaOpcionalFalhou
+        ? []
+        : parseSelecoes(String((await aiResponse.json())?.choices?.[0]?.message?.content ?? ""));
+    } catch (error) {
+      if (acaoObrigatoria) throw error;
+      iaOpcionalFalhou = true;
+      selecoesBrutas = [];
+    }
     const normalizadas = normalizarSelecoesPlanoIA(
       selecoesBrutas,
       Array.isArray(contexto?.fatores) ? contexto.fatores as FatorPlanoIA[] : [],
@@ -160,6 +180,7 @@ Deno.serve(async (req) => {
       itens: aplicado?.itens ?? 0,
       itens_selecionados: aplicado?.itens_selecionados ?? 0,
       descartadas: normalizadas.descartadas,
+      aviso: iaOpcionalFalhou ? "IA_OPCIONAL_INDISPONIVEL" : null,
       modelo: model,
       prompt_codigo: PROMPT_CODE,
     });
