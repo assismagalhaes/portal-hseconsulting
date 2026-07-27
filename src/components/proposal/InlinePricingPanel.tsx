@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AutoGrowTextarea } from "@/components/ui/auto-grow-textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -100,7 +101,7 @@ export default function InlinePricingPanel({ item, existing, params, clientFunci
                         </Select>
                       </td>
                       <td className="px-2 py-1.5">
-                        <Input className="h-8" placeholder="Ex.: Combustível, ART…" value={row.descricao} onChange={(e) => updCusto(row.id!, { descricao: e.target.value })} />
+                        <AutoGrowTextarea placeholder="Ex.: Combustível, ART…" value={row.descricao} onChange={(e) => updCusto(row.id!, { descricao: e.target.value })} />
                       </td>
                       <td className="px-2 py-1.5">
                         <Input className="h-8 text-right" type="number" min="0" step="0.01" value={row.valor} onChange={(e) => updCusto(row.id!, { valor: Math.max(0, Number(e.target.value) || 0) })} />
