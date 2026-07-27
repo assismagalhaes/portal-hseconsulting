@@ -106,7 +106,7 @@ export const ERRO_LABEL: Record<string, string> = {
   CONCLUSAO_INCOMPLETA: "Conclusão técnica insuficiente (mín. 50 caracteres)",
   PARECER_CONCLUSIVO_INCOMPLETO: "Parecer técnico conclusivo incompleto; preencha as seis seções antes de aprovar",
   LIMITACOES_INCOMPLETAS: "Limitações não descritas (mín. 10 caracteres)",
-  FATOR_SIGNIFICATIVO_SEM_ACAO: "Fator significativo sem ação selecionada no plano",
+  FATOR_SIGNIFICATIVO_SEM_ACAO: "Fator com tratamento “Ação recomendada” sem medida vinculada no plano",
   PLANO_SEM_ACOES: "Plano de ação sem itens selecionados",
   VALIDACAO_INDISPONIVEL: "Não foi possível executar a validação técnica. Atualize a página e tente novamente",
 };

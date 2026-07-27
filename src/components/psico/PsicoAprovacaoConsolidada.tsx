@@ -8,6 +8,7 @@ import {
   STATUS_REVISAO_COLOR, STATUS_REVISAO_LABEL, RevisaoStatus,
   traduzirErro, validarRevisao, getRevisaoAtiva,
 } from "@/lib/psicoRevisao";
+import { separarErrosPorEtapa } from "@/lib/psicoRevisaoGates";
 import { PLANO_STATUS_COLOR, PLANO_STATUS_LABEL, PlanoStatus, getPlanoPorRevisao } from "@/lib/psicoPlano";
 import PsicoSeloAprovacao from "./PsicoSeloAprovacao";
 
@@ -17,11 +18,12 @@ import PsicoSeloAprovacao from "./PsicoSeloAprovacao";
  * PsicoRevisaoTab (onde o fluxo transacional está implementado).
  */
 export default function PsicoAprovacaoConsolidada({
-  avaliacaoId, avaliacaoCodigo, refreshKey,
+  avaliacaoId, avaliacaoCodigo, refreshKey, etapa = "revisao",
 }: {
   avaliacaoId: string;
   avaliacaoCodigo: string;
   refreshKey?: any;
+  etapa?: "plano" | "revisao";
 }) {
   const [revisao, setRevisao] = useState<any>(null);
   const [plano, setPlano] = useState<any>(null);
@@ -55,14 +57,18 @@ export default function PsicoAprovacaoConsolidada({
     if (!val) return [];
     const erros: string[] = val.erros || [];
     const set = new Set(erros);
-    const items = [
+    const itemsRevisao = [
       { key: "RESPONSAVEL_TECNICO_AUSENTE", label: "Responsável técnico definido" },
       { key: "CONCLUSAO_INCOMPLETA", label: "Conclusão técnica preenchida (≥50 caracteres)" },
       { key: "LIMITACOES_INCOMPLETAS", label: "Limitações descritas" },
-      { key: "FATOR_SIGNIFICATIVO_SEM_ACAO", label: "Todos os fatores significativos com ação" },
+      { key: "FATOR_SIGNIFICATIVO_SEM_ACAO", label: "Fatores com ação recomendada possuem medida vinculada" },
     ];
-    return items.map((i) => ({ ...i, ok: !set.has(i.key) }));
-  }, [val]);
+    const itemsPlano = [
+      { key: "FATOR_SIGNIFICATIVO_SEM_ACAO", label: "Fatores com ação recomendada possuem medida vinculada" },
+    ];
+    return (etapa === "plano" ? itemsPlano : itemsRevisao)
+      .map((i) => ({ ...i, ok: !set.has(i.key) }));
+  }, [etapa, val]);
 
   const detalheItens = useMemo(() => {
     if (!val) return [] as { label: string; ok: boolean }[];
@@ -83,6 +89,13 @@ export default function PsicoAprovacaoConsolidada({
   const statusRev: RevisaoStatus = revisao.status;
   const statusPlano: PlanoStatus | null = plano?.status || null;
   const aprovada = statusRev === "aprovada";
+  const erros: string[] = val?.erros || [];
+  const errosPorEtapa = separarErrosPorEtapa(erros);
+  const errosBloqueantes = etapa === "plano" ? errosPorEtapa.plano : erros;
+  const pendenciasEtapaPosterior = etapa === "plano" ? errosPorEtapa.revisao : [];
+  const planoSemAcoesValido = etapa === "plano"
+    && val?.itens === 0
+    && errosPorEtapa.plano.length === 0;
 
   return (
     <div className="space-y-3">
@@ -130,13 +143,39 @@ export default function PsicoAprovacaoConsolidada({
         </CardContent>
       </Card>
 
-      {val && !val.valido && !aprovada && (val.erros || []).length > 0 && (
+      {planoSemAcoesValido && (
+        <Alert>
+          <CheckCircle2 className="h-4 w-4" />
+          <AlertTitle>Nenhuma ação específica obrigatória</AlertTitle>
+          <AlertDescription>
+            Nenhum fator recebeu tratamento “Ação recomendada”. O plano pode ser revisado sem itens;
+            a manutenção e o monitoramento preventivo permanecem registrados no tratamento por fator.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {errosBloqueantes.length > 0 && !aprovada && (
         <Alert variant="destructive">
           <XCircle className="h-4 w-4" />
-          <AlertTitle>Pendências que impedem a aprovação</AlertTitle>
+          <AlertTitle>
+            {etapa === "plano" ? "Pendências que impedem revisar o plano" : "Pendências que impedem a aprovação"}
+          </AlertTitle>
           <AlertDescription>
             <ul className="list-disc pl-5 text-sm">
-              {(val.erros as string[]).map((e, i) => <li key={i}>{traduzirErro(e)}</li>)}
+              {errosBloqueantes.map((e, i) => <li key={i}>{traduzirErro(e)}</li>)}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {pendenciasEtapaPosterior.length > 0 && !aprovada && (
+        <Alert>
+          <Circle className="h-4 w-4" />
+          <AlertTitle>Pendências para a aprovação final</AlertTitle>
+          <AlertDescription>
+            Estes campos serão concluídos na etapa <b>Revisão Técnica</b> e não impedem revisar o plano:
+            <ul className="list-disc pl-5 mt-1 text-sm">
+              {pendenciasEtapaPosterior.map((e, i) => <li key={i}>{traduzirErro(e)}</li>)}
             </ul>
           </AlertDescription>
         </Alert>

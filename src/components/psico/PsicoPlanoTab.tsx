@@ -186,7 +186,12 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
 
   return (
     <div className="space-y-4">
-      <PsicoAprovacaoConsolidada avaliacaoId={av.id} avaliacaoCodigo={av.codigo} refreshKey={plano?.atualizado_em} />
+      <PsicoAprovacaoConsolidada
+        avaliacaoId={av.id}
+        avaliacaoCodigo={av.codigo}
+        refreshKey={plano?.atualizado_em}
+        etapa="plano"
+      />
       <Card>
         <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
