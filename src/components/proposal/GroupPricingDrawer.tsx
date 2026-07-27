@@ -348,7 +348,7 @@ export default function GroupPricingDrawer({
                   </div>
                   <div className="col-span-1">
                     <Label className="text-[11px]">Obs.</Label>
-                    <Input className="h-8" value={s.observacao} onChange={(e) => setHorasShared((arr) => arr.map((x) => x.id === s.id ? { ...x, observacao: e.target.value } : x))} />
+                    <AutoGrowTextarea value={s.observacao} onChange={(e) => setHorasShared((arr) => arr.map((x) => x.id === s.id ? { ...x, observacao: e.target.value } : x))} />
                   </div>
                   <Button variant="ghost" size="icon" className="col-span-1 h-8" aria-label="Remover linha de horas" onClick={() => setHorasShared((arr) => arr.filter((x) => x.id !== s.id))}>
                     <Trash2 className="h-4 w-4 text-danger" />
