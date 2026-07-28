@@ -137,7 +137,7 @@ Modalidade: ${modoColeta}.`;
         const perfilPorId = new Map((perfis || []).map((perfil: any) => [perfil.id, perfil]));
         const listaResponsaveis = (responsaveis || []).map((responsavel: any) => (
           responsavel.origem === "perfil"
-            ? { ...responsavel, ...perfilPorId.get(responsavel.id) }
+            ? { ...responsavel, ...(perfilPorId.get(responsavel.id) || {}) }
             : responsavel
         ));
         setProfiles(listaResponsaveis);
