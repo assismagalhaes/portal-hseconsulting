@@ -19,4 +19,20 @@ describe("tolerância transacional do plano por IA", () => {
     expect(sql).toContain("public.psico_aplicar_plano_ia_strict_v1(");
     expect(sql).not.toContain("RAISE EXCEPTION 'MONITORAMENTO_IA_");
   });
+
+  it("mantém uma única migration de criação da camada sanitizadora", () => {
+    const migrationsDir = path.resolve(process.cwd(), "supabase/migrations");
+    const ocorrencias = fs
+      .readdirSync(migrationsDir)
+      .filter((arquivo) => arquivo.endsWith(".sql"))
+      .map((arquivo) => fs.readFileSync(path.join(migrationsDir, arquivo), "utf8"))
+      .reduce(
+        (total, sql) =>
+          total +
+          (sql.match(/RENAME TO psico_aplicar_plano_ia_strict_v1/g) || []).length,
+        0,
+      );
+
+    expect(ocorrencias).toBe(1);
+  });
 });
