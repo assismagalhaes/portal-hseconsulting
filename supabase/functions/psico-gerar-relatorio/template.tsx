@@ -113,6 +113,47 @@ async function loadApprovedSignature(admin: any, snapshot: any): Promise<string 
   return `data:${mime};base64,${btoa(binary)}`;
 }
 
+async function loadClientLogo(admin: any, snapshot: any): Promise<string | undefined> {
+  const branding = snapshot?.avaliacao?.organizacao_branding;
+  const path = branding?.logo_storage_path;
+  const expectedHash = branding?.logo_hash_sha256;
+  if (!path || !expectedHash || !/^[0-9a-f-]{36}\/logo\.(png|jpg)$/.test(path)) {
+    return undefined;
+  }
+
+  try {
+    const downloaded = await admin.storage.from("client-branding").download(path);
+    if (downloaded.error || !downloaded.data) throw new Error("download_failed");
+    const bytes = new Uint8Array(await downloaded.data.arrayBuffer());
+    if (!bytes.length || bytes.length > 2 * 1024 * 1024) throw new Error("invalid_size");
+
+    const isPng = bytes.length >= 8
+      && bytes[0] === 0x89 && bytes[1] === 0x50
+      && bytes[2] === 0x4e && bytes[3] === 0x47
+      && bytes[4] === 0x0d && bytes[5] === 0x0a
+      && bytes[6] === 0x1a && bytes[7] === 0x0a;
+    const isJpeg = bytes.length >= 4
+      && bytes[0] === 0xff && bytes[1] === 0xd8
+      && bytes[bytes.length - 2] === 0xff && bytes[bytes.length - 1] === 0xd9;
+    if (!isPng && !isJpeg) throw new Error("invalid_signature");
+
+    const actualHash = await sha256Hex(bytes);
+    if (actualHash !== expectedHash) throw new Error("hash_mismatch");
+
+    let binary = "";
+    for (let offset = 0; offset < bytes.length; offset += 8192) {
+      binary += String.fromCharCode(...bytes.subarray(offset, offset + 8192));
+    }
+    return `data:${isPng ? "image/png" : "image/jpeg"};base64,${btoa(binary)}`;
+  } catch (error) {
+    console.warn("[psico-gerar-relatorio] client logo ignored", {
+      path,
+      reason: error instanceof Error ? error.message : "unknown",
+    });
+    return undefined;
+  }
+}
+
 // Best-effort page count from PDF bytes (regex /Type /Page)
 function estimatePageCount(bytes: Uint8Array): number {
   const txt = new TextDecoder("latin1").decode(bytes);
@@ -240,6 +281,7 @@ Deno.serve(async (req) => {
       const codigoRafp = `PRÉVIA-${validacaoData.avaliacao_codigo || "RELATÓRIO"}`;
       const codigoRev = validacaoData.proxima_revisao || "R00";
       const assinaturaDataUrl = await loadApprovedSignature(admin, snapshot);
+      const clientLogoDataUrl = await loadClientLogo(admin, snapshot);
       console.log("[psico-gerar-relatorio] preview render start", { avaliacaoId });
       const nodeBuf = await renderToBuffer(
         <PsychosocialReportDocument
@@ -251,6 +293,7 @@ Deno.serve(async (req) => {
           empresa={empresaQ.data || {}}
           dataEmissao={new Date().toISOString()}
           assinaturaDataUrl={assinaturaDataUrl}
+          clientLogoDataUrl={clientLogoDataUrl}
           preview
         />
       );
@@ -330,6 +373,7 @@ Deno.serve(async (req) => {
       .select("quem_somos, telefone, email, site, endereco, slogan, cor_primaria, cor_secundaria")
       .limit(1).maybeSingle();
     const assinaturaDataUrl = await loadApprovedSignature(admin, snapshot);
+    const clientLogoDataUrl = await loadClientLogo(admin, snapshot);
 
     // 3) Renderizar PDF
     let pdfBuffer: Uint8Array;
@@ -346,6 +390,7 @@ Deno.serve(async (req) => {
           dataEmissao={new Date().toISOString()}
           qrDataUrl={qrDataUrl}
           assinaturaDataUrl={assinaturaDataUrl}
+          clientLogoDataUrl={clientLogoDataUrl}
         />
       );
       console.log("[psico-gerar-relatorio] render done", { avaliacaoId, versaoId });

@@ -7,14 +7,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
-import { Plus } from "lucide-react";
+import { ImageIcon, Plus, Upload, X } from "lucide-react";
 import { formatCnpjCpf } from "@/lib/format";
 import { toast } from "sonner";
 import CnpjLookupField from "@/components/CnpjLookupField";
 import CepLookupField from "@/components/CepLookupField";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  CLIENT_LOGO_BUCKET,
+  clientLogoPath,
+  type ValidatedClientLogo,
+  validateClientLogo,
+} from "@/lib/clientBranding";
 
-const empty = { razao_social:"", nome_fantasia:"", cnpj_cpf:"", email:"", telefone:"", whatsapp:"", endereco:"", cidade:"", uf:"", solicitante:"", cargo:"", qtd_funcionarios:0, observacoes:"" };
+const empty = { razao_social:"", nome_fantasia:"", cnpj_cpf:"", email:"", telefone:"", whatsapp:"", endereco:"", cidade:"", uf:"", solicitante:"", cargo:"", qtd_funcionarios:0, observacoes:"", logo_storage_path:null, logo_mime_type:null, logo_hash_sha256:null };
 
 export default function Clients() {
   const [list, setList] = useState<any[]>([]);
@@ -26,6 +32,10 @@ export default function Clients() {
   const [groupOpen, setGroupOpen] = useState(false);
   const [groupNome, setGroupNome] = useState("");
   const [creatingGroup, setCreatingGroup] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [logoPrepared, setLogoPrepared] = useState<ValidatedClientLogo | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [removeLogo, setRemoveLogo] = useState(false);
 
   useEffect(() => { document.title = "Clientes | Portal HSE Consulting"; load(); }, []);
   async function load() {
@@ -52,20 +62,122 @@ export default function Clients() {
     toast.success("Grupo econômico criado e vinculado.");
   }
 
-  function openNew() { setEditing(null); setForm(empty); setOpen(true); }
-  function openEdit(c:any) { setEditing(c); setForm({ ...empty, ...c }); setOpen(true); }
+  function resetLogoState() {
+    if (logoPreview?.startsWith("blob:")) URL.revokeObjectURL(logoPreview);
+    setLogoPrepared(null);
+    setLogoPreview(null);
+    setRemoveLogo(false);
+  }
+
+  function openNew() {
+    resetLogoState();
+    setEditing(null);
+    setForm(empty);
+    setOpen(true);
+  }
+
+  async function openEdit(c:any) {
+    resetLogoState();
+    setEditing(c);
+    setForm({ ...empty, ...c });
+    setOpen(true);
+    if (c.logo_storage_path) {
+      const signed = await supabase.storage
+        .from(CLIENT_LOGO_BUCKET)
+        .createSignedUrl(c.logo_storage_path, 10 * 60);
+      if (!signed.error) setLogoPreview(signed.data.signedUrl);
+    }
+  }
+
+  async function selectLogo(file?: File) {
+    if (!file) return;
+    try {
+      const prepared = await validateClientLogo(file);
+      if (logoPreview?.startsWith("blob:")) URL.revokeObjectURL(logoPreview);
+      setLogoPrepared(prepared);
+      setLogoPreview(URL.createObjectURL(file));
+      setRemoveLogo(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Logomarca inválida.");
+    }
+  }
+
+  function markLogoForRemoval() {
+    if (logoPreview?.startsWith("blob:")) URL.revokeObjectURL(logoPreview);
+    setLogoPrepared(null);
+    setLogoPreview(null);
+    setRemoveLogo(true);
+  }
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
     const payload = { ...form, qtd_funcionarios: Number(form.qtd_funcionarios) || 0 };
     // remover campo virtual injetado pelo select embed
     delete (payload as any).client_groups;
-    const { error } = editing
-      ? await supabase.from("clients").update(payload).eq("id", editing.id)
-      : await supabase.from("clients").insert(payload);
-    if (error) return toast.error(error.message);
+    delete (payload as any).logo_storage_path;
+    delete (payload as any).logo_mime_type;
+    delete (payload as any).logo_hash_sha256;
+
+    setSaving(true);
+    const saved = editing
+      ? await supabase.from("clients").update(payload).eq("id", editing.id).select("id").single()
+      : await supabase.from("clients").insert(payload).select("id").single();
+    if (saved.error || !saved.data?.id) {
+      setSaving(false);
+      return toast.error(saved.error?.message || "Não foi possível salvar o cliente.");
+    }
+
+    const clientId = saved.data.id;
+    const previousPath = editing?.logo_storage_path as string | null | undefined;
+
+    if (logoPrepared) {
+      const path = clientLogoPath(clientId, logoPrepared.extension);
+      const upload = await supabase.storage
+        .from(CLIENT_LOGO_BUCKET)
+        .upload(path, logoPrepared.bytes, {
+          contentType: logoPrepared.mimeType,
+          cacheControl: "3600",
+          upsert: true,
+        });
+      if (upload.error) {
+        setSaving(false);
+        return toast.error(`Cliente salvo, mas a logomarca não foi enviada: ${upload.error.message}`);
+      }
+
+      const logoUpdate = await supabase.from("clients").update({
+        logo_storage_path: path,
+        logo_mime_type: logoPrepared.mimeType,
+        logo_hash_sha256: logoPrepared.hashSha256,
+      }).eq("id", clientId);
+      if (logoUpdate.error) {
+        await supabase.storage.from(CLIENT_LOGO_BUCKET).remove([path]);
+        setSaving(false);
+        return toast.error(`Cliente salvo, mas a logomarca não foi vinculada: ${logoUpdate.error.message}`);
+      }
+
+      const stalePaths = [
+        previousPath,
+        clientLogoPath(clientId, logoPrepared.extension === "png" ? "jpg" : "png"),
+      ].filter((candidate): candidate is string => !!candidate && candidate !== path);
+      if (stalePaths.length) await supabase.storage.from(CLIENT_LOGO_BUCKET).remove(stalePaths);
+    } else if (removeLogo && previousPath) {
+      const logoUpdate = await supabase.from("clients").update({
+        logo_storage_path: null,
+        logo_mime_type: null,
+        logo_hash_sha256: null,
+      }).eq("id", clientId);
+      if (logoUpdate.error) {
+        setSaving(false);
+        return toast.error(logoUpdate.error.message);
+      }
+      await supabase.storage.from(CLIENT_LOGO_BUCKET).remove([previousPath]);
+    }
+
+    setSaving(false);
     toast.success(editing ? "Cliente atualizado" : "Cliente criado");
-    setOpen(false); load();
+    setOpen(false);
+    resetLogoState();
+    load();
   }
 
   const filtered = list.filter(c => {
@@ -77,7 +189,13 @@ export default function Clients() {
     <div>
       <PageHeader title="Clientes" subtitle="Carteira de empresas atendidas pela HSE Consulting"
         actions={
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog
+            open={open}
+            onOpenChange={(nextOpen) => {
+              setOpen(nextOpen);
+              if (!nextOpen) resetLogoState();
+            }}
+          >
             <DialogTrigger asChild><Button onClick={openNew}><Plus className="h-4 w-4 mr-2" /> Novo cliente</Button></DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader><DialogTitle>{editing ? "Editar cliente" : "Novo cliente"}</DialogTitle></DialogHeader>
@@ -110,6 +228,39 @@ export default function Clients() {
                 <Field label="Solicitante" value={form.solicitante} onChange={v=>setForm({...form,solicitante:v})} />
                 <Field label="Cargo" value={form.cargo} onChange={v=>setForm({...form,cargo:v})} />
                 <Field label="Qtd. funcionários" type="number" value={String(form.qtd_funcionarios)} onChange={v=>setForm({...form,qtd_funcionarios:v})} />
+                <div className="sm:col-span-2 space-y-2">
+                  <Label>Logomarca para documentos técnicos</Label>
+                  <div className="flex flex-wrap items-center gap-3 rounded-md border p-3">
+                    <div className="flex h-16 w-28 items-center justify-center overflow-hidden rounded border bg-muted/40">
+                      {logoPreview
+                        ? <img src={logoPreview} alt="Logomarca do cliente" className="h-full w-full object-contain p-1" />
+                        : <ImageIcon className="h-7 w-7 text-muted-foreground" />}
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <p className="text-xs text-muted-foreground">
+                        PNG ou JPEG, até 2 MB. A imagem será mantida em armazenamento privado e usada no cabeçalho dos relatórios.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <label className="inline-flex h-9 cursor-pointer items-center rounded-md border bg-background px-3 text-sm font-medium hover:bg-accent">
+                          <Upload className="mr-2 h-4 w-4" />
+                          Escolher imagem
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg"
+                            className="sr-only"
+                            onChange={(event) => selectLogo(event.target.files?.[0])}
+                          />
+                        </label>
+                        {logoPreview && (
+                          <Button type="button" size="sm" variant="ghost" onClick={markLogoForRemoval}>
+                            <X className="mr-2 h-4 w-4" />
+                            Remover
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div className="space-y-1.5 sm:col-span-2">
                   <div className="flex items-center justify-between">
                     <Label>Grupo econômico (holding)</Label>
@@ -133,8 +284,8 @@ export default function Clients() {
                   <Textarea rows={3} value={form.observacoes||""} onChange={e=>setForm({...form,observacoes:e.target.value})} />
                 </div>
                 <div className="sm:col-span-2 flex justify-end gap-2 pt-2">
-                  <Button type="button" variant="outline" onClick={()=>setOpen(false)}>Cancelar</Button>
-                  <Button type="submit">Salvar</Button>
+                  <Button type="button" variant="outline" onClick={()=>setOpen(false)} disabled={saving}>Cancelar</Button>
+                  <Button type="submit" disabled={saving}>{saving ? "Salvando…" : "Salvar"}</Button>
                 </div>
               </form>
             </DialogContent>
