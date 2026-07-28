@@ -60,6 +60,15 @@ export async function validarEmissao(avaliacaoId: string) {
   return sb.rpc("psico_validar_emissao_relatorio", { p_avaliacao_id: avaliacaoId });
 }
 
+export function mensagemFalhaValidacaoEmissao(error: unknown) {
+  const detalhe =
+    error && typeof error === "object" && "message" in error
+      ? String((error as { message?: unknown }).message || "").trim()
+      : "";
+  const base = "Não foi possível validar os pré-requisitos da emissão. Tente atualizar novamente.";
+  return detalhe ? `${base} Detalhe técnico: ${detalhe}` : base;
+}
+
 export async function getRelatorio(avaliacaoId: string) {
   const { data } = await sb
     .from("psico_relatorios")
