@@ -2505,6 +2505,14 @@ export type Database = {
       execucao_profissionais: {
         Row: {
           area: string | null
+          assinatura_ativa: boolean
+          assinatura_carregada_em: string | null
+          assinatura_carregada_por: string | null
+          assinatura_hash_sha256: string | null
+          assinatura_mime_type: string | null
+          assinatura_modo: string
+          assinatura_nome_arquivo: string | null
+          assinatura_storage_path: string | null
           auth_user_id: string | null
           cargo: string | null
           created_at: string
@@ -2522,6 +2530,14 @@ export type Database = {
         }
         Insert: {
           area?: string | null
+          assinatura_ativa?: boolean
+          assinatura_carregada_em?: string | null
+          assinatura_carregada_por?: string | null
+          assinatura_hash_sha256?: string | null
+          assinatura_mime_type?: string | null
+          assinatura_modo?: string
+          assinatura_nome_arquivo?: string | null
+          assinatura_storage_path?: string | null
           auth_user_id?: string | null
           cargo?: string | null
           created_at?: string
@@ -2539,6 +2555,14 @@ export type Database = {
         }
         Update: {
           area?: string | null
+          assinatura_ativa?: boolean
+          assinatura_carregada_em?: string | null
+          assinatura_carregada_por?: string | null
+          assinatura_hash_sha256?: string | null
+          assinatura_mime_type?: string | null
+          assinatura_modo?: string
+          assinatura_nome_arquivo?: string | null
+          assinatura_storage_path?: string | null
           auth_user_id?: string | null
           cargo?: string | null
           created_at?: string
