@@ -34,6 +34,7 @@ import {
   gerarRelatorio,
   getRelatorio,
   listarVersoes,
+  mensagemFalhaValidacaoEmissao,
   REL_STATUS_COLOR,
   REL_STATUS_LABEL,
   RelatorioVersaoStatus,
@@ -71,7 +72,7 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
     setLoading(true);
     const [{ data: val, error: valError }, rel] = await Promise.all([validarEmissao(av.id), getRelatorio(av.id)]);
     setValidacao(val);
-    setValidacaoErro(valError ? "Não foi possível validar os pré-requisitos da emissão. Tente atualizar novamente." : null);
+    setValidacaoErro(valError ? mensagemFalhaValidacaoEmissao(valError) : null);
     setRelatorio(rel);
     if (rel?.id) setVersoes(await listarVersoes(rel.id));
     else setVersoes([]);
