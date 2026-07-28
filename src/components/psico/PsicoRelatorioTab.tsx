@@ -35,6 +35,7 @@ import {
   getRelatorio,
   listarVersoes,
   mensagemFalhaValidacaoEmissao,
+  previewRelatorio,
   REL_STATUS_COLOR,
   REL_STATUS_LABEL,
   RelatorioVersaoStatus,
@@ -59,6 +60,7 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
   const [versoes, setVersoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [gerando, setGerando] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
   const [validacaoErro, setValidacaoErro] = useState<string | null>(null);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -126,14 +128,35 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
   }
 
   async function handlePreview() {
-    const previewUrl = `/operacoes/avaliacao-fatores-psicossociais/avaliacoes/${av.id}/relatorio/preview`;
-    const previewWindow = window.open(previewUrl, "_blank");
+    const previewWindow = window.open("", "_blank");
     if (!previewWindow) {
       toast.error("Permita pop-ups para abrir a prévia do relatório.");
       return;
     }
-    previewWindow.opener = null;
-    toast.info("A prévia será carregada na nova aba.");
+
+    previewWindow.document.title = "Gerando prévia do relatório";
+    previewWindow.document.body.innerHTML =
+      '<p style="font: 16px system-ui; padding: 24px">Gerando prévia do relatório…</p>';
+
+    setPreviewing(true);
+    try {
+      const { blob, error } = await previewRelatorio(av.id);
+      if (error || !blob) {
+        previewWindow.close();
+        toast.error(traduzirErroEmissao(error || "ERRO_RENDERIZACAO"));
+        return;
+      }
+
+      const pdfUrl = URL.createObjectURL(blob);
+      previewWindow.opener = null;
+      previewWindow.location.replace(pdfUrl);
+      window.setTimeout(() => URL.revokeObjectURL(pdfUrl), 5 * 60_000);
+    } catch (error) {
+      previewWindow.close();
+      toast.error(traduzirErroEmissao(error));
+    } finally {
+      setPreviewing(false);
+    }
   }
 
   async function handleRevogar() {
@@ -228,10 +251,10 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
             <Button
               variant="outline"
               onClick={handlePreview}
-              disabled={!podeEmitir || !!emAndamento || gerando}
+              disabled={!podeEmitir || !!emAndamento || gerando || previewing}
             >
-              <Eye className="h-4 w-4 mr-2" />
-              Pré-visualizar
+              {previewing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Eye className="h-4 w-4 mr-2" />}
+              {previewing ? "Gerando prévia…" : "Pré-visualizar"}
             </Button>
 
             <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
