@@ -10276,6 +10276,15 @@ export type Database = {
         }
         Returns: Json
       }
+      psico_aplicar_plano_ia_strict_v1: {
+        Args: {
+          p_modelo_ia?: string
+          p_prompt_codigo?: string
+          p_revisao_id: string
+          p_selecoes: Json
+        }
+        Returns: Json
+      }
       psico_aprovar_revisao_tecnica: {
         Args: { p_confirmacao: string; p_revisao_id: string }
         Returns: Json
