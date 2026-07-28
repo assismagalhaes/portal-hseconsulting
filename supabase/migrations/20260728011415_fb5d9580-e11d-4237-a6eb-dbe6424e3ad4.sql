@@ -1,0 +1,2 @@
+GRANT EXECUTE ON FUNCTION public.psico_aplicar_plano_ia(uuid, jsonb, text, text) TO service_role;
+GRANT EXECUTE ON FUNCTION public.psico_aplicar_plano_ia_strict_v1(uuid, jsonb, text, text) TO service_role;
