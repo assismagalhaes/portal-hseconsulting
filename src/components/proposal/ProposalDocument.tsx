@@ -117,17 +117,18 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   // em páginas A4 preservando o fluxo (um bloco só quebra pra próxima página
   // se não couber inteiro no espaço restante da página atual).
   const fontTitulo = tpl.font_titulo || "Sora";
-  const invChunk = 8;
-  const invChunks: any[][] = [];
-  for (let i = 0; i < items.length; i += invChunk) invChunks.push(items.slice(i, i + invChunk));
-
   const revChunk = 20;
   const revChunks: any[][] = [];
   for (let i = 0; i < revisions.length; i += revChunk) revChunks.push(revisions.slice(i, i + revChunk));
 
   const bodyBlocks: Block[] = [];
-  const push = (label: string, key: string, node: React.ReactNode, keepWithNext = false) =>
-    bodyBlocks.push({ key, label, node, keepWithNext });
+  const push = (
+    label: string,
+    key: string,
+    node: React.ReactNode,
+    keepWithNext: Block["keepWithNext"] = false,
+    pageStartNode?: React.ReactNode,
+  ) => bodyBlocks.push({ key, label, node, keepWithNext, pageStartNode });
 
   // -------- Apresentação --------
   push("Apresentação", "ap-title", <SectionTitle eyebrow="Apresentação" title="Quem somos" accent={accent} primary={primary} />, true);
@@ -264,46 +265,61 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   }
 
   // -------- Investimento --------
-  push("Investimento", "inv-title", <SectionTitle eyebrow="Resumo financeiro" title="Investimento" accent={accent} primary={primary} />, true);
-  let invOffset = 0;
-  invChunks.forEach((chunk, idx) => {
-    const baseOffset = invOffset;
-    invOffset += chunk.length;
-    push("Investimento", "inv-t-" + idx, (
-      <div style={{ marginTop: idx === 0 ? 0 : 6 }}>
+  const investmentColumns = (
+    <colgroup>
+      <col style={{ width: 38 }} />
+      <col />
+      <col style={{ width: 60 }} />
+      <col style={{ width: 110 }} />
+      <col style={{ width: 120 }} />
+    </colgroup>
+  );
+  const investmentHeader = (
+    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+      {investmentColumns}
+      <thead>
+        <tr style={{ background: primary, color: "#fff" }}>
+          <th style={{ padding: "10px 12px", textAlign: "left" }}>#</th>
+          <th style={{ padding: "10px 12px", textAlign: "left" }}>Descrição</th>
+          <th style={{ padding: "10px 12px", textAlign: "right" }}>Qtd</th>
+          <th style={{ padding: "10px 12px", textAlign: "right" }}>Unitário</th>
+          <th style={{ padding: "10px 12px", textAlign: "right" }}>Total</th>
+        </tr>
+      </thead>
+    </table>
+  );
+
+  // O título, o cabeçalho e a primeira linha formam o início mínimo da seção.
+  // As demais linhas são blocos independentes e recebem um cabeçalho quando
+  // iniciam uma página de continuação.
+  push("Investimento", "inv-title", <SectionTitle eyebrow="Resumo financeiro" title="Investimento" accent={accent} primary={primary} />, items.length ? 2 : true);
+  if (items.length) {
+    push("Investimento", "inv-header", investmentHeader, true);
+    items.forEach((it: any, idx: number) => {
+      push("Investimento", `inv-row-${it.id || idx}`, (
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-          <thead>
-            <tr style={{ background: primary, color: "#fff" }}>
-              <th style={{ padding: "10px 12px", textAlign: "left", width: 38 }}>#</th>
-              <th style={{ padding: "10px 12px", textAlign: "left" }}>Descrição</th>
-              <th style={{ padding: "10px 12px", textAlign: "right", width: 60 }}>Qtd</th>
-              <th style={{ padding: "10px 12px", textAlign: "right", width: 110 }}>Unitário</th>
-              <th style={{ padding: "10px 12px", textAlign: "right", width: 120 }}>Total</th>
-            </tr>
-          </thead>
+          {investmentColumns}
           <tbody>
-            {chunk.map((it: any, i: number) => (
-              <tr key={it.id} style={{ background: i % 2 ? neutral : "#fff", verticalAlign: "top" }}>
-                <td style={{ padding: "10px 12px", fontFamily: "monospace", color: "#64748b" }}>{String(baseOffset + i + 1).padStart(2, "0")}</td>
-                <td style={{ padding: "10px 12px" }}>
-                  <div style={{ fontWeight: 600, color: "#0f172a" }}>{titleOf(it)}</div>
-                  {it.categoria && <div style={{ fontSize: 10, color: "#64748b" }}>{it.categoria}</div>}
-                  {it.observacoes_escopo && (
-                    <div style={{ marginTop: 4, fontSize: 10.5, color: "#64748b", fontStyle: "italic", whiteSpace: "pre-line" }}>
-                      Obs.: {it.observacoes_escopo}
-                    </div>
-                  )}
-                </td>
-                <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace" }}>{it.quantidade}</td>
-                <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace" }}>{brl(it.valor_unitario)}</td>
-                <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace", fontWeight: 700 }}>{brl(it.valor_total)}</td>
-              </tr>
-            ))}
+            <tr style={{ background: idx % 2 ? neutral : "#fff", verticalAlign: "top" }}>
+              <td style={{ padding: "10px 12px", fontFamily: "monospace", color: "#64748b" }}>{String(idx + 1).padStart(2, "0")}</td>
+              <td style={{ padding: "10px 12px" }}>
+                <div style={{ fontWeight: 600, color: "#0f172a" }}>{titleOf(it)}</div>
+                {it.categoria && <div style={{ fontSize: 10, color: "#64748b" }}>{it.categoria}</div>}
+                {it.observacoes_escopo && (
+                  <div style={{ marginTop: 4, fontSize: 10.5, color: "#64748b", fontStyle: "italic", whiteSpace: "pre-line" }}>
+                    Obs.: {it.observacoes_escopo}
+                  </div>
+                )}
+              </td>
+              <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace" }}>{it.quantidade}</td>
+              <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace" }}>{brl(it.valor_unitario)}</td>
+              <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace", fontWeight: 700 }}>{brl(it.valor_total)}</td>
+            </tr>
           </tbody>
         </table>
-      </div>
-    ));
-  });
+      ), false, idx > 0 ? investmentHeader : undefined);
+    });
+  }
   push("Investimento", "inv-totals", (
     <div style={{ marginTop: 22, display: "flex", justifyContent: "flex-end" }}>
       <div style={{ minWidth: 320 }}>
