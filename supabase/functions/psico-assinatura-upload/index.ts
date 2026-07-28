@@ -34,26 +34,37 @@ Deno.serve(async (req) => {
 
     const contentType = req.headers.get("content-type") ?? "";
     let targetUserId = authData.user.id;
+    let targetOrigin: "perfil" | "profissional" = "perfil";
     let mode = "imagem";
     let file: File | null = null;
     if (contentType.includes("application/json")) {
       const body = await req.json();
       targetUserId = String(body?.responsavel_tecnico_id ?? authData.user.id);
+      targetOrigin = body?.responsavel_origem === "profissional" ? "profissional" : "perfil";
       mode = String(body?.modo ?? "em_branco");
     } else {
       const form = await req.formData();
       targetUserId = String(form.get("responsavel_tecnico_id") ?? authData.user.id);
+      targetOrigin = form.get("responsavel_origem") === "profissional" ? "profissional" : "perfil";
       file = form.get("arquivo") as File | null;
     }
 
     const { data: roleRows } = await userClient.from("user_roles").select("role").eq("user_id", authData.user.id);
     const isAdmin = (roleRows ?? []).some((row: { role: string }) => row.role === "admin");
-    if (targetUserId !== authData.user.id && !isAdmin) return json({ error: "FORBIDDEN" }, 403);
+    if ((targetOrigin === "profissional" || targetUserId !== authData.user.id) && !isAdmin) {
+      return json({ error: "FORBIDDEN" }, 403);
+    }
     if (!/^[0-9a-f-]{36}$/i.test(targetUserId)) return json({ error: "RESPONSAVEL_INVALIDO" }, 400);
+    const targetTable = targetOrigin === "profissional" ? "execucao_profissionais" : "profiles";
+    const auditEntity = targetOrigin === "profissional" ? "execucao_profissional" : "profile";
+    let targetQuery = admin.from(targetTable).select("id").eq("id", targetUserId);
+    if (targetOrigin === "profissional") targetQuery = targetQuery.eq("situacao", "ativo");
+    const { data: targetRecord, error: targetError } = await targetQuery.maybeSingle();
+    if (targetError || !targetRecord) return json({ error: "RESPONSAVEL_NAO_LOCALIZADO" }, 404);
 
     if (mode === "em_branco") {
-      const { error } = await admin.from("profiles").update({ assinatura_modo: "em_branco" }).eq("id", targetUserId);
-      if (!error) await admin.from("psico_auditoria").insert({ entidade: "profile", entidade_id: targetUserId, acao: "assinatura_relatorio_em_branco", metadados: { alterado_por: authData.user.id }, usuario_id: authData.user.id });
+      const { error } = await admin.from(targetTable).update({ assinatura_modo: "em_branco" }).eq("id", targetUserId);
+      if (!error) await admin.from("psico_auditoria").insert({ entidade: auditEntity, entidade_id: targetUserId, acao: "assinatura_relatorio_em_branco", metadados: { alterado_por: authData.user.id, origem: targetOrigin }, usuario_id: authData.user.id });
       return error ? json({ error: "CONFIGURACAO_NAO_SALVA", detalhe: error.message }, 400) : json({ ok: true, modo: "em_branco" });
     }
 
@@ -63,11 +74,11 @@ Deno.serve(async (req) => {
     if (!detected) return json({ error: "CONTEUDO_NAO_E_PNG_OU_JPEG" }, 400);
     const digest = await crypto.subtle.digest("SHA-256", bytes);
     const hash = Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
-    const path = `${targetUserId}/${crypto.randomUUID()}.${detected.ext}`;
+    const path = `${targetOrigin}/${targetUserId}/${crypto.randomUUID()}.${detected.ext}`;
     const upload = await admin.storage.from("psico-assinaturas").upload(path, bytes, { contentType: detected.mime, upsert: false, cacheControl: "3600" });
     if (upload.error) return json({ error: "UPLOAD_FALHOU", detalhe: upload.error.message }, 400);
 
-    const { error: updateError } = await admin.from("profiles").update({
+    const { error: updateError } = await admin.from(targetTable).update({
       assinatura_modo: "imagem", assinatura_storage_path: path,
       assinatura_nome_arquivo: file.name.slice(0, 240), assinatura_mime_type: detected.mime,
       assinatura_hash_sha256: hash, assinatura_carregada_por: authData.user.id,
@@ -77,7 +88,7 @@ Deno.serve(async (req) => {
       await admin.storage.from("psico-assinaturas").remove([path]);
       return json({ error: "CONFIGURACAO_NAO_SALVA", detalhe: updateError.message }, 400);
     }
-    await admin.from("psico_auditoria").insert({ entidade: "profile", entidade_id: targetUserId, acao: "assinatura_relatorio_imagem_atualizada", metadados: { mime_type: detected.mime, hash_sha256: hash, alterado_por: authData.user.id }, usuario_id: authData.user.id });
+    await admin.from("psico_auditoria").insert({ entidade: auditEntity, entidade_id: targetUserId, acao: "assinatura_relatorio_imagem_atualizada", metadados: { mime_type: detected.mime, hash_sha256: hash, alterado_por: authData.user.id, origem: targetOrigin }, usuario_id: authData.user.id });
     return json({ ok: true, modo: "imagem", mime_type: detected.mime, hash_sha256: hash });
   } catch (error) {
     console.error("[psico-assinatura-upload]", { code: error instanceof Error ? error.name : "UNKNOWN" });

@@ -128,17 +128,21 @@ Modalidade: ${modoColeta}.`;
           (o || []).forEach((x: any) => { map[x.fator_codigo] = x; });
           setOrient(map);
         }
-        const [{ data: responsaveis }, { data: perfis }] = await Promise.all([
+        const [{ data: responsaveis }, { data: perfis }, { data: profissionais }] = await Promise.all([
           (supabase as any).rpc("psico_ind_listar_responsaveis"),
           (supabase as any).from("profiles")
             .select("id, nome, email, cargo, registro_profissional, assinatura_modo, assinatura_ativa, assinatura_nome_arquivo, assinatura_mime_type")
             .order("nome"),
+          (supabase as any).from("execucao_profissionais")
+            .select("id, assinatura_modo, assinatura_ativa, assinatura_nome_arquivo, assinatura_mime_type")
+            .eq("situacao", "ativo"),
         ]);
         const perfilPorId = new Map((perfis || []).map((perfil: any) => [perfil.id, perfil]));
+        const profissionalPorId = new Map((profissionais || []).map((profissional: any) => [profissional.id, profissional]));
         const listaResponsaveis = (responsaveis || []).map((responsavel: any) => (
           responsavel.origem === "perfil"
             ? { ...responsavel, ...(perfilPorId.get(responsavel.id) as object || {}) }
-            : responsavel
+            : { ...responsavel, ...(profissionalPorId.get(responsavel.id) as object || {}) }
         ));
         setProfiles(listaResponsaveis);
         const history = await getParecerHistorico(r.id);
@@ -281,15 +285,18 @@ Modalidade: ${modoColeta}.`;
 
   async function configurarAssinatura(mode: "em_branco" | "imagem", file?: File) {
     const target = form.responsavel_tecnico_id;
+    const selected = profiles.find((profile) => profile.id === target);
     if (!target) { toast.error("Selecione o responsável técnico primeiro"); return; }
+    if (!selected) { toast.error("Responsável técnico não localizado"); return; }
     setUploadingSignature(true);
     let body: FormData | Record<string, string>;
     if (mode === "imagem" && file) {
       const formData = new FormData();
       formData.append("responsavel_tecnico_id", target);
+      formData.append("responsavel_origem", selected.origem);
       formData.append("arquivo", file);
       body = formData;
-    } else body = { responsavel_tecnico_id: target, modo: "em_branco" };
+    } else body = { responsavel_tecnico_id: target, responsavel_origem: selected.origem, modo: "em_branco" };
     const { data, error } = await supabase.functions.invoke("psico-assinatura-upload", { body });
     setUploadingSignature(false);
     if (error || !data?.ok) { toast.error(data?.error || error?.message || "Não foi possível configurar a assinatura"); return; }
@@ -515,23 +522,13 @@ Modalidade: ${modoColeta}.`;
           {!readOnly && form.responsavel_tecnico_id && (() => {
             const selected = profiles.find((profile) => profile.id === form.responsavel_tecnico_id);
             if (!selected) return null;
-            if (selected.origem === "profissional") {
-              return (
-                <div className="rounded-md border bg-muted/30 p-3">
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <FileSignature className="h-4 w-4" /> Assinatura no relatório
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Profissional cadastrado sem usuário do sistema. O relatório reservará o espaço para assinatura
-                    manual e congelará nome, cargo e registro profissional na aprovação.
-                  </p>
-                </div>
-              );
-            }
             return (
             <div className="rounded-md border p-3 space-y-2">
               <div className="flex items-center gap-2 text-sm font-medium"><FileSignature className="h-4 w-4" /> Assinatura no relatório</div>
-              <p className="text-xs text-muted-foreground">A imagem é opcional, privada e será congelada como referência quando a revisão for aprovada.</p>
+              <p className="text-xs text-muted-foreground">
+                A imagem é opcional, privada e será congelada como referência quando a revisão for aprovada.
+                {selected.origem === "profissional" ? " O envio deve ser realizado por um administrador autorizado." : ""}
+              </p>
               <div className="flex flex-wrap gap-2">
                 <Button type="button" size="sm" variant="outline" disabled={uploadingSignature} onClick={() => configurarAssinatura("em_branco")}>Deixar espaço em branco</Button>
                 <Label className="inline-flex h-9 cursor-pointer items-center rounded-md border border-input bg-background px-3 text-sm hover:bg-accent">
