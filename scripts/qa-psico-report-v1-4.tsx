@@ -1,4 +1,4 @@
-// Gera os 18 cenários editoriais obrigatórios sem consultar banco ou dados reais.
+// Gera os 18 cenários editoriais obrigatórios da v1.6 sem consultar banco ou dados reais.
 // @deno-types="npm:@types/react@18.3.3"
 import React from "npm:react@18.3.1";
 import { renderToBuffer } from "npm:@react-pdf/renderer@3.4.5";
@@ -83,12 +83,12 @@ const scenarios: Scenario[] = [
   { name: "17-cliente-nome-longo", significant: 2, longClient: true }, { name: "18-relatorio-r01", significant: 2, revision: "R01" },
 ];
 
-const output = Deno.args[0] || "output/pdf/v1.4.0";
+const output = Deno.args[0] || "output/pdf/v1.6.0";
 await Deno.mkdir(output, { recursive: true });
 for (const [index, scenario] of scenarios.entries()) {
   const fs = factors(scenario.significant);
   const snapshot = {
-    modelo: { codigo: "HSE-PSICO-REL-1.0", versao: "1.4.0" },
+    modelo: { codigo: "HSE-PSICO-REL-1.0", versao: "1.6.0" },
     origem: { coleta: scenario.origin || "portal", importacao: scenario.origin === "importacao_bruta" ? { id: "qa-importacao" } : null },
     avaliacao: { codigo: scenario.origin === "importacao_bruta" ? "IMP-QA-0001" : "AFP-QA-0001", periodo: { inicio: "2026-07-01", fim: "2026-07-20" }, metodologia: { codigo: "HSE-PSICO-2.0", versao: "2.0", criterio_principal_percentual: 50, criterio_agravamento_percentual: 30, criterio_critico_percentual: 10 } },
     resultado: { total_participantes: scenario.respondents ?? 18, participantes_elegiveis: 20, percentual_participacao: 90, indice_geral_descritivo: 1.84, fatores_significativos: scenario.significant, prioridade_maxima: scenario.significant ? "critica" : "monitoramento", amostra_reduzida: (scenario.respondents ?? 18) < 5 },
@@ -96,7 +96,7 @@ for (const [index, scenario] of scenarios.entries()) {
     fatores: fs, perguntas: questions(), plano: { itens: actions(scenario.actionCount ?? Math.max(1, scenario.significant), scenario.manyExamples) },
   };
   const clientName = scenario.longClient ? "ORGANIZAÇÃO DE SERVIÇOS INTEGRADOS, DESENVOLVIMENTO HUMANO E SOLUÇÕES OPERACIONAIS DO NORDESTE LTDA" : "Empresa de Homologação HSE";
-  const buffer = await renderToBuffer(<PsychosocialReportDocument snapshot={snapshot} codigoRafp={`RAFP-QA-${String(index + 1).padStart(4, "0")}`} codigoRev={scenario.revision || "R00"} codigoValidacao="QA-V1-4" cliente={{ nome: clientName, razao_social: clientName, cnpj_cpf: "12345678000190", endereco: "Avenida da Homologação", numero: "100", bairro: "Centro", cidade: "Fortaleza", uf: "CE", cep: "60000-000" }} empresa={{ telefone: "(85) 9.9142-6534", email: "contato@hseconsulting.com.br", site: "hseconsulting.com.br" }} dataEmissao="2026-07-20T16:00:00Z" assinaturaDataUrl={scenario.signature ? HSE_LOGO_GREEN_DATA_URL : undefined} />);
+  const buffer = await renderToBuffer(<PsychosocialReportDocument snapshot={snapshot} codigoRafp={`RAFP-QA-${String(index + 1).padStart(4, "0")}`} codigoRev={scenario.revision || "R00"} codigoValidacao="QA-V1-6" cliente={{ nome: clientName, razao_social: clientName, cnpj_cpf: "12345678000190", endereco: "Avenida da Homologação", numero: "100", bairro: "Centro", cidade: "Fortaleza", uf: "CE", cep: "60000-000" }} empresa={{ telefone: "(85) 9.9142-6534", email: "contato@hseconsulting.com.br", site: "hseconsulting.com.br" }} dataEmissao="2026-07-20T16:00:00Z" assinaturaDataUrl={scenario.signature ? HSE_LOGO_GREEN_DATA_URL : undefined} clientLogoDataUrl={scenario.name === "01-sem-fator-significativo" ? HSE_LOGO_GREEN_DATA_URL : undefined} />);
   await Deno.writeFile(`${output}/${scenario.name}.pdf`, new Uint8Array(buffer));
   console.log(`${scenario.name}.pdf`);
 }

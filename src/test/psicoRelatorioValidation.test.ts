@@ -62,6 +62,10 @@ const reportV14Migration = readFileSync(
   resolve("supabase/migrations/20260720165358_psico_report_v1_4_conclusion_signature.sql"),
   "utf8",
 );
+const reportClientBrandingMigration = readFileSync(
+  resolve("supabase/migrations/20260728183448_add_client_report_branding.sql"),
+  "utf8",
+);
 const opinionFunction = readFileSync(
   resolve("supabase/functions/psico-gerar-parecer/index.ts"),
   "utf8",
@@ -221,12 +225,48 @@ describe("metadados seguros do PDF psicossocial", () => {
       /export const REPORT_MODEL_VERSION = "([^"]+)"/,
     )?.[1];
 
-    // Versão editorial vigente (Onda B v1.5.x); v1.4.0 é o piso da RPC.
-    expect(edgeVersion).toMatch(/^1\.[4-9]\.\d+$/);
+    expect(edgeVersion).toBe("1.6.0");
     expect(reportV14Migration).toContain("v_modelo_versao text := ''1.4.0''");
     expect(reportV14Migration).toContain(
       "psico_preparar_emissao_relatorio(uuid,text,text)",
     );
+  });
+
+  it("mantém a logomarca do cliente privada, validada e versionada no snapshot", () => {
+    expect(reportClientBrandingMigration).toContain("'client-branding'");
+    expect(reportClientBrandingMigration).toContain("false,\n  2097152");
+    expect(reportClientBrandingMigration).toContain("ARRAY['image/png', 'image/jpeg']");
+    expect(reportClientBrandingMigration).toContain("FOR SELECT");
+    expect(reportClientBrandingMigration).toContain("FOR INSERT");
+    expect(reportClientBrandingMigration).toContain("FOR UPDATE");
+    expect(reportClientBrandingMigration).toContain("FOR DELETE");
+    expect(reportClientBrandingMigration).toContain("public.can_see_internal((SELECT auth.uid()))");
+    expect(reportClientBrandingMigration).toContain("'logo_hash_sha256', c.logo_hash_sha256");
+    expect(reportClientBrandingMigration).toContain("v_modelo_versao text := ''1.6.0''");
+    expect(reportFunction).toContain('from("client-branding").download(path)');
+    expect(reportFunction).toContain('digest("SHA-256"');
+    expect(reportFunction).toContain("actualHash !== expectedHash");
+    expect(reportDocument).toContain("clientLogoDataUrl");
+    expect(reportDocument).toContain("<Image src={clientLogoSrc}");
+  });
+
+  it("traduz percentuais em contagens e apresenta todos os fatores sem rótulo de continuação", () => {
+    expect(reportDocument).toContain("participantPhrase");
+    expect(reportDocument).toContain("questionAttentionText");
+    expect(reportDocument).toContain("detailedFactors");
+    expect(reportDocument).toContain("summarizedFactors");
+    expect(reportDocument).toContain("Demais fatores avaliados");
+    expect(reportDocument).not.toContain("· continuação");
+    expect(reportDocument).not.toContain("Monitoramento preventivo ·");
+  });
+
+  it("separa a identidade do cliente no cabeçalho e a HSE no rodapé", () => {
+    expect(reportDocument).toContain("headerClientLogo");
+    expect(reportDocument).toContain("headerClientName");
+    expect(reportDocument).toContain("footerLogo");
+    expect(reportDocument).toContain("HSE Consulting");
+    expect(reportDocument).toContain("Acompanhamento:");
+    expect(reportDocument).toContain("Dentro dos limites");
   });
 
   it("inclui somente indicadores agregados no resumo executivo", () => {
