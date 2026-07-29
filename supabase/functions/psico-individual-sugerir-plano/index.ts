@@ -164,7 +164,17 @@ Deno.serve(async (req) => {
   if (!avaliacaoId) return json(400, { error: "avaliacao_id_obrigatorio" });
 
   const admin = createClient(url, service);
-  const { data: canSee } = await admin.rpc("can_see_internal", { _user: userData.user.id });
+  const { data: canSee, error: canSeeError } = await admin.rpc("can_see_internal", {
+    _user_id: userData.user.id,
+  });
+  if (canSeeError) {
+    console.error("psico-individual-sugerir-plano: falha ao validar acesso interno", {
+      user_id: userData.user.id,
+      code: canSeeError.code,
+      message: canSeeError.message,
+    });
+    return json(500, { error: "autorizacao_interna_falhou" });
+  }
   if (!canSee) return json(403, { error: "forbidden" });
 
   // Contexto sanitizado (RPC exige service_role)

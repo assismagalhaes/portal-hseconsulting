@@ -44,7 +44,17 @@ Deno.serve(async (req) => {
   const admin = createClient(url, service);
 
   // Confirma que o usuário é interno
-  const { data: canSee } = await admin.rpc("can_see_internal", { _user: userData.user.id });
+  const { data: canSee, error: canSeeError } = await admin.rpc("can_see_internal", {
+    _user_id: userData.user.id,
+  });
+  if (canSeeError) {
+    console.error("psico-individual-processar: falha ao validar acesso interno", {
+      user_id: userData.user.id,
+      code: canSeeError.code,
+      message: canSeeError.message,
+    });
+    return json(500, { error: "autorizacao_interna_falhou" });
+  }
   if (!canSee) return json(403, { error: "forbidden" });
 
   // Confirma modalidade individual e recupera formulários/entradas
