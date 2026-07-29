@@ -66,6 +66,10 @@ const reportClientBrandingMigration = readFileSync(
   resolve("supabase/migrations/20260728183448_add_client_report_branding.sql"),
   "utf8",
 );
+const reportBrandingFooterMigration = readFileSync(
+  resolve("supabase/migrations/20260729135149_bump_psico_report_branding_footer_v1_6_1.sql"),
+  "utf8",
+);
 const opinionFunction = readFileSync(
   resolve("supabase/functions/psico-gerar-parecer/index.ts"),
   "utf8",
@@ -225,7 +229,9 @@ describe("metadados seguros do PDF psicossocial", () => {
       /export const REPORT_MODEL_VERSION = "([^"]+)"/,
     )?.[1];
 
-    expect(edgeVersion).toBe("1.6.0");
+    expect(edgeVersion).toBe("1.6.1");
+    expect(reportBrandingFooterMigration).toContain("v_modelo_versao text := ''1.6.0''");
+    expect(reportBrandingFooterMigration).toContain("v_modelo_versao text := ''1.6.1''");
     expect(reportV14Migration).toContain("v_modelo_versao text := ''1.4.0''");
     expect(reportV14Migration).toContain(
       "psico_preparar_emissao_relatorio(uuid,text,text)",
@@ -325,6 +331,14 @@ describe("metadados seguros do PDF psicossocial", () => {
     expect(reportDocument).toContain("Como implementar");
     expect(reportDocument).toContain("Exemplos de aplicação");
     expect(reportDocument).toContain("Indicador de eficácia");
+    expect(reportDocument).toContain("organizationLogo");
+    expect(reportDocument).toContain("clientLogoDataUrl");
+    expect(reportDocument).toContain("HSE Consulting · {companyContacts}");
+    expect(reportDocument).toContain("(85) 9.9142-6534");
+    expect(reportDocument).toContain("contato@hseconsulting.com.br");
+    expect(reportDocument).toContain("www.hseconsulting.com.br");
+    expect(reportDocument).toContain("sentenceCase(evidenceText(action?.evidencias))");
+    expect(reportDocument).toContain("sentenceCase(editorialText(action?.indicador_eficacia");
   });
 
   it("mantém parecer com IA sob versionamento e aprovação humana", () => {
