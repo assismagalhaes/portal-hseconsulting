@@ -50,4 +50,11 @@ describe("gates do plano de ação coletivo", () => {
     expect(source).not.toContain("Não bloqueiam o plano");
     expect(source).not.toContain("Serão preenchidos na Revisão Técnica");
   });
+
+  it("deixa o alerta de aprovação somente na aba operacional da revisão", () => {
+    const source = fs.readFileSync(consolidatedApprovalPath, "utf8");
+    expect(source).toContain('etapa === "plano" && errosBloqueantes.length > 0');
+    expect(source).not.toContain("Pendências que impedem a aprovação");
+    expect(source).toContain("Pendências que impedem revisar o plano");
+  });
 });

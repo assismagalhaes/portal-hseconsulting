@@ -91,7 +91,7 @@ export default function PsicoAprovacaoConsolidada({
   const aprovada = statusRev === "aprovada";
   const erros: string[] = val?.erros || [];
   const errosPorEtapa = separarErrosPorEtapa(erros);
-  const errosBloqueantes = etapa === "plano" ? errosPorEtapa.plano : erros;
+  const errosBloqueantes = errosPorEtapa.plano;
   const planoSemAcoesValido = etapa === "plano"
     && val?.itens === 0
     && errosPorEtapa.plano.length === 0;
@@ -177,12 +177,10 @@ export default function PsicoAprovacaoConsolidada({
         </div>
       )}
 
-      {errosBloqueantes.length > 0 && !aprovada && (
+      {etapa === "plano" && errosBloqueantes.length > 0 && !aprovada && (
         <Alert variant="destructive">
           <XCircle className="h-4 w-4" />
-          <AlertTitle>
-            {etapa === "plano" ? "Pendências que impedem revisar o plano" : "Pendências que impedem a aprovação"}
-          </AlertTitle>
+          <AlertTitle>Pendências que impedem revisar o plano</AlertTitle>
           <AlertDescription>
             <ul className="list-disc pl-5 text-sm">
               {errosBloqueantes.map((e, i) => <li key={i}>{traduzirErro(e)}</li>)}
