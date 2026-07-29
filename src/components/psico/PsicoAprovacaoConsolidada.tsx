@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle2, XCircle, Circle, ClipboardCheck, ShieldCheck, Clock3 } from "lucide-react";
+import { CheckCircle2, XCircle, Circle, ClipboardCheck, ShieldCheck } from "lucide-react";
 import {
   STATUS_REVISAO_COLOR, STATUS_REVISAO_LABEL, RevisaoStatus,
   traduzirErro, validarRevisao, getRevisaoAtiva,
@@ -92,7 +92,6 @@ export default function PsicoAprovacaoConsolidada({
   const erros: string[] = val?.erros || [];
   const errosPorEtapa = separarErrosPorEtapa(erros);
   const errosBloqueantes = etapa === "plano" ? errosPorEtapa.plano : erros;
-  const pendenciasEtapaPosterior = etapa === "plano" ? errosPorEtapa.revisao : [];
   const planoSemAcoesValido = etapa === "plano"
     && val?.itens === 0
     && errosPorEtapa.plano.length === 0;
@@ -192,34 +191,6 @@ export default function PsicoAprovacaoConsolidada({
         </Alert>
       )}
 
-      {pendenciasEtapaPosterior.length > 0 && !aprovada && (
-        <div className="rounded-xl border border-sky-200 bg-sky-50/60 p-4 dark:border-sky-900 dark:bg-sky-950/20">
-          <div className="flex items-start gap-3">
-            <div className="rounded-full bg-sky-100 p-2 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300">
-              <Clock3 className="h-5 w-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="font-medium text-sky-950 dark:text-sky-100">Itens da próxima etapa</h3>
-                <Badge variant="outline" className="border-sky-200 bg-white/70 text-sky-700">
-                  Não bloqueiam o plano
-                </Badge>
-              </div>
-              <p className="mt-1 text-sm text-sky-900/70 dark:text-sky-200/75">
-                Serão preenchidos na Revisão Técnica antes da aprovação final.
-              </p>
-              <ul className="mt-2 grid gap-1 text-sm text-sky-950/80 dark:text-sky-100/80 md:grid-cols-2">
-                {pendenciasEtapaPosterior.map((e, i) => (
-                  <li key={i} className="flex items-start gap-2">
-                    <Circle className="mt-1 h-2.5 w-2.5 shrink-0 fill-current" />
-                    {traduzirErro(e)}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
