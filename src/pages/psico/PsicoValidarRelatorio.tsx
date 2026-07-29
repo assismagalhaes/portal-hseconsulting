@@ -1,23 +1,25 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { AlertTriangle, CheckCircle2, Loader2, ShieldCheck, ShieldX } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle, CheckCircle2, Loader2, ShieldCheck, ShieldX } from "lucide-react";
-import { validarPublico } from "@/lib/psicoRelatorio";
 import { formatDateTime } from "@/lib/format";
+import { validarPublico } from "@/lib/psicoRelatorio";
 
-/**
- * Página pública para validação da autenticidade de um Relatório de
- * Avaliação de Fatores Psicossociais (RAFP) emitido pelo Portal HSE.
- * Não expõe conteúdo do relatório — apenas metadados de autenticidade.
- */
+const VALIDATION_CODE_PATTERN = /[0-9a-f]{4}(?:-[0-9a-f]{4}){7}/i;
+
+export function normalizeValidationCode(value: string) {
+  const extracted = value.match(VALIDATION_CODE_PATTERN)?.[0];
+  return (extracted ?? value.replace(/\s+/g, "")).trim().toUpperCase();
+}
+
 export default function PsicoValidarRelatorio() {
   const [sp, setSp] = useSearchParams();
-  const [codigo, setCodigo] = useState(sp.get("codigo") || "");
+  const [codigo, setCodigo] = useState(() => normalizeValidationCode(sp.get("codigo") || ""));
   const [loading, setLoading] = useState(false);
   const [res, setRes] = useState<any>(null);
   const [buscou, setBuscou] = useState(false);
@@ -27,37 +29,48 @@ export default function PsicoValidarRelatorio() {
   }, []);
 
   async function consultar(cod: string) {
-    if (!cod || cod.trim().length < 20) {
-      setRes({ valido: false });
+    const normalizado = normalizeValidationCode(cod);
+    setCodigo(normalizado);
+
+    if (normalizado.length < 20) {
+      setRes({ encontrado: false, valido: false });
       setBuscou(true);
       return;
     }
+
     setLoading(true);
-    const { data, error } = await validarPublico(cod.trim());
+    const { data, error } = await validarPublico(normalizado);
     setLoading(false);
     setBuscou(true);
+
     if (error) {
-      setRes({ valido: false, _erro: error.message });
+      setRes({ encontrado: false, valido: false, _erro: error.message });
       return;
     }
+
     setRes(data);
   }
 
   useEffect(() => {
     const q = sp.get("codigo");
-    if (q) consultar(q);
+    if (q) void consultar(q);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setSp(codigo ? { codigo } : {});
-    consultar(codigo);
+  function submit(event: React.FormEvent) {
+    event.preventDefault();
+    const normalizado = normalizeValidationCode(codigo);
+    setSp(normalizado ? { codigo: normalizado } : {});
+    void consultar(normalizado);
   }
 
+  const encontrado = res?.encontrado === undefined ? !!res?.valido : !!res.encontrado;
   const valido = !!res?.valido;
-  const statusTxt: string = res?.status || "";
-  const revogado = statusTxt === "Revogado";
+  const erroConsulta = !!res?._erro;
+  const status: string = res?.status || "";
+  const emitido = status === "Emitido";
+  const substituido = status === "Substituído";
+  const revogado = status === "Revogado";
 
   return (
     <div className="min-h-dvh bg-muted/30 py-10 px-4">
@@ -68,7 +81,7 @@ export default function PsicoValidarRelatorio() {
           </div>
           <h1 className="text-2xl font-bold">Validação de Relatório</h1>
           <p className="text-sm text-muted-foreground">
-            Verifique a autenticidade de um Relatório de Avaliação de Fatores Psicossociais emitido pelo Portal HSE.
+            Confirme a autenticidade e a situação atual de um Relatório de Avaliação de Fatores Psicossociais.
           </p>
         </header>
 
@@ -79,19 +92,26 @@ export default function PsicoValidarRelatorio() {
           <CardContent>
             <form onSubmit={submit} className="space-y-3">
               <div>
-                <Label>Cole o código impresso na capa do relatório</Label>
+                <Label>Cole o código ou o texto completo impresso no relatório</Label>
                 <Input
                   value={codigo}
-                  onChange={(e) => setCodigo(e.target.value)}
-                  placeholder="Ex.: 3f9c1b7e4a...(código de 128 bits)"
+                  onChange={(event) => setCodigo(event.target.value)}
+                  placeholder="Ex.: 56B4-2E6A-BACE-821B-75DD-D258-383B-7A91"
                   className="font-mono"
+                  autoCapitalize="characters"
+                  spellCheck={false}
                 />
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Letras maiúsculas ou minúsculas e espaços são aceitos.
+                </p>
               </div>
               <Button type="submit" disabled={loading} className="w-full sm:w-auto">
                 {loading ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Verificando…</>
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Verificando…
+                  </>
                 ) : (
-                  <>Validar</>
+                  "Validar"
                 )}
               </Button>
             </form>
@@ -101,13 +121,28 @@ export default function PsicoValidarRelatorio() {
         {buscou && !loading && (
           <Card>
             <CardContent className="py-6">
-              {!valido ? (
+              {erroConsulta ? (
+                <Alert variant="destructive">
+                  <ShieldX className="h-4 w-4" />
+                  <AlertTitle>Não foi possível validar agora</AlertTitle>
+                  <AlertDescription>
+                    O serviço de validação não respondeu. Tente novamente em alguns instantes.
+                  </AlertDescription>
+                </Alert>
+              ) : !encontrado ? (
                 <Alert variant="destructive">
                   <ShieldX className="h-4 w-4" />
                   <AlertTitle>Código não localizado</AlertTitle>
                   <AlertDescription>
-                    Não encontramos nenhum relatório emitido com este código. Verifique se copiou o valor
-                    completo, sem espaços em branco.
+                    Não encontramos um documento associado a este código. Confira se o valor foi copiado integralmente.
+                  </AlertDescription>
+                </Alert>
+              ) : !valido ? (
+                <Alert variant="destructive">
+                  <ShieldX className="h-4 w-4" />
+                  <AlertTitle>Documento indisponível</AlertTitle>
+                  <AlertDescription>
+                    O código foi reconhecido, mas esta emissão não está disponível como documento oficial.
                   </AlertDescription>
                 </Alert>
               ) : revogado ? (
@@ -115,41 +150,53 @@ export default function PsicoValidarRelatorio() {
                   <AlertTriangle className="h-4 w-4" />
                   <AlertTitle>Relatório revogado</AlertTitle>
                   <AlertDescription>
-                    Este código corresponde a uma versão que foi <strong>revogada</strong> pela HSE Consulting
-                    e não deve mais ser utilizada como referência oficial.
+                    Esta versão foi revogada pela HSE Consulting e não deve ser utilizada como referência oficial.
+                  </AlertDescription>
+                </Alert>
+              ) : substituido ? (
+                <Alert className="border-amber-300 bg-amber-50 text-amber-950">
+                  <AlertTriangle className="h-4 w-4 text-amber-700" />
+                  <AlertTitle>Versão autêntica, mas substituída</AlertTitle>
+                  <AlertDescription>
+                    Esta revisão pertence ao histórico do relatório, mas não é mais a versão vigente.
+                    {res.revisao_vigente ? (
+                      <> A revisão vigente é <strong>{res.revisao_vigente}</strong>.</>
+                    ) : null}
                   </AlertDescription>
                 </Alert>
               ) : (
-                <Alert>
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  <AlertTitle className="text-emerald-700">Relatório autêntico</AlertTitle>
+                <Alert className="border-emerald-300 bg-emerald-50 text-emerald-950">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-700" />
+                  <AlertTitle>Relatório autêntico e vigente</AlertTitle>
                   <AlertDescription>
-                    Emitido pelo Portal HSE Consulting. Os metadados abaixo confirmam a integridade do documento.
+                    Os metadados abaixo confirmam a emissão oficial pelo Portal HSE Consulting.
                   </AlertDescription>
                 </Alert>
               )}
 
-              {valido && (
-                <div className="mt-5 grid gap-3 sm:grid-cols-2 text-sm">
+              {encontrado && (
+                <div className="mt-5 grid gap-4 sm:grid-cols-2 text-sm">
+                  <div className="sm:col-span-2 rounded-lg border bg-muted/30 p-4">
+                    <Info label="Organização avaliada" value={res.organizacao || "Não informada"} />
+                    {res.cnpj_mascarado ? (
+                      <div className="mt-2">
+                        <Info label="CNPJ" value={<span className="font-mono">{res.cnpj_mascarado}</span>} />
+                      </div>
+                    ) : null}
+                  </div>
                   <Info label="Código RAFP" value={<span className="font-mono">{res.codigo_rafp}</span>} />
-                  <Info label="Revisão" value={<span className="font-mono">{res.codigo_revisao}</span>} />
+                  <Info label="Revisão consultada" value={<span className="font-mono">{res.codigo_revisao}</span>} />
                   <Info
                     label="Situação"
-                    value={
-                      <Badge
-                        className={
-                          statusTxt === "Emitido"
-                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
-                            : statusTxt === "Substituído"
-                            ? "bg-muted text-muted-foreground"
-                            : "bg-destructive/15 text-destructive"
-                        }
-                      >
-                        {statusTxt}
-                      </Badge>
-                    }
+                    value={<StatusBadge status={status} emitido={emitido} substituido={substituido} />}
                   />
                   <Info label="Data de emissão" value={res.data_emissao ? formatDateTime(res.data_emissao) : "—"} />
+                  {substituido && res.revisao_vigente ? (
+                    <Info
+                      label="Revisão vigente"
+                      value={<span className="font-mono font-semibold">{res.revisao_vigente}</span>}
+                    />
+                  ) : null}
                   <Info label="Modelo" value={<span className="font-mono">{res.modelo}</span>} />
                   <Info
                     label="Responsável técnico"
@@ -157,9 +204,11 @@ export default function PsicoValidarRelatorio() {
                       res.responsavel_tecnico?.nome ? (
                         <>
                           {res.responsavel_tecnico.nome}
-                          {res.responsavel_tecnico.registro && (
-                            <span className="text-xs text-muted-foreground"> · {res.responsavel_tecnico.registro}</span>
-                          )}
+                          {res.responsavel_tecnico.registro ? (
+                            <span className="text-xs text-muted-foreground">
+                              {" "}· {res.responsavel_tecnico.registro}
+                            </span>
+                          ) : null}
                         </>
                       ) : (
                         "—"
@@ -169,7 +218,7 @@ export default function PsicoValidarRelatorio() {
                   <div className="sm:col-span-2">
                     <Info
                       label="Hash SHA-256 (abreviado)"
-                      value={<span className="font-mono text-xs break-all">{res.hash_abreviado}…</span>}
+                      value={<span className="font-mono text-xs break-all">{res.hash_abreviado || "—"}…</span>}
                     />
                   </div>
                 </div>
@@ -179,15 +228,33 @@ export default function PsicoValidarRelatorio() {
         )}
 
         <p className="text-[11px] text-center text-muted-foreground">
-          Esta página não expõe o conteúdo do relatório. Solicite o arquivo diretamente à organização
-          responsável ou ao HSE Consulting.
+          Esta consulta apresenta somente metadados de autenticidade. O conteúdo da avaliação e os dados dos
+          participantes permanecem protegidos.
         </p>
       </div>
     </div>
   );
 }
 
-function Info({ label, value }: { label: string; value: any }) {
+function StatusBadge({
+  status,
+  emitido,
+  substituido,
+}: {
+  status: string;
+  emitido: boolean;
+  substituido: boolean;
+}) {
+  const className = emitido
+    ? "bg-emerald-100 text-emerald-800"
+    : substituido
+      ? "bg-amber-100 text-amber-900"
+      : "bg-destructive/15 text-destructive";
+
+  return <Badge className={className}>{status || "Indisponível"}</Badge>;
+}
+
+function Info({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
