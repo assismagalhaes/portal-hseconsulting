@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 const PROMPT_CODE = "HSE-PSICO-IA-PARECER-1.3";
-const DEFAULT_MODEL = "google/gemini-3-flash-preview";
+const DEFAULT_MODEL = "google/gemini-3.6-flash";
 const REQUIRED_KEYS = [
   "sintese_resultados",
   "interpretacao_integrada",
