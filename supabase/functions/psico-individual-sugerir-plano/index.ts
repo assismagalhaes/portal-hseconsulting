@@ -10,7 +10,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const PROMPT_VERSAO = "HSE-PSICO-IND-PLANO-1.0";
-const MODELO = "google/gemini-2.5-flash"; // custo-benefício alto para JSON estruturado
+const MODELO = "google/gemini-3.6-flash"; // custo-benefício alto para JSON estruturado
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 const corsHeaders: Record<string, string> = {

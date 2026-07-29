@@ -16,7 +16,7 @@ function corsHeaders(origin: string | null): Record<string, string> {
 }
 
 const PROMPT_CODE = "HSE-PSICO-IA-PARECER-INDIVIDUAL-1.0";
-const DEFAULT_MODEL = "google/gemini-3-flash-preview";
+const DEFAULT_MODEL = "google/gemini-3.6-flash";
 
 const REQUIRED_KEYS = [
   "sintese_caso",

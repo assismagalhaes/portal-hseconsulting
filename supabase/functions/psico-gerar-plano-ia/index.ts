@@ -13,7 +13,7 @@ const corsHeaders = {
 };
 
 const PROMPT_CODE = "HSE-PSICO-IA-PLANO-1.3";
-const DEFAULT_MODEL = "google/gemini-3-flash-preview";
+const DEFAULT_MODEL = "google/gemini-3.6-flash";
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
