@@ -70,6 +70,10 @@ const reportBrandingFooterMigration = readFileSync(
   resolve("supabase/migrations/20260729135149_bump_psico_report_branding_footer_v1_6_1.sql"),
   "utf8",
 );
+const reportReissueAfterRevocationMigration = readFileSync(
+  resolve("supabase/migrations/20260729141339_fix_psico_report_reissue_after_revocation.sql"),
+  "utf8",
+);
 const opinionFunction = readFileSync(
   resolve("supabase/functions/psico-gerar-parecer/index.ts"),
   "utf8",
@@ -407,6 +411,21 @@ describe("metadados seguros do PDF psicossocial", () => {
     );
     expect(reportFunction.slice(previewStart, prepareStart)).not.toContain(
       "psico_concluir_emissao_relatorio",
+    );
+  });
+
+  it("avança a revisão após revogação sem impedir a retentativa de versão falha", () => {
+    expect(reportReissueAfterRevocationMigration).toContain(
+      "AND v.status IN (''emitido'',''substituido'',''revogado'')",
+    );
+    expect(reportReissueAfterRevocationMigration).toContain(
+      "AND status IN (''emitido'', ''substituido'', ''revogado'')",
+    );
+    expect(reportReissueAfterRevocationMigration).not.toContain(
+      "AND status IN (''emitido'', ''substituido'', ''revogado'', ''falhou'')",
+    );
+    expect(reportReissueAfterRevocationMigration).toContain(
+      "Regra base inesperada em psico_preparar_emissao_relatorio",
     );
   });
 });
