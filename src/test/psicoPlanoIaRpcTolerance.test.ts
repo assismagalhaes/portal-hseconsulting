@@ -62,7 +62,7 @@ describe("tolerância transacional do plano por IA", () => {
       "utf8",
     );
 
-    expect(edgeFunction).toContain('const DEFAULT_MODEL = "google/gemini-3-flash-preview"');
+    expect(edgeFunction).toContain('const DEFAULT_MODEL = "google/gemini-3.6-flash"');
     expect(edgeFunction).toContain('Deno.env.get("LOVABLE_API_KEY")');
     expect(edgeFunction).toContain("https://ai.gateway.lovable.dev/v1/chat/completions");
     expect(edgeFunction).not.toContain("GEMINI_API_KEY");

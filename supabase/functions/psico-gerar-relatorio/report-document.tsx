@@ -5,7 +5,7 @@ import { Document, Page, Text, View, StyleSheet, Font, Image } from "npm:@react-
 import { HSE_LOGO_GREEN_DATA_URL } from "./brand-assets.ts";
 
 export const REPORT_MODEL_CODE = "HSE-PSICO-REL-1.0";
-export const REPORT_MODEL_VERSION = "1.6.0";
+export const REPORT_MODEL_VERSION = "1.6.1";
 
 export const REPORT_COLORS = {
   navy: "#0B2545", blue: "#176B87", teal: "#159A85", green: "#27864A",
@@ -49,7 +49,11 @@ const styles = StyleSheet.create({
   coverBody: { paddingHorizontal: 48, paddingTop: 25 },
   clientLabel: { color: REPORT_COLORS.muted, fontSize: 7.5, fontFamily: "Helvetica-Bold", letterSpacing: 1 },
   clientName: { marginTop: 4, maxWidth: 490, fontSize: 19, lineHeight: 1.1, color: REPORT_COLORS.navy, fontFamily: "Helvetica-Bold" },
-  organizationCard: { marginTop: 10, padding: 11, borderRadius: 6, backgroundColor: REPORT_COLORS.panel, borderLeftWidth: 3, borderLeftColor: REPORT_COLORS.teal },
+  organizationCard: { marginTop: 10, minHeight: 64, padding: 11, borderRadius: 6, backgroundColor: REPORT_COLORS.panel, borderLeftWidth: 3, borderLeftColor: REPORT_COLORS.teal, flexDirection: "row", alignItems: "center" },
+  organizationBrand: { width: 92, minHeight: 43, paddingRight: 11, borderRightWidth: 1, borderRightColor: REPORT_COLORS.line, alignItems: "center", justifyContent: "center" },
+  organizationLogo: { width: 76, height: 42, objectFit: "contain" },
+  organizationMark: { width: 38, height: 38, borderRadius: 5, backgroundColor: REPORT_COLORS.paleGreen, color: REPORT_COLORS.green, fontFamily: "Helvetica-Bold", fontSize: 11, textAlign: "center", paddingTop: 12 },
+  organizationDetails: { flex: 1, paddingLeft: 11 },
   organizationLine: { marginBottom: 3, fontSize: 8.7 },
   coverMetaGrid: { marginTop: 20, flexDirection: "row", flexWrap: "wrap", borderTopWidth: 1, borderTopColor: REPORT_COLORS.line, paddingTop: 14 },
   coverMeta: { width: "50%", marginBottom: 13, paddingRight: 16 },
@@ -66,9 +70,9 @@ const styles = StyleSheet.create({
   headerClientMark: { width: 27, height: 27, borderRadius: 4, backgroundColor: REPORT_COLORS.paleGreen, color: REPORT_COLORS.green, fontFamily: "Helvetica-Bold", fontSize: 9, textAlign: "center", paddingTop: 8, marginRight: 8 },
   headerClientName: { maxWidth: 300, color: REPORT_COLORS.navy, fontSize: 7.8, fontFamily: "Helvetica-Bold" },
   headerMeta: { color: REPORT_COLORS.muted, fontSize: 7.2, textAlign: "right" },
-  footer: { position: "absolute", bottom: 18, left: 40, right: 40, height: 20, flexDirection: "row", alignItems: "center", borderTopWidth: 1, borderTopColor: REPORT_COLORS.line, paddingTop: 6, color: REPORT_COLORS.muted, fontSize: 6.8 },
+  footer: { position: "absolute", bottom: 16, left: 40, right: 40, height: 24, flexDirection: "row", alignItems: "center", borderTopWidth: 1, borderTopColor: REPORT_COLORS.line, paddingTop: 6, color: REPORT_COLORS.muted, fontSize: 6.5 },
   footerLogo: { width: 39, height: 14, objectFit: "contain" },
-  footerLeft: { width: "40%" }, footerCenter: { width: "30%", textAlign: "center" }, footerRight: { width: "30%", textAlign: "right" },
+  footerLeft: { width: "13%" }, footerCenter: { width: "72%", textAlign: "left" }, footerRight: { width: "15%", textAlign: "right" },
   watermark: { position: "absolute", top: "44%", left: 55, right: 55, color: REPORT_COLORS.red, opacity: 0.12, fontSize: 36, fontFamily: "Helvetica-Bold", textAlign: "center", transform: "rotate(-34deg)" },
   kicker: { fontSize: 7.6, color: REPORT_COLORS.teal, fontFamily: "Helvetica-Bold", letterSpacing: 1.3, marginBottom: 4 },
   h1: { fontSize: 19, color: REPORT_COLORS.navy, fontFamily: "Helvetica-Bold", lineHeight: 1.15, marginBottom: 6 },
@@ -174,6 +178,14 @@ function fixTypos(input: unknown): string {
     .replace(/[≥≤]/g, "")
     .replace(/\s{2,}/g, " ")
     .trim();
+}
+function sentenceCase(value: unknown, fallback = "") {
+  const text = clean(value, fallback);
+  return text ? text.charAt(0).toLocaleUpperCase("pt-BR") + text.slice(1) : text;
+}
+function displayWebsite(value: unknown) {
+  const site = clean(value, "www.hseconsulting.com.br").replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+  return /^www\./i.test(site) ? site : `www.${site}`;
 }
 function editorialText(input: unknown, fallback = "") {
   return fixTypos(clean(input, fallback))
@@ -281,7 +293,7 @@ function bucketByPrazo(prazoDias: number | null | undefined, prioridade: unknown
 function originLabel(origin: any) { const value = clean(origin?.coleta); return value === "importacao_bruta" ? "Importação de formulário externo em dados brutos" : value === "importacao_agregada" ? "Importação agregada" : "Coleta realizada pelo Portal HSE"; }
 function criteriaActivated(f: any) { const out: string[] = []; if (f?.criterio_principal) out.push("M+A+C"); if (f?.criterio_agravamento) out.push("A+C"); if (f?.criterio_critico_automatico) out.push("crítico"); return out.length ? out.join(", ") : "nenhum critério"; }
 
-function HeaderFooter({ code, revision, preview, hseLogoSrc, clientLogoSrc, clientName }: any) {
+function HeaderFooter({ code, revision, preview, hseLogoSrc, clientLogoSrc, clientName, companyContacts }: any) {
   return <>
     <View style={styles.header} fixed>
       <View style={styles.headerIdentity}>
@@ -294,7 +306,7 @@ function HeaderFooter({ code, revision, preview, hseLogoSrc, clientLogoSrc, clie
     </View>
     <View style={styles.footer} fixed>
       <View style={styles.footerLeft}><Image src={hseLogoSrc} style={styles.footerLogo} /></View>
-      <Text style={styles.footerCenter}>HSE Consulting</Text>
+      <Text style={styles.footerCenter}>HSE Consulting · {companyContacts}</Text>
       <Text style={styles.footerRight} render={({ pageNumber }) => `Página ${pageNumber}`} />
     </View>
     {preview && <Text style={styles.watermark} fixed>PRÉVIA · SEM VALIDADE</Text>}
@@ -302,7 +314,7 @@ function HeaderFooter({ code, revision, preview, hseLogoSrc, clientLogoSrc, clie
 }
 function Meta({ label, value }: any) { return usable(value) ? <View style={styles.coverMeta}><Text style={styles.metaLabel}>{label}</Text><Text style={styles.metaValue}>{clean(value)}</Text></View> : null; }
 function Kpi({ value, label, hint, last, color }: any) { return <View style={[styles.kpi, last ? styles.kpiLast : {}]}><Text style={[styles.kpiValue, color ? { color } : {}]}>{clean(value, "-")}</Text><Text style={styles.kpiLabel}>{label}</Text>{usable(hint) ? <Text style={styles.kpiHint}>{hint}</Text> : null}</View>; }
-function BulletList({ items }: { items: string[] }) { return <>{items.slice(0, 6).map((item, index) => <View style={styles.bullet} key={index}><Text style={styles.bulletMark}>•</Text><Text style={styles.bulletText}>{item}</Text></View>)}</>; }
+function BulletList({ items }: { items: string[] }) { return <>{items.slice(0, 6).map((item, index) => <View style={styles.bullet} key={index}><Text style={styles.bulletMark}>•</Text><Text style={styles.bulletText}>{sentenceCase(item)}</Text></View>)}</>; }
 
 function ScoreChart({ factors }: { factors: any[] }) {
   const bands = [REPORT_COLORS.paleGreen, "#E1F1E6", REPORT_COLORS.paleAmber, "#FBE6D5", REPORT_COLORS.paleRed];
@@ -360,7 +372,11 @@ export function PsychosocialReportDocument({ snapshot, codigoRafp, codigoRev, co
   const opinion = review?.parecer_conclusivo || {};
   const address = organizationAddress(cliente);
   const hseLogoSrc = empresa?.logo_url || HSE_LOGO_GREEN_DATA_URL;
-  const companyContacts = [empresa?.telefone, empresa?.email, empresa?.site].filter(usable).join("  ·  ");
+  const companyContacts = [
+    clean(empresa?.telefone, "(85) 9.9142-6534"),
+    clean(empresa?.email, "contato@hseconsulting.com.br"),
+    displayWebsite(empresa?.site),
+  ].join(" · ");
   const clientName = clean(cliente?.nome || cliente?.nome_fantasia || cliente?.razao_social, "Organização avaliada");
   const actionDeadlines = actions.map((a) => Number(a?.prazo_dias) > 0 ? Number(a.prazo_dias) : deadlineFor(a?.prioridade)).filter((n) => Number.isFinite(n) && n > 0);
   const priorityDeadline = actionDeadlines.length ? Math.min(...actionDeadlines) : deadlineFor(highest?.prioridade);
@@ -402,14 +418,14 @@ export function PsychosocialReportDocument({ snapshot, codigoRafp, codigoRev, co
   actions.forEach((action) => { const weight = 135 + list(action?.orientacoes_praticas).length * 20 + list(action?.exemplos_aplicacao).length * 20 + Math.ceil(clean(action?.acao).length / 100) * 12; if (currentActions.length && currentWeight + weight > 390) { actionPages.push(currentActions); currentActions = []; currentWeight = 0; } currentActions.push(action); currentWeight += weight; });
   if (currentActions.length) actionPages.push(currentActions);
   if (!actionPages.length) actionPages.push([]);
-  const headerFooter = <HeaderFooter code={codigoRafp} revision={codigoRev} preview={preview} hseLogoSrc={hseLogoSrc} clientLogoSrc={clientLogoDataUrl} clientName={clientName} />;
+  const headerFooter = <HeaderFooter code={codigoRafp} revision={codigoRev} preview={preview} hseLogoSrc={hseLogoSrc} clientLogoSrc={clientLogoDataUrl} clientName={clientName} companyContacts={companyContacts} />;
 
   return <Document title={`Relatório ${codigoRafp} ${codigoRev}`} author="HSE Consulting" subject="Avaliação de Fatores Psicossociais" creator="Portal HSE" producer="Portal HSE">
     <Page size="A4" style={styles.cover}>
       <View style={styles.coverBand}><View style={styles.coverShapeOne} /><View style={styles.coverShapeTwo} /><Image src={hseLogoSrc} style={styles.coverLogo} /><Text style={styles.coverKicker}>RELATÓRIO TÉCNICO</Text><Text style={styles.coverTitle}>Avaliação de Fatores Psicossociais</Text></View>
       <View style={styles.coverBody}>
         <Text style={styles.clientLabel}>ORGANIZAÇÃO AVALIADA</Text><Text style={styles.clientName}>{clientName}</Text>
-        {(usable(cliente?.razao_social) || usable(cliente?.cnpj_cpf) || usable(address)) && <View style={styles.organizationCard}>{usable(cliente?.razao_social) && <Text style={styles.organizationLine}><Text style={{ fontFamily: "Helvetica-Bold" }}>Razão social: </Text>{clean(cliente.razao_social)}</Text>}{usable(cliente?.cnpj_cpf) && <Text style={styles.organizationLine}><Text style={{ fontFamily: "Helvetica-Bold" }}>CNPJ: </Text>{formatCnpj(cliente.cnpj_cpf)}</Text>}{usable(address) ? <Text style={styles.organizationLine}><Text style={{ fontFamily: "Helvetica-Bold" }}>Endereço: </Text>{address}</Text> : null}</View>}
+        {(usable(cliente?.razao_social) || usable(cliente?.cnpj_cpf) || usable(address) || usable(clientLogoDataUrl)) && <View style={styles.organizationCard}><View style={styles.organizationBrand}>{clientLogoDataUrl ? <Image src={clientLogoDataUrl} style={styles.organizationLogo} /> : <Text style={styles.organizationMark}>{clientInitials(clientName)}</Text>}</View><View style={styles.organizationDetails}>{usable(cliente?.razao_social) && <Text style={styles.organizationLine}><Text style={{ fontFamily: "Helvetica-Bold" }}>Razão social: </Text>{clean(cliente.razao_social)}</Text>}{usable(cliente?.cnpj_cpf) && <Text style={styles.organizationLine}><Text style={{ fontFamily: "Helvetica-Bold" }}>CNPJ: </Text>{formatCnpj(cliente.cnpj_cpf)}</Text>}{usable(address) ? <Text style={styles.organizationLine}><Text style={{ fontFamily: "Helvetica-Bold" }}>Endereço: </Text>{address}</Text> : null}</View></View>}
         <View style={styles.coverMetaGrid}><Meta label="Relatório e revisão" value={`${codigoRafp} · ${codigoRev}`} /><Meta label="Período analisado" value={assessment?.periodo?.inicio && assessment?.periodo?.fim ? `${date(assessment.periodo.inicio)} a ${date(assessment.periodo.fim)}` : ""} /><Meta label="Emissão" value={date(dataEmissao)} /><Meta label="Metodologia" value={methodologyLabel} /><Meta label="Modelo do documento" value={`${REPORT_MODEL_CODE} v${REPORT_MODEL_VERSION}`} /></View>
         <View style={styles.approval}><View style={styles.approvalDot}><View style={styles.approvalDotInner} /></View><View style={styles.approvalText}><Text style={{ color: REPORT_COLORS.green, fontFamily: "Helvetica-Bold", fontSize: 9 }}>CONTEÚDO TÉCNICO APROVADO</Text><Text style={{ marginTop: 3, fontFamily: "Helvetica-Bold" }}>{responsibleName}</Text><Text style={styles.note}>{[clean(responsible?.cargo), registration].filter(Boolean).join(" · ")}</Text></View></View>
         {usable(companyContacts) ? <Text style={[styles.contactText, { color: REPORT_COLORS.muted, marginTop: 11 }]}>{companyContacts}</Text> : null}
@@ -441,7 +457,7 @@ export function PsychosocialReportDocument({ snapshot, codigoRafp, codigoRev, co
 
     {questionPages.map((groups, pageIndex) => <Page key={`questions-${pageIndex}`} size="A4" style={styles.page}>{headerFooter}<Text style={styles.kicker}>ANEXO TÉCNICO · RESULTADOS COLETIVOS</Text><Text style={styles.h1}>Resultados completos por pergunta</Text>{pageIndex === 0 && <Text style={styles.intro}>As 35 perguntas são apresentadas por fator, exclusivamente com indicadores agregados. “Desfav.” representa a proporção de respostas em sentido desfavorável conforme a pontuação da pergunta.</Text>}{groups.map(({ factor, questions: groupQuestions }) => <View key={factor?.fator_codigo} style={styles.questionGroup}><View style={styles.questionHeader}><Text style={styles.questionTitle}>{factorName(factor)} · {groupQuestions.length} perguntas</Text></View><QuestionTable questions={groupQuestions} limits={attentionLimits} /></View>)}</Page>)}
 
-    {actionPages.map((pageActions, pageIndex) => <Page key={`actions-${pageIndex}`} size="A4" style={styles.page}>{headerFooter}<Text style={styles.kicker}>PLANO PARA OS PRÓXIMOS 12 MESES</Text><Text style={styles.h1}>{significant.length ? "Plano de ação" : "Plano preventivo"}</Text>{pageIndex === 0 && <Text style={styles.intro}>O plano apresenta as medidas recomendadas, os responsáveis sugeridos, os prazos, as evidências esperadas e os critérios para verificar os resultados.</Text>}{pageActions.length ? pageActions.map((action, index) => { const number = actionPages.slice(0, pageIndex).reduce((sum, page) => sum + page.length, 0) + index + 1; const titulo = fixTypos(action?.titulo) || `Ação ${number}`; const acaoDesc = fixTypos(action?.acao); const showAcao = !isRedundantAction(titulo, acaoDesc); const actionDeadline = Number(action?.prazo_dias) > 0 ? Number(action.prazo_dias) : deadlineFor(action?.prioridade); return <View key={action?.id || number} style={styles.actionCard}><View style={styles.actionHeader} wrap={false}><Text style={styles.actionNo}>{number}</Text><Text style={styles.actionTitle}>{titulo}</Text></View><View style={styles.actionBody}><View style={styles.actionGrid}><View style={styles.actionField}><Text style={styles.actionLabel}>Fatores relacionados</Text><Text style={styles.actionValue}>{list(action?.fatores).map((code) => FACTOR_LABELS[code] || code).join("; ") || "Medida transversal"}</Text></View><View style={styles.actionField}><Text style={styles.actionLabel}>Natureza e acompanhamento</Text><Text style={styles.actionValue}>{[editorialText(action?.nivel), riskLabel(action?.prioridade)].filter(Boolean).join(" · ")}</Text></View></View>{usable(action?.objetivo) && <><Text style={styles.actionLabel}>Objetivo</Text><Text style={styles.actionValue}>{editorialText(action.objetivo)}</Text></>}{showAcao && <><Text style={styles.actionLabel}>O que fazer</Text><Text style={styles.actionValue}>{editorialText(acaoDesc, "Aplicar a medida aprovada e registrar sua execução.")}</Text></>}{list(action?.orientacoes_praticas).length > 0 && <><Text style={styles.actionLabel}>Como implementar</Text><BulletList items={list(action.orientacoes_praticas)} /></>}{list(action?.exemplos_aplicacao).length > 0 && <><Text style={[styles.actionLabel, { marginTop: 5 }]}>Exemplos de aplicação</Text><BulletList items={list(action.exemplos_aplicacao)} /></>}<View style={[styles.actionGrid, { marginTop: 6 }]}><View style={styles.actionField}><Text style={styles.actionLabel}>Responsável sugerido</Text><Text style={styles.actionValue}>{fixTypos(action?.responsavel) || "Gestão da unidade e RH"}</Text></View><View style={styles.actionField}><Text style={styles.actionLabel}>Prazo recomendado</Text><Text style={styles.actionValue}>{deadlineLabel(actionDeadline)}</Text></View><View style={styles.actionField}><Text style={styles.actionLabel}>Abrangência</Text><Text style={styles.actionValue}>{fixTypos(action?.abrangencia || action?.grupo) || "Organização"}</Text></View><View style={styles.actionField}><Text style={styles.actionLabel}>Como comprovar</Text><Text style={styles.actionValue}>{evidenceText(action?.evidencias)}</Text></View></View><Text style={styles.actionLabel}>Indicador de eficácia</Text><Text style={styles.actionValue}>{editorialText(action?.indicador_eficacia, "Verificar implantação, percepção das equipes e evolução do fator em reavaliação posterior.")}</Text></View></View>; }) : <View style={styles.infoPanel}><Text>Manter os controles preventivos, registrar mudanças relevantes no trabalho e programar reavaliação no ciclo definido pela organização.</Text></View>}</Page>)}
+    {actionPages.map((pageActions, pageIndex) => <Page key={`actions-${pageIndex}`} size="A4" style={styles.page}>{headerFooter}<Text style={styles.kicker}>PLANO PARA OS PRÓXIMOS 12 MESES</Text><Text style={styles.h1}>{significant.length ? "Plano de ação" : "Plano preventivo"}</Text>{pageIndex === 0 && <Text style={styles.intro}>O plano apresenta as medidas recomendadas, os responsáveis sugeridos, os prazos, as evidências esperadas e os critérios para verificar os resultados.</Text>}{pageActions.length ? pageActions.map((action, index) => { const number = actionPages.slice(0, pageIndex).reduce((sum, page) => sum + page.length, 0) + index + 1; const titulo = fixTypos(action?.titulo) || `Ação ${number}`; const acaoDesc = fixTypos(action?.acao); const showAcao = !isRedundantAction(titulo, acaoDesc); const actionDeadline = Number(action?.prazo_dias) > 0 ? Number(action.prazo_dias) : deadlineFor(action?.prioridade); return <View key={action?.id || number} style={styles.actionCard}><View style={styles.actionHeader} wrap={false}><Text style={styles.actionNo}>{number}</Text><Text style={styles.actionTitle}>{titulo}</Text></View><View style={styles.actionBody}><View style={styles.actionGrid}><View style={styles.actionField}><Text style={styles.actionLabel}>Fatores relacionados</Text><Text style={styles.actionValue}>{list(action?.fatores).map((code) => FACTOR_LABELS[code] || code).join("; ") || "Medida transversal"}</Text></View><View style={styles.actionField}><Text style={styles.actionLabel}>Natureza e acompanhamento</Text><Text style={styles.actionValue}>{sentenceCase([editorialText(action?.nivel), riskLabel(action?.prioridade)].filter(Boolean).join(" · "))}</Text></View></View>{usable(action?.objetivo) && <><Text style={styles.actionLabel}>Objetivo</Text><Text style={styles.actionValue}>{editorialText(action.objetivo)}</Text></>}{showAcao && <><Text style={styles.actionLabel}>O que fazer</Text><Text style={styles.actionValue}>{editorialText(acaoDesc, "Aplicar a medida aprovada e registrar sua execução.")}</Text></>}{list(action?.orientacoes_praticas).length > 0 && <><Text style={styles.actionLabel}>Como implementar</Text><BulletList items={list(action.orientacoes_praticas)} /></>}{list(action?.exemplos_aplicacao).length > 0 && <><Text style={[styles.actionLabel, { marginTop: 5 }]}>Exemplos de aplicação</Text><BulletList items={list(action.exemplos_aplicacao)} /></>}<View style={[styles.actionGrid, { marginTop: 6 }]}><View style={styles.actionField}><Text style={styles.actionLabel}>Responsável sugerido</Text><Text style={styles.actionValue}>{fixTypos(action?.responsavel) || "Gestão da unidade e RH"}</Text></View><View style={styles.actionField}><Text style={styles.actionLabel}>Prazo recomendado</Text><Text style={styles.actionValue}>{deadlineLabel(actionDeadline)}</Text></View><View style={styles.actionField}><Text style={styles.actionLabel}>Abrangência</Text><Text style={styles.actionValue}>{fixTypos(action?.abrangencia || action?.grupo) || "Organização"}</Text></View><View style={styles.actionField}><Text style={styles.actionLabel}>Como comprovar</Text><Text style={styles.actionValue}>{sentenceCase(evidenceText(action?.evidencias))}</Text></View></View><Text style={styles.actionLabel}>Indicador de eficácia</Text><Text style={styles.actionValue}>{sentenceCase(editorialText(action?.indicador_eficacia, "Verificar implantação, percepção das equipes e evolução do fator em reavaliação posterior."))}</Text></View></View>; }) : <View style={styles.infoPanel}><Text>Manter os controles preventivos, registrar mudanças relevantes no trabalho e programar reavaliação no ciclo definido pela organização.</Text></View>}</Page>)}
 
     <Page size="A4" style={styles.page}>{headerFooter}<Text style={styles.kicker}>PARECER DO RESPONSÁVEL TÉCNICO</Text><Text style={styles.h1}>Parecer técnico conclusivo</Text><Text style={styles.intro}>O parecer reúne a conclusão do responsável técnico, os pontos que merecem acompanhamento e as orientações aprovadas para a organização.</Text>{[["Conclusão técnica", "conclusao"], ["O que os resultados indicam", "interpretacao_integrada"], ["Prioridades para a organização", "prioridades_intervencao"], ["Orientações recomendadas", "recomendacoes"], ["Limitações da leitura", "limitacoes"]].map(([label, key]) => <View key={key} style={styles.opinionSection}><Text style={styles.h3}>{label}</Text><Text>{editorialText(opinion?.[key], key === "limitacoes" ? clean(review?.limitacoes, "Os resultados são coletivos e não constituem diagnóstico individual.") : clean(opinion?.sintese_resultados || review?.conclusao, "Parecer registrado na revisão técnica aprovada."))}</Text></View>)}<View style={styles.infoPanel}><Text style={styles.note}>A HSE Consulting recomenda e orienta as medidas técnicas. Cabe à organização definir responsáveis internos, disponibilizar recursos, executar as ações e manter os registros correspondentes, salvo quando houver contratação específica para essa execução. O relatório apoia a Avaliação de Exposição Psicossocial (AEP), o Inventário de Riscos e o Plano de Ação do PGR, mas não substitui esses documentos.</Text></View></Page>
 
