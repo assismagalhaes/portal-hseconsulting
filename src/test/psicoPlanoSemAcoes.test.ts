@@ -7,6 +7,10 @@ const migrationPath = path.resolve(
   process.cwd(),
   "supabase/migrations/20260727131406_allow_collective_plan_without_actions.sql",
 );
+const consolidatedApprovalPath = path.resolve(
+  process.cwd(),
+  "src/components/psico/PsicoAprovacaoConsolidada.tsx",
+);
 
 describe("gates do plano de ação coletivo", () => {
   it("não trata campos da revisão técnica como bloqueios do plano", () => {
@@ -38,5 +42,12 @@ describe("gates do plano de ação coletivo", () => {
     expect(sql).toContain("rf.tratamento_tecnico = 'acao_recomendada'");
     expect(sql).not.toContain("rf.significativo_calculado = true");
     expect(sql).not.toContain("rf.tratamento_tecnico <> 'sem_acao_especifica'");
+  });
+
+  it("não exibe pendências da revisão técnica como itens da próxima etapa no plano", () => {
+    const source = fs.readFileSync(consolidatedApprovalPath, "utf8");
+    expect(source).not.toContain("Itens da próxima etapa");
+    expect(source).not.toContain("Não bloqueiam o plano");
+    expect(source).not.toContain("Serão preenchidos na Revisão Técnica");
   });
 });
