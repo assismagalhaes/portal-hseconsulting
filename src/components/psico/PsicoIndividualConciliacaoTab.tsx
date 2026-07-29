@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { AlertTriangle, CheckCircle2, Cpu, Lock, RefreshCcw, ShieldAlert } from "lucide-react";
 import { fatorLabel } from "@/lib/psicoLabels";
+import { mensagemErroConciliacao } from "@/lib/psicoIndividualFunctionError";
 
 type Achado = {
   id: string;
@@ -87,7 +88,10 @@ export default function PsicoIndividualConciliacaoTab({ avaliacaoId }: { avaliac
       const { data, error } = await supabase.functions.invoke("psico-individual-processar", {
         body: { avaliacao_id: avaliacaoId },
       });
-      if (error) throw error;
+      if (error) {
+        const mensagem = await mensagemErroConciliacao(error, data);
+        throw new Error(mensagem);
+      }
       const payload = data as any;
       if (payload?.status === "bloqueado") {
         setUltimoBloqueio(payload?.motivo || "bloqueado");
@@ -97,7 +101,7 @@ export default function PsicoIndividualConciliacaoTab({ avaliacaoId }: { avaliac
       }
       await carregar();
     } catch (e: any) {
-      toast.error("Falha ao processar conciliação: " + (e?.message || "erro"));
+      toast.error(e?.message || "Não foi possível processar a conciliação.");
     } finally {
       setProcessando(false);
     }
