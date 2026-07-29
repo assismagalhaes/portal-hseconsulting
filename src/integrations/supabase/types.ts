@@ -770,6 +770,9 @@ export type Database = {
           fonte_consulta_cnpj: string | null
           group_id: string | null
           id: string
+          logo_hash_sha256: string | null
+          logo_mime_type: string | null
+          logo_storage_path: string | null
           natureza_juridica: string | null
           nome_fantasia: string | null
           numero: string | null
@@ -803,6 +806,9 @@ export type Database = {
           fonte_consulta_cnpj?: string | null
           group_id?: string | null
           id?: string
+          logo_hash_sha256?: string | null
+          logo_mime_type?: string | null
+          logo_storage_path?: string | null
           natureza_juridica?: string | null
           nome_fantasia?: string | null
           numero?: string | null
@@ -836,6 +842,9 @@ export type Database = {
           fonte_consulta_cnpj?: string | null
           group_id?: string | null
           id?: string
+          logo_hash_sha256?: string | null
+          logo_mime_type?: string | null
+          logo_storage_path?: string | null
           natureza_juridica?: string | null
           nome_fantasia?: string | null
           numero?: string | null
@@ -10744,6 +10753,10 @@ export type Database = {
         Returns: Json
       }
       psico_obter_conteudo_aprovado_relatorio: {
+        Args: { p_avaliacao_id: string }
+        Returns: Json
+      }
+      psico_obter_conteudo_aprovado_relatorio_sem_branding_v1_6: {
         Args: { p_avaliacao_id: string }
         Returns: Json
       }
