@@ -164,18 +164,19 @@ Deno.serve(async (req) => {
   if (!avaliacaoId) return json(400, { error: "avaliacao_id_obrigatorio" });
 
   const admin = createClient(url, service);
-  const { data: canSee, error: canSeeError } = await admin.rpc("can_see_internal", {
-    _user_id: userData.user.id,
-  });
-  if (canSeeError) {
-    console.error("psico-individual-sugerir-plano: falha ao validar acesso interno", {
+  const [adminRole, tecnicoRole] = await Promise.all([
+    admin.rpc("has_role", { _user_id: userData.user.id, _role: "admin" }),
+    admin.rpc("has_role", { _user_id: userData.user.id, _role: "tecnico" }),
+  ]);
+  if (adminRole.error || tecnicoRole.error) {
+    console.error("psico-individual-sugerir-plano: falha ao validar acesso técnico", {
       user_id: userData.user.id,
-      code: canSeeError.code,
-      message: canSeeError.message,
+      admin_error: adminRole.error?.code,
+      tecnico_error: tecnicoRole.error?.code,
     });
     return json(500, { error: "autorizacao_interna_falhou" });
   }
-  if (!canSee) return json(403, { error: "forbidden" });
+  if (!adminRole.data && !tecnicoRole.data) return json(403, { error: "forbidden" });
 
   // Contexto sanitizado (RPC exige service_role)
   const { data: ctx, error: eCtx } = await admin.rpc("psico_ind_contexto_para_ia", { p_avaliacao: avaliacaoId });
