@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}))
     const avaliacaoId = String(body?.avaliacao_id || '')
+    const somenteConsulta = body?.somente_consulta === true
     if (!/^[0-9a-f-]{36}$/i.test(avaliacaoId)) {
       return new Response(JSON.stringify({ error: 'avaliacao_id obrigatório' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -97,6 +98,7 @@ Deno.serve(async (req) => {
         .select('id, public_id, token_version, status, expira_em')
         .eq('avaliacao_id', avaliacaoId).eq('papel', papel).maybeSingle()
       if (!conv) {
+        if (somenteConsulta) continue
         const ins = await admin.from('psico_individual_convites').insert({
           avaliacao_id: avaliacaoId,
           papel,
