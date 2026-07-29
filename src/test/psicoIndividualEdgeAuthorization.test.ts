@@ -9,13 +9,15 @@ const edgeFunctions = [
 
 describe("autorização das Edge Functions individuais", () => {
   for (const file of edgeFunctions) {
-    it(`${file} respeita o contrato da RPC e trata falha de autorização`, () => {
+    it(`${file} autoriza administradores e técnicos e trata falha de autorização`, () => {
       const source = readFileSync(resolve(process.cwd(), file), "utf8");
 
-      expect(source).toContain("_user_id: userData.user.id");
-      expect(source).toContain("error: canSeeError");
+      expect(source).toContain('_role: "admin"');
+      expect(source).toContain('_role: "tecnico"');
+      expect(source).toContain("adminRole.error || tecnicoRole.error");
+      expect(source).toContain("!adminRole.data && !tecnicoRole.data");
       expect(source).toContain('error: "autorizacao_interna_falhou"');
-      expect(source).not.toContain("{ _user:");
+      expect(source).not.toContain('rpc("can_see_internal"');
     });
   }
 });

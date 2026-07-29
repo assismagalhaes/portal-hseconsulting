@@ -43,19 +43,22 @@ Deno.serve(async (req) => {
 
   const admin = createClient(url, service);
 
-  // Confirma que o usuário é interno
-  const { data: canSee, error: canSeeError } = await admin.rpc("can_see_internal", {
-    _user_id: userData.user.id,
-  });
-  if (canSeeError) {
-    console.error("psico-individual-processar: falha ao validar acesso interno", {
+  // Operações psicossociais técnicas seguem o mesmo contrato das RLS do módulo:
+  // apenas administradores e técnicos. O helper can_see_internal é comercial e
+  // não inclui o papel tecnico.
+  const [adminRole, tecnicoRole] = await Promise.all([
+    admin.rpc("has_role", { _user_id: userData.user.id, _role: "admin" }),
+    admin.rpc("has_role", { _user_id: userData.user.id, _role: "tecnico" }),
+  ]);
+  if (adminRole.error || tecnicoRole.error) {
+    console.error("psico-individual-processar: falha ao validar acesso técnico", {
       user_id: userData.user.id,
-      code: canSeeError.code,
-      message: canSeeError.message,
+      admin_error: adminRole.error?.code,
+      tecnico_error: tecnicoRole.error?.code,
     });
     return json(500, { error: "autorizacao_interna_falhou" });
   }
-  if (!canSee) return json(403, { error: "forbidden" });
+  if (!adminRole.data && !tecnicoRole.data) return json(403, { error: "forbidden" });
 
   // Confirma modalidade individual e recupera formulários/entradas
   const { data: av, error: eAv } = await admin
