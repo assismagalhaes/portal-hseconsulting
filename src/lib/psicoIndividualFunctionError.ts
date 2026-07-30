@@ -13,6 +13,7 @@ const MENSAGENS: Record<string, string> = {
   modalidade_invalida: "Esta avaliação não utiliza a modalidade individual de microempresa.",
   ler_entradas_falhou: "Não foi possível carregar os formulários respondidos.",
   persistencia_falhou: "A conciliação foi calculada, mas não pôde ser salva.",
+  auditoria_falhou: "A conciliação foi salva, mas o registro de auditoria falhou. Tente novamente.",
 };
 
 async function lerPayload(error: unknown, data?: unknown): Promise<FunctionErrorPayload | null> {

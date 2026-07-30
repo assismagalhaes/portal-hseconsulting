@@ -393,7 +393,7 @@ export default function PsicoAvaliacaoDetalhes() {
             <PsicoIndividualConvitesTab avaliacaoId={av.id} />
           </TabsContent>}
           {individual && <TabsContent value="conciliacao">
-            <PsicoIndividualConciliacaoTab avaliacaoId={av.id} />
+            <PsicoIndividualConciliacaoTab avaliacaoId={av.id} onReload={load} />
           </TabsContent>}
           {individual && <TabsContent value="plano-ind">
             <PsicoIndividualPlanoTab avaliacaoId={av.id} />

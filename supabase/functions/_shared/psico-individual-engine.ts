@@ -15,8 +15,8 @@
 //     * outros — ignorados pelo motor de conciliação (usados só na fundamentação).
 // - Texto livre NUNCA entra aqui.
 
-export const ENGINE_VERSAO = "HSE-PSICO-IND-ENGINE-2.0";
-export const REGRAS_VERSAO = "HSE-PSICO-IND-REGRAS-2.0";
+export const ENGINE_VERSAO = "HSE-PSICO-IND-ENGINE-2.1";
+export const REGRAS_VERSAO = "HSE-PSICO-IND-REGRAS-2.1";
 
 export type EstadoAchado =
   | "controlado"
@@ -208,6 +208,12 @@ function decidirEstado(
 ): { estado: EstadoAchado; regra: string; necessita_acao: boolean } {
   // R000: bloqueio superior — divergência forte
   if (divergenciaForte) return { estado: "divergente", regra: "R000-DIVERGENCIA-FORTE", necessita_acao: true };
+
+  // Ausência de exposição declarada não encerra o achado quando a outra fonte
+  // informa controles inexistentes/ineficazes. Exige validação técnica.
+  if (convergencia === "divergente") {
+    return { estado: "divergente", regra: "R001-DIVERGENCIA-CONTROLE", necessita_acao: true };
+  }
 
   if (exposicao === "nenhuma") return { estado: "nao_aplicavel", regra: "R040-SEM-EXPOSICAO", necessita_acao: false };
 

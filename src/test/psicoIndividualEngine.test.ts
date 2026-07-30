@@ -30,7 +30,7 @@ function entrada(): EntradaMotor {
 describe("motor psicossocial individual", () => {
   it("processa as chaves PAR-* usadas pelo instrumento publicado", async () => {
     const resultado = await processar(entrada());
-    expect(ENGINE_VERSAO).toContain("2.0");
+    expect(ENGINE_VERSAO).toContain("2.1");
     expect(resultado.bloqueado).toBe(false);
     expect(resultado.achados).toHaveLength(1);
     expect(resultado.achados[0]).toMatchObject({
@@ -71,6 +71,28 @@ describe("motor psicossocial individual", () => {
     const a = await processar(entrada());
     const b = await processar(entrada());
     expect(a.resultado_hash).toBe(b.resultado_hash);
+  });
+
+  it("não encerra como não aplicável quando controles são insuficientes", async () => {
+    const dados = entrada();
+    dados.respostas_empregado[0] = {
+      ...dados.respostas_empregado[0],
+      valor: 1,
+      significa_exposicao: false,
+    };
+    dados.respostas_empregador[0] = {
+      ...dados.respostas_empregador[0],
+      valor: 5,
+      significa_exposicao: true,
+    };
+
+    const achado = (await processar(dados)).achados[0];
+    expect(achado).toMatchObject({
+      estado_final: "divergente",
+      regra_codigo: "R001-DIVERGENCIA-CONTROLE",
+      nivel_evidencia: "baixo",
+      necessita_acao: true,
+    });
   });
 
   it("bloqueia quando falta uma das duas fontes", async () => {
