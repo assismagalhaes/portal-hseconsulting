@@ -7321,6 +7321,168 @@ export type Database = {
           },
         ]
       }
+      psico_individual_esclarecimento_convites: {
+        Row: {
+          created_at: string
+          esclarecimento_id: string
+          expira_em: string
+          id: string
+          papel: string
+          respondido_em: string | null
+          status: string
+          token_hash: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          esclarecimento_id: string
+          expira_em: string
+          id?: string
+          papel: string
+          respondido_em?: string | null
+          status?: string
+          token_hash: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          esclarecimento_id?: string
+          expira_em?: string
+          id?: string
+          papel?: string
+          respondido_em?: string | null
+          status?: string
+          token_hash?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_esclarecimento_convites_esclarecimento_id_fkey"
+            columns: ["esclarecimento_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_esclarecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_esclarecimento_respostas: {
+        Row: {
+          convite_id: string
+          created_at: string
+          esclarecimento_id: string
+          id: string
+          papel: string
+          respondido_em: string
+          respostas: Json
+        }
+        Insert: {
+          convite_id: string
+          created_at?: string
+          esclarecimento_id: string
+          id?: string
+          papel: string
+          respondido_em?: string
+          respostas: Json
+        }
+        Update: {
+          convite_id?: string
+          created_at?: string
+          esclarecimento_id?: string
+          id?: string
+          papel?: string
+          respondido_em?: string
+          respostas?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_esclarecimento_resposta_esclarecimento_id_fkey"
+            columns: ["esclarecimento_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_esclarecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_individual_esclarecimento_respostas_convite_id_fkey"
+            columns: ["convite_id"]
+            isOneToOne: true
+            referencedRelation: "psico_individual_esclarecimento_convites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_esclarecimentos: {
+        Row: {
+          achado_id: string
+          avaliacao_id: string
+          concluido_em: string | null
+          created_at: string
+          fator_codigo: string
+          id: string
+          perigo_codigo: string | null
+          processamento_id: string
+          revogado_em: string | null
+          sintese_sanitizada: Json | null
+          solicitado_em: string
+          solicitado_por: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          achado_id: string
+          avaliacao_id: string
+          concluido_em?: string | null
+          created_at?: string
+          fator_codigo: string
+          id?: string
+          perigo_codigo?: string | null
+          processamento_id: string
+          revogado_em?: string | null
+          sintese_sanitizada?: Json | null
+          solicitado_em?: string
+          solicitado_por: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          achado_id?: string
+          avaliacao_id?: string
+          concluido_em?: string | null
+          created_at?: string
+          fator_codigo?: string
+          id?: string
+          perigo_codigo?: string | null
+          processamento_id?: string
+          revogado_em?: string | null
+          sintese_sanitizada?: Json | null
+          solicitado_em?: string
+          solicitado_por?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_esclarecimentos_achado_id_fkey"
+            columns: ["achado_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_achados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_individual_esclarecimentos_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_individual_esclarecimentos_processamento_id_fkey"
+            columns: ["processamento_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_processamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psico_individual_formularios: {
         Row: {
           avaliacao_id: string
@@ -10519,6 +10681,10 @@ export type Database = {
         Args: { p_erro: string; p_id: string }
         Returns: undefined
       }
+      psico_ind_finalizar_esclarecimento: {
+        Args: { p_convite: string; p_respostas: Json; p_token_hash: string }
+        Returns: Json
+      }
       psico_ind_finalizar_submissao: {
         Args: {
           p_instrumento_versao_id: string
@@ -10584,6 +10750,22 @@ export type Database = {
           regra_versao: string
           revisado_em: string
           revisado_por: string
+        }[]
+      }
+      psico_ind_listar_esclarecimentos: {
+        Args: { p_avaliacao: string }
+        Returns: {
+          achado_id: string
+          concluido_em: string
+          empregado_status: string
+          empregador_status: string
+          expira_em: string
+          fator_codigo: string
+          id: string
+          perigo_codigo: string
+          sintese_sanitizada: Json
+          solicitado_em: string
+          status: string
         }[]
       }
       psico_ind_listar_relatorios: {
@@ -10713,6 +10895,15 @@ export type Database = {
         Args: { p_motivo: string; p_processamento: string }
         Returns: undefined
       }
+      psico_ind_reemitir_esclarecimento: {
+        Args: {
+          p_esclarecimento: string
+          p_expira_em?: string
+          p_token_hash_empregado: string
+          p_token_hash_empregador: string
+        }
+        Returns: undefined
+      }
       psico_ind_salvar_parecer: {
         Args: {
           p_avaliacao: string
@@ -10725,6 +10916,15 @@ export type Database = {
       psico_ind_snapshot_relatorio: {
         Args: { p_avaliacao: string }
         Returns: Json
+      }
+      psico_ind_solicitar_esclarecimento: {
+        Args: {
+          p_achado: string
+          p_expira_em?: string
+          p_token_hash_empregado: string
+          p_token_hash_empregador: string
+        }
+        Returns: string
       }
       psico_listar_escopos_resultado: {
         Args: { p_avaliacao_id: string }
