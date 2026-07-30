@@ -10564,6 +10564,7 @@ export type Database = {
         Returns: {
           condicao_preliminar: string
           controle_existente: string
+          descricao_organizacional: string
           eficacia_controle: string
           estado_convergencia: string
           estado_final: string
@@ -10577,6 +10578,7 @@ export type Database = {
           justificativa_alteracao: string
           necessita_acao: boolean
           nivel_evidencia: string
+          perigo_codigo: string
           processamento_id: string
           regra_codigo: string
           regra_versao: string
@@ -10706,6 +10708,10 @@ export type Database = {
           p_modelo_versao: string
         }
         Returns: Json
+      }
+      psico_ind_reabrir_processamento: {
+        Args: { p_motivo: string; p_processamento: string }
+        Returns: undefined
       }
       psico_ind_salvar_parecer: {
         Args: {
