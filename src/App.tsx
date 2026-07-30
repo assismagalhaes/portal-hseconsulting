@@ -132,7 +132,7 @@ const App = () => (
               <Route path="/meu-perfil" element={<MeuPerfil />} />
               <Route path="/usuarios" element={<RequireRole allow="admin"><Usuarios /></RequireRole>} />
               <Route path="/usuarios/logs" element={<RequireRole allow="admin"><UsuariosLogs /></RequireRole>} />
-              <Route path="/clientes" element={<RequireRole><Clients /></RequireRole>} />
+              <Route path="/clientes" element={<RequireRole allow="operacional_tecnico"><Clients /></RequireRole>} />
               <Route path="/servicos" element={<RequireRole><Services /></RequireRole>} />
               <Route path="/propostas" element={<RequireRole><Proposals /></RequireRole>} />
               <Route path="/propostas/:id" element={<RequireRole><ProposalEditor /></RequireRole>} />
@@ -180,18 +180,18 @@ const App = () => (
               <Route path="/automacoes/execucoes" element={<RequireRole><AutomacoesExecucoes /></RequireRole>} />
               <Route path="/notificacoes" element={<RequireRole><Notificacoes /></RequireRole>} />
               <Route path="/tarefas" element={<RequireRole><Tarefas /></RequireRole>} />
-              <Route path="/operacoes/avaliacao-fatores-psicossociais" element={<RequireRole><PsicoModuloRedirect /></RequireRole>} />
-              <Route path="/operacoes/avaliacao-fatores-psicossociais/avaliacoes" element={<RequireRole><PsicoAvaliacoesLista /></RequireRole>} />
-              <Route path="/operacoes/avaliacao-fatores-psicossociais/avaliacoes/nova" element={<RequireRole><PsicoAvaliacaoNova /></RequireRole>} />
-              <Route path="/operacoes/avaliacao-fatores-psicossociais/importar-historico" element={<RequireRole><PsicoImportacaoHistorica /></RequireRole>} />
-              <Route path="/operacoes/avaliacao-fatores-psicossociais/avaliacoes/:id/relatorio/preview" element={<RequireRole><PsicoRelatorioPreview /></RequireRole>} />
-              <Route path="/operacoes/avaliacao-fatores-psicossociais/avaliacoes/:id" element={<RequireRole><PsicoAvaliacaoDetalhes /></RequireRole>} />
-              <Route path="/operacoes/avaliacao-fatores-psicossociais/resultados" element={<RequireRole><PsicoResultados /></RequireRole>} />
-              <Route path="/operacoes/avaliacao-fatores-psicossociais/relatorios" element={<RequireRole><PsicoRelatorios /></RequireRole>} />
-              <Route path="/operacoes/avaliacao-fatores-psicossociais/configuracoes" element={<RequireRole><PsicoConfiguracoes /></RequireRole>} />
-              <Route path="/operacoes/avaliacao-fatores-psicossociais/configuracoes/preview/:id" element={<RequireRole><PsicoQuestionarioPreview /></RequireRole>} />
-             <Route path="/operacoes/avaliacao-fatores-psicossociais/biblioteca-medidas" element={<RequireRole><PsicoBibliotecaLista /></RequireRole>} />
-             <Route path="/operacoes/avaliacao-fatores-psicossociais/biblioteca-medidas/:id" element={<RequireRole><PsicoBibliotecaDetalhe /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais" element={<RequireRole allow="operacional_tecnico"><PsicoModuloRedirect /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais/avaliacoes" element={<RequireRole allow="operacional_tecnico"><PsicoAvaliacoesLista /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais/avaliacoes/nova" element={<RequireRole allow="operacional_tecnico"><PsicoAvaliacaoNova /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais/importar-historico" element={<RequireRole allow="operacional_tecnico"><PsicoImportacaoHistorica /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais/avaliacoes/:id/relatorio/preview" element={<RequireRole allow="operacional_tecnico"><PsicoRelatorioPreview /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais/avaliacoes/:id" element={<RequireRole allow="operacional_tecnico"><PsicoAvaliacaoDetalhes /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais/resultados" element={<RequireRole allow="operacional_tecnico"><PsicoResultados /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais/relatorios" element={<RequireRole allow="operacional_tecnico"><PsicoRelatorios /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais/configuracoes" element={<RequireRole allow="operacional_tecnico"><PsicoConfiguracoes /></RequireRole>} />
+              <Route path="/operacoes/avaliacao-fatores-psicossociais/configuracoes/preview/:id" element={<RequireRole allow="operacional_tecnico"><PsicoQuestionarioPreview /></RequireRole>} />
+             <Route path="/operacoes/avaliacao-fatores-psicossociais/biblioteca-medidas" element={<RequireRole allow="operacional_tecnico"><PsicoBibliotecaLista /></RequireRole>} />
+             <Route path="/operacoes/avaliacao-fatores-psicossociais/biblioteca-medidas/:id" element={<RequireRole allow="operacional_tecnico"><PsicoBibliotecaDetalhe /></RequireRole>} />
               <Route path="/configuracoes" element={<RequireRole allow="admin"><Settings /></RequireRole>} />
               <Route path="/configuracoes/premissas" element={<RequireRole allow="admin"><PremissasProposta /></RequireRole>} />
             </Route>
