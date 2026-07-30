@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { brl, formatCnpjCpf } from "@/lib/format";
+import { brlRaw, formatCnpjCpf } from "@/lib/format";
 import logoNavy from "@/assets/hse-logo-navy.png";
 import logoGreen from "@/assets/hse-logo-green.png";
 import capaImg from "@/assets/proposta-capa.jpg";
@@ -312,8 +312,8 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
                 )}
               </td>
               <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace" }}>{it.quantidade}</td>
-              <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace" }}>{brl(it.valor_unitario)}</td>
-              <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace", fontWeight: 700 }}>{brl(it.valor_total)}</td>
+              <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace" }}>{brlRaw(it.valor_unitario)}</td>
+              <td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "monospace", fontWeight: 700 }}>{brlRaw(it.valor_total)}</td>
             </tr>
           </tbody>
         </table>
@@ -323,10 +323,10 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
   push("Investimento", "inv-totals", (
     <div style={{ marginTop: 22, display: "flex", justifyContent: "flex-end" }}>
       <div style={{ minWidth: 320 }}>
-        <Line label="Subtotal dos serviços" value={brl(subtotal)} />
+        <Line label="Subtotal dos serviços" value={brlRaw(subtotal)} />
         {desconto > 0 && (
           <>
-            <Line label={descontoLabel} value={"- " + brl(desconto)} />
+            <Line label={descontoLabel} value={"- " + brlRaw(desconto)} />
             {revVigente?.motivo && (
               <div style={{ fontSize: 10.5, color: "#64748b", padding: "0 2px 6px", textAlign: "right", fontStyle: "italic" }}>
                 Motivo: {revVigente.motivo}
@@ -343,7 +343,7 @@ export default function ProposalDocument({ proposal, client, items, revisions = 
               </div>
             )}
           </div>
-          <div style={{ fontFamily: `${fontTitulo}, sans-serif`, fontSize: 28, fontWeight: 800, color: accent }}>{brl(valorFinal)}</div>
+          <div style={{ fontFamily: `${fontTitulo}, sans-serif`, fontSize: 28, fontWeight: 800, color: accent }}>{brlRaw(valorFinal)}</div>
         </div>
       </div>
     </div>

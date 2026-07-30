@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, Eraser, FileSignature, ShieldCheck, Loader2 } from "lucide-react";
 import logoNavy from "@/assets/hse-logo-navy.png";
-import { brl } from "@/lib/format";
+import { brlRaw } from "@/lib/format";
 
 type Aceite = {
   id: string;
@@ -248,7 +248,7 @@ export default function PropostaAceitePublica() {
               </div>
               <div className="text-right">
                 <div className="text-xs text-muted-foreground">Valor total</div>
-                <div className="text-2xl font-bold">{brl(proposta.valor_total || 0)}</div>
+                <div className="text-2xl font-bold">{brlRaw(proposta.valor_total || 0)}</div>
                 {proposta.revisao_atual ? <div className="text-xs text-muted-foreground">Revisão {String(proposta.revisao_atual).padStart(2, "0")}</div> : null}
               </div>
             </CardTitle>
@@ -307,7 +307,7 @@ export default function PropostaAceitePublica() {
                         <td className="p-2">{it.numero_item ?? i + 1}</td>
                         <td className="p-2">{it.nome}</td>
                         <td className="p-2 text-right">{it.quantidade} {it.unidade || ""}</td>
-                        <td className="p-2 text-right font-medium">{brl(it.valor_total || 0)}</td>
+                        <td className="p-2 text-right font-medium">{brlRaw(it.valor_total || 0)}</td>
                       </tr>
                     ))}
                   </tbody>

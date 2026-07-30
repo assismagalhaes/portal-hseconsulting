@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileText, Download } from "lucide-react";
 import { Link } from "react-router-dom";
-import { brl } from "@/lib/format";
+import { brlRaw } from "@/lib/format";
 import { PROPOSTA_STATUS_CLIENTE, registrarLogCliente } from "@/lib/cliente";
 
 export default function ClientePropostas() {
@@ -40,7 +40,7 @@ export default function ClientePropostas() {
               <div className="flex items-center gap-3">
                 <div className="text-right">
                   <div className="text-xs text-muted-foreground">Valor total</div>
-                  <div className="font-display text-lg font-bold">{brl(p.valor_total || 0)}</div>
+                  <div className="font-display text-lg font-bold">{brlRaw(p.valor_total || 0)}</div>
                 </div>
                 <Button asChild variant="secondary" size="sm"
                   onClick={() => registrarLogCliente("proposta_visualizada", p.numero)}>
