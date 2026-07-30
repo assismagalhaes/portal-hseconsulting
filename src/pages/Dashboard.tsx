@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { brl, formatDate, proposalStatusLabel } from "@/lib/format";
-import { FileText, Users, Plus, TrendingUp, FolderKanban } from "lucide-react";
+import { FileText, Users, Plus, TrendingUp, FolderKanban, Eye, EyeOff } from "lucide-react";
 
 type Counts = { propostas: number; aprovadas: number; clientes: number; servicos: number; pipeline: number; aprovado_valor: number; projetos_ativos: number; projetos_atrasados: number; };
 const statusColor: Record<string, string> = {
@@ -24,6 +24,10 @@ export default function Dashboard() {
   const [recent, setRecent] = useState<any[]>([]);
   const [allProps, setAllProps] = useState<any[]>([]);
   const [base, setBase] = useState<"emissao"|"envio"|"aprovacao"|"cadastro">("emissao");
+  const [showValues, setShowValues] = useState<boolean>(() => localStorage.getItem("hse:showValues") !== "0");
+  const money = (v: any) => (showValues ? brl(v) : "R$ ••••••");
+
+  useEffect(() => { localStorage.setItem("hse:showValues", showValues ? "1" : "0"); }, [showValues]);
 
   useEffect(() => {
     document.title = "Dashboard | Portal HSE Consulting";
@@ -81,13 +85,17 @@ export default function Dashboard() {
                 </SelectContent>
               </Select>
             </div>
+            <Button variant="outline" size="sm" onClick={() => setShowValues(v => !v)} title={showValues ? "Ocultar valores" : "Mostrar valores"}>
+              {showValues ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+              {showValues ? "Ocultar valores" : "Mostrar valores"}
+            </Button>
             <Button asChild><Link to="/propostas"><Plus className="h-4 w-4 mr-2" /> Nova proposta</Link></Button>
           </div>
         } />
       <div className="p-6 space-y-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard icon={FileText} label="Propostas" value={counts.propostas} hint={`${counts.aprovadas} aprovadas`} />
-          <MetricCard icon={TrendingUp} label="Pipeline" value={brl(counts.pipeline)} hint="rascunho + enviadas + negociação" />
+          <MetricCard icon={TrendingUp} label="Pipeline" value={money(counts.pipeline)} hint="rascunho + enviadas + negociação" />
           <MetricCard icon={FolderKanban} label="Projetos ativos" value={counts.projetos_ativos} hint={`${counts.projetos_atrasados} atrasados`} />
           <MetricCard icon={Users} label="Clientes" value={counts.clientes} hint="cadastrados" />
         </div>
@@ -115,7 +123,7 @@ export default function Dashboard() {
                     </Link>
                     <div className="flex items-center gap-4">
                       <span className="text-xs text-muted-foreground">{formatDate(dateMap[base])}</span>
-                      <span className="font-mono text-sm">{brl(p.valor_total)}</span>
+                      <span className="font-mono text-sm">{money(p.valor_total)}</span>
                       <Badge className={statusColor[p.status] + " border-0"}>{proposalStatusLabel[p.status]}</Badge>
                     </div>
                   </li>
