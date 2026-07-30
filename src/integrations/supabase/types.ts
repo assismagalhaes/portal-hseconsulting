@@ -10337,6 +10337,7 @@ export type Database = {
       can_see_comercial: { Args: never; Returns: boolean }
       can_see_financeiro: { Args: never; Returns: boolean }
       can_see_internal: { Args: { _user_id: string }; Returns: boolean }
+      can_see_psico: { Args: { _user_id: string }; Returns: boolean }
       cliente_log: {
         Args: { _acao: string; _detalhe: string }
         Returns: undefined
