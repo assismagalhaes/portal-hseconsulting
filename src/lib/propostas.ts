@@ -79,7 +79,24 @@ export async function updateProposal(proposalId: string, patch: any): Promise<vo
 }
 
 export async function updateProposalTotal(proposalId: string, valorTotal: number): Promise<void> {
-  await supabase.from("proposals").update({ valor_total: valorTotal }).eq("id", proposalId);
+  const { error } = await supabase.from("proposals").update({ valor_total: valorTotal }).eq("id", proposalId);
+  if (error) throw new Error(error.message);
+}
+
+export async function syncProposalRevision(proposalId: string): Promise<string> {
+  const { data, error } = await supabase.rpc("sincronizar_revisao_proposta", {
+    _proposal_id: proposalId,
+  });
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function closeProposalRevision(proposalId: string): Promise<string> {
+  const { data, error } = await supabase.rpc("fechar_revisao_proposta", {
+    _proposal_id: proposalId,
+  });
+  if (error) throw new Error(error.message);
+  return data;
 }
 
 /* ---------------- Cliente ---------------- */

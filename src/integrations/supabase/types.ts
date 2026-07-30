@@ -10374,6 +10374,14 @@ export type Database = {
             }
             Returns: string
           }
+      fechar_revisao_proposta: {
+        Args: { _proposal_id: string }
+        Returns: string
+      }
+      sincronizar_revisao_proposta: {
+        Args: { _proposal_id: string }
+        Returns: string
+      }
       crm_converter_lead: { Args: { _lead_id: string }; Returns: string }
       current_client_id: { Args: never; Returns: string }
       current_client_ids: { Args: never; Returns: string[] }

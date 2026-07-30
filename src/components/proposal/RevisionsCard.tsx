@@ -1,5 +1,5 @@
 // Cartão de revisões da proposta.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,11 +30,15 @@ export default function RevisionsCard({ proposalId, valorAtual, revisions, onCha
     { value: "renegociacao", label: "Renegociação" },
     { value: "outro", label: "Outro" },
   ];
-  const [tipo, setTipo] = useState<string>("desconto");
+  const [tipo, setTipo] = useState<string>("alteracao_servicos");
   const [motivo, setMotivo] = useState("");
   const [obs, setObs] = useState("");
   const [valorNovo, setValorNovo] = useState<number>(Number(valorAtual) || 0);
   const temAprovada = revisions.some((r: any) => r.status === "aprovada");
+
+  useEffect(() => {
+    setValorNovo(Number(valorAtual) || 0);
+  }, [valorAtual]);
 
   async function criar() {
     if (!motivo.trim()) { toast.error("Informe o motivo da revisão"); return; }
@@ -45,9 +49,14 @@ export default function RevisionsCard({ proposalId, valorAtual, revisions, onCha
       _valor_novo: valorNovo,
       _tipo: tipo,
     });
-    if (error) return toast.error(error.message);
+    if (error) {
+      const message = error.message.includes("SEM_ALTERACOES_COMERCIAIS")
+        ? "Não há alteração comercial para registrar nesta revisão."
+        : error.message;
+      return toast.error(message);
+    }
     setMotivo(""); setObs("");
-    toast.success("Nova revisão registrada");
+    toast.success("Revisão consolidada");
     onChanged?.();
   }
 
@@ -73,9 +82,10 @@ export default function RevisionsCard({ proposalId, valorAtual, revisions, onCha
       )}
 
       <div className="space-y-2">
-        <Label className="text-xs">Registrar nova revisão</Label>
+        <Label className="text-xs">Identificar a revisão atual</Label>
         <p className="text-[11px] text-muted-foreground -mt-1">
-          Use apenas para eventos relevantes (desconto, alteração de serviços, ajuste técnico, renegociação). Mudanças internas de status (rascunho, enviada, aprovada) não geram revisão.
+          Alterações em serviços, preços e custos já são reunidas automaticamente na revisão em edição.
+          Informe aqui o motivo comercial antes de gerar a nova versão do PDF.
         </p>
         <div className="grid sm:grid-cols-3 gap-2">
           <Select value={tipo} onValueChange={setTipo}>
@@ -92,7 +102,7 @@ export default function RevisionsCard({ proposalId, valorAtual, revisions, onCha
         <div className="flex justify-between items-center text-xs text-muted-foreground">
           <span>Valor atual da proposta: <span className="font-mono font-semibold">{brl(valorAtual)}</span></span>
           <Button size="sm" onClick={criar} disabled={!motivo.trim()}>
-            <Plus className="h-3.5 w-3.5 mr-1" /> Criar revisão
+            <Plus className="h-3.5 w-3.5 mr-1" /> Consolidar revisão
           </Button>
         </div>
       </div>
@@ -112,6 +122,11 @@ export default function RevisionsCard({ proposalId, valorAtual, revisions, onCha
                   <Badge variant="outline" className="font-mono">Rev. {String(r.revisao).padStart(2, "0")}</Badge>
                   <Badge className={`border-0 ${meta.color}`}>{meta.label}</Badge>
                   {tipoLabel && <Badge variant="secondary" className="text-[10px]">{tipoLabel}</Badge>}
+                  {r.snapshot?.estado === "em_edicao" && r.revisao > 1 && (
+                    <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-800">
+                      Alterações detectadas
+                    </Badge>
+                  )}
                   <span className="font-medium">{r.titulo || r.motivo || "Revisão"}</span>
                 </div>
                 <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString("pt-BR")}</span>

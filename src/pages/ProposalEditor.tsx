@@ -70,6 +70,8 @@ import {
   loadProposalBundle,
   updateProposal,
   updateProposalTotal,
+  syncProposalRevision,
+  closeProposalRevision,
   upsertProposalClient,
   insertProposalItem,
   updateProposalItem as updateProposalItemDb,
@@ -262,8 +264,19 @@ export default function ProposalEditor() {
   /* ---------------- Itens ---------------- */
   async function updateTotal(newItems: any[]) {
     const t = newItems.reduce((a,b)=>a+Number(b.valor_total||0),0);
-    await updateProposalTotal(proposal.id, t);
-    setProposal((p:any) => ({...p, valor_total:t }));
+    try {
+      await updateProposalTotal(proposal.id, t);
+      await syncProposalRevision(proposal.id);
+      const nextRevisions = await listRevisions(proposal.id);
+      setRevisions(nextRevisions);
+      setProposal((p:any) => ({
+        ...p,
+        valor_total: t,
+        revisao_atual: nextRevisions[0]?.revisao ?? p.revisao_atual,
+      }));
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao atualizar a revisão comercial");
+    }
   }
 
   async function addItem(fromService?: any) {
@@ -293,7 +306,7 @@ export default function ProposalEditor() {
       return toast.error(e?.message || "Falha ao adicionar item");
     }
     const next = [...items, data];
-    setItems(next); updateTotal(next);
+    setItems(next); await updateTotal(next);
 
     // Se o serviço tem template de precificação, cria proposal_item_pricing automaticamente
     if (hasPricingTemplate && data) {
@@ -315,6 +328,7 @@ export default function ProposalEditor() {
         if (pr) setPricings((prev) => ({ ...prev, [data.id]: pr }));
       } catch { /* pricing template é best-effort */ }
     }
+    await syncProposalRevision(proposal.id);
   }
 
   async function updateItem(it: any, patch: any) {
@@ -343,7 +357,7 @@ export default function ProposalEditor() {
     setSaving(false);
     setLastSavedAt(Date.now());
     const next = items.map(x => x.id === it.id ? merged : x);
-    setItems(next); updateTotal(next);
+    setItems(next); await updateTotal(next);
   }
 
   async function removeItem(it: any) {
@@ -355,7 +369,7 @@ export default function ProposalEditor() {
         .filter((x, i) => x.numero_item !== remaining[i].numero_item)
         .map(x => updateProposalItemDb(x.id, { numero_item: x.numero_item }))
     );
-    setItems(next); updateTotal(next);
+    setItems(next); await updateTotal(next);
   }
 
   async function duplicateItem(it: any, mode: "keep" | "blank" | string = "keep") {
@@ -409,7 +423,7 @@ export default function ProposalEditor() {
     }
     const next = [...items, data];
     setItems(next);
-    updateTotal(next);
+    await updateTotal(next);
 
     // Copia a precificação interna, se existir no item original (essa é a razão
     // principal do "duplicar" no fluxo real — reaproveitar custos/margem já
@@ -433,6 +447,7 @@ export default function ProposalEditor() {
         if (pr) setPricings((prev) => ({ ...prev, [data.id]: pr }));
       } catch { /* best-effort */ }
     }
+    await syncProposalRevision(proposal.id);
     toast.success(svc ? `Item duplicado com dados de "${svc.nome}"` : "Item duplicado");
   }
 
@@ -546,6 +561,19 @@ export default function ProposalEditor() {
   const errs = validate();
 
   async function handlePrint() {
+    try {
+      await closeProposalRevision(proposal.id);
+      const nextRevisions = await listRevisions(proposal.id);
+      setRevisions(nextRevisions);
+      setProposal((p: any) => ({
+        ...p,
+        revisao_atual: nextRevisions[0]?.revisao ?? p.revisao_atual,
+      }));
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível registrar a versão da proposta.");
+      return;
+    }
+
     // Padrão de nome do arquivo: "Proposta P-2026-51842 - Zanotti".
     const clienteNome = client?.nome_fantasia || client?.razao_social || "Cliente";
     const safe = (s: string) => (s || "").replace(/[\\/:*?"<>|]/g, "").trim();
