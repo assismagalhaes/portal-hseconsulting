@@ -14,10 +14,19 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { AlertTriangle, CheckCircle2, Cpu, Lock, RefreshCcw, ShieldAlert, Unlock } from "lucide-react";
+import {
+  AlertTriangle, CheckCircle2, Clipboard, Cpu, Lock, MessageSquareText,
+  RefreshCcw, ShieldAlert, Unlock,
+} from "lucide-react";
 import { fatorLabel } from "@/lib/psicoLabels";
 import { mensagemErroConciliacao } from "@/lib/psicoIndividualFunctionError";
 import { condicaoLabel } from "@/lib/psicoIndividualCondicoes";
+import {
+  Esclarecimento,
+  gerarTokenEsclarecimento,
+  hashTokenEsclarecimento,
+  linkEsclarecimento,
+} from "@/lib/psicoIndividualEsclarecimento";
 
 type Achado = {
   id: string;
@@ -80,6 +89,7 @@ export default function PsicoIndividualConciliacaoTab({
   const [loading, setLoading] = useState(false);
   const [processando, setProcessando] = useState(false);
   const [achados, setAchados] = useState<Achado[]>([]);
+  const [esclarecimentos, setEsclarecimentos] = useState<Esclarecimento[]>([]);
   const [erroCarregar, setErroCarregar] = useState<string | null>(null);
   const [ultimoBloqueio, setUltimoBloqueio] = useState<string | null>(null);
   const [reabrindo, setReabrindo] = useState(false);
@@ -89,9 +99,14 @@ export default function PsicoIndividualConciliacaoTab({
     setLoading(true);
     setErroCarregar(null);
     try {
-      const { data, error } = await (supabase as any).rpc("psico_ind_listar_achados", { p_avaliacao: avaliacaoId });
-      if (error) throw error;
-      setAchados((data as Achado[]) ?? []);
+      const [achadosResult, esclarecimentosResult] = await Promise.all([
+        (supabase as any).rpc("psico_ind_listar_achados", { p_avaliacao: avaliacaoId }),
+        (supabase as any).rpc("psico_ind_listar_esclarecimentos", { p_avaliacao: avaliacaoId }),
+      ]);
+      if (achadosResult.error) throw achadosResult.error;
+      if (esclarecimentosResult.error) throw esclarecimentosResult.error;
+      setAchados((achadosResult.data as Achado[]) ?? []);
+      setEsclarecimentos((esclarecimentosResult.data as Esclarecimento[]) ?? []);
     } catch (e: any) {
       setErroCarregar(e?.message || "Falha ao carregar achados.");
     } finally {
@@ -130,6 +145,16 @@ export default function PsicoIndividualConciliacaoTab({
 
   const imutavel = achados[0]?.imutavel ?? false;
   const processamentoId = achados[0]?.processamento_id ?? null;
+  const esclarecimentoPorAchado = useMemo(() => {
+    const mapa = new Map<string, Esclarecimento>();
+    for (const item of esclarecimentos) {
+      if (!mapa.has(item.achado_id)) mapa.set(item.achado_id, item);
+    }
+    return mapa;
+  }, [esclarecimentos]);
+  const validacoesPendentes = achados.filter(
+    (item) => ["divergente", "evidencia_insuficiente"].includes(item.estado_final) && !item.revisado_em,
+  ).length;
   const fatoresConsolidados = useMemo(() => {
     const grupos = new Map<string, Achado[]>();
     for (const achado of achados) {
@@ -160,7 +185,13 @@ export default function PsicoIndividualConciliacaoTab({
       await carregar();
       await onReload?.();
     } catch (e: any) {
-      toast.error("Falha ao aprovar: " + (e?.message || "erro"));
+      if (String(e?.message || "").includes("divergencias_sem_validacao_tecnica")) {
+        toast.error(`Existem ${validacoesPendentes} condições aguardando validação técnica. Revise ou confirme as classificações antes de aprovar.`);
+      } else if (String(e?.message || "").includes("esclarecimentos_pendentes")) {
+        toast.error("Existem solicitações de esclarecimento aguardando resposta. Conclua-as antes de aprovar.");
+      } else {
+        toast.error("Falha ao aprovar: " + (e?.message || "erro"));
+      }
     }
   }
 
@@ -311,7 +342,13 @@ export default function PsicoIndividualConciliacaoTab({
                 </p>
               </div>
               {achados.map((a) => (
-                <AchadoCard key={a.id} a={a} onChanged={carregar} disabled={imutavel} />
+                <AchadoCard
+                  key={a.id}
+                  a={a}
+                  esclarecimento={esclarecimentoPorAchado.get(a.id) ?? null}
+                  onChanged={carregar}
+                  disabled={imutavel}
+                />
               ))}
             </div>
           )}
@@ -321,10 +358,19 @@ export default function PsicoIndividualConciliacaoTab({
   );
 }
 
-function AchadoCard({ a, onChanged, disabled }: { a: Achado; onChanged: () => void; disabled: boolean }) {
+function AchadoCard({
+  a, esclarecimento, onChanged, disabled,
+}: {
+  a: Achado;
+  esclarecimento: Esclarecimento | null;
+  onChanged: () => void;
+  disabled: boolean;
+}) {
   const [novoEstado, setNovoEstado] = useState<string>(a.estado_final);
   const [just, setJust] = useState("");
   const [saving, setSaving] = useState(false);
+  const [criandoEsclarecimento, setCriandoEsclarecimento] = useState(false);
+  const [linksGerados, setLinksGerados] = useState<Partial<Record<"empregado" | "empregador", string>> | null>(null);
   const info = estadoInfo(a.estado_final);
   const alterou = useMemo(() => (a.estado_original && a.estado_original !== a.estado_final) || !!a.justificativa_alteracao, [a]);
 
@@ -342,6 +388,60 @@ function AchadoCard({ a, onChanged, disabled }: { a: Achado; onChanged: () => vo
     } catch (e: any) {
       toast.error(e?.message || "Falha ao alterar classificação.");
     } finally { setSaving(false); }
+  }
+
+  async function gerarLinksEsclarecimento(reemitir = false) {
+    setCriandoEsclarecimento(true);
+    try {
+      const empregadoToken = gerarTokenEsclarecimento();
+      const empregadorToken = gerarTokenEsclarecimento();
+      const [empregadoHash, empregadorHash] = await Promise.all([
+        hashTokenEsclarecimento(empregadoToken),
+        hashTokenEsclarecimento(empregadorToken),
+      ]);
+      const expiraEm = new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString();
+      const { error } = await (supabase as any).rpc(
+        reemitir ? "psico_ind_reemitir_esclarecimento" : "psico_ind_solicitar_esclarecimento",
+        reemitir
+          ? {
+              p_esclarecimento: esclarecimento?.id,
+              p_token_hash_empregado: empregadoHash,
+              p_token_hash_empregador: empregadorHash,
+              p_expira_em: expiraEm,
+            }
+          : {
+              p_achado: a.id,
+              p_token_hash_empregado: empregadoHash,
+              p_token_hash_empregador: empregadorHash,
+              p_expira_em: expiraEm,
+            },
+      );
+      if (error) throw error;
+      setLinksGerados({
+        ...(esclarecimento?.empregado_status !== "respondido"
+          ? { empregado: linkEsclarecimento(empregadoToken) }
+          : {}),
+        ...(esclarecimento?.empregador_status !== "respondido"
+          ? { empregador: linkEsclarecimento(empregadorToken) }
+          : {}),
+      });
+      toast.success(reemitir
+        ? "Links pendentes reemitidos. Copie-os antes de sair desta página."
+        : "Solicitação criada. Copie os dois links antes de sair desta página.");
+      onChanged();
+    } catch (error: any) {
+      const mensagem = String(error?.message || "");
+      toast.error(mensagem.includes("esclarecimento_ativo_existente")
+        ? "Já existe uma solicitação aguardando resposta para esta condição."
+        : "Não foi possível criar a solicitação de esclarecimento.");
+    } finally {
+      setCriandoEsclarecimento(false);
+    }
+  }
+
+  async function copiarLink(link: string, papel: string) {
+    await navigator.clipboard.writeText(link);
+    toast.success(`Link do ${papel} copiado.`);
   }
 
   return (
@@ -384,6 +484,80 @@ function AchadoCard({ a, onChanged, disabled }: { a: Achado; onChanged: () => vo
           <span>{a.justificativa_alteracao}</span>
         </div>
       )}
+
+      {esclarecimento && (
+        <div className="rounded-md border border-blue-200 bg-blue-50/60 p-3 text-sm space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <MessageSquareText className="h-4 w-4 text-blue-700" />
+            <span className="font-medium">Esclarecimento complementar</span>
+            <Badge variant="outline">{labelize(esclarecimento.status)}</Badge>
+            <span className="text-xs text-muted-foreground">
+              Empregado: {labelize(esclarecimento.empregado_status)} · Empregador: {labelize(esclarecimento.empregador_status)}
+            </span>
+          </div>
+          {esclarecimento.sintese_sanitizada && (
+            <div className="space-y-2">
+              <p>{esclarecimento.sintese_sanitizada.fundamentacao}</p>
+              <div className="flex flex-wrap gap-2 text-xs">
+                <Badge variant="secondary">Resultado: {labelize(esclarecimento.sintese_sanitizada.resultado)}</Badge>
+                <Badge variant="secondary">{esclarecimento.sintese_sanitizada.criterios_convergentes}/3 critérios convergentes</Badge>
+                <Badge variant="secondary">{esclarecimento.sintese_sanitizada.exemplos_fornecidos}/2 exemplos</Badge>
+                <Badge variant="secondary">{esclarecimento.sintese_sanitizada.evidencias_fornecidas}/2 evidências</Badge>
+              </div>
+              {!disabled && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setJust(esclarecimento.sintese_sanitizada?.fundamentacao || "")}
+                >
+                  Usar síntese na justificativa
+                </Button>
+              )}
+            </div>
+          )}
+          {!disabled && ["aguardando_respostas", "parcial"].includes(esclarecimento.status) && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => gerarLinksEsclarecimento(true)}
+              disabled={criandoEsclarecimento}
+            >
+              <RefreshCcw className="h-4 w-4 mr-1" />
+              Reemitir links pendentes
+            </Button>
+          )}
+        </div>
+      )}
+
+      {linksGerados && (
+        <div className="rounded-md border border-amber-300 bg-amber-50 p-3 space-y-3">
+          <div>
+            <div className="font-medium text-sm">Copie os links agora</div>
+            <p className="text-xs text-muted-foreground">Por segurança, os tokens não são armazenados e não poderão ser exibidos novamente.</p>
+          </div>
+          {(["empregado", "empregador"] as const).filter((papel) => !!linksGerados[papel]).map((papel) => (
+            <div key={papel} className="flex items-center gap-2">
+              <div className="min-w-24 text-xs font-medium capitalize">{papel}</div>
+              <code className="min-w-0 flex-1 truncate rounded bg-background p-2 text-xs">{linksGerados[papel]}</code>
+              <Button size="sm" variant="outline" onClick={() => copiarLink(linksGerados[papel]!, papel)}>
+                <Clipboard className="h-4 w-4 mr-1" /> Copiar
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!disabled
+        && ["divergente", "evidencia_insuficiente"].includes(a.estado_final)
+        && !esclarecimento
+        && (
+          <div className="flex justify-end">
+            <Button size="sm" variant="outline" onClick={() => gerarLinksEsclarecimento(false)} disabled={criandoEsclarecimento}>
+              <MessageSquareText className="h-4 w-4 mr-1" />
+              {criandoEsclarecimento ? "Gerando links…" : "Solicitar esclarecimento"}
+            </Button>
+          </div>
+        )}
 
       {!disabled && (
         <div className="grid gap-2 sm:grid-cols-[220px_1fr_auto] items-start pt-1">
