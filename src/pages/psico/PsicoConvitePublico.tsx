@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import PsicoPublicQuestionnaireForm, { QuestionarioPublico } from "@/components/psico/PsicoPublicQuestionnaireForm";
 import PsicoIndividualQuestionnaireForm, { FormularioIndividual } from "@/components/psico/PsicoIndividualQuestionnaireForm";
+import PsicoIndividualClarificationForm, {
+  ContextoEsclarecimento,
+  FormularioEsclarecimento,
+} from "@/components/psico/PsicoIndividualClarificationForm";
 
 type Resultado = {
   valido: boolean;
@@ -14,11 +18,14 @@ type Resultado = {
   modalidade?: string;
   tipo?: "empregado" | "empregador";
   formulario?: FormularioIndividual;
+  contexto?: ContextoEsclarecimento;
+  formulario_esclarecimento?: FormularioEsclarecimento;
 };
 
 export default function PsicoConvitePublico() {
   const [res, setRes] = useState<Resultado | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fluxoEsclarecimento, setFluxoEsclarecimento] = useState(false);
 
   useEffect(() => {
     document.title = "Questionário de Percepção Psicoorganizacional | HSE";
@@ -34,17 +41,27 @@ export default function PsicoConvitePublico() {
     let token = "";
     const m = raw.match(/token=([^&]+)/);
     if (m) token = decodeURIComponent(m[1]);
+    setFluxoEsclarecimento(token.startsWith("esc."));
     // limpa o hash da barra de endereço
     if (token) history.replaceState(null, "", window.location.pathname);
 
     (async () => {
       try {
         // Token v2 (individual) começa com "v2."; caso contrário, tenta v1 (coletivo).
+        const isEsclarecimento = token.startsWith("esc.");
         const isV2 = token.startsWith("v2.");
-        const fn = isV2 ? "psico-individual-validar-convite" : "psico-validar-convite";
+        const fn = isEsclarecimento
+          ? "psico-individual-esclarecimento-validar"
+          : isV2 ? "psico-individual-validar-convite" : "psico-validar-convite";
         const { data, error } = await supabase.functions.invoke(fn, { body: { token } });
         if (error) throw error;
-        setRes(data as Resultado);
+        if (isEsclarecimento) {
+          const payload = data as Omit<Resultado, "formulario"> & { formulario?: FormularioEsclarecimento };
+          const { formulario, ...restante } = payload;
+          setRes({ ...restante, formulario_esclarecimento: formulario });
+        } else {
+          setRes(data as Resultado);
+        }
       } catch {
         setRes({ valido: false, estado: "invalido", mensagem: "Link inválido ou expirado." });
       } finally {
@@ -52,6 +69,20 @@ export default function PsicoConvitePublico() {
       }
     })();
   }, []);
+
+  if (
+    !loading && res?.valido && res.estado === "disponivel"
+    && res.modalidade === "esclarecimento_individual"
+    && res.sessao && res.formulario_esclarecimento && res.contexto
+  ) {
+    return (
+      <PsicoIndividualClarificationForm
+        formulario={res.formulario_esclarecimento}
+        contexto={res.contexto}
+        sessao={res.sessao}
+      />
+    );
+  }
 
   // Render individual form fullscreen
   if (!loading && res?.valido && res.estado === "disponivel" && res.modalidade === "individual" && res.sessao && res.formulario && res.tipo) {
@@ -70,7 +101,11 @@ export default function PsicoConvitePublico() {
       <div className="max-w-lg w-full space-y-6 text-center">
         <div>
           <div className="text-xs uppercase tracking-widest text-muted-foreground">HSE Consulting</div>
-          <h1 className="text-xl font-semibold mt-2">Questionário de Percepção Psicoorganizacional no Trabalho</h1>
+          <h1 className="text-xl font-semibold mt-2">
+            {fluxoEsclarecimento
+              ? "Esclarecimento complementar da avaliação"
+              : "Questionário de Percepção Psicoorganizacional no Trabalho"}
+          </h1>
         </div>
         {loading ? (
           <p className="text-sm text-muted-foreground">Validando seu acesso…</p>
@@ -92,8 +127,9 @@ export default function PsicoConvitePublico() {
           </div>
         )}
         <p className="text-[11px] text-muted-foreground pt-4 border-t">
-          Sua identificação é usada apenas para controle de participação e permanece tecnicamente separada do conteúdo das respostas.
-          A empresa recebe somente resultados coletivos consolidados.
+          {fluxoEsclarecimento
+            ? "As respostas individuais permanecem protegidas. A equipe técnica recebe somente uma síntese organizacional sanitizada."
+            : "Sua identificação é usada apenas para controle de participação e permanece tecnicamente separada do conteúdo das respostas. A empresa recebe somente resultados coletivos consolidados."}
         </p>
       </div>
       {!loading && res?.valido && res.estado === "disponivel" && res.sessao && res.questionario && (
