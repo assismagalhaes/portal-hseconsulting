@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Input } from "@/components/ui/input";
-import { brl, parseBrl } from "@/lib/format";
+import { brlRaw, parseBrl } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 type Props = Omit<React.ComponentProps<"input">, "value" | "onChange"> & {
@@ -26,7 +26,7 @@ export const MoneyInput = React.forwardRef<HTMLInputElement, Props>(
         ref={ref}
         inputMode="decimal"
         className={cn("text-right font-mono", className)}
-        value={focused ? draft : (value == null ? "" : showCurrency ? brl(value) : Number(value).toFixed(2).replace(".", ","))}
+        value={focused ? draft : (value == null ? "" : showCurrency ? brlRaw(value) : Number(value).toFixed(2).replace(".", ","))}
         onFocus={() => { setFocused(true); setDraft(value == null ? "" : Number(value).toFixed(2).replace(".", ",")); }}
         onBlur={() => { setFocused(false); onChange(parseBrl(draft)); }}
         onChange={(e) => setDraft(e.target.value)}

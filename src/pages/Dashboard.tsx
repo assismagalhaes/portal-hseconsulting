@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { brl, formatDate, proposalStatusLabel } from "@/lib/format";
 import { FileText, Users, Plus, TrendingUp, FolderKanban, Eye, EyeOff } from "lucide-react";
+import { useValuesVisibility } from "@/hooks/use-values-visibility";
 
 type Counts = { propostas: number; aprovadas: number; clientes: number; servicos: number; pipeline: number; aprovado_valor: number; projetos_ativos: number; projetos_atrasados: number; };
 const statusColor: Record<string, string> = {
@@ -24,10 +25,9 @@ export default function Dashboard() {
   const [recent, setRecent] = useState<any[]>([]);
   const [allProps, setAllProps] = useState<any[]>([]);
   const [base, setBase] = useState<"emissao"|"envio"|"aprovacao"|"cadastro">("emissao");
-  const [showValues, setShowValues] = useState<boolean>(() => localStorage.getItem("hse:showValues") !== "0");
-  const money = (v: any) => (showValues ? brl(v) : "R$ ••••••");
-
-  useEffect(() => { localStorage.setItem("hse:showValues", showValues ? "1" : "0"); }, [showValues]);
+  const { hidden, toggle } = useValuesVisibility();
+  const showValues = !hidden;
+  const money = (v: any) => brl(v);
 
   useEffect(() => {
     document.title = "Dashboard | Portal HSE Consulting";
@@ -85,7 +85,7 @@ export default function Dashboard() {
                 </SelectContent>
               </Select>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setShowValues(v => !v)} title={showValues ? "Ocultar valores" : "Mostrar valores"}>
+            <Button variant="outline" size="sm" onClick={toggle} title={showValues ? "Ocultar valores" : "Mostrar valores"}>
               {showValues ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
               {showValues ? "Ocultar valores" : "Mostrar valores"}
             </Button>

@@ -1,4 +1,4 @@
-import { brl, formatCnpjCpf } from "@/lib/format";
+import { brlRaw, formatCnpjCpf } from "@/lib/format";
 import { ClipboardList, Hash, Info, Package, ShieldCheck } from "lucide-react";
 import { formatarMarcoParcela } from "@/lib/condicoesPagamento";
 
@@ -91,7 +91,7 @@ export function ParcelasCard({ snap, total, primary, accent, neutral, textoPadra
           <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: 1.4, opacity: 0.85 }}>Cronograma de pagamento</div>
           <div style={{ fontSize: 14, fontWeight: 700 }}>{snap.nome}</div>
         </div>
-        <div style={{ marginLeft: "auto", fontSize: 12 }}>Total: <strong>{brl(total || 0)}</strong></div>
+        <div style={{ marginLeft: "auto", fontSize: 12 }}>Total: <strong>{brlRaw(total || 0)}</strong></div>
       </div>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11.5 }}>
         <thead>
@@ -108,7 +108,7 @@ export function ParcelasCard({ snap, total, primary, accent, neutral, textoPadra
               <td style={{ padding: "8px 12px", fontWeight: 600 }}>{p.numero}</td>
               <td style={{ padding: "8px 12px" }}>{Number(p.percentual).toFixed(2)}%</td>
               <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "monospace", fontWeight: 600, color: primary }}>
-                {brl(Number(p.valor ?? (p.percentual / 100) * (total || 0)))}
+                {brlRaw(Number(p.valor ?? (p.percentual / 100) * (total || 0)))}
               </td>
               <td style={{ padding: "8px 12px", color: accent, fontWeight: 600 }}>{formatarMarcoParcela(p)}</td>
             </tr>

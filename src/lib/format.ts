@@ -1,5 +1,33 @@
-export const brl = (n: number | null | undefined) =>
+/** Formatação de moeda sem máscara — usar em PDFs, documentos e páginas públicas. */
+export const brlRaw = (n: number | null | undefined) =>
   (Number(n ?? 0)).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+/* ---- Visibilidade global de valores (ocultar/mostrar) ---- */
+const VALUES_KEY = "hse:showValues";
+let valuesHidden =
+  typeof window !== "undefined" && localStorage.getItem(VALUES_KEY) === "0";
+const valuesListeners = new Set<() => void>();
+
+export const MASKED_MONEY = "R$ ••••••";
+
+export const isValuesHidden = () => valuesHidden;
+
+export const setValuesHidden = (hidden: boolean) => {
+  valuesHidden = hidden;
+  try { localStorage.setItem(VALUES_KEY, hidden ? "0" : "1"); } catch { /* ignore */ }
+  valuesListeners.forEach((l) => l());
+};
+
+export const toggleValuesHidden = () => setValuesHidden(!valuesHidden);
+
+export const subscribeValuesHidden = (listener: () => void) => {
+  valuesListeners.add(listener);
+  return () => { valuesListeners.delete(listener); };
+};
+
+/** Moeda para telas internas: respeita o botão global de ocultar valores. */
+export const brl = (n: number | null | undefined) =>
+  (valuesHidden ? MASKED_MONEY : brlRaw(n));
 
 /** Converte entrada em padrão BR ("R$ 1.234,56", "1234,56", "1234.56", "110") em number. */
 export const parseBrl = (input: string | number | null | undefined): number => {
