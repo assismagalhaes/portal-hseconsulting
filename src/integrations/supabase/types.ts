@@ -10386,6 +10386,10 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      fechar_revisao_proposta: {
+        Args: { _proposal_id: string }
+        Returns: string
+      }
       financeiro_atualizar_vencidas: { Args: never; Returns: number }
       financeiro_gerar_contrato: {
         Args: { _proposal_id: string }
@@ -10458,6 +10462,10 @@ export type Database = {
         Returns: undefined
       }
       projetos_gerar_renovacoes: { Args: never; Returns: number }
+      proposal_revision_snapshot: {
+        Args: { _estado: string; _proposal_id: string }
+        Returns: Json
+      }
       psico_abrir_coleta: {
         Args: { p_avaliacao_id: string; p_confirmacao: string }
         Returns: Json
@@ -11249,6 +11257,10 @@ export type Database = {
           _user_agent: string
         }
         Returns: Json
+      }
+      sincronizar_revisao_proposta: {
+        Args: { _proposal_id: string }
+        Returns: string
       }
       unaccent: { Args: { "": string }; Returns: string }
       user_can_access_execucao: {
