@@ -26,10 +26,12 @@ import {
   listarPlanoIndividual, sugerirPlanoIA, sugestaoToPatch,
 } from "@/lib/psicoIndividualPlano";
 import { fatorLabel } from "@/lib/psicoLabels";
+import { condicaoLabel } from "@/lib/psicoIndividualCondicoes";
 import { PSICO_INDIVIDUAL_AI_PLAN_ENABLED } from "@/lib/psicoIndividual";
 
 type Achado = {
   id: string; fator_codigo: string; estado_final: string;
+  perigo_codigo: string | null;
   necessita_acao: boolean; imutavel: boolean;
 };
 
@@ -117,7 +119,7 @@ export default function PsicoIndividualPlanoTab({ avaliacaoId }: { avaliacaoId: 
   async function aceitarSugestao(s: SugestaoIA) {
     const ach = achadosMap.get(s.achado_id);
     if (!ach) { toast.error("Achado não encontrado."); return; }
-    const patch = sugestaoToPatch(s, avaliacaoId, ach.fator_codigo);
+    const patch = sugestaoToPatch(s, avaliacaoId, ach.fator_codigo, ach.perigo_codigo);
     const { error } = await criarItemPlanoIndividual(patch);
     if (error) { toast.error((error as any).message); return; }
     setSugestoes((p) => p.filter((x) => x !== s));
@@ -217,7 +219,7 @@ export default function PsicoIndividualPlanoTab({ avaliacaoId }: { avaliacaoId: 
                           <SelectContent>
                             {achadosAcao.map((a) => (
                               <SelectItem key={a.id} value={a.id}>
-                                {fatorLabel(a.fator_codigo)} — {a.estado_final}
+                                {condicaoLabel(a.perigo_codigo)} · {fatorLabel(a.fator_codigo)} — {a.estado_final}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -342,6 +344,9 @@ export default function PsicoIndividualPlanoTab({ avaliacaoId }: { avaliacaoId: 
                       <span className="text-xs text-muted-foreground">{ach?.estado_final}</span>
                       <span className="ml-auto text-xs text-muted-foreground">prazo {s.prazo_dias}d</span>
                     </div>
+                    <div className="text-xs font-medium text-muted-foreground">
+                      Condição: {condicaoLabel(ach?.perigo_codigo)}
+                    </div>
                     <div className="font-medium">{s.titulo}</div>
                     <div><span className="text-xs text-muted-foreground">Objetivo:</span> {s.objetivo}</div>
                     <div><span className="text-xs text-muted-foreground">Ação:</span> {s.acao}</div>
@@ -398,6 +403,9 @@ function ItemCard({
             <Trash2 className="h-4 w-4" />
           </Button>
         )}
+      </div>
+      <div className="text-xs font-medium text-muted-foreground mb-1">
+        Condição: {condicaoLabel(item.perigo_codigo)}
       </div>
       <div className="font-medium">{item.titulo}</div>
       <div className="text-xs text-muted-foreground mb-2">{item.objetivo}</div>

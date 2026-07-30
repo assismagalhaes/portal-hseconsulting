@@ -14,14 +14,17 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { AlertTriangle, CheckCircle2, Cpu, Lock, RefreshCcw, ShieldAlert } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Cpu, Lock, RefreshCcw, ShieldAlert, Unlock } from "lucide-react";
 import { fatorLabel } from "@/lib/psicoLabels";
 import { mensagemErroConciliacao } from "@/lib/psicoIndividualFunctionError";
+import { condicaoLabel } from "@/lib/psicoIndividualCondicoes";
 
 type Achado = {
   id: string;
   processamento_id: string;
   fator_codigo: string;
+  perigo_codigo: string | null;
+  descricao_organizacional: string | null;
   frequencia_exposicao: string | null;
   intensidade_exigencia: string | null;
   controle_existente: string | null;
@@ -50,6 +53,15 @@ const ESTADOS: { value: string; label: string; tone: string }[] = [
   { value: "evidencia_insuficiente", label: "Evidência insuficiente", tone: "bg-slate-100 text-slate-700" },
   { value: "nao_aplicavel", label: "Não aplicável", tone: "bg-muted text-muted-foreground" },
 ];
+const PRIORIDADE_ESTADO: Record<string, number> = {
+  prioritario: 7,
+  requer_intervencao: 6,
+  divergente: 5,
+  evidencia_insuficiente: 4,
+  atencao_preventiva: 3,
+  controlado: 2,
+  nao_aplicavel: 1,
+};
 function estadoInfo(v: string | null | undefined) {
   return ESTADOS.find((e) => e.value === v) ?? { value: v ?? "—", label: v ?? "—", tone: "bg-muted" };
 }
@@ -58,12 +70,20 @@ function labelize(v?: string | null) {
   return v.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export default function PsicoIndividualConciliacaoTab({ avaliacaoId }: { avaliacaoId: string }) {
+export default function PsicoIndividualConciliacaoTab({
+  avaliacaoId,
+  onReload,
+}: {
+  avaliacaoId: string;
+  onReload?: () => Promise<void> | void;
+}) {
   const [loading, setLoading] = useState(false);
   const [processando, setProcessando] = useState(false);
   const [achados, setAchados] = useState<Achado[]>([]);
   const [erroCarregar, setErroCarregar] = useState<string | null>(null);
   const [ultimoBloqueio, setUltimoBloqueio] = useState<string | null>(null);
+  const [reabrindo, setReabrindo] = useState(false);
+  const [motivoReabertura, setMotivoReabertura] = useState("");
 
   async function carregar() {
     setLoading(true);
@@ -100,6 +120,7 @@ export default function PsicoIndividualConciliacaoTab({ avaliacaoId }: { avaliac
         toast.success("Conciliação processada.");
       }
       await carregar();
+      await onReload?.();
     } catch (e: any) {
       toast.error(e?.message || "Não foi possível processar a conciliação.");
     } finally {
@@ -109,6 +130,26 @@ export default function PsicoIndividualConciliacaoTab({ avaliacaoId }: { avaliac
 
   const imutavel = achados[0]?.imutavel ?? false;
   const processamentoId = achados[0]?.processamento_id ?? null;
+  const fatoresConsolidados = useMemo(() => {
+    const grupos = new Map<string, Achado[]>();
+    for (const achado of achados) {
+      grupos.set(achado.fator_codigo, [...(grupos.get(achado.fator_codigo) ?? []), achado]);
+    }
+    return [...grupos.entries()].map(([fator, itens]) => {
+      const pior = itens.reduce((atual, item) =>
+        (PRIORIDADE_ESTADO[item.estado_final] ?? 0) > (PRIORIDADE_ESTADO[atual.estado_final] ?? 0)
+          ? item
+          : atual,
+      );
+      return {
+        fator,
+        itens,
+        estado: pior.estado_final,
+        acoes: itens.filter((item) => item.necessita_acao).length,
+        divergencias: itens.filter((item) => item.estado_final === "divergente").length,
+      };
+    });
+  }, [achados]);
 
   async function aprovar() {
     if (!processamentoId) return;
@@ -117,8 +158,32 @@ export default function PsicoIndividualConciliacaoTab({ avaliacaoId }: { avaliac
       if (error) throw error;
       toast.success("Processamento aprovado e tornado imutável.");
       await carregar();
+      await onReload?.();
     } catch (e: any) {
       toast.error("Falha ao aprovar: " + (e?.message || "erro"));
+    }
+  }
+
+  async function reabrir() {
+    if (!processamentoId || motivoReabertura.trim().length < 10) {
+      toast.error("Descreva o motivo da reabertura com pelo menos 10 caracteres.");
+      return;
+    }
+    setReabrindo(true);
+    try {
+      const { error } = await (supabase as any).rpc("psico_ind_reabrir_processamento", {
+        p_processamento: processamentoId,
+        p_motivo: motivoReabertura.trim(),
+      });
+      if (error) throw error;
+      setMotivoReabertura("");
+      toast.success("Conciliação reaberta. Processe novamente para aplicar as regras vigentes.");
+      await carregar();
+      await onReload?.();
+    } catch (e: any) {
+      toast.error("Não foi possível reabrir: " + (e?.message || "erro"));
+    } finally {
+      setReabrindo(false);
     }
   }
 
@@ -134,7 +199,37 @@ export default function PsicoIndividualConciliacaoTab({ avaliacaoId }: { avaliac
           </div>
           <div className="flex items-center gap-2">
             {imutavel ? (
-              <Badge variant="secondary" className="gap-1"><Lock className="h-3 w-3" /> Imutável</Badge>
+              <>
+                <Badge variant="secondary" className="gap-1"><Lock className="h-3 w-3" /> Imutável</Badge>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="outline"><Unlock className="h-4 w-4 mr-1" /> Reabrir</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Reabrir conciliação?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Permitido somente antes de existir ação no plano ou relatório emitido. A operação ficará registrada no histórico.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="space-y-2">
+                      <Label htmlFor="motivo-reabertura">Motivo técnico</Label>
+                      <Textarea
+                        id="motivo-reabertura"
+                        value={motivoReabertura}
+                        onChange={(event) => setMotivoReabertura(event.target.value)}
+                        placeholder="Ex.: reprocessar divergências com a versão atual das regras."
+                      />
+                    </div>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={reabrir} disabled={reabrindo || motivoReabertura.trim().length < 10}>
+                        Reabrir conciliação
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
             ) : (
               <>
                 <Button size="sm" variant="outline" onClick={rodar} disabled={processando}>
@@ -184,6 +279,37 @@ export default function PsicoIndividualConciliacaoTab({ avaliacaoId }: { avaliac
             </p>
           ) : (
             <div className="space-y-4">
+              <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+                <div>
+                  <h4 className="font-semibold">Consolidação por fator</h4>
+                  <p className="text-xs text-muted-foreground">
+                    O nível do fator considera a condição válida mais crítica, sem ocultar as condições avaliadas abaixo.
+                  </p>
+                </div>
+                <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                  {fatoresConsolidados.map((fator) => {
+                    const info = estadoInfo(fator.estado);
+                    return (
+                      <div key={fator.fator} className="rounded-md border bg-background p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-medium">{fatorLabel(fator.fator)}</span>
+                          <Badge className={info.tone}>{info.label}</Badge>
+                        </div>
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          {fator.itens.length} condição(ões) · {fator.acoes} exige(m) ação
+                          {fator.divergencias > 0 ? ` · ${fator.divergencias} divergência(s)` : ""}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <h4 className="font-semibold">Condições avaliadas</h4>
+                <p className="text-xs text-muted-foreground">
+                  Cada cartão representa uma condição específica do fator, identificada pelo instrumento congelado.
+                </p>
+              </div>
               {achados.map((a) => (
                 <AchadoCard key={a.id} a={a} onChanged={carregar} disabled={imutavel} />
               ))}
@@ -203,15 +329,14 @@ function AchadoCard({ a, onChanged, disabled }: { a: Achado; onChanged: () => vo
   const alterou = useMemo(() => (a.estado_original && a.estado_original !== a.estado_final) || !!a.justificativa_alteracao, [a]);
 
   async function salvar() {
-    if (novoEstado === a.estado_final) return;
-    if (!just.trim()) { toast.error("Informe a justificativa da alteração."); return; }
+    if (!just.trim()) { toast.error("Informe a justificativa da decisão técnica."); return; }
     setSaving(true);
     try {
       const { error } = await (supabase as any).rpc("psico_ind_alterar_classificacao", {
         p_achado: a.id, p_novo_estado: novoEstado, p_justificativa: just.trim(),
       });
       if (error) throw error;
-      toast.success("Classificação atualizada.");
+      toast.success(novoEstado === a.estado_final ? "Classificação confirmada tecnicamente." : "Classificação atualizada.");
       setJust("");
       onChanged();
     } catch (e: any) {
@@ -222,9 +347,15 @@ function AchadoCard({ a, onChanged, disabled }: { a: Achado; onChanged: () => vo
   return (
     <div className="rounded-md border p-3 space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="font-medium">{fatorLabel(a.fator_codigo)}</div>
+        <div>
+          <div className="font-medium">{condicaoLabel(a.perigo_codigo)}</div>
+          <div className="text-xs text-muted-foreground">{fatorLabel(a.fator_codigo)}</div>
+        </div>
         <Badge className={info.tone}>{info.label}</Badge>
         {a.necessita_acao && <Badge variant="outline" className="text-orange-700 border-orange-300 gap-1"><AlertTriangle className="h-3 w-3" /> requer ação</Badge>}
+        {a.estado_final === "divergente" && !a.revisado_em && (
+          <Badge variant="outline" className="text-purple-700 border-purple-300">validação técnica pendente</Badge>
+        )}
         {alterou && <Badge variant="outline" className="text-purple-700 border-purple-300">alterado tecnicamente</Badge>}
         <div className="ml-auto text-xs text-muted-foreground">
           Regra <code>{a.regra_codigo}</code> · {a.regra_versao}
@@ -266,11 +397,13 @@ function AchadoCard({ a, onChanged, disabled }: { a: Achado; onChanged: () => vo
             </Select>
           </div>
           <div>
-            <Label className="text-xs">Justificativa (obrigatória ao alterar)</Label>
-            <Textarea rows={2} value={just} onChange={(e) => setJust(e.target.value)} placeholder="Descreva a base clínica/organizacional da alteração." />
+            <Label className="text-xs">Justificativa da decisão técnica</Label>
+            <Textarea rows={2} value={just} onChange={(e) => setJust(e.target.value)} placeholder="Descreva a base técnica e organizacional da decisão." />
           </div>
           <div className="pt-5">
-            <Button size="sm" onClick={salvar} disabled={saving || novoEstado === a.estado_final}>Salvar</Button>
+            <Button size="sm" onClick={salvar} disabled={saving || !just.trim()}>
+              {novoEstado === a.estado_final ? "Confirmar" : "Salvar"}
+            </Button>
           </div>
         </div>
       )}

@@ -93,6 +93,33 @@ Deno.serve(async (req) => {
   });
   if (ePer) return json(500, { error: "persistencia_falhou", detail: ePer.message });
 
+  const { data: auditExistente, error: auditReadError } = await admin
+    .from("psico_auditoria")
+    .select("id")
+    .eq("entidade", "avaliacao")
+    .eq("entidade_id", avaliacaoId)
+    .eq("acao", "conciliacao_individual_processada")
+    .contains("metadados", { processamento_id: procId })
+    .maybeSingle();
+  if (auditReadError) return json(500, { error: "auditoria_falhou" });
+
+  if (!auditExistente) {
+    const { error: auditInsertError } = await admin.from("psico_auditoria").insert({
+      entidade: "avaliacao",
+      entidade_id: avaliacaoId,
+      acao: "conciliacao_individual_processada",
+      usuario_id: userData.user.id,
+      metadados: {
+        resumo: "Conciliação individual processada pelo motor determinístico",
+        processamento_id: procId,
+        engine_versao: saida.engine_versao,
+        regras_versao: saida.regras_versao,
+        total_achados: saida.achados.length,
+      },
+    });
+    if (auditInsertError) return json(500, { error: "auditoria_falhou" });
+  }
+
   return json(200, {
     status: "ok",
     processamento_id: procId,
