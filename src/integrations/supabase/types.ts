@@ -10374,14 +10374,6 @@ export type Database = {
             }
             Returns: string
           }
-      fechar_revisao_proposta: {
-        Args: { _proposal_id: string }
-        Returns: string
-      }
-      sincronizar_revisao_proposta: {
-        Args: { _proposal_id: string }
-        Returns: string
-      }
       crm_converter_lead: { Args: { _lead_id: string }; Returns: string }
       current_client_id: { Args: never; Returns: string }
       current_client_ids: { Args: never; Returns: string[] }
@@ -10393,6 +10385,10 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      fechar_revisao_proposta: {
+        Args: { _proposal_id: string }
+        Returns: string
       }
       financeiro_atualizar_vencidas: { Args: never; Returns: number }
       financeiro_gerar_contrato: {
@@ -10466,6 +10462,10 @@ export type Database = {
         Returns: undefined
       }
       projetos_gerar_renovacoes: { Args: never; Returns: number }
+      proposal_revision_snapshot: {
+        Args: { _estado: string; _proposal_id: string }
+        Returns: Json
+      }
       psico_abrir_coleta: {
         Args: { p_avaliacao_id: string; p_confirmacao: string }
         Returns: Json
@@ -11257,6 +11257,10 @@ export type Database = {
           _user_agent: string
         }
         Returns: Json
+      }
+      sincronizar_revisao_proposta: {
+        Args: { _proposal_id: string }
+        Returns: string
       }
       unaccent: { Args: { "": string }; Returns: string }
       user_can_access_execucao: {
