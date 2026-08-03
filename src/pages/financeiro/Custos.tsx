@@ -132,7 +132,7 @@ export default function Custos() {
                   <td className="px-4 py-2">{FIN_TIPO_CUSTO[r.tipo] || r.tipo}</td>
                   <td className="px-4 py-2">{r.descricao}<div className="text-xs text-muted-foreground">{r.observacoes}</div></td>
                   <td className="px-4 py-2 text-right font-mono">{brl(r.valor)}</td>
-                  <td className="px-4 py-2 text-right"><Button size="icon" variant="ghost" onClick={()=>remover(r.id)}><Trash2 className="h-3 w-3"/></Button></td>
+                  <td className="px-4 py-2 text-right"><Button size="icon" variant="ghost" aria-label="Remover" onClick={()=>remover(r.id)}><Trash2 className="h-3 w-3"/></Button></td>
                 </tr>
               ))}
               {filtered.length === 0 && <tr><td colSpan={5} className="text-center py-10 text-muted-foreground">Nenhum custo lançado.</td></tr>}

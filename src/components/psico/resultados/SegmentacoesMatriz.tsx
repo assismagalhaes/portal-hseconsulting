@@ -6,7 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle, Info, Loader2 } from "lucide-react";
 import { getPsicoSegmentComparison } from "@/lib/psicoResultados";
-import { CLASSIF_LABEL, CLASSIF_SHORT, PRIO_LABEL, RISK_COLOR, classifBadgeClass, prioBadgeClass, fmt, AVISO_METODOLOGICO } from "./shared";
+import { CLASSIF_LABEL, CLASSIF_SHORT, PRIO_LABEL, RISK_COLOR, classifBadgeClass, prioBadgeClass, fmt, AvisoMetodologico } from "./shared";
 
 type Tipo = "funcao" | "setor" | "unidade";
 
@@ -50,30 +50,50 @@ export default function SegmentacoesMatriz({ avaliacaoId }: { avaliacaoId: strin
           {q.data && q.data.ok && <MatrizConteudo comp={q.data.data} />}
         </CardContent>
       </Card>
-      <p className="text-[11px] text-muted-foreground border-t pt-2">{AVISO_METODOLOGICO}</p>
+      <AvisoMetodologico />
     </div>
   );
 }
 
 function MatrizConteudo({ comp }: { comp: import("@/lib/psicoResultados").PsicoComparacao }) {
+  // Fase 3 — filtro defensivo n<2: segmentos com menos de 2 respondentes nunca
+  // renderizam célula, mesmo que a RPC ainda os retorne.
+  const segmentosVisiveis = useMemo(
+    () => comp.segmentos.filter((s) => Number(s.respondentes ?? 0) >= 2),
+    [comp.segmentos],
+  );
+  const suprimidos = comp.segmentos.length - segmentosVisiveis.length;
+
   const cell = useMemo(() => {
     const m = new Map<string, typeof comp.matriz[number]>();
     comp.matriz.forEach((c) => m.set(`${c.segmento_id}::${c.fator_id}`, c));
     return m;
   }, [comp.matriz]);
 
-  if (comp.segmentos.length === 0) {
+  if (segmentosVisiveis.length === 0) {
     return (
       <Alert className="border-primary/30 bg-primary/5">
         <Info className="h-4 w-4" />
         <AlertTitle>Sem segmentos elegíveis</AlertTitle>
-        <AlertDescription>Nenhum segmento deste tipo atende ao mínimo metodológico exigido para exibição de resultado.</AlertDescription>
+        <AlertDescription>
+          Nenhum segmento deste tipo atende ao mínimo metodológico (n≥2) exigido para exibição de resultado.
+          {suprimidos > 0 ? ` ${suprimidos} recorte(s) foram omitidos por sigilo.` : ""}
+        </AlertDescription>
       </Alert>
     );
   }
 
   return (
     <div className="space-y-4">
+      {suprimidos > 0 && (
+        <Alert className="border-amber-400 bg-amber-50 dark:bg-amber-900/10">
+          <AlertCircle className="h-4 w-4 text-amber-600" />
+          <AlertTitle>{suprimidos} recorte(s) ocultos por sigilo (n&lt;2)</AlertTitle>
+          <AlertDescription>
+            Segmentos com menos de 2 respondentes foram omitidos para preservar o anonimato.
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="overflow-x-auto">
         <table className="w-full text-xs border-separate border-spacing-0">
           <thead>
@@ -89,7 +109,7 @@ function MatrizConteudo({ comp }: { comp: import("@/lib/psicoResultados").PsicoC
             </tr>
           </thead>
           <tbody>
-            {comp.segmentos.map((s) => (
+            {segmentosVisiveis.map((s) => (
               <tr key={s.id}>
                 <td className="sticky left-0 z-10 bg-background border-b border-r py-2 px-3 align-top">
                   <div className="font-medium">{s.rotulo}</div>

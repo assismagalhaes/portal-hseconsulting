@@ -6,12 +6,30 @@ import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
+// Filtro global: normaliza acentos/caixa e faz match por substring em qualquer
+// posição do texto (não apenas prefixo). Garante que "fichas" encontre
+// "Solicitar fichas de registro".
+const normalize = (s: string) =>
+  (s || "")
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+const substringFilter = (value: string, search: string, keywords?: string[]) => {
+  const q = normalize(search).trim();
+  if (!q) return 1;
+  const haystack = normalize([value, ...(keywords ?? [])].join(" "));
+  return haystack.includes(q) ? 1 : 0;
+};
+
 const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive>
->(({ className, ...props }, ref) => (
+>(({ className, filter, ...props }, ref) => (
   <CommandPrimitive
     ref={ref}
+    filter={filter ?? substringFilter}
     className={cn(
       "flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground",
       className,

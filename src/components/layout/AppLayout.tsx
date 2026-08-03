@@ -6,7 +6,9 @@ import {
   KanbanSquare, PhoneCall, Bell, UserPlus, DollarSign, Receipt, Wallet, Building2,
   Globe, Sparkles, Zap, Briefcase as BriefcaseIcon, Search, Plus, ChevronDown,
   ChevronsLeft, ChevronsRight, Menu, ShieldCheck, BookOpen, FolderOpen, Cpu, FolderKanban, UserCog,
+  Eye, EyeOff,
 } from "lucide-react";
+import { useValuesVisibility } from "@/hooks/use-values-visibility";
 import { useAuth } from "@/lib/auth";
 import logo from "@/assets/hse-logo-green.png";
 import { Button } from "@/components/ui/button";
@@ -117,8 +119,11 @@ const TECNICO_GROUPS: NavGroup[] = [
     items: [
       { to: "/projetos", label: "Projetos", icon: FolderKanban },
       { to: "/agenda", label: "Agenda Técnica", icon: CalendarDays },
+      { to: "/operacoes/avaliacao-fatores-psicossociais", label: "Avaliação de Fatores Psicossociais", icon: ClipboardList },
       { to: "/meu-painel", label: "Meu Painel", icon: UserCircle },
     ] },
+  { id: "cadastros", label: "Cadastros", icon: FolderOpen,
+    items: [{ to: "/clientes", label: "Clientes", icon: Users }] },
   { id: "perfil", label: "Meu Perfil", icon: UserCircle,
     items: [{ to: "/meu-perfil", label: "Meu Perfil", icon: UserCircle }] },
 ];
@@ -338,7 +343,7 @@ function SidebarShell({
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out border-r border-sidebar-border",
+        "hidden md:flex flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out border-r border-sidebar-border sticky top-0 h-dvh self-start",
         collapsed ? "w-[68px]" : "w-64",
       )}
     >
@@ -394,6 +399,7 @@ function SidebarShell({
 
 export default function AppLayout() {
   const { user, roles, signOut, isTecnico, isAdmin, isComercial, isFinanceiro } = useAuth();
+  const { hidden: valoresOcultos, toggle: toggleValores } = useValuesVisibility();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const groups = isTecnico
@@ -433,7 +439,7 @@ export default function AppLayout() {
   );
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-dvh bg-background">
       <SidebarShell
         collapsed={collapsed}
         openGroup={openGroup}
@@ -498,6 +504,21 @@ export default function AppLayout() {
 
           <div className="flex-1" />
 
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost" size="icon"
+                  onClick={toggleValores}
+                  aria-label={valoresOcultos ? "Mostrar valores" : "Ocultar valores"}
+                >
+                  {valoresOcultos ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{valoresOcultos ? "Mostrar valores" : "Ocultar valores"}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
           <NotificacoesBell />
 
           <DropdownMenu>
@@ -534,7 +555,7 @@ export default function AppLayout() {
           </DropdownMenu>
         </header>
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 pb-24">
           <Outlet />
         </div>
         <GlobalAssistenteIa />

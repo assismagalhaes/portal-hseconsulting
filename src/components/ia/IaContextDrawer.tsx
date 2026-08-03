@@ -246,7 +246,7 @@ export default function IaContextDrawer({ open, onOpenChange, modulo, entidade_t
               <Textarea value={input} onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
                 placeholder="Pergunte ao copiloto HSE..." rows={2} className="flex-1 resize-none" disabled={loading} />
-              <Button type="submit" size="icon" disabled={loading || !input.trim()}>
+              <Button type="submit" size="icon" aria-label="Enviar mensagem" disabled={loading || !input.trim()}>
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </Button>
             </form>

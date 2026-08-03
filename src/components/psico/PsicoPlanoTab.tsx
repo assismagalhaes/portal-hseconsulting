@@ -17,9 +17,10 @@ import {
   PLANO_STATUS_COLOR, PLANO_STATUS_LABEL, NIVEL_COLOR, PlanoStatus,
   adicionarMedidaDoModelo, atualizarItem, atualizarPlano, criarItemPersonalizado, excluirItem,
   getMedidasCatalogo, getPlanoPorRevisao, getResultadoFatoresPorRevisao, listItens, listItemFatores,
-  regenerarRecomendacoes,
+  marcarPlanoRevisado, regenerarRecomendacoes, gerarPlanoIA,
 } from "@/lib/psicoPlano";
 import { getRevisaoAtiva, getRevisaoFatores, PRIORIDADE_COLOR } from "@/lib/psicoRevisao";
+import { fatorLabel, grupoTransversalLabel, nivelMedidaLabel, prioridadeLabel } from "@/lib/psicoLabels";
 import PsicoAprovacaoConsolidada from "./PsicoAprovacaoConsolidada";
 
 function ChipList({ items, empty = "—" }: { items?: string[] | null; empty?: string }) {
@@ -41,6 +42,8 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
   const [somenteSelecionados, setSomenteSelecionados] = useState(false);
   const [regenOpen, setRegenOpen] = useState(false);
   const [regenText, setRegenText] = useState("");
+  const [iaOpen, setIaOpen] = useState(false);
+  const [iaLoading, setIaLoading] = useState(false);
   const [catalogoOpen, setCatalogoOpen] = useState(false);
   const [novoOpen, setNovoOpen] = useState(false);
   const [novo, setNovo] = useState<any>({ titulo: "", acao_recomendada: "", objetivo: "", prazo_sugerido_dias: 30, evidencias_recomendadas: "", responsaveis_sugeridos: "", fatores: [] as string[] });
@@ -110,16 +113,46 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
 
   async function regenerar() {
     const esperado = `REGENERAR ${av.codigo}`;
-    if (regenText !== esperado) { toast.error(`Digite exatamente: ${esperado}`); return; }
-    const { error } = await regenerarRecomendacoes(rev.id, regenText);
+    const { error } = await regenerarRecomendacoes(rev.id, esperado);
     if (error) { toast.error(error.message); return; }
     toast.success("Recomendações regeneradas (personalizadas preservadas)");
-    setRegenOpen(false); setRegenText(""); load();
+    setRegenOpen(false); load();
+  }
+
+  async function gerarComIA() {
+    setIaLoading(true);
+    try {
+      const { data, error } = await gerarPlanoIA(rev.id);
+      if (error) {
+        toast.error(error.message || "Falha ao gerar com IA", {
+          description: "O plano atual foi preservado. Você pode tentar novamente ou usar o catálogo.",
+          duration: 7000,
+        });
+        return;
+      }
+      if ((data as any)?.error) { toast.error((data as any).error); return; }
+      const n = (data as any)?.itens ?? 0;
+      const selecionadas = (data as any)?.itens_selecionados ?? n;
+      if (n === 0) {
+        const aviso = (data as any)?.aviso;
+        toast.success("Nenhuma medida obrigatória foi adicionada.", {
+          description: aviso
+            ? "A IA estava indisponível, mas este cenário permite seguir com o plano sem ações."
+            : "A análise não identificou medida necessária; o plano pode permanecer sem ações.",
+          duration: 7000,
+        });
+      } else if (selecionadas < n) {
+        toast.success(`IA sugeriu ${n} medida(s); ${n - selecionadas} aguarda(m) seleção técnica.`);
+      } else {
+        toast.success(`IA sugeriu ${n} medida(s). Ações personalizadas preservadas.`);
+      }
+      setIaOpen(false); load();
+    } finally { setIaLoading(false); }
   }
 
   async function marcarRevisado() {
     if (!plano) return;
-    const { error } = await atualizarPlano(plano.id, { status: "revisado" });
+    const { error } = await marcarPlanoRevisado(plano.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Plano marcado como revisado"); load();
   }
@@ -154,7 +187,13 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
   if (loading) return <Card><CardContent className="py-10 text-center text-muted-foreground">Carregando…</CardContent></Card>;
 
   if (!rev) {
-    return <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">Crie a revisão técnica antes de acessar o plano de ação.</CardContent></Card>;
+    return (
+      <Card>
+        <CardContent className="py-10 text-center text-sm text-muted-foreground">
+          Vá até a aba <b>Resultados</b> e clique em <b>"Iniciar tratamento por fator"</b> para habilitar o plano de ação.
+        </CardContent>
+      </Card>
+    );
   }
   if (!plano) {
     return <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">Plano de ação indisponível.</CardContent></Card>;
@@ -166,7 +205,12 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
 
   return (
     <div className="space-y-4">
-      <PsicoAprovacaoConsolidada avaliacaoId={av.id} avaliacaoCodigo={av.codigo} refreshKey={plano?.atualizado_em} />
+      <PsicoAprovacaoConsolidada
+        avaliacaoId={av.id}
+        avaliacaoCodigo={av.codigo}
+        refreshKey={plano?.atualizado_em}
+        etapa="plano"
+      />
       <Card>
         <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -193,7 +237,7 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
                         <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">Todos os fatores</SelectItem>
-                          {fatorSet.map((f) => <SelectItem key={f.fator_codigo} value={f.fator_codigo}>{f.fator_codigo}</SelectItem>)}
+                          {fatorSet.map((f) => <SelectItem key={f.fator_codigo} value={f.fator_codigo}>{fatorLabel(f.fator_codigo)}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
@@ -227,7 +271,7 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
                               <button key={f.fator_codigo} type="button"
                                 className={`text-xs px-2 py-1 rounded border ${on ? "bg-primary text-primary-foreground border-primary" : "bg-background"}`}
                                 onClick={() => setNovo({ ...novo, fatores: on ? novo.fatores.filter((x: string) => x !== f.fator_codigo) : [...novo.fatores, f.fator_codigo] })}>
-                                {f.fator_codigo}
+                                {fatorLabel(f.fator_codigo)}
                               </button>
                             );
                           })}
@@ -242,19 +286,40 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
                 </Dialog>
                 <AlertDialog open={regenOpen} onOpenChange={setRegenOpen}>
                   <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm"><Wand2 className="h-4 w-4 mr-2" /> Regenerar</Button>
+                    <Button variant="outline" size="sm"><RefreshCw className="h-4 w-4 mr-2" /> Gerar rápido</Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Regenerar recomendações?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        As ações personalizadas serão preservadas. As geradas automaticamente serão recriadas a partir da biblioteca vigente. Confirme digitando: <b>REGENERAR {av.codigo}</b>
+                      <AlertDialogTitle>Gerar sugestões rápidas (biblioteca)?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Regenera automaticamente a partir da biblioteca vigente (uma medida por fator). Ações personalizadas são preservadas.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <Input value={regenText} onChange={(e) => setRegenText(e.target.value)} placeholder={`REGENERAR ${av.codigo}`} />
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={(e) => { e.preventDefault(); regenerar(); }}>Confirmar</AlertDialogAction>
+                      <AlertDialogAction onClick={(e) => { e.preventDefault(); regenerar(); }}>Sim, regenerar</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                <AlertDialog open={iaOpen} onOpenChange={(v) => !iaLoading && setIaOpen(v)}>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="default" size="sm"><Wand2 className="h-4 w-4 mr-2" /> Gerar com IA</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Gerar plano de ação com IA?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        A IA analisa os resultados, o tratamento por fator e o catálogo vigente. Fatores em
+                        monitoramento podem receber no máximo uma sugestão preventiva, que ficará desmarcada até
+                        validação técnica. Se nenhuma medida for necessária, o plano permanecerá sem ações.
+                        Ações personalizadas serão preservadas.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel disabled={iaLoading}>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction disabled={iaLoading} onClick={(e) => { e.preventDefault(); gerarComIA(); }}>
+                        {iaLoading ? "Gerando…" : "Sim, gerar com IA"}
+                      </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -274,7 +339,7 @@ export default function PsicoPlanoTab({ av, onReload }: { av: any; onReload?: ()
             <SelectTrigger className="w-[220px]"><SelectValue placeholder="Fator" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os fatores</SelectItem>
-              {fatorSet.map((f) => <SelectItem key={f.fator_codigo} value={f.fator_codigo}>{f.fator_codigo}</SelectItem>)}
+              {fatorSet.map((f) => <SelectItem key={f.fator_codigo} value={f.fator_codigo}>{fatorLabel(f.fator_codigo)}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={filtroNivel} onValueChange={setFiltroNivel}>
@@ -324,11 +389,14 @@ function CatalogoRow({ m, fatoresRev, onAdd }: { m: any; fatoresRev: any[]; onAd
   const [codes, setCodes] = useState<string[]>([m.fator_codigo]);
   return (
     <div className="rounded border p-3 space-y-2">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-muted">{m.codigo}</span>
-        <Badge className={NIVEL_COLOR[m.nivel_recomendacao]}>{m.nivel_recomendacao}</Badge>
-        {m.grupo_transversal && <Badge variant="outline" className="text-[10px]">{m.grupo_transversal}</Badge>}
-        <span className="text-sm font-medium">{m.titulo}</span>
+      <div className="space-y-1.5">
+        <div className="text-sm font-medium">{m.titulo}</div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-muted">{m.codigo}</span>
+          <Badge className={NIVEL_COLOR[m.nivel_recomendacao]}>{nivelMedidaLabel(m.nivel_recomendacao)}</Badge>
+          <Badge variant="outline" className="text-[10px]">{fatorLabel(m.fator_codigo)}</Badge>
+          {m.grupo_transversal && <Badge variant="outline" className="text-[10px]">{grupoTransversalLabel(m.grupo_transversal)}</Badge>}
+        </div>
       </div>
       {m.o_que_significa && <p className="text-xs text-muted-foreground">{m.o_que_significa}</p>}
       <div className="flex flex-wrap items-center gap-2">
@@ -339,7 +407,7 @@ function CatalogoRow({ m, fatoresRev, onAdd }: { m: any; fatoresRev: any[]; onAd
             <button key={f.fator_codigo} type="button"
               className={`text-[11px] px-2 py-0.5 rounded border ${on ? "bg-primary text-primary-foreground border-primary" : "bg-background"}`}
               onClick={() => setCodes(on ? codes.filter((c) => c !== f.fator_codigo) : [...codes, f.fator_codigo])}>
-              {f.fator_codigo}
+              {fatorLabel(f.fator_codigo)}
             </button>
           );
         })}
@@ -367,23 +435,48 @@ function ItemCard({ item, fatores, readOnly, onToggle, onSave, onRemove }: {
         <div className="flex items-start gap-3">
           <Checkbox checked={item.selecionado} disabled={readOnly} onCheckedChange={(v) => onToggle(!!v)} className="mt-1" />
           <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              {item.codigo_origem && <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-muted">{item.codigo_origem}</span>}
-              {item.nivel_recomendacao && <Badge className={NIVEL_COLOR[item.nivel_recomendacao] || "bg-muted"}>{item.nivel_recomendacao}</Badge>}
-              {item.prioridade && <Badge className={PRIORIDADE_COLOR[item.prioridade] || "bg-muted"}>{item.prioridade}</Badge>}
-              {item.grupo_transversal && <Badge variant="outline" className="text-[10px]">{item.grupo_transversal}</Badge>}
-              {item.personalizado && <Badge variant="outline" className="text-[10px]">Personalizada</Badge>}
-              {missing && <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Pendente</Badge>}
-              <span className="text-sm font-medium">{item.titulo}</span>
-              <span className="ml-auto flex gap-2">
-                {fatores.map((c) => <span key={c} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-primary/10 text-primary">{c}</span>)}
-                <button className="text-muted-foreground" onClick={() => setOpen((v) => !v)}>
+            <div className="flex items-start gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium leading-snug">{item.titulo}</div>
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  {item.codigo_origem && <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-muted">{item.codigo_origem}</span>}
+                  {item.nivel_recomendacao && <Badge className={NIVEL_COLOR[item.nivel_recomendacao] || "bg-muted"}>{nivelMedidaLabel(item.nivel_recomendacao)}</Badge>}
+                  {item.prioridade && <Badge className={PRIORIDADE_COLOR[item.prioridade] || "bg-muted"}>{prioridadeLabel(item.prioridade)}</Badge>}
+                  {item.grupo_transversal && <Badge variant="outline" className="text-[10px]">{grupoTransversalLabel(item.grupo_transversal)}</Badge>}
+                  {fatores.map((c) => (
+                    <Badge key={c} variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/30">{fatorLabel(c)}</Badge>
+                  ))}
+                  {item.personalizado && <Badge variant="outline" className="text-[10px]">Personalizada</Badge>}
+                  {missing && <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Pendente</Badge>}
+                </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <button className="text-muted-foreground p-1" onClick={() => setOpen((v) => !v)}>
                   <ChevronDown className={`h-4 w-4 transition ${open ? "rotate-180" : ""}`} />
                 </button>
-                {!readOnly && item.personalizado && (
-                  <button className="text-destructive" onClick={onRemove}><Trash2 className="h-4 w-4" /></button>
+                {!readOnly && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button className="text-destructive p-1" title="Excluir ação">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Excluir esta ação?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          A ação "{item.titulo}" será removida do plano. Você pode regerar
+                          as recomendações automáticas depois, se quiser.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={onRemove}>Excluir</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 )}
-              </span>
+              </div>
             </div>
             {item.objetivo && !open && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.objetivo}</p>}
 
@@ -430,6 +523,12 @@ function ItemCard({ item, fatores, readOnly, onToggle, onSave, onRemove }: {
                   <Label className="text-xs">Indicador</Label>
                   <Input defaultValue={item.indicador_sugerido || ""} disabled={readOnly}
                     onBlur={(e) => e.target.value !== (item.indicador_sugerido || "") && onSave({ indicador_sugerido: e.target.value || null })} />
+                  {item.indicadores_sugeridos?.length ? (
+                    <div className="mt-1">
+                      <span className="text-[11px] text-muted-foreground mr-1">Sugestões:</span>
+                      <ChipList items={item.indicadores_sugeridos} empty="Sem sugestões" />
+                    </div>
+                  ) : null}
                 </div>
               </div>
             )}

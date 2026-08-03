@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import PageHeader from "@/components/PageHeader";
+import { ModuleTabs } from "./_ModuloShared";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +42,7 @@ function ChipList({ items }: { items?: string[] | null }) {
 
 function FatorCard({ f, medidas }: { f: FatorOrientacao; medidas: MedidaModelo[] }) {
   const doFator = medidas.filter((m) => m.fator_codigo === f.fator_codigo);
-  const cores = { basica: 0, intermediaria: 0, avancada: 0, transversal: 0 };
+  const cores = { essencial: 0, estruturante: 0, complementar: 0 };
   doFator.forEach((m) => { (cores as any)[m.nivel_recomendacao]++; });
   return (
     <Card>
@@ -55,7 +56,7 @@ function FatorCard({ f, medidas }: { f: FatorOrientacao; medidas: MedidaModelo[]
             {f.definicao_resumida && <p className="text-sm text-muted-foreground mt-2 max-w-3xl">{f.definicao_resumida}</p>}
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {(["basica","intermediaria","avancada","transversal"] as const).map((n) => (
+            {(["essencial","estruturante","complementar"] as const).map((n) => (
               (cores as any)[n] > 0 && <Badge key={n} className={NIVEL_COLOR[n]}>{(cores as any)[n]} {NIVEL_LABEL[n]}</Badge>
             ))}
           </div>
@@ -201,6 +202,7 @@ export function PsicoBibliotecaLista() {
         title="Biblioteca de Medidas"
         subtitle="Catálogo técnico de fatores psicossociais e medidas recomendadas. Base para as revisões técnicas de cada avaliação."
       />
+      <div className="px-6 pt-4"><ModuleTabs /></div>
       <div className="p-6 space-y-6">
         {vigente && (
           <Alert>
@@ -338,6 +340,32 @@ export function PsicoBibliotecaDetalhe() {
         </Card>
 
         <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Níveis das medidas de controle</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 grid gap-3 md:grid-cols-3">
+            <div className="rounded-md border p-3 space-y-1">
+              <Badge className="bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200">Essencial</Badge>
+              <p className="text-xs text-muted-foreground">
+                Ataca a causa raiz do fator de risco. Exige impacto imediato e, muitas vezes, tem base legal ou normativa (ex.: comunicação clara, definição de papéis, jornada). Deve ser priorizada.
+              </p>
+            </div>
+            <div className="rounded-md border p-3 space-y-1">
+              <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Estruturante</Badge>
+              <p className="text-xs text-muted-foreground">
+                Sustenta a mudança no médio prazo por meio de políticas, procedimentos e programas formalizados (ex.: política de gestão de mudanças, canal de escuta ativa, plano de desenvolvimento de lideranças).
+              </p>
+            </div>
+            <div className="rounded-md border p-3 space-y-1">
+              <Badge className="bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">Complementar</Badge>
+              <p className="text-xs text-muted-foreground">
+                Reforça cultura, maturidade e desenvolvimento das pessoas (ex.: inteligência emocional, autocuidado, capacitações). Potencializa as medidas essenciais e estruturantes, mas não substitui.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardContent className="py-4 flex flex-wrap gap-3 items-center">
             <div className="relative flex-1 min-w-[240px]">
               <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -347,17 +375,16 @@ export function PsicoBibliotecaDetalhe() {
               <SelectTrigger className="w-[240px]"><SelectValue placeholder="Fator" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os fatores</SelectItem>
-                {fatores.map((f) => <SelectItem key={f.fator_codigo} value={f.fator_codigo}>{f.fator_codigo} · {f.nome}</SelectItem>)}
+                {fatores.map((f) => <SelectItem key={f.fator_codigo} value={f.fator_codigo}>{f.nome}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={filtroNivel} onValueChange={setFiltroNivel}>
               <SelectTrigger className="w-[200px]"><SelectValue placeholder="Nível" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os níveis</SelectItem>
-                <SelectItem value="basica">Básica</SelectItem>
-                <SelectItem value="intermediaria">Intermediária</SelectItem>
-                <SelectItem value="avancada">Avançada</SelectItem>
-                <SelectItem value="transversal">Transversal</SelectItem>
+                <SelectItem value="essencial">Essencial</SelectItem>
+                <SelectItem value="estruturante">Estruturante</SelectItem>
+                <SelectItem value="complementar">Complementar</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="ghost" onClick={() => { setBusca(""); setFiltroFator("all"); setFiltroNivel("all"); }}>Limpar</Button>

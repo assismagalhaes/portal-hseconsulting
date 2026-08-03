@@ -20,6 +20,9 @@ export const NIVEL_COLOR: Record<string, string> = {
   intermediaria: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200",
   avancada: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200",
   transversal: "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200",
+  essencial: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200",
+  estruturante: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200",
+  complementar: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
 };
 
 export async function getPlanoPorRevisao(revisaoId: string) {
@@ -48,19 +51,32 @@ export async function atualizarPlano(id: string, patch: Record<string, any>) {
   return sb.from("psico_planos_acao").update(patch).eq("id", id);
 }
 
+export async function marcarPlanoRevisado(id: string) {
+  return sb.rpc("psico_marcar_plano_revisado", { p_plano_id: id });
+}
+
 export async function excluirItem(id: string) {
   return sb.from("psico_plano_acao_itens").delete().eq("id", id);
 }
 
-export async function criarItemPersonalizado(planoId: string, patch: Record<string, any>, fatoresCodes: string[], resultadoFatorPorCodigo: Record<string, string>) {
-  const { data, error } = await sb.from("psico_plano_acao_itens").insert({
+export function montarNovoItemPlano(planoId: string, patch: Record<string, any>) {
+  return {
     plano_id: planoId,
     personalizado: true,
     gerado_automaticamente: false,
     selecionado: true,
     ordem: 9999,
     ...patch,
-  }).select("id").single();
+    objetivo: patch.objetivo?.trim?.() || patch.acao_recomendada || patch.titulo || "Ação preventiva",
+    prioridade: patch.prioridade || "monitoramento",
+  };
+}
+
+export async function criarItemPersonalizado(planoId: string, patch: Record<string, any>, fatoresCodes: string[], resultadoFatorPorCodigo: Record<string, string>) {
+  const { data, error } = await sb.from("psico_plano_acao_itens")
+    .insert(montarNovoItemPlano(planoId, patch))
+    .select("id")
+    .single();
   if (error || !data) return { error };
   const links = fatoresCodes.map((c) => ({
     plano_item_id: data.id,
@@ -76,6 +92,52 @@ export async function criarItemPersonalizado(planoId: string, patch: Record<stri
 
 export async function regenerarRecomendacoes(revisaoId: string, confirmacao: string) {
   return sb.rpc("psico_regenerar_recomendacoes", { p_revisao_id: revisaoId, p_confirmacao: confirmacao });
+}
+
+export async function gerarPlanoIA(revisaoId: string) {
+  const { data, error } = await sb.functions.invoke("psico-gerar-plano-ia", {
+    body: { revisao_id: revisaoId },
+  });
+  if (!error) return { data, error: null };
+
+  let codigo = "";
+  let detalhe = "";
+  const response = (error as { context?: Response })?.context;
+  if (response instanceof Response) {
+    try {
+      const body = await response.clone().json();
+      codigo = typeof body?.error === "string" ? body.error : "";
+      detalhe = typeof body?.detalhe === "string" ? body.detalhe : "";
+    } catch {
+      // A resposta pode não ser JSON (falha de gateway/startup).
+    }
+  }
+
+  return {
+    data,
+    error: {
+      ...error,
+      code: codigo,
+      detail: detalhe,
+      message: mensagemErroPlanoIA(codigo, detalhe),
+    },
+  };
+}
+
+export function mensagemErroPlanoIA(codigo?: string, detalhe?: string) {
+  const mensagens: Record<string, string> = {
+    IA_NAO_CONFIGURADA: "O serviço de IA ainda não está configurado. O plano pode ser preenchido manualmente.",
+    IA_LIMITE_ATINGIDO: "O limite temporário da IA foi atingido. Aguarde alguns minutos e tente novamente.",
+    IA_CREDITOS_ESGOTADOS: "Os créditos do serviço de IA estão esgotados. Use o catálogo ou tente novamente após a regularização.",
+    IA_INDISPONIVEL: "A IA está temporariamente indisponível. Tente novamente ou prossiga pelo catálogo.",
+    CONTEXTO_INDISPONIVEL: "Não foi possível preparar os dados desta avaliação para a IA.",
+    PLANO_NAO_APLICADO: "A sugestão foi gerada, mas não pôde ser aplicada ao plano.",
+    PLANO_IA_INVALIDO: "A IA retornou uma sugestão inválida. Nenhuma alteração foi aplicada ao plano.",
+    NAO_AUTENTICADO: "Sua sessão expirou. Entre novamente para gerar o plano com IA.",
+  };
+  if (codigo && mensagens[codigo]) return mensagens[codigo];
+  if (detalhe) return `Não foi possível gerar o plano com IA: ${detalhe}`;
+  return "Não foi possível gerar o plano com IA. Nenhuma alteração foi aplicada.";
 }
 
 export async function getMedidasCatalogo(bibliotecaVersaoId: string) {
@@ -115,6 +177,7 @@ export async function adicionarMedidaDoModelo(planoId: string, medidaId: string,
     prazo_sugerido_dias: med.prazo_sugerido_dias,
     evidencias_recomendadas: med.evidencias_recomendadas,
     indicador_sugerido: (med.indicadores_sugeridos || [])[0] || null,
+    indicadores_sugeridos: med.indicadores_sugeridos || null,
     personalizado: false,
   }, fatoresCodes, resultadoFatorPorCodigo);
 }

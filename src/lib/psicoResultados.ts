@@ -39,8 +39,36 @@ export type PrioridadeFator = "monitoramento" | "media" | "alta" | "critica";
 export type EscopoTipo = "global" | "funcao" | "setor" | "unidade";
 
 // ---------- Schemas ----------
-const classificacao = z.enum(["irrelevante","baixo","medio","alto","critico"]);
-const prioridade    = z.enum(["monitoramento","media","alta","critica"]);
+const classificacaoValores = ["irrelevante", "baixo", "medio", "alto", "critico"] as const;
+const prioridadeValores = ["monitoramento", "media", "alta", "critica"] as const;
+
+const classificacaoBanco: Record<string, (typeof classificacaoValores)[number]> = {
+  "Risco Irrelevante": "irrelevante",
+  "Risco Baixo": "baixo",
+  "Risco Médio": "medio",
+  "Risco Alto": "alto",
+  "Risco Crítico": "critico",
+};
+
+const prioridadeBanco: Record<string, (typeof prioridadeValores)[number]> = {
+  Monitoramento: "monitoramento",
+  "Média": "media",
+  Alta: "alta",
+  "Crítica": "critica",
+};
+
+const classificacao = z.preprocess(
+  (valor) => typeof valor === "string" ? classificacaoBanco[valor] ?? valor : valor,
+  z.enum(classificacaoValores),
+);
+const prioridade = z.preprocess(
+  (valor) => typeof valor === "string" ? prioridadeBanco[valor] ?? valor : valor,
+  z.enum(prioridadeValores),
+);
+
+export function normalizarClassificacaoRisco(valor: unknown): ClassificacaoRisco {
+  return classificacao.parse(valor);
+}
 const tipoEscopo    = z.enum(["global","funcao","setor","unidade"]);
 
 const fatorSchema = z.object({

@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { AlertCircle, CheckCircle2, Loader2, Play, RefreshCcw } from "lucide-react";
 import { formatDateTime } from "@/lib/format";
 import PsicoDashboardResultados from "@/components/psico/resultados/PsicoDashboardResultados";
+import TratamentoPorFatorCard from "@/components/psico/resultados/TratamentoPorFatorCard";
 
 type Classificacao = "Risco Irrelevante" | "Risco Baixo" | "Risco Médio" | "Risco Alto" | "Risco Crítico";
 type Prioridade = "Monitoramento" | "Média" | "Alta" | "Crítica";
@@ -158,10 +159,6 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
   }, [av?.id, escopoSel]);
 
   async function processar() {
-    if (confirmText !== `PROCESSAR ${av.codigo}`) {
-      toast.error(`Confirmação inválida. Digite: PROCESSAR ${av.codigo}`);
-      return;
-    }
     setProcessing(true);
     try {
       const { data, error } = await supabase.rpc("psico_processar_resultados", {
@@ -171,7 +168,7 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
       if (error) throw error;
       const reutilizado = (data as any)?.reutilizado;
       toast.success(reutilizado ? "Resultado já estava processado (reutilizado)." : "Resultados processados com sucesso.");
-      setDialogOpen(false); setConfirmText("");
+      setDialogOpen(false);
       onReload();
     } catch (e: any) {
       toast.error(e?.message || "Falha ao processar resultados");
@@ -227,17 +224,13 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
                     <AlertDialogTitle>Confirmar processamento</AlertDialogTitle>
                     <AlertDialogDescription>
                       Esta ação executa o motor de cálculo (versão <b>{validation?.versao_motor}</b>) sobre as respostas anônimas.
-                      O processamento é imutável após concluído. Para confirmar, digite <code>PROCESSAR {av.codigo}</code> abaixo.
+                      O processamento é imutável após concluído.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
-                  <div className="space-y-2">
-                    <Label>Confirmação *</Label>
-                    <Input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} placeholder={`PROCESSAR ${av.codigo}`} />
-                  </div>
                   <AlertDialogFooter>
                     <AlertDialogCancel disabled={processing}>Cancelar</AlertDialogCancel>
                     <AlertDialogAction disabled={processing} onClick={(e) => { e.preventDefault(); processar(); }}>
-                      {processing ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Processando…</> : "Confirmar"}
+                      {processing ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Processando…</> : "Sim, processar"}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -291,6 +284,10 @@ export default function PsicoResultadosTab({ av, onReload }: { av: any; onReload
 
       {jaProcessado && (
         <PsicoDashboardResultados avaliacaoId={av.id} />
+      )}
+
+      {jaProcessado && (
+        <TratamentoPorFatorCard av={av} onChange={onReload} />
       )}
 
       {jaProcessado === false && !podeProcessar && (

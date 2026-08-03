@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import { FileText } from "lucide-react";
 
 export default function Settings() {
   const { isInternal } = useAuth();
@@ -128,8 +130,14 @@ export default function Settings() {
           <CardContent className="space-y-3">
             <div className="space-y-1.5"><Label>Condições de pagamento</Label>
               <Textarea rows={3} value={p.condicoes_pagamento_default||""} onChange={e=>setP({...p, condicoes_pagamento_default:e.target.value})} /></div>
-            <div className="space-y-1.5"><Label>Outras condições</Label>
-              <Textarea rows={3} value={p.outras_condicoes_default||""} onChange={e=>setP({...p, outras_condicoes_default:e.target.value})} /></div>
+            <div className="rounded-md border p-3 bg-muted/30 flex items-start gap-3">
+              <FileText className="h-4 w-4 mt-0.5 text-muted-foreground" />
+              <div className="flex-1">
+                <div className="text-sm font-medium">Premissas e Condições do Serviço</div>
+                <p className="text-xs text-muted-foreground">Agora são cláusulas cadastráveis, selecionadas por proposta com sugestões automáticas por categoria de serviço.</p>
+              </div>
+              <Button asChild size="sm" variant="outline"><Link to="/configuracoes/premissas">Gerenciar cláusulas</Link></Button>
+            </div>
           </CardContent>
         </Card>
         <Card className="shadow-elegant">

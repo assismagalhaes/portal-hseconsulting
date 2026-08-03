@@ -110,7 +110,7 @@ export default function IaChat({
           className="flex-1 resize-none"
           disabled={loading}
         />
-        <Button type="submit" size="icon" disabled={loading || !input.trim()}>
+        <Button type="submit" size="icon" aria-label="Enviar mensagem" disabled={loading || !input.trim()}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </form>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PageHeader from "@/components/PageHeader";
@@ -20,6 +20,18 @@ import PsicoResultadosTab from "@/components/psico/PsicoResultadosTab";
 import PsicoRevisaoTab from "@/components/psico/PsicoRevisaoTab";
 import PsicoPlanoTab from "@/components/psico/PsicoPlanoTab";
 import PsicoRelatorioTab from "@/components/psico/PsicoRelatorioTab";
+import PsicoLinkPublicoTab from "@/components/psico/PsicoLinkPublicoTab";
+import PsicoIndividualConvitesTab from "@/components/psico/PsicoIndividualConvitesTab";
+import PsicoIndividualConciliacaoTab from "@/components/psico/PsicoIndividualConciliacaoTab";
+import PsicoIndividualPlanoTab from "@/components/psico/PsicoIndividualPlanoTab";
+import PsicoIndividualRelatorioTab from "@/components/psico/PsicoIndividualRelatorioTab";
+import {
+  PSICO_MODALIDADE_LABEL,
+  isModalidadeIndividual,
+  descreverInstrumento,
+  type PsicoIndividualInstrumentoVigente,
+} from "@/lib/psicoIndividual";
+import { Lock, ShieldAlert } from "lucide-react";
 
 const BASE = "/operacoes/avaliacao-fatores-psicossociais";
 
@@ -46,6 +58,10 @@ export default function PsicoAvaliacaoDetalhes() {
   const [motivo, setMotivo] = useState("");
   const [cancelOpen, setCancelOpen] = useState(false);
   const [vigente, setVigente] = useState<any>(null);
+  const [instrEmp, setInstrEmp] = useState<PsicoIndividualInstrumentoVigente | null>(null);
+  const [instrRep, setInstrRep] = useState<PsicoIndividualInstrumentoVigente | null>(null);
+  const dataInicioRef = useRef<HTMLInputElement>(null);
+  const dataFimRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { document.title = "Avaliação Psicossocial | Portal HSE"; load(); }, [id]);
 
@@ -76,7 +92,11 @@ export default function PsicoAvaliacaoDetalhes() {
       .order("created_at", { ascending: false });
     const [c, r, m, q, aud] = await Promise.all([
       supabase.from("clients").select("id, razao_social, nome_fantasia, cidade, uf").eq("id", data.cliente_id).maybeSingle(),
-      data.responsavel_hse_id ? supabase.from("profiles").select("id, nome, email").eq("id", data.responsavel_hse_id).maybeSingle() : Promise.resolve({ data: null }),
+      data.responsavel_hse_id
+        ? supabase.from("profiles").select("id, nome, email").eq("id", data.responsavel_hse_id).maybeSingle()
+        : data.responsavel_profissional_id
+          ? supabase.from("execucao_profissionais").select("id, nome, cargo").eq("id", data.responsavel_profissional_id).maybeSingle().then((r: any) => ({ data: r.data ? { id: r.data.id, nome: r.data.nome, email: r.data.cargo } : null }))
+          : Promise.resolve({ data: null }),
       data.metodologia_versao_id ? supabase.from("psico_metodologias_versoes").select("codigo, nome, versao").eq("id", data.metodologia_versao_id).maybeSingle() : Promise.resolve({ data: null }),
       data.questionario_versao_id ? supabase.from("psico_questionarios_versoes").select("codigo, nome, versao").eq("id", data.questionario_versao_id).maybeSingle() : Promise.resolve({ data: null }),
       auditQuery,
@@ -84,24 +104,59 @@ export default function PsicoAvaliacaoDetalhes() {
     setCli(c.data); setResp(r.data); setMetod(m.data); setQuest(q.data); setAuditoria(aud.data || []);
     const { data: v } = await getVersaoVigente();
     setVigente(v);
+    if (isModalidadeIndividual(data.modalidade) && (data.instrumento_empregado_versao_id || data.instrumento_empregador_versao_id)) {
+      const ids = [data.instrumento_empregado_versao_id, data.instrumento_empregador_versao_id].filter(Boolean);
+      const { data: instrs } = await (supabase as any)
+        .from("psico_individual_instrumentos_versoes")
+        .select("id, codigo, versao, nome")
+        .in("id", ids);
+      const findMap = (id: string | null, papel: "empregado" | "empregador") => {
+        const row = (instrs || []).find((x: any) => x.id === id);
+        return row ? { id: row.id, codigo: row.codigo, versao: row.versao, nome: row.nome, papel } : null;
+      };
+      setInstrEmp(findMap(data.instrumento_empregado_versao_id, "empregado"));
+      setInstrRep(findMap(data.instrumento_empregador_versao_id, "empregador"));
+    } else {
+      setInstrEmp(null); setInstrRep(null);
+    }
   }
 
   async function salvarEdicao() {
+    const dataInicioPrevista = dataInicioRef.current?.value || null;
+    const dataFimPrevista = dataFimRef.current?.value || null;
     if (!form.titulo?.trim()) return toast.error("Título é obrigatório");
-    if (form.data_fim_prevista && form.data_inicio_prevista && form.data_fim_prevista < form.data_inicio_prevista) return toast.error("Data final anterior à inicial");
+    if (dataFimPrevista && dataInicioPrevista && dataFimPrevista < dataInicioPrevista) return toast.error("Data final anterior à inicial");
     if (Number(form.quantidade_participantes_prevista) < 1) return toast.error("Mínimo 1 participante");
-    const { error } = await supabase.from("psico_avaliacoes").update({
+    const atualizacao = {
       titulo: form.titulo,
-      unidade: form.unidade || "Geral",
-      data_inicio_prevista: form.data_inicio_prevista || null,
-      data_fim_prevista: form.data_fim_prevista || null,
-      quantidade_participantes_prevista: Number(form.quantidade_participantes_prevista) || 1,
-      responsavel_hse_id: form.responsavel_hse_id,
+      unidade: form.unidade || "Matriz",
+      data_inicio_prevista: dataInicioPrevista,
+      data_fim_prevista: dataFimPrevista,
+      quantidade_participantes_prevista: individual
+        ? 1
+        : Number(form.quantidade_participantes_prevista) || 1,
+      responsavel_hse_id: form.responsavel_hse_id ?? null,
+      responsavel_profissional_id: form.responsavel_profissional_id ?? null,
       observacoes_internas: form.observacoes_internas || null,
-    }).eq("id", id);
+    };
+    const { data: atualizado, error } = await supabase.from("psico_avaliacoes")
+      .update(atualizacao)
+      .eq("id", id)
+      .select("*")
+      .maybeSingle();
     if (error) return toast.error(error.message);
+    if (!atualizado) return toast.error("A avaliação não foi atualizada. Recarregue a página e tente novamente.");
+    if (
+      atualizado.data_inicio_prevista !== atualizacao.data_inicio_prevista
+      || atualizado.data_fim_prevista !== atualizacao.data_fim_prevista
+    ) {
+      return toast.error("As datas previstas não foram persistidas. Recarregue a página e tente novamente.");
+    }
     toast.success("Avaliação atualizada");
-    setEditing(false); load();
+    setAv(atualizado);
+    setForm(atualizado);
+    setEditing(false);
+    load();
   }
 
   async function cancelar() {
@@ -122,6 +177,7 @@ export default function PsicoAvaliacaoDetalhes() {
   const podeEditar = av.status === "rascunho";
   const podeCancelar = av.status !== "cancelada" && av.status !== "relatorio_emitido";
   const clienteNome = cli?.nome_fantasia || cli?.razao_social || "—";
+  const individual = isModalidadeIndividual(av.modalidade);
 
   return (
     <div>
@@ -163,12 +219,42 @@ export default function PsicoAvaliacaoDetalhes() {
       <div className="p-6 space-y-6">
         <div className="flex items-center gap-2">
           <Badge className={statusColor(av.status)}>{statusLabel(av.status)}</Badge>
+          <Badge variant="outline" className="text-xs">
+            {PSICO_MODALIDADE_LABEL[(av.modalidade as keyof typeof PSICO_MODALIDADE_LABEL) || "coletiva_hse"]}
+          </Badge>
           {av.status === "cancelada" && av.motivo_cancelamento && (
             <span className="text-sm text-muted-foreground">Motivo: {av.motivo_cancelamento}</span>
           )}
         </div>
 
-        {av.status === "rascunho" && !av.questionario_versao_id && (
+        {individual && (
+          <>
+            <Card className="border-sky-300 bg-sky-50 dark:bg-sky-900/10">
+              <CardContent className="py-4 text-sm flex items-start gap-3">
+                <Lock className="h-5 w-5 text-sky-700 shrink-0 mt-0.5" />
+                <div className="flex-1 space-y-1">
+                  <div className="font-medium">Instrumentos congelados nesta avaliação</div>
+                  <div className="text-xs">Empregado: {descreverInstrumento(instrEmp)}</div>
+                  <div className="text-xs">Empregador: {descreverInstrumento(instrRep)}</div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-amber-300 bg-amber-50 dark:bg-amber-900/10">
+              <CardContent className="py-4 text-sm flex items-start gap-3">
+                <ShieldAlert className="h-5 w-5 text-amber-700 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <div className="font-medium mb-1">Sem anonimato estatístico</div>
+                  <div className="text-xs">
+                    Modalidade individual: as duas visões (empregado e empregador) são nominais. Segmentações, importação
+                    histórica e link público coletivo ficam indisponíveis. Convites e coleta chegarão no próximo PR.
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {!individual && av.status === "rascunho" && !av.questionario_versao_id && (
           <Card className="border-amber-300 bg-amber-50 dark:bg-amber-900/10">
             <CardContent className="py-4 flex items-center justify-between gap-3 text-sm">
               {vigente ? (
@@ -200,20 +286,34 @@ export default function PsicoAvaliacaoDetalhes() {
           <Card><CardContent className="py-4"><Field label="Período previsto" value={`${av.data_inicio_prevista ? formatDate(av.data_inicio_prevista) : "—"} → ${av.data_fim_prevista ? formatDate(av.data_fim_prevista) : "—"}`} /></CardContent></Card>
           <Card><CardContent className="py-4"><Field label="Participantes previstos" value={av.quantidade_participantes_prevista} /></CardContent></Card>
           <Card><CardContent className="py-4"><Field label="Responsável HSE" value={resp?.nome || resp?.email || "—"} /></CardContent></Card>
-          <Card><CardContent className="py-4"><Field label="Questionário" value={quest ? `${quest.codigo} v${quest.versao}` : "—"} /></CardContent></Card>
-          <Card><CardContent className="py-4"><Field label="Metodologia" value={metod ? `${metod.codigo} v${metod.versao}` : "—"} /></CardContent></Card>
+          {individual ? (
+            <>
+              <Card><CardContent className="py-4"><Field label="Instrumento empregado" value={instrEmp ? `${instrEmp.codigo} v${instrEmp.versao}` : "—"} /></CardContent></Card>
+              <Card><CardContent className="py-4"><Field label="Instrumento empregador" value={instrRep ? `${instrRep.codigo} v${instrRep.versao}` : "—"} /></CardContent></Card>
+            </>
+          ) : (
+            <>
+              <Card><CardContent className="py-4"><Field label="Questionário" value={quest ? `${quest.codigo} v${quest.versao}` : "—"} /></CardContent></Card>
+              <Card><CardContent className="py-4"><Field label="Metodologia" value={metod ? `${metod.codigo} v${metod.versao}` : "—"} /></CardContent></Card>
+            </>
+          )}
           <Card><CardContent className="py-4"><Field label="Última atualização" value={formatDateTime(av.updated_at)} /></CardContent></Card>
         </div>
 
         <Tabs defaultValue="visao">
           <TabsList className="w-full justify-start overflow-x-auto">
             <TabsTrigger value="visao">Visão Geral</TabsTrigger>
-            <TabsTrigger value="participantes">Participantes</TabsTrigger>
-            <TabsTrigger value="coleta">Coleta</TabsTrigger>
-            <TabsTrigger value="resultados">Resultados</TabsTrigger>
-            <TabsTrigger value="revisao">Revisão Técnica</TabsTrigger>
-            <TabsTrigger value="plano">Plano de Ação</TabsTrigger>
-            <TabsTrigger value="relatorio">Relatório</TabsTrigger>
+            {individual && <TabsTrigger value="convites">Convites</TabsTrigger>}
+            {individual && <TabsTrigger value="conciliacao">Conciliação</TabsTrigger>}
+            {individual && <TabsTrigger value="plano-ind">Plano de Ação</TabsTrigger>}
+            {individual && <TabsTrigger value="relatorio-ind">Relatório</TabsTrigger>}
+            {!individual && <TabsTrigger value="participantes">Participantes</TabsTrigger>}
+            {!individual && <TabsTrigger value="link-publico">Link Público</TabsTrigger>}
+            {!individual && <TabsTrigger value="coleta">Coleta</TabsTrigger>}
+            {!individual && <TabsTrigger value="resultados">Resultados</TabsTrigger>}
+            {!individual && <TabsTrigger value="plano">Plano de Ação</TabsTrigger>}
+            {!individual && <TabsTrigger value="revisao">Revisão Técnica</TabsTrigger>}
+            {!individual && <TabsTrigger value="relatorio">Relatório</TabsTrigger>}
             <TabsTrigger value="historico">Histórico</TabsTrigger>
           </TabsList>
 
@@ -258,11 +358,11 @@ export default function PsicoAvaliacaoDetalhes() {
                     </div>
                     <div>
                       <Label>Data prevista de início</Label>
-                      <Input type="date" value={form.data_inicio_prevista || ""} onChange={(e) => setForm({ ...form, data_inicio_prevista: e.target.value })} />
+                      <Input ref={dataInicioRef} type="date" value={form.data_inicio_prevista || ""} onChange={(e) => setForm((atual) => ({ ...atual, data_inicio_prevista: e.target.value }))} />
                     </div>
                     <div>
                       <Label>Data prevista de encerramento</Label>
-                      <Input type="date" value={form.data_fim_prevista || ""} onChange={(e) => setForm({ ...form, data_fim_prevista: e.target.value })} />
+                      <Input ref={dataFimRef} type="date" value={form.data_fim_prevista || ""} onChange={(e) => setForm((atual) => ({ ...atual, data_fim_prevista: e.target.value }))} />
                     </div>
                     <div className="sm:col-span-2">
                       <Label>Observações internas</Label>
@@ -274,7 +374,7 @@ export default function PsicoAvaliacaoDetalhes() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="participantes">
+          {!individual && <TabsContent value="participantes">
             <PsicoParticipantes
               avaliacaoId={av.id}
               clienteNome={clienteNome}
@@ -288,22 +388,37 @@ export default function PsicoAvaliacaoDetalhes() {
               temVersaoPublicada={!!av.questionario_versao_id}
               codigoAvaliacao={av.codigo}
             />
-          </TabsContent>
-          <TabsContent value="coleta">
+          </TabsContent>}
+          {individual && <TabsContent value="convites">
+            <PsicoIndividualConvitesTab avaliacaoId={av.id} />
+          </TabsContent>}
+          {individual && <TabsContent value="conciliacao">
+            <PsicoIndividualConciliacaoTab avaliacaoId={av.id} onReload={load} />
+          </TabsContent>}
+          {individual && <TabsContent value="plano-ind">
+            <PsicoIndividualPlanoTab avaliacaoId={av.id} />
+          </TabsContent>}
+          {individual && <TabsContent value="relatorio-ind">
+            <PsicoIndividualRelatorioTab avaliacaoId={av.id} />
+          </TabsContent>}
+          {!individual && <TabsContent value="link-publico">
+            <PsicoLinkPublicoTab av={av} onReload={load} />
+          </TabsContent>}
+          {!individual && <TabsContent value="coleta">
             <PsicoColetaTab av={av} onReload={load} />
-          </TabsContent>
-          <TabsContent value="resultados">
+          </TabsContent>}
+          {!individual && <TabsContent value="resultados">
             <PsicoResultadosTab av={av} onReload={load} />
-          </TabsContent>
-          <TabsContent value="revisao">
-            <PsicoRevisaoTab av={av} onReload={load} />
-          </TabsContent>
-          <TabsContent value="plano">
+          </TabsContent>}
+          {!individual && <TabsContent value="plano">
             <PsicoPlanoTab av={av} onReload={load} />
-          </TabsContent>
-          <TabsContent value="relatorio">
+          </TabsContent>}
+          {!individual && <TabsContent value="revisao">
+            <PsicoRevisaoTab av={av} onReload={load} />
+          </TabsContent>}
+          {!individual && <TabsContent value="relatorio">
             <PsicoRelatorioTab av={av} onReload={load} />
-          </TabsContent>
+          </TabsContent>}
 
           <TabsContent value="historico">
             <Card>

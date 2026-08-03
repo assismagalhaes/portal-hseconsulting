@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -8,8 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, CalendarPlus, CheckCircle2, Clock } from "lucide-react";
 import { ETAPAS, etapaColor, etapaLabel, TEMPERATURAS } from "@/lib/crm";
+import { FUP_TIPOS, FUP_STATUS } from "@/lib/crm";
 import { prioridadeLabel, prioridadeColor, brl, formatDate } from "@/lib/format";
 import { toast } from "sonner";
 
@@ -29,6 +31,7 @@ export default function CrmOportunidades() {
   const [leads, setLeads] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [motivos, setMotivos] = useState<any[]>([]);
+  const [followups, setFollowups] = useState<any[]>([]);
   const [fEtapa, setFEtapa] = useState("__all");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
@@ -37,13 +40,14 @@ export default function CrmOportunidades() {
 
   useEffect(() => { document.title = "Oportunidades | CRM HSE"; reload(); }, []);
   async function reload() {
-    const [o, l, c, m] = await Promise.all([
+    const [o, l, c, m, f] = await Promise.all([
       supabase.from("crm_oportunidades").select("*").order("created_at",{ascending:false}),
       supabase.from("crm_leads").select("id, empresa"),
       supabase.from("clients").select("id, razao_social, nome_fantasia"),
       supabase.from("crm_motivos_perda").select("*").eq("ativo", true).order("ordem"),
+      supabase.from("crm_followups").select("*").order("data",{ascending:false}),
     ]);
-    setList(o.data||[]); setLeads(l.data||[]); setClients(c.data||[]); setMotivos(m.data||[]);
+    setList(o.data||[]); setLeads(l.data||[]); setClients(c.data||[]); setMotivos(m.data||[]); setFollowups(f.data||[]);
   }
 
   function openNew() { setEditing(null); setForm(empty); setOpen(true); }
@@ -155,6 +159,43 @@ export default function CrmOportunidades() {
               <Label>Observações</Label>
               <Textarea rows={3} value={form.observacoes||""} onChange={e=>setForm({...form,observacoes:e.target.value})}/>
             </div>
+            {editing && (
+              <div className="sm:col-span-2 space-y-2 border-t pt-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold">Histórico de follow-ups</Label>
+                  <Button asChild type="button" size="sm" variant="outline">
+                    <Link to={`/crm/followups?novo=1&oportunidade=${editing.id}`}>
+                      <CalendarPlus className="h-3.5 w-3.5 mr-1"/>Novo follow-up
+                    </Link>
+                  </Button>
+                </div>
+                {(() => {
+                  const items = followups.filter(f => f.oportunidade_id === editing.id).slice(0,10);
+                  if (!items.length) return <p className="text-xs text-muted-foreground py-3">Nenhum follow-up registrado.</p>;
+                  return (
+                    <ul className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                      {items.map(f => {
+                        const tipo = FUP_TIPOS.find(t=>t.value===f.tipo)?.label || f.tipo;
+                        const st = FUP_STATUS.find(s=>s.value===f.status);
+                        const Icon = f.status === "realizado" ? CheckCircle2 : Clock;
+                        return (
+                          <li key={f.id} className="rounded-md border p-2 text-xs bg-muted/30">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Icon className="h-3.5 w-3.5 text-muted-foreground"/>
+                              <span className="font-medium">{formatDate(f.data)}{f.hora && ` · ${String(f.hora).slice(0,5)}`}</span>
+                              <span className="px-1.5 py-0.5 rounded bg-muted">{tipo}</span>
+                              <span className={`px-1.5 py-0.5 rounded ${st?.color}`}>{st?.label}</span>
+                            </div>
+                            {f.resumo && <div className="text-muted-foreground mt-1 whitespace-pre-wrap">{f.resumo}</div>}
+                            {f.proxima_acao && <div className="italic text-muted-foreground mt-0.5">→ {f.proxima_acao}</div>}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  );
+                })()}
+              </div>
+            )}
             <div className="sm:col-span-2 flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={()=>setOpen(false)}>Cancelar</Button>
               <Button type="submit">Salvar</Button>

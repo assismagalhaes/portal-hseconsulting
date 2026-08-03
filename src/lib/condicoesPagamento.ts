@@ -34,6 +34,20 @@ export type ParcelaForm = {
   descricao: string | null;
 };
 
+type ParcelaMarco = Pick<ParcelaForm, "marco" | "dias_apos_marco" | "dia_mes">;
+
+/** Formata o marco com o prazo específico da parcela para tela, PDF e textos. */
+export function formatarMarcoParcela(parcela: ParcelaMarco) {
+  const label = MARCO_LABEL[parcela.marco];
+
+  if (parcela.marco === "mensal_recorrente" && parcela.dia_mes) {
+    return `${label} (dia ${parcela.dia_mes})`;
+  }
+
+  const dias = Number(parcela.dias_apos_marco) || 0;
+  return dias > 0 ? `${label} (+${dias} dias)` : label;
+}
+
 export function somaPercentuais(parcelas: ParcelaForm[]) {
   return parcelas.reduce((s, p) => s + (Number(p.percentual) || 0), 0);
 }
@@ -64,12 +78,7 @@ export function buildTextoCondicao(
 ) {
   const linhas = parcelas.map((p) => {
     const valor = (Number(p.percentual) / 100) * (total || 0);
-    const base = `${p.numero}) ${p.percentual}% (${fmtBRL(valor)}) — ${MARCO_LABEL[p.marco]}`;
-    const extras: string[] = [];
-    if (p.marco === "mensal_recorrente" && p.dia_mes) extras.push(`todo dia ${p.dia_mes}`);
-    else if (p.dias_apos_marco) extras.push(`+${p.dias_apos_marco} dias`);
-    if (p.descricao) extras.push(p.descricao);
-    return extras.length ? `${base} (${extras.join(" · ")})` : base;
+    return `${p.numero}) ${p.percentual}% (${fmtBRL(valor)}) — ${formatarMarcoParcela(p)}`;
   });
   const cab = nome ? `${nome}\n` : "";
   const comp = complemento ? `\n\n${complemento}` : "";

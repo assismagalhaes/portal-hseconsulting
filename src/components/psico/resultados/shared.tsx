@@ -83,9 +83,26 @@ export function fmtDateTime(iso: string | null | undefined): string {
 
 export function fmtDate(iso: string | null | undefined): string {
   if (!iso) return "—";
-  try { return new Date(iso).toLocaleDateString("pt-BR"); } catch { return "—"; }
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (dateOnly) {
+    const [, year, month, day] = dateOnly;
+    return `${day}/${month}/${year}`;
+  }
+
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString("pt-BR");
 }
 
 // Texto de aviso metodológico fixo
 export const AVISO_METODOLOGICO =
   "Os percentuais apresentados representam respostas válidas relacionadas às perguntas dos fatores. Os resultados não correspondem à classificação individual dos trabalhadores.";
+
+// Componente reutilizável para o aviso metodológico.
+// Aceita `className` para variações pontuais de espaçamento/borda.
+export function AvisoMetodologico({ className }: { className?: string }) {
+  return (
+    <p className={className ?? "text-[11px] text-muted-foreground border-t pt-2"}>
+      {AVISO_METODOLOGICO}
+    </p>
+  );
+}

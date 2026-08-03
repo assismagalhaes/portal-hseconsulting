@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import PageHeader from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,27 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Plus, Trash2, Calculator, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown, Users, Eye } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { ArrowLeft, Plus, Trash2, Calculator, FileText, Save, History, AlertTriangle, CheckCircle2, Bookmark, FileDown, Users, Eye, Check, ChevronsDownUp, ChevronsUpDown, ChevronDown, ChevronRight } from "lucide-react";
+import { GripVertical } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { brl, pct, proposalStatusLabel, proposalOrigemLabel, proposalOrigemColor, formatCnpjCpf, formatDate, formatDateTime } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
 import {
@@ -29,6 +48,7 @@ import {
   normalizarHorasTecnicas,
 } from "@/lib/pricing";
 import { toast } from "sonner";
+import PremissasPicker from "@/components/proposal/PremissasPicker";
 import logo from "@/assets/hse-logo-navy.png";
 import ProposalDocument from "@/components/proposal/ProposalDocument";
 import CnpjLookupField from "@/components/CnpjLookupField";
@@ -39,8 +59,56 @@ import HistoricoPrecificacao from "@/components/proposal/HistoricoPrecificacao";
 import AceiteLinkCard from "@/components/proposal/AceiteLinkCard";
 import EmpresasProposta from "@/components/proposal/EmpresasProposta";
 import CondicaoPagamentoPicker from "@/components/proposal/CondicaoPagamentoPicker";
+import ClientCard from "@/components/proposal/ClientCard";
+import DatesCard from "@/components/proposal/DatesCard";
+import ItemEditor from "@/components/proposal/ItemEditor";
+import RevisionsCard from "@/components/proposal/RevisionsCard";
+import InlinePricingPanel from "@/components/proposal/InlinePricingPanel";
+import ClientPreview from "@/components/proposal/ClientPreview";
+import { Row, ResumoValor, InternalSummary, calcDescontoRevisao } from "@/components/proposal/ProposalSummary";
+import {
+  loadProposalBundle,
+  updateProposal,
+  updateProposalTotal,
+  syncProposalRevision,
+  closeProposalRevision,
+  upsertProposalClient,
+  insertProposalItem,
+  updateProposalItem as updateProposalItemDb,
+  deleteProposalItem,
+  findServiceByName,
+  insertService,
+  insertItemPricing,
+  upsertItemPricing,
+  recordIndividualPricingHistory,
+  listRevisions,
+  addRevisao as addRevisaoDb,
+} from "@/lib/propostas";
 
 const newId = () => Math.random().toString(36).slice(2, 10);
+
+function SortableItemRow({ id, children }: { id: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  };
+  return (
+    <div ref={setNodeRef} style={style} className="relative group">
+      <button
+        type="button"
+        aria-label="Arrastar para reordenar"
+        className="absolute -left-1 top-3 z-10 p-1 rounded hover:bg-muted text-muted-foreground cursor-grab active:cursor-grabbing opacity-40 group-hover:opacity-100 transition"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <div className="pl-5">{children}</div>
+    </div>
+  );
+}
 
 export default function ProposalEditor() {
   const { id } = useParams<{id:string}>();
@@ -60,55 +128,95 @@ export default function ProposalEditor() {
   const clientView = isMobile ? false : clientViewRaw;
   const [pricingOpen, setPricingOpen] = useState<string | null>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [collapsedItems, setCollapsedItems] = useState<Record<string, boolean>>({});
   const [groupOpen, setGroupOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [duplicateSource, setDuplicateSource] = useState<any | null>(null);
+  const [duplicatePickServiceId, setDuplicatePickServiceId] = useState<string | "__blank__" | "__keep__">("__keep__");
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  const [internalOpen, setInternalOpen] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return window.localStorage.getItem("proposal.internalSummary.open") !== "0";
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem("proposal.internalSummary.open", internalOpen ? "1" : "0"); } catch {}
+  }, [internalOpen]);
+  const [, setSavedTick] = useState(0);
+  useEffect(() => {
+    if (!lastSavedAt) return;
+    const t = setTimeout(() => setSavedTick((x) => x + 1), 4100);
+    return () => clearTimeout(t);
+  }, [lastSavedAt]);
   const dirtyTimer = useRef<any>(null);
   const [docReady, setDocReady] = useState(false);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = items.findIndex((x) => x.id === active.id);
+    const newIndex = items.findIndex((x) => x.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const reordered = arrayMove(items, oldIndex, newIndex).map((x, i) => ({ ...x, numero_item: i + 1 }));
+    setItems(reordered);
+    try {
+      await Promise.all(
+        reordered.map((x) => updateProposalItemDb(x.id, { numero_item: x.numero_item })),
+      );
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao reordenar itens");
+      load();
+    }
+  }
 
   useEffect(() => { load(); }, [id]);
 
+  // Atalhos de teclado (somente na edição interna, evita conflito com formulários do cliente)
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement)?.tagName;
+      const isField = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable;
+      // Alt+N — novo item (funciona mesmo dentro de campos)
+      if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && (e.key === "n" || e.key === "N")) {
+        e.preventDefault();
+        addItem();
+        return;
+      }
+      if (!(e.ctrlKey || e.metaKey)) return;
+      if (isField) return;
+      if (e.key === "p" || e.key === "P") { e.preventDefault(); setPreviewOpen(true); }
+      else if (e.key === "e" || e.key === "E") {
+        e.preventDefault();
+        const allCollapsed = items.length > 0 && items.every(i => collapsedItems[i.id]);
+        if (allCollapsed) setCollapsedItems({});
+        else setCollapsedItems(Object.fromEntries(items.map(i => [i.id, true])));
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, collapsedItems, proposal?.id]);
+
   async function load() {
     if (!id) return;
-    const [p, sv, pp] = await Promise.all([
-      supabase.from("proposals").select("*, clients(*)").eq("id", id).single(),
-      supabase.from("services").select("*").order("nome"),
-      supabase.from("pricing_params").select("*").limit(1).maybeSingle(),
-    ]);
-    if (p.error) { toast.error(p.error.message); return; }
-    const proposalData = p.data;
-    // Pré-popular condições padrão APENAS na primeira abertura (campo nunca preenchido).
-    // Usar == null evita re-preencher quando o usuário apagou o texto propositalmente
-    // (nesse caso o valor salvo é "" e deve ser respeitado).
-    const patch: any = {};
-    if (proposalData.condicoes_pagamento == null && pp.data?.condicoes_pagamento_default) patch.condicoes_pagamento = pp.data.condicoes_pagamento_default;
-    if (proposalData.outras_condicoes == null && pp.data?.outras_condicoes_default) patch.outras_condicoes = pp.data.outras_condicoes_default;
-    if (Object.keys(patch).length) {
-      await supabase.from("proposals").update(patch).eq("id", proposalData.id);
-      Object.assign(proposalData, patch);
+    try {
+      const bundle = await loadProposalBundle(id);
+      setProposal(bundle.proposal);
+      setClient(bundle.client);
+      setServices(bundle.services);
+      setParams(bundle.params);
+      setItems(bundle.items);
+      setRevisions(bundle.revisions);
+      setPricings(bundle.pricings);
+      setProposalClients(bundle.proposalClients);
+      document.title = `${bundle.proposal.numero} | Portal HSE Consulting`;
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao carregar proposta");
     }
-    setProposal(proposalData);
-    setClient(proposalData.clients || null);
-    setServices(sv.data || []);
-    setParams(pp.data || { custo_fixo_mensal:0, horas_produtivas_mes:160, custo_por_vida:0, aliquota_imposto:0.10, margem_minima:0.20, markup_minimo:1.5, arredondamento:1, valor_hora_tecnica: 35 });
-    document.title = `${proposalData.numero} | Portal HSE Consulting`;
-    const [it, rv] = await Promise.all([
-      supabase.from("proposal_items").select("*").eq("proposal_id", id).order("numero_item"),
-      supabase.from("proposal_revisions").select("*").eq("proposal_id", id).order("revisao", { ascending: false }),
-    ]);
-    setItems(it.data || []);
-    setRevisions(rv.data || []);
-    if (it.data && it.data.length) {
-      const pr = await supabase.from("proposal_item_pricing").select("*").in("proposal_item_id", it.data.map(x=>x.id));
-      const map: Record<string, any> = {};
-      (pr.data || []).forEach(r => { map[r.proposal_item_id] = r; });
-      setPricings(map);
-    }
-    const { data: pcs } = await supabase.from("proposal_clients")
-      .select("*, clients(id,razao_social,nome_fantasia,cnpj_cpf,cidade,uf,endereco,solicitante,cargo,telefone,email)")
-      .eq("proposal_id", id)
-      .order("papel", { ascending: true })
-      .order("ordem", { ascending: true });
-    setProposalClients(pcs || []);
   }
 
   const total = items.reduce((a,b)=>a+Number(b.valor_total||0), 0);
@@ -118,11 +226,17 @@ export default function ProposalEditor() {
   async function saveProposalField(patch: any): Promise<boolean> {
     if (!proposal) return false;
     setSaving(true);
-    const { error } = await supabase.from("proposals").update(patch).eq("id", proposal.id);
-    setSaving(false);
-    if (error) { toast.error(error.message); return false; }
-    setProposal({ ...proposal, ...patch });
-    return true;
+    try {
+      await updateProposal(proposal.id, patch);
+      setProposal((p: any) => ({ ...(p || proposal), ...patch }));
+      setLastSavedAt(Date.now());
+      return true;
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao salvar");
+      return false;
+    } finally {
+      setSaving(false);
+    }
   }
 
   function scheduleProposalSave(patch: any) {
@@ -134,56 +248,35 @@ export default function ProposalEditor() {
   /* ---------------- Cliente (auto-cadastro / upsert) ---------------- */
   async function persistClient(c: any) {
     if (!c) return;
-    if (saving) return;
     setSaving(true);
-    let saved = c;
-    if (c.id) {
-      const { error } = await supabase.from("clients").update({
-        razao_social: c.razao_social, nome_fantasia: c.nome_fantasia, cnpj_cpf: c.cnpj_cpf,
-        qtd_funcionarios: Number(c.qtd_funcionarios)||0, endereco: c.endereco,
-        bairro: c.bairro, cep: c.cep, cidade: c.cidade, uf: c.uf,
-        solicitante: c.solicitante, cargo: c.cargo, telefone: c.telefone, whatsapp: c.whatsapp,
-        email: c.email, observacoes: c.observacoes,
-      }).eq("id", c.id);
-      if (error) { toast.error(error.message); setSaving(false); return; }
-    } else {
-      // Tentar localizar pelo CNPJ — reutilizar / atualizar campos vazios
-      let existing: any = null;
-      if (c.cnpj_cpf) {
-        const clean = String(c.cnpj_cpf).replace(/\D/g, "");
-        const variants = Array.from(new Set([String(c.cnpj_cpf).trim(), clean]));
-        const { data } = await supabase.from("clients").select("*").in("cnpj_cpf", variants).order("created_at", { ascending: true }).limit(1);
-        existing = data;
-      }
-      if (existing) {
-        const merged: any = { ...existing };
-        Object.entries(c).forEach(([k,v]) => { if (v && !merged[k]) merged[k] = v; });
-        await supabase.from("clients").update(merged).eq("id", existing.id);
-        saved = merged;
-      } else {
-        const { data, error } = await supabase.from("clients").insert({
-          razao_social: c.razao_social || "Cliente sem nome",
-          nome_fantasia: c.nome_fantasia, cnpj_cpf: c.cnpj_cpf,
-          qtd_funcionarios: Number(c.qtd_funcionarios)||0, endereco: c.endereco,
-          bairro: c.bairro, cep: c.cep, cidade: c.cidade, uf: c.uf,
-          solicitante: c.solicitante, cargo: c.cargo, telefone: c.telefone, whatsapp: c.whatsapp,
-          email: c.email, observacoes: c.observacoes,
-        }).select("*").single();
-        if (error) { toast.error(error.message); setSaving(false); return; }
-        saved = data;
-      }
-      await supabase.from("proposals").update({ client_id: saved.id }).eq("id", proposal.id);
-      setProposal((p:any)=>({ ...p, client_id: saved.id }));
+    try {
+      const saved = await upsertProposalClient(proposal.id, c);
+      if (!c.id) setProposal((p: any) => ({ ...p, client_id: saved.id }));
+      setClient(saved);
+      setLastSavedAt(Date.now());
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao salvar cliente");
+    } finally {
+      setSaving(false);
     }
-    setClient(saved);
-    setSaving(false);
   }
 
   /* ---------------- Itens ---------------- */
   async function updateTotal(newItems: any[]) {
     const t = newItems.reduce((a,b)=>a+Number(b.valor_total||0),0);
-    await supabase.from("proposals").update({ valor_total: t }).eq("id", proposal.id);
-    setProposal((p:any) => ({...p, valor_total:t }));
+    try {
+      await updateProposalTotal(proposal.id, t);
+      await syncProposalRevision(proposal.id);
+      const nextRevisions = await listRevisions(proposal.id);
+      setRevisions(nextRevisions);
+      setProposal((p:any) => ({
+        ...p,
+        valor_total: t,
+        revisao_atual: nextRevisions[0]?.revisao ?? p.revisao_atual,
+      }));
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao atualizar a revisão comercial");
+    }
   }
 
   async function addItem(fromService?: any) {
@@ -206,10 +299,14 @@ export default function ProposalEditor() {
       valor_unitario: valorUnit,
       valor_total: valorUnit,
     };
-    const { data, error } = await supabase.from("proposal_items").insert(payload).select("*").single();
-    if (error) return toast.error(error.message);
-    const next = [...items, data!];
-    setItems(next); updateTotal(next);
+    let data: any;
+    try {
+      data = await insertProposalItem(payload);
+    } catch (e: any) {
+      return toast.error(e?.message || "Falha ao adicionar item");
+    }
+    const next = [...items, data];
+    setItems(next); await updateTotal(next);
 
     // Se o serviço tem template de precificação, cria proposal_item_pricing automaticamente
     if (hasPricingTemplate && data) {
@@ -226,60 +323,159 @@ export default function ProposalEditor() {
         preco_aprovado: Number(fromService.pricing_preco_arredondado || valorUnit),
         indicadores: fromService.pricing_indicadores || {},
       };
-      const { data: pr } = await supabase.from("proposal_item_pricing").insert(pricingPayload).select("*").single();
-      if (pr) setPricings((prev) => ({ ...prev, [data.id]: pr }));
+      try {
+        const pr = await insertItemPricing(pricingPayload);
+        if (pr) setPricings((prev) => ({ ...prev, [data.id]: pr }));
+      } catch { /* pricing template é best-effort */ }
     }
+    await syncProposalRevision(proposal.id);
   }
 
   async function updateItem(it: any, patch: any) {
     const merged = { ...it, ...patch };
     merged.valor_total = Number(merged.quantidade||0) * Number(merged.valor_unitario||0);
-    const { error } = await supabase.from("proposal_items").update({
-      categoria: merged.categoria || null,
-      nome: merged.nome,
-      descricao_comercial: merged.descricao_comercial,
-      escopo_tecnico: merged.escopo_tecnico,
-      entregaveis: merged.entregaveis ?? null,
-      observacoes_escopo: merged.observacoes_escopo ?? null,
-      quantidade_tecnica: merged.quantidade_tecnica ?? null,
-      quantidade: merged.quantidade,
-      valor_unitario: merged.valor_unitario,
-      valor_total: merged.valor_total,
-      client_id: merged.client_id ?? null,
-      rateado: merged.rateado ?? false,
-    }).eq("id", it.id);
-    if (error) return toast.error(error.message);
+    setSaving(true);
+    try {
+      await updateProposalItemDb(it.id, {
+        categoria: merged.categoria || null,
+        nome: merged.nome,
+        descricao_comercial: merged.descricao_comercial,
+        escopo_tecnico: merged.escopo_tecnico,
+        entregaveis: merged.entregaveis ?? null,
+        observacoes_escopo: merged.observacoes_escopo ?? null,
+        quantidade_tecnica: merged.quantidade_tecnica ?? null,
+        quantidade: merged.quantidade,
+        valor_unitario: merged.valor_unitario,
+        valor_total: merged.valor_total,
+        client_id: merged.client_id ?? null,
+        rateado: merged.rateado ?? false,
+      });
+    } catch (e: any) {
+      setSaving(false);
+      return toast.error(e?.message || "Falha ao salvar item");
+    }
+    setSaving(false);
+    setLastSavedAt(Date.now());
     const next = items.map(x => x.id === it.id ? merged : x);
-    setItems(next); updateTotal(next);
+    setItems(next); await updateTotal(next);
   }
 
   async function removeItem(it: any) {
-    await supabase.from("proposal_items").delete().eq("id", it.id);
-    const next = items.filter(x => x.id !== it.id);
-    setItems(next); updateTotal(next);
+    await deleteProposalItem(it.id);
+    const remaining = items.filter(x => x.id !== it.id);
+    const next = remaining.map((x, i) => ({ ...x, numero_item: i + 1 }));
+    await Promise.all(
+      next
+        .filter((x, i) => x.numero_item !== remaining[i].numero_item)
+        .map(x => updateProposalItemDb(x.id, { numero_item: x.numero_item }))
+    );
+    setItems(next); await updateTotal(next);
+  }
+
+  async function duplicateItem(it: any, mode: "keep" | "blank" | string = "keep") {
+    const numero_item = (items[items.length - 1]?.numero_item || 0) + 1;
+    // `mode` = "keep"  → copia dados do item original com sufixo "(cópia)"
+    //         "blank" → cria item em branco (usuário digita depois)
+    //         <uuid>  → usa dados de um serviço do catálogo
+    const svc = mode !== "keep" && mode !== "blank" ? services.find((s) => s.id === mode) : null;
+    const base: any = svc
+      ? {
+          service_id: svc.id,
+          categoria: svc.categoria || null,
+          nome: svc.nome || "Novo item",
+          descricao_comercial: svc.descricao_comercial || svc.nome || "",
+          escopo_tecnico: svc.escopo_tecnico || "",
+          entregaveis: svc.entregaveis || "",
+          observacoes_escopo: svc.observacoes_escopo || "",
+          quantidade_tecnica: svc.quantidade_tecnica || "",
+        }
+      : mode === "blank"
+        ? {
+            service_id: null, categoria: null, nome: "Novo item",
+            descricao_comercial: "", escopo_tecnico: "",
+            entregaveis: "", observacoes_escopo: "", quantidade_tecnica: "",
+          }
+        : {
+            service_id: it.service_id || null,
+            categoria: it.categoria || null,
+            nome: it.nome ? `${it.nome} (cópia)` : "Novo item",
+            descricao_comercial: it.descricao_comercial || "",
+            escopo_tecnico: it.escopo_tecnico || "",
+            entregaveis: it.entregaveis || "",
+            observacoes_escopo: it.observacoes_escopo || "",
+            quantidade_tecnica: it.quantidade_tecnica || "",
+          };
+    const payload: any = {
+      proposal_id: proposal.id,
+      numero_item,
+      ...base,
+      quantidade: Number(it.quantidade) || 1,
+      valor_unitario: Number(it.valor_unitario) || 0,
+      valor_total: Number(it.valor_total) || 0,
+      client_id: it.client_id || null,
+      rateado: !!it.rateado,
+    };
+    let data: any;
+    try {
+      data = await insertProposalItem(payload);
+    } catch (e: any) {
+      return toast.error(e?.message || "Falha ao duplicar item");
+    }
+    const next = [...items, data];
+    setItems(next);
+    await updateTotal(next);
+
+    // Copia a precificação interna, se existir no item original (essa é a razão
+    // principal do "duplicar" no fluxo real — reaproveitar custos/margem já
+    // calculados independentemente do serviço escolhido).
+    const src = pricings[it.id];
+    if (src && data) {
+      try {
+        const pr = await insertItemPricing({
+          proposal_item_id: data.id,
+          custos: src.custos || [],
+          horas: src.horas || [],
+          aliquota_imposto: src.aliquota_imposto,
+          margem_desejada: src.margem_desejada,
+          lucro_desejado: src.lucro_desejado,
+          desconto_comercial: src.desconto_comercial,
+          preco_sugerido: src.preco_sugerido,
+          preco_arredondado: src.preco_arredondado,
+          preco_aprovado: src.preco_aprovado,
+          indicadores: src.indicadores || {},
+        });
+        if (pr) setPricings((prev) => ({ ...prev, [data.id]: pr }));
+      } catch { /* best-effort */ }
+    }
+    await syncProposalRevision(proposal.id);
+    toast.success(svc ? `Item duplicado com dados de "${svc.nome}"` : "Item duplicado");
   }
 
   async function saveItemAsService(it: any) {
     const nomeRef = (it.nome || it.descricao_comercial || "").trim();
     if (!nomeRef) return toast.error("Item sem nome");
-    const { data: existing } = await supabase.from("services").select("id").eq("nome", nomeRef).maybeSingle();
+    const existing = await findServiceByName(nomeRef);
     if (existing) {
       await updateItem(it, { service_id: existing.id });
       return toast.info("Já existia no catálogo — vínculo atualizado.");
     }
-    const { data, error } = await supabase.from("services").insert({
-      nome: nomeRef,
-      categoria: it.categoria,
-      descricao_comercial: it.descricao_comercial,
-      escopo_tecnico: it.escopo_tecnico,
-      entregaveis: it.entregaveis,
-      observacoes_escopo: it.observacoes_escopo,
-      quantidade_tecnica: it.quantidade_tecnica,
-      valor_referencia: it.valor_unitario,
-    }).select("*").single();
-    if (error) return toast.error(error.message);
-    setServices(s => [...s, data!]);
-    await updateItem(it, { service_id: data!.id });
+    let data: any;
+    try {
+      data = await insertService({
+        nome: nomeRef,
+        categoria: it.categoria,
+        descricao_comercial: it.descricao_comercial,
+        escopo_tecnico: it.escopo_tecnico,
+        entregaveis: it.entregaveis,
+        observacoes_escopo: it.observacoes_escopo,
+        quantidade_tecnica: it.quantidade_tecnica,
+        valor_referencia: it.valor_unitario,
+      });
+    } catch (e: any) {
+      return toast.error(e?.message || "Falha ao cadastrar serviço");
+    }
+    setServices(s => [...s, data]);
+    await updateItem(it, { service_id: data.id });
     toast.success("Serviço cadastrado no catálogo");
   }
 
@@ -296,54 +492,25 @@ export default function ProposalEditor() {
     const existing = pricings[item.id];
     const qtd = Math.max(1, Number(item.quantidade||1));
     const valorAnt = Number(item.valor_unitario||0) * qtd;
-    const hasExistingId = existing && existing.id;
-    const { data: savedRow, error } = hasExistingId
-      ? await supabase.from("proposal_item_pricing").update(payload).eq("id", existing.id).select("*").single()
-      : await supabase.from("proposal_item_pricing").insert(payload).select("*").single();
-    if (error) return toast.error(error.message);
-    setPricings({ ...pricings, [item.id]: savedRow || { ...existing, ...payload } });
-    await updateItem(item, { valor_unitario: Number((computed.preco_arredondado / qtd).toFixed(2)) });
-    // Registra simulação individual + histórico
+    let savedRow: any;
     try {
-      const { data: sim } = await supabase.from("simulacoes_precificacao").insert({
-        proposal_id: proposal.id,
-        tipo: "individual",
-        regra_rateio: "igual",
-        aplicada: true,
-        aplicada_em: new Date().toISOString(),
-        totais: computed as any,
-      }).select("id").single();
-      if (sim) {
-        await supabase.from("simulacao_itens").insert({
-          simulacao_id: sim.id,
-          proposal_item_id: item.id,
-          custos_individuais: draft.custos,
-          horas: draft.horas,
-          aliquota_imposto: draft.aliquota_imposto,
-          margem_desejada: draft.margem_desejada,
-          lucro_desejado: draft.lucro_desejado,
-          desconto_comercial: draft.desconto_comercial,
-          custo_individual: computed.custo_total,
-          custo_total: computed.custo_total,
-          preco_sugerido: computed.preco_sugerido,
-          preco_final: computed.preco_arredondado,
-          lucro_estimado: computed.lucro_estimado,
-          margem_liquida: computed.margem_liquida,
-          markup: computed.markup,
-          status_margem: computed.status_margem,
-          indicadores: computed as any,
-        });
-        await supabase.from("historico_precificacao").insert({
-          proposal_id: proposal.id,
-          simulacao_id: sim.id,
-          proposal_item_id: item.id,
-          acao: "aplicada_individual",
-          valor_anterior: valorAnt,
-          valor_novo: computed.preco_arredondado,
-          detalhes: { regra: "individual" } as any,
-        });
-      }
-    } catch { /* histórico é best-effort */ }
+      savedRow = await upsertItemPricing(existing?.id, payload);
+    } catch (e: any) {
+      return toast.error(e?.message || "Falha ao salvar precificação");
+    }
+    setPricings({ ...pricings, [item.id]: savedRow || { ...existing, ...payload } });
+    // Arredonda o valor UNITÁRIO para cima (R$1) quando há mais de 1 unidade,
+    // para manter o mesmo padrão do valor total (que já vem arredondado).
+    const unitBruto = computed.preco_arredondado / qtd;
+    const novoUnit = qtd > 1 ? Math.ceil(unitBruto) : Number(unitBruto.toFixed(2));
+    await updateItem(item, { valor_unitario: novoUnit });
+    await recordIndividualPricingHistory({
+      proposalId: proposal.id,
+      item,
+      draft,
+      computed,
+      valorAnterior: valorAnt,
+    });
     toast.success("Precificação aplicada ao item");
     setPricingOpen(null);
   }
@@ -378,16 +545,14 @@ export default function ProposalEditor() {
     const ok = await saveProposalField(patch);
     if (!ok) return;
     // Recarrega revisões pois o trigger gravou uma nova
-    const rv = await supabase.from("proposal_revisions").select("*").eq("proposal_id", proposal.id).order("revisao",{ascending:false});
-    setRevisions(rv.data || []);
+    setRevisions(await listRevisions(proposal.id));
     toast.success("Status atualizado");
   }
 
   async function addRevisao(titulo: string, descricao: string) {
     if (!titulo) return;
-    await supabase.rpc("add_proposal_revision", { _proposal_id: proposal.id, _titulo: titulo, _descricao: descricao });
-    const rv = await supabase.from("proposal_revisions").select("*").eq("proposal_id", proposal.id).order("revisao",{ascending:false});
-    setRevisions(rv.data || []);
+    await addRevisaoDb(proposal.id, titulo, descricao);
+    setRevisions(await listRevisions(proposal.id));
     toast.success("Revisão registrada");
   }
 
@@ -396,6 +561,19 @@ export default function ProposalEditor() {
   const errs = validate();
 
   async function handlePrint() {
+    try {
+      await closeProposalRevision(proposal.id);
+      const nextRevisions = await listRevisions(proposal.id);
+      setRevisions(nextRevisions);
+      setProposal((p: any) => ({
+        ...p,
+        revisao_atual: nextRevisions[0]?.revisao ?? p.revisao_atual,
+      }));
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível registrar a versão da proposta.");
+      return;
+    }
+
     // Padrão de nome do arquivo: "Proposta P-2026-51842 - Zanotti".
     const clienteNome = client?.nome_fantasia || client?.razao_social || "Cliente";
     const safe = (s: string) => (s || "").replace(/[\\/:*?"<>|]/g, "").trim();
@@ -477,7 +655,7 @@ export default function ProposalEditor() {
               print-color-adjust: exact !important;
             }
             .proposal-doc { width: 210mm; margin: 0; padding: 0; }
-            .pdf-page { box-shadow: none !important; margin: 0 !important; page-break-after: always; break-after: page; }
+            .pdf-page { box-shadow: none !important; margin: 0 !important; padding: 0 !important; page-break-after: always; break-after: page; overflow: hidden; }
             .pdf-page:last-child { page-break-after: auto; break-after: auto; }
             .avoid-break { break-inside: avoid; page-break-inside: avoid; }
             @media screen { body { margin: 0 auto; } }
@@ -510,19 +688,19 @@ export default function ProposalEditor() {
           <>
             <Button variant="ghost" size="sm" asChild><Link to="/propostas"><ArrowLeft className="h-4 w-4 mr-1" /> Voltar</Link></Button>
             {saving && <span className="text-xs text-muted-foreground flex items-center gap-1"><Save className="h-3 w-3 animate-pulse" /> salvando…</span>}
+            {!saving && lastSavedAt && (Date.now() - lastSavedAt) < 4000 && (
+              <span className="text-xs text-success flex items-center gap-1"><Check className="h-3 w-3" /> salvo</span>
+            )}
             <Button variant="outline" size="sm" onClick={handlePrint} disabled={!docReady}>
               <FileDown className="h-4 w-4 mr-1" /> Gerar PDF
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setPreviewOpen(true)} disabled={!docReady} title="Pré-visualizar (Ctrl/⌘+P)">
+              <Eye className="h-4 w-4 mr-1" /> Pré-visualizar
             </Button>
             <Select value={proposal.status} onValueChange={changeStatus}>
               <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
               <SelectContent>{Object.entries(proposalStatusLabel).map(([k,v])=><SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
             </Select>
-            {isInternal && !isMobile && (
-              <div className="flex items-center gap-2 ml-2 px-3 py-1.5 rounded-md bg-muted">
-                <Switch checked={clientView} onCheckedChange={setClientView} id="cv" />
-              <Label htmlFor="cv" className="text-xs cursor-pointer">Visualizar Proposta</Label>
-              </div>
-            )}
           </>
         } />
 
@@ -553,7 +731,7 @@ export default function ProposalEditor() {
               </TabsList>
 
               <TabsContent value="cliente" className="mt-4">
-                <ClientCard client={client} setClient={setClient} onSave={persistClient} saving={saving} />
+                <ClientCard client={client} setClient={setClient} onSave={persistClient} />
               </TabsContent>
 
               <TabsContent value="empresas" className="mt-4">
@@ -572,6 +750,16 @@ export default function ProposalEditor() {
                     <SelectTrigger className="w-72"><SelectValue placeholder="…ou adicionar do catálogo" /></SelectTrigger>
                     <SelectContent>{services.map(s=><SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}</SelectContent>
                   </Select>
+                  {items.length > 1 && (
+                    <>
+                      <Button size="sm" variant="ghost" onClick={() => setCollapsedItems(Object.fromEntries(items.map(i => [i.id, true])))}>
+                        <ChevronsDownUp className="h-4 w-4 mr-1" /> Recolher todos
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setCollapsedItems({})}>
+                        <ChevronsUpDown className="h-4 w-4 mr-1" /> Expandir todos
+                      </Button>
+                    </>
+                  )}
                   {isInternal && (() => {
                     const count = Object.values(selected).filter(Boolean).length;
                     return (
@@ -585,18 +773,27 @@ export default function ProposalEditor() {
                   })()}
                 </div>
                 {items.length === 0 && <Card className="p-8 text-center text-muted-foreground">Nenhum item ainda. Adicione o primeiro serviço.</Card>}
-                {items.map(it => (
-                  <ItemEditor key={it.id} item={it} pricing={pricings[it.id]}
-                    onChange={(patch)=>updateItem(it, patch)}
-                    onRemove={()=>removeItem(it)}
-                    onOpenPricing={()=>setPricingOpen(it.id)}
-                    onSaveToCatalog={()=>saveItemAsService(it)}
-                    isInternal={isInternal}
-                    proposalClients={proposalClients}
-                    modoFaturamento={proposal.modo_faturamento}
-                    selected={!!selected[it.id]}
-                    onSelect={(v)=>setSelected(s=>({ ...s, [it.id]: v }))} />
-                ))}
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                    {items.map((it, idx) => (
+                      <SortableItemRow key={it.id} id={it.id}>
+                        <ItemEditor item={it} numero={idx + 1} pricing={pricings[it.id]}
+                          onChange={(patch)=>updateItem(it, patch)}
+                          onRemove={()=>removeItem(it)}
+                          onDuplicate={()=>{ setDuplicatePickServiceId("__keep__"); setDuplicateSource(it); }}
+                          onOpenPricing={()=>setPricingOpen(it.id)}
+                          onSaveToCatalog={()=>saveItemAsService(it)}
+                          isInternal={isInternal}
+                          proposalClients={proposalClients}
+                          modoFaturamento={proposal.modo_faturamento}
+                          selected={!!selected[it.id]}
+                          onSelect={(v)=>setSelected(s=>({ ...s, [it.id]: v }))}
+                          collapsed={!!collapsedItems[it.id]}
+                          onToggleCollapsed={(v: boolean) => setCollapsedItems(s => ({ ...s, [it.id]: v }))} />
+                      </SortableItemRow>
+                    ))}
+                  </SortableContext>
+                </DndContext>
                 <Card>
                   <CardContent className="p-4 space-y-1.5">
                     <Label>Observações técnicas gerais</Label>
@@ -633,8 +830,15 @@ export default function ProposalEditor() {
                       onSaved={(texto) => setProposal((p: any) => ({ ...p, condicoes_pagamento: texto }))}
                     />
                   </div>
-                  <div className="space-y-1.5"><Label>Outras condições</Label>
-                    <Textarea rows={6} value={proposal.outras_condicoes||""} onChange={e=>scheduleProposalSave({ outras_condicoes: e.target.value })} /></div>
+                  <PremissasPicker
+                    selectedIds={proposal.premissas_ids || []}
+                    extraText={(proposal.premissas_ids?.length ? "" : (proposal.outras_condicoes || ""))}
+                    itemCategorias={items.map((i: any) => i.categoria).filter(Boolean)}
+                    onChange={(patch) => {
+                      setProposal((p: any) => ({ ...p, ...patch }));
+                      scheduleProposalSave(patch);
+                    }}
+                  />
                   <div className="space-y-1.5"><Label>Observações para o cliente</Label>
                     <Textarea rows={3} value={proposal.observacoes_comerciais||""} onChange={e=>scheduleProposalSave({ observacoes_comerciais: e.target.value })} /></div>
                 </CardContent></Card>
@@ -694,7 +898,20 @@ export default function ProposalEditor() {
               {isInternal && !clientView && (
                 <>
                   <hr/>
-                  <InternalSummary items={items} pricings={pricings} descontoRevisao={calcDescontoRevisao(total, revisions)} />
+                  <button
+                    type="button"
+                    onClick={() => setInternalOpen(v => !v)}
+                    className="w-full flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition"
+                    aria-expanded={internalOpen}
+                  >
+                    <span className="flex items-center gap-1">
+                      <Calculator className="h-3.5 w-3.5" /> Resumo interno
+                    </span>
+                    {internalOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                  </button>
+                  {internalOpen && (
+                    <InternalSummary items={items} pricings={pricings} descontoRevisao={calcDescontoRevisao(total, revisions)} />
+                  )}
                 </>
               )}
             </CardContent>
@@ -734,10 +951,19 @@ export default function ProposalEditor() {
 
       <Sheet open={!!pricingOpen} onOpenChange={(o)=>!o && setPricingOpen(null)}>
         <SheetContent side="right" className="w-full sm:max-w-3xl overflow-y-auto">
-          <SheetHeader><SheetTitle>Precificação interna do item</SheetTitle></SheetHeader>
+          <SheetHeader>
+            <SheetTitle>
+              Precificação interna do item
+              {pricingOpen && (() => {
+                const it = items.find(i => i.id === pricingOpen);
+                const nome = it?.nome || it?.descricao_comercial;
+                return nome ? <span className="block text-sm font-normal text-muted-foreground mt-1">#{it?.numero_item} · {nome}</span> : null;
+              })()}
+            </SheetTitle>
+          </SheetHeader>
           {pricingOpen && (
             <div className="mt-4">
-              <PricingPanel
+              <InlinePricingPanel
                 item={items.find(i=>i.id===pricingOpen)!}
                 existing={pricings[pricingOpen]}
                 params={params}
@@ -761,768 +987,89 @@ export default function ProposalEditor() {
           onApplied={()=>{ setSelected({}); load(); }}
         />
       )}
-    </div>
-  );
-}
 
-function Row({ label, children }: any) {
-  return <div className="flex items-center justify-between gap-3"><span className="text-muted-foreground">{label}</span><span className="text-right">{children}</span></div>;
-}
-
-function InternalSummary({ items, pricings, descontoRevisao = 0 }: any) {
-  let custoTotal = 0, lucroTotal = 0, receita = 0, imposto = 0;
-  items.forEach((it:any) => {
-    const p = pricings[it.id];
-    if (!p?.indicadores) return;
-    // Indicadores são calculados por UNIDADE. Escala pela quantidade do item na proposta
-    // para que Custo / Impostos / Receita / Lucro reflitam o total real (mesma base do "Valor total").
-    const qtd = Math.max(1, Number(it.quantidade) || 1);
-    custoTotal += Number(p.indicadores.custo_total || 0) * qtd;
-    lucroTotal += Number(p.indicadores.lucro_estimado || 0) * qtd;
-    receita    += Number(p.indicadores.receita_liquida || 0) * qtd;
-    imposto    += Number(p.indicadores.imposto_estimado || 0) * qtd;
-  });
-  const desc = Number(descontoRevisao) || 0;
-  const receitaFinal = Math.max(0, receita - desc);
-  const lucroFinal = lucroTotal - desc;
-  const margem = receitaFinal > 0 ? lucroFinal / receitaFinal : 0;
-  return (
-    <div className="space-y-2">
-      <Row label="Custo total interno"><span className="font-mono">{brl(custoTotal)}</span></Row>
-      <Row label="Impostos estimados"><span className="font-mono">{brl(imposto)}</span></Row>
-      <Row label="Receita líquida"><span className="font-mono">{brl(receita)}</span></Row>
-      {desc > 0 && (
-        <>
-          <Row label="Desconto (revisão)"><span className="font-mono text-danger">- {brl(desc)}</span></Row>
-          <Row label="Receita líquida final"><span className="font-mono font-semibold">{brl(receitaFinal)}</span></Row>
-        </>
-      )}
-      <Row label={desc > 0 ? "Lucro estimado (com desconto)" : "Lucro estimado"}>
-        <span className={`font-mono ${lucroFinal < 0 ? "text-danger" : ""}`}>{brl(lucroFinal)}</span>
-      </Row>
-      <Row label="Margem média"><span className={`font-mono ${margem < 0 ? "text-danger" : ""}`}>{pct(margem)}</span></Row>
-    </div>
-  );
-}
-
-/* ---------------- Helpers de revisão (resumo) ---------------- */
-function calcDescontoRevisao(subtotal: number, revisions: any[]): number {
-  if (!revisions?.length) return 0;
-  const ord = [...revisions].sort((a, b) => Number(b.revisao || 0) - Number(a.revisao || 0));
-  const rev = ord.find((r) => r.status === "aprovada") || ord[0];
-  if (!rev || rev.valor_novo == null || rev.valor_anterior == null) return 0;
-  // Só considera desconto real quando houve redução entre valor anterior e novo da própria revisão.
-  // Evita interpretar "emissão inicial" ou adição de itens após a revisão como desconto.
-  if (rev.tipo && rev.tipo !== "desconto") return 0;
-  const novo = Number(rev.valor_novo);
-  const ant = Number(rev.valor_anterior);
-  return ant > novo ? ant - novo : 0;
-}
-
-function ResumoValor({ total, revisions }: { total: number; revisions: any[] }) {
-  const desc = calcDescontoRevisao(total, revisions);
-  if (!desc) {
-    return <Row label="Valor total"><span className="font-mono font-semibold text-primary">{brl(total)}</span></Row>;
-  }
-  const final = total - desc;
-  const ord = [...revisions].sort((a, b) => Number(b.revisao || 0) - Number(a.revisao || 0));
-  const rev = ord.find((r: any) => r.status === "aprovada") || ord[0];
-  return (
-    <>
-      <Row label="Subtotal"><span className="font-mono">{brl(total)}</span></Row>
-      <Row label={`Desconto (Rev. ${String(rev.revisao).padStart(2, "0")})`}>
-        <span className="font-mono text-danger">- {brl(desc)}</span>
-      </Row>
-      <Row label="Valor final">
-        <span className="font-mono font-semibold text-primary">{brl(final)}</span>
-      </Row>
-    </>
-  );
-}
-
-/* ---------------- Cliente Card ---------------- */
-function ClientCard({ client, setClient, onSave, saving }: any) {
-  const c = client || {};
-  const set = (patch:any) => setClient({ ...c, ...patch });
-  return (
-    <Card><CardContent className="p-4 space-y-3">
-      <div className="grid sm:grid-cols-2 gap-3">
-        <Field label="Razão social" value={c.razao_social} onChange={v=>set({razao_social:v})} className="sm:col-span-2" />
-        <Field label="Nome fantasia" value={c.nome_fantasia} onChange={v=>set({nome_fantasia:v})} />
-        <CnpjLookupField
-          value={c.cnpj_cpf || ""}
-          onChange={(v) => set({ cnpj_cpf: v })}
-          formSnapshot={c}
-          onAutofill={(patch) => setClient({ ...c, ...patch })}
-          onExistingClient={(ex) => setClient({ ...ex })}
-          ignoreClientId={c.id || null}
-          ultimaConsulta={c.ultima_consulta_cnpj}
-          label="CNPJ / CPF"
-          compact
-        />
-        <Field label="Qtd. funcionários" type="number" value={c.qtd_funcionarios} onChange={v=>set({qtd_funcionarios:v})} />
-        <Field label="Endereço" value={c.endereco} onChange={v=>set({endereco:v})} className="sm:col-span-2" />
-        <Field label="Bairro" value={c.bairro} onChange={v=>set({bairro:v})} />
-        <Field label="CEP" value={c.cep} onChange={v=>set({cep:v})} />
-        <Field label="Cidade" value={c.cidade} onChange={v=>set({cidade:v})} />
-        <Field label="UF" value={c.uf} onChange={v=>set({uf:(v||"").toUpperCase().slice(0,2)})} />
-        <Field label="Solicitante" value={c.solicitante} onChange={v=>set({solicitante:v})} />
-        <Field label="Cargo" value={c.cargo} onChange={v=>set({cargo:v})} />
-        <Field label="Telefone" value={c.telefone} onChange={v=>set({telefone:v})} />
-        <Field label="WhatsApp" value={c.whatsapp} onChange={v=>set({whatsapp:v})} />
-        <Field label="E-mail" type="email" value={c.email} onChange={v=>set({email:v})} className="sm:col-span-2" />
-        <div className="sm:col-span-2 space-y-1.5">
-          <Label>Observações internas</Label>
-          <Textarea rows={2} value={c.observacoes||""} onChange={e=>set({observacoes:e.target.value})} />
-        </div>
-      </div>
-      <div className="flex justify-between items-center pt-2">
-        <p className="text-xs text-muted-foreground">
-          {c.id ? "Atualiza o cadastro existente." : "Será cadastrado automaticamente ao salvar (identificador: CNPJ/CPF)."}
-        </p>
-        <Button onClick={()=>onSave(c)} disabled={saving}><Save className="h-4 w-4 mr-1" /> {saving ? "Salvando…" : "Salvar cliente"}</Button>
-      </div>
-    </CardContent></Card>
-  );
-}
-
-function Field({ label, value, onChange, type="text", className }: any) {
-  return (
-    <div className={`space-y-1.5 ${className||""}`}>
-      <Label className="text-xs">{label}</Label>
-      <Input type={type} value={value ?? ""} onChange={(e:any)=>onChange(e.target.value)} />
-    </div>
-  );
-}
-
-/* ---------------- Datas & Origem ---------------- */
-function DatesCard({ proposal, onSave }: any) {
-  const isRetro = proposal.origem_cadastro === "retroativa" || proposal.origem_cadastro === "importacao_manual";
-  return (
-    <Card><CardContent className="p-4 space-y-4">
-      <div className="flex items-center gap-2">
-        <Badge className={(proposalOrigemColor[proposal.origem_cadastro]||"") + " border-0"} variant="secondary">
-          {proposalOrigemLabel[proposal.origem_cadastro] || "—"}
-        </Badge>
-        <span className="text-xs text-muted-foreground">
-          Cadastrada em {formatDateTime(proposal.created_at)}
-        </span>
-      </div>
-
-      <div className="grid sm:grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label className="text-xs">Origem do cadastro <span className="text-danger">*</span></Label>
-          <Select value={proposal.origem_cadastro} onValueChange={(v)=>onSave({ origem_cadastro: v })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {Object.entries(proposalOrigemLabel).map(([k,v])=>(
-                <SelectItem key={k} value={k}>{v}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">Data de emissão original <span className="text-danger">*</span></Label>
-          <Input type="date" value={proposal.data_emissao||""} onChange={e=>onSave({ data_emissao: e.target.value || null })} />
-          <p className="text-[11px] text-muted-foreground">Referência principal nos relatórios comerciais.</p>
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">Data de envio ao cliente</Label>
-          <Input type="date" value={proposal.data_envio||""} onChange={e=>onSave({ data_envio: e.target.value || null })} />
-          <p className="text-[11px] text-muted-foreground">Se vazio, assume a data de emissão.</p>
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">
-            Data de aprovação {proposal.status==="aprovada" && <span className="text-danger">*</span>}
-          </Label>
-          <Input type="date" value={proposal.data_aprovacao||""} onChange={e=>onSave({ data_aprovacao: e.target.value || null })} />
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">
-            Data de recusa / cancelamento {["recusada","cancelada"].includes(proposal.status) && <span className="text-danger">*</span>}
-          </Label>
-          <Input type="date" value={proposal.data_recusa||""} onChange={e=>onSave({ data_recusa: e.target.value || null })} />
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">Data de cadastro no sistema</Label>
-          <Input disabled value={formatDateTime(proposal.created_at)} />
-        </div>
-      </div>
-
-      {isRetro && (
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs">Observação retroativa</Label>
-            {!proposal.observacao_retroativa && (
-              <Button variant="ghost" size="sm" onClick={()=>onSave({ observacao_retroativa: "Proposta cadastrada retroativamente para alimentação inicial do sistema. Data de emissão baseada no documento comercial original." })}>
-                Sugerir texto padrão
-              </Button>
-            )}
-          </div>
-          <Textarea rows={3} value={proposal.observacao_retroativa||""}
-            onChange={e=>onSave({ observacao_retroativa: e.target.value })}
-            placeholder="Justificativa do cadastro retroativo (apenas auditoria interna — não vai no PDF do cliente)." />
-        </div>
-      )}
-    </CardContent></Card>
-  );
-}
-
-/* ---------------- Item Editor ---------------- */
-function ItemEditor({ item, pricing, onChange, onRemove, onOpenPricing, onSaveToCatalog, isInternal, selected, onSelect, proposalClients, modoFaturamento }: any) {
-  const [local, setLocal] = useState(item);
-  useEffect(()=>setLocal(item), [item.id, item.valor_unitario, item.valor_total]);
-  const margem = pricing?.indicadores?.status_margem;
-  const meta = margem ? statusMargemMeta[margem as keyof typeof statusMargemMeta] : null;
-  const showCnpjPicker = modoFaturamento === "por_cnpj" && Array.isArray(proposalClients) && proposalClients.length > 1;
-  return (
-    <Card className="shadow-elegant">
-      <CardContent className="p-4 space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3 flex-1">
-            {isInternal && (
-              <div className="pt-2">
-                <Checkbox checked={!!selected} onCheckedChange={(v)=>onSelect?.(!!v)} aria-label="Selecionar para cálculo em grupo" />
-              </div>
-            )}
-            <div className="flex-1 space-y-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="outline" className="font-mono">#{item.numero_item}</Badge>
-              {item.categoria && <Badge variant="secondary">{item.categoria}</Badge>}
-              {meta && <Badge className={`border ${meta.color}`}>{meta.label}</Badge>}
-            </div>
-            <Input value={local.nome || ""} onChange={e=>setLocal({...local, nome:e.target.value})} onBlur={()=>onChange({ nome: local.nome })} className="font-display font-semibold text-base" placeholder="Nome do serviço (ex.: Visita Técnica)" />
+      <Sheet open={previewOpen} onOpenChange={setPreviewOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-[900px] p-0 overflow-hidden flex flex-col">
+          <SheetHeader className="px-6 py-3 border-b flex-row items-center justify-between space-y-0">
+            <SheetTitle className="text-base">Pré-visualização da proposta</SheetTitle>
+            <Button size="sm" variant="outline" onClick={handlePrint} disabled={!docReady}>
+              <FileDown className="h-4 w-4 mr-1" /> Gerar PDF
+            </Button>
+          </SheetHeader>
+          <div className="flex-1 overflow-auto bg-muted/40 p-4">
+            <div className="mx-auto shadow-elegant bg-white" style={{ width: "210mm", transformOrigin: "top center" }}>
+              <ProposalDocument
+                proposal={proposal}
+                client={client}
+                items={items}
+                revisions={revisions}
+                proposalClients={proposalClients}
+                onReady={() => setDocReady(true)}
+              />
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onRemove}><Trash2 className="h-4 w-4 text-danger" /></Button>
-        </div>
-        <div className="space-y-1"><Label className="text-xs">Categoria</Label>
-          <CategoryCombobox value={local.categoria||""} onChange={(v)=>{ setLocal({...local, categoria:v}); onChange({ categoria: v }); }} /></div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">Descrição comercial (aparece na proposta)</Label>
-          <Textarea rows={3} value={local.descricao_comercial||""} onChange={e=>setLocal({...local, descricao_comercial:e.target.value})} onBlur={()=>onChange({ descricao_comercial: local.descricao_comercial })} placeholder="Descrição detalhada do serviço para o cliente" />
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">Escopo técnico (interno)</Label>
-          <Textarea rows={2} value={local.escopo_tecnico||""} onChange={e=>setLocal({...local, escopo_tecnico:e.target.value})} onBlur={()=>onChange({ escopo_tecnico: local.escopo_tecnico })} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Entregáveis (um por linha)</Label>
-            <Textarea rows={3} value={local.entregaveis||""} onChange={e=>setLocal({...local, entregaveis:e.target.value})} onBlur={()=>onChange({ entregaveis: local.entregaveis })} placeholder={"Relatório técnico\nRegistro dos resultados"} />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Observações de escopo (cliente)</Label>
-            <Textarea rows={3} value={local.observacoes_escopo||""} onChange={e=>setLocal({...local, observacoes_escopo:e.target.value})} onBlur={()=>onChange({ observacoes_escopo: local.observacoes_escopo })} placeholder="Observações específicas deste serviço" />
-          </div>
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">Quantidade técnica (texto livre, opcional)</Label>
-          <Input value={local.quantidade_tecnica||""} onChange={e=>setLocal({...local, quantidade_tecnica:e.target.value})} onBlur={()=>onChange({ quantidade_tecnica: local.quantidade_tecnica })} placeholder="Ex: 8 dosimetrias, 1 unidade avaliada" />
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="space-y-1"><Label className="text-xs">Qtd</Label>
-            <Input type="number" step="0.01" value={local.quantidade} onChange={e=>setLocal({...local, quantidade:e.target.value})} onBlur={()=>onChange({ quantidade: Number(local.quantidade) })} /></div>
-          <div className="space-y-1"><Label className="text-xs">Valor unitário</Label>
-            <Input type="number" step="0.01" value={local.valor_unitario} onChange={e=>setLocal({...local, valor_unitario:e.target.value})} onBlur={()=>onChange({ valor_unitario: Number(local.valor_unitario) })} /></div>
-          <div className="space-y-1"><Label className="text-xs">Total</Label>
-            <Input disabled value={brl(Number(local.quantidade||0)*Number(local.valor_unitario||0))} className="font-mono" /></div>
-        </div>
-        {showCnpjPicker && (
-          <div className="space-y-1 rounded-md bg-muted/40 p-2 border">
-            <Label className="text-xs">CNPJ que fatura este item</Label>
-            <Select
-              value={local.rateado ? "__rateado__" : (local.client_id || "__principal__")}
-              onValueChange={(v) => {
-                if (v === "__rateado__") {
-                  setLocal({ ...local, rateado: true, client_id: null });
-                  onChange({ rateado: true, client_id: null });
-                } else {
-                  const val = v === "__principal__" ? null : v;
-                  setLocal({ ...local, client_id: val, rateado: false });
-                  onChange({ client_id: val, rateado: false });
-                }
-              }}
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__principal__">Empresa principal (padrão)</SelectItem>
-                {proposalClients.map((pc: any) => (
-                  <SelectItem key={pc.client_id} value={pc.client_id}>
-                    {pc.clients?.nome_fantasia || pc.clients?.razao_social}
-                    {pc.papel === "principal" ? " (principal)" : ""}
-                  </SelectItem>
-                ))}
-                <SelectItem value="__rateado__">Rateado entre todas as empresas</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-[11px] text-muted-foreground">
-              {local.rateado
-                ? `Ao aprovar, o valor deste item é dividido igualmente entre as ${proposalClients.length} empresas.`
-                : "Ao aprovar, este item entra no contrato do CNPJ selecionado."}
-            </p>
-          </div>
-        )}
-        {isInternal && (
-          <div className="flex justify-end gap-2">
-            {!item.service_id && (
-              <Button variant="ghost" size="sm" onClick={onSaveToCatalog}>
-                <Bookmark className="h-4 w-4 mr-1" /> Salvar no catálogo
-              </Button>
-            )}
-            <Button variant="outline" size="sm" onClick={onOpenPricing}>
-              <Calculator className="h-4 w-4 mr-1" /> {pricing ? "Recalcular preço" : "Calcular preço com custos"}
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
+        </SheetContent>
+      </Sheet>
 
-/* ---------------- Revisões ---------------- */
-const REVISAO_STATUS: Record<string, { label: string; color: string }> = {
-  rascunho:      { label: "Rascunho",       color: "bg-muted text-foreground" },
-  enviada:       { label: "Enviada",        color: "bg-blue-100 text-blue-900" },
-  em_negociacao: { label: "Em negociação",  color: "bg-amber-100 text-amber-900" },
-  aprovada:      { label: "Aprovada",       color: "bg-emerald-100 text-emerald-900" },
-  recusada:      { label: "Recusada",       color: "bg-rose-100 text-rose-900" },
-  substituida:   { label: "Substituída",    color: "bg-slate-200 text-slate-700" },
-  cancelada:     { label: "Cancelada",      color: "bg-zinc-200 text-zinc-700" },
-};
-
-function RevisionsCard({ proposalId, valorAtual, revisions, onChanged }: any) {
-  const TIPOS: { value: string; label: string }[] = [
-    { value: "desconto", label: "Desconto comercial" },
-    { value: "alteracao_servicos", label: "Alteração de serviços" },
-    { value: "ajuste_tecnico", label: "Ajuste técnico" },
-    { value: "renegociacao", label: "Renegociação" },
-    { value: "outro", label: "Outro" },
-  ];
-  const [tipo, setTipo] = useState<string>("desconto");
-  const [motivo, setMotivo] = useState("");
-  const [obs, setObs] = useState("");
-  const [valorNovo, setValorNovo] = useState<number>(Number(valorAtual) || 0);
-  const temAprovada = revisions.some((r: any) => r.status === "aprovada");
-
-  async function criar() {
-    if (!motivo.trim()) { toast.error("Informe o motivo da revisão"); return; }
-    const { error } = await supabase.rpc("criar_revisao_proposta", {
-      _proposal_id: proposalId,
-      _motivo: motivo,
-      _observacoes: obs,
-      _valor_novo: valorNovo,
-      _tipo: tipo,
-    });
-    if (error) return toast.error(error.message);
-    setMotivo(""); setObs("");
-    toast.success("Nova revisão registrada");
-    onChanged?.();
-  }
-
-  async function atualizarStatus(rev: any, status: string) {
-    if (rev.status === "aprovada" && status !== "aprovada") {
-      toast.error("Revisão aprovada não pode mais ser alterada");
-      return;
-    }
-    const { error } = await supabase.from("proposal_revisions")
-      .update({ status }).eq("id", rev.id);
-    if (error) return toast.error(error.message);
-    toast.success(status === "aprovada" ? "Revisão aprovada — anteriores substituídas, proposta bloqueada" : "Status atualizado");
-    onChanged?.();
-  }
-
-  return (
-    <Card><CardContent className="p-4 space-y-4">
-      {temAprovada && (
-        <div className="rounded-md border border-emerald-300 bg-emerald-50 p-2 text-xs text-emerald-900 flex items-center gap-2">
-          <CheckCircle2 className="h-3.5 w-3.5" />
-          Já existe uma revisão aprovada. A proposta está bloqueada para edição comercial.
-        </div>
-      )}
-
-      <div className="space-y-2">
-        <Label className="text-xs">Registrar nova revisão</Label>
-        <p className="text-[11px] text-muted-foreground -mt-1">
-          Use apenas para eventos relevantes (desconto, alteração de serviços, ajuste técnico, renegociação). Mudanças internas de status (rascunho, enviada, aprovada) não geram revisão.
-        </p>
-        <div className="grid sm:grid-cols-3 gap-2">
-          <Select value={tipo} onValueChange={setTipo}>
-            <SelectTrigger><SelectValue placeholder="Tipo *" /></SelectTrigger>
-            <SelectContent>
-              {TIPOS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Input placeholder="Motivo / descrição curta *" value={motivo} onChange={e=>setMotivo(e.target.value)} />
-          <Input type="number" step="0.01" placeholder="Novo valor total (R$)" value={valorNovo}
-            onChange={e=>setValorNovo(Number(e.target.value)||0)} />
-        </div>
-        <Textarea rows={2} placeholder="Observações internas (não vão para o cliente)" value={obs} onChange={e=>setObs(e.target.value)} />
-        <div className="flex justify-between items-center text-xs text-muted-foreground">
-          <span>Valor atual da proposta: <span className="font-mono font-semibold">{brl(valorAtual)}</span></span>
-          <Button size="sm" onClick={criar} disabled={!motivo.trim()}>
-            <Plus className="h-3.5 w-3.5 mr-1" /> Criar revisão
-          </Button>
-        </div>
-      </div>
-      <hr/>
-      {revisions.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma revisão registrada ainda.</p>}
-      <ul className="space-y-2">
-        {revisions.map((r: any) => {
-          const meta = REVISAO_STATUS[r.status] || REVISAO_STATUS.rascunho;
-          const tipoLabel = (TIPOS.find(t => t.value === r.tipo)?.label)
-            || (r.tipo === "emissao_inicial" ? "Emissão inicial" : null);
-          const dif = Number(r.diferenca_valor || 0);
-          const difPct = Number(r.diferenca_percentual || 0);
-          const bloqueada = r.status === "aprovada";
-          return (
-            <li key={r.id} className="border border-border rounded-md p-3 text-sm space-y-2">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="outline" className="font-mono">Rev. {String(r.revisao).padStart(2,"0")}</Badge>
-                  <Badge className={`border-0 ${meta.color}`}>{meta.label}</Badge>
-                  {tipoLabel && <Badge variant="secondary" className="text-[10px]">{tipoLabel}</Badge>}
-                  <span className="font-medium">{r.titulo || r.motivo || "Revisão"}</span>
-                </div>
-                <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString("pt-BR")}</span>
-              </div>
-              {(r.valor_anterior != null || r.valor_novo != null) && (
-                <div className="text-xs grid sm:grid-cols-3 gap-2">
-                  <span><span className="text-muted-foreground">Valor anterior:</span> <span className="font-mono">{brl(r.valor_anterior||0)}</span></span>
-                  <span><span className="text-muted-foreground">Valor novo:</span> <span className="font-mono font-semibold">{brl(r.valor_novo||0)}</span></span>
-                  <span><span className="text-muted-foreground">Diferença:</span> <span className={`font-mono ${dif < 0 ? "text-danger" : dif > 0 ? "text-success" : ""}`}>{brl(dif)} ({difPct.toFixed(1)}%)</span></span>
-                </div>
-              )}
-              {r.motivo && r.motivo !== r.titulo && <p className="text-xs text-muted-foreground"><strong>Motivo:</strong> {r.motivo}</p>}
-              {r.descricao && <p className="text-xs text-muted-foreground">{r.descricao}</p>}
-              {r.observacoes_internas && <p className="text-xs italic text-muted-foreground">{r.observacoes_internas}</p>}
-            </li>
-          );
-        })}
-      </ul>
-    </CardContent></Card>
-  );
-}
-
-/* ---------------- Pricing Panel (Drawer) ---------------- */
-function PricingPanel({ item, existing, params, clientFuncionarios, onSave }: any) {
-  const custoHoraLegado = params.horas_produtivas_mes > 0 ? Number(params.custo_fixo_mensal||0) / Number(params.horas_produtivas_mes) : 0;
-  const custoHora = Number(params.valor_hora_tecnica || 0) > 0 ? Number(params.valor_hora_tecnica) : custoHoraLegado;
-  const [draft, setDraft] = useState<any>(() => existing ? {
-    custos: normalizarCustosDiretos(existing.custos),
-    horas: normalizarHorasTecnicas(existing.horas, custoHora),
-    aliquota_imposto: existing.aliquota_imposto, margem_desejada: existing.margem_desejada,
-    lucro_desejado: existing.lucro_desejado, desconto_comercial: existing.desconto_comercial,
-  } : {
-    custos: [] as CustoDiretoRow[],
-    horas: [] as HoraTecnicaRow[],
-    aliquota_imposto: Number(params.aliquota_imposto||0.10),
-    margem_desejada: Number(params.margem_minima||0.20),
-    lucro_desejado: 0, desconto_comercial: 0,
-  });
-
-  const input: PricingInput = useMemo(() => ({
-    custos: draft.custos, horas: draft.horas,
-    qtd_funcionarios: clientFuncionarios,
-    custo_hora_interno: custoHora,
-    valor_hora_tecnica: Number(params.valor_hora_tecnica || 0),
-    custo_por_vida: Number(params.custo_por_vida||0),
-    aliquota_imposto: Number(draft.aliquota_imposto||0),
-    margem_desejada: Number(draft.margem_desejada||0),
-    lucro_desejado: Number(draft.lucro_desejado||0),
-    desconto_comercial: Number(draft.desconto_comercial||0),
-    arredondamento: Number(params.arredondamento||1),
-    markup_minimo: Number(params.markup_minimo||1),
-    margem_minima: Number(params.margem_minima||0),
-  }), [draft, params, custoHora, clientFuncionarios]);
-  const c = computePricing(input);
-  const meta = statusMargemMeta[c.status_margem];
-
-  // ----- Custos diretos (linhas dinâmicas) -----
-  const addCusto = () => setDraft({ ...draft, custos: [...draft.custos, { id: newId(), categoria: "", descricao: "", valor: 0 }] });
-  const updCusto = (id: string, patch: Partial<CustoDiretoRow>) =>
-    setDraft({ ...draft, custos: draft.custos.map((r: CustoDiretoRow) => r.id === id ? { ...r, ...patch } : r) });
-  const delCusto = (id: string) => setDraft({ ...draft, custos: draft.custos.filter((r: CustoDiretoRow) => r.id !== id) });
-
-  // ----- Horas técnicas (linhas dinâmicas) -----
-  const addHora = () => setDraft({ ...draft, horas: [...draft.horas, { id: newId(), atividade: "", horas: 0, valor_hora: custoHora }] });
-  const updHora = (id: string, patch: Partial<HoraTecnicaRow>) =>
-    setDraft({ ...draft, horas: draft.horas.map((r: HoraTecnicaRow) => r.id === id ? { ...r, ...patch } : r) });
-  const delHora = (id: string) => setDraft({ ...draft, horas: draft.horas.filter((r: HoraTecnicaRow) => r.id !== id) });
-
-  return (
-    <div className="space-y-5">
-      {/* Custos diretos */}
-      <Card>
-        <CardContent className="p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold">Custos diretos</h3>
-            <Button size="sm" variant="outline" onClick={addCusto}>
-              <Plus className="h-4 w-4 mr-1" /> Adicionar custo direto
-            </Button>
-          </div>
-          {draft.custos.length === 0 ? (
-            <p className="text-xs text-muted-foreground italic py-2">Nenhum custo direto adicionado.</p>
-          ) : (
-            <div className="border border-border rounded-md overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/60 text-xs uppercase tracking-wider text-muted-foreground">
-                  <tr>
-                    <th className="text-left px-3 py-2 w-56">Categoria</th>
-                    <th className="text-left px-3 py-2">Descrição</th>
-                    <th className="text-right px-3 py-2 w-32">Valor</th>
-                    <th className="px-2 py-2 w-10"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {draft.custos.map((row: CustoDiretoRow) => (
-                    <tr key={row.id} className="border-t border-border">
-                      <td className="px-2 py-1.5">
-                        <Select value={row.categoria || ""} onValueChange={(v)=>updCusto(row.id!, { categoria: v })}>
-                          <SelectTrigger className="h-8"><SelectValue placeholder="Selecione…" /></SelectTrigger>
-                          <SelectContent>
-                            {CUSTO_CATEGORIAS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </td>
-                      <td className="px-2 py-1.5">
-                        <Input className="h-8" placeholder="Ex.: Combustível, ART…" value={row.descricao} onChange={(e)=>updCusto(row.id!, { descricao: e.target.value })} />
-                      </td>
-                      <td className="px-2 py-1.5">
-                        <Input className="h-8 text-right" type="number" min="0" step="0.01" value={row.valor} onChange={(e)=>updCusto(row.id!, { valor: Math.max(0, Number(e.target.value)||0) })} />
-                      </td>
-                      <td className="px-2 py-1.5 text-center">
-                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={()=>delCusto(row.id!)}>
-                          <Trash2 className="h-3.5 w-3.5 text-danger" />
-                        </Button>
-                      </td>
-                    </tr>
+      <Dialog open={!!duplicateSource} onOpenChange={(o) => { if (!o) setDuplicateSource(null); }}>
+        <DialogContent className="max-w-xl max-h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Duplicar item</DialogTitle>
+            <DialogDescription>
+              A precificação interna (custos, horas, margem e valor) do item
+              <strong> #{duplicateSource?.numero_item} {duplicateSource?.nome}</strong> será copiada.
+              Escolha qual serviço aplicar ao novo item.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 flex-1 min-h-0 flex flex-col">
+            <Label className="text-xs">Serviço para o novo item</Label>
+            <Command className="border rounded-md flex-1 min-h-0">
+              <CommandInput placeholder="Buscar no catálogo…" />
+              <CommandList className="max-h-none flex-1 overflow-y-auto">
+                <CommandEmpty>Nenhum serviço encontrado.</CommandEmpty>
+                <CommandGroup heading="Opções">
+                  <CommandItem value="keep manter copia mesmo item" onSelect={() => setDuplicatePickServiceId("__keep__")}>
+                    <div className="flex items-center justify-between w-full gap-2">
+                      <span>Manter o mesmo serviço <span className="text-muted-foreground">(cópia)</span></span>
+                      {duplicatePickServiceId === "__keep__" && <Check className="h-4 w-4 text-primary" />}
+                    </div>
+                  </CommandItem>
+                  <CommandItem value="blank novo em branco vazio" onSelect={() => setDuplicatePickServiceId("__blank__")}>
+                    <div className="flex items-center justify-between w-full gap-2">
+                      <span>Item novo em branco <span className="text-muted-foreground">(cadastrar depois)</span></span>
+                      {duplicatePickServiceId === "__blank__" && <Check className="h-4 w-4 text-primary" />}
+                    </div>
+                  </CommandItem>
+                </CommandGroup>
+                <CommandGroup heading="Catálogo de serviços">
+                  {services.map((s) => (
+                    <CommandItem key={s.id} value={`${s.nome} ${s.categoria || ""}`} onSelect={() => setDuplicatePickServiceId(s.id)}>
+                      <div className="flex items-center justify-between w-full gap-2">
+                        <div className="min-w-0">
+                          <div className="truncate">{s.nome}</div>
+                          {s.categoria && <div className="text-xs text-muted-foreground truncate">{s.categoria}</div>}
+                        </div>
+                        {duplicatePickServiceId === s.id && <Check className="h-4 w-4 text-primary shrink-0" />}
+                      </div>
+                    </CommandItem>
                   ))}
-                </tbody>
-                <tfoot className="bg-muted/40 font-semibold">
-                  <tr className="border-t border-border">
-                    <td colSpan={2} className="px-3 py-2 text-right">Subtotal dos custos diretos</td>
-                    <td className="px-3 py-2 text-right font-mono">{brl(c.custo_direto_total)}</td>
-                    <td></td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Horas técnicas HSE */}
-      <Card>
-        <CardContent className="p-4 space-y-3">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div>
-              <h3 className="text-sm font-semibold">Horas técnicas HSE</h3>
-              <p className="text-xs text-muted-foreground">
-                Valor da hora técnica HSE: <span className="font-mono font-semibold">{brl(custoHora)}/h</span>
-              </p>
-            </div>
-            <Button size="sm" variant="outline" onClick={addHora}>
-              <Plus className="h-4 w-4 mr-1" /> Adicionar atividade técnica
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDuplicateSource(null)}>Cancelar</Button>
+            <Button onClick={async () => {
+              const src = duplicateSource;
+              const pick = duplicatePickServiceId;
+              setDuplicateSource(null);
+              if (src) await duplicateItem(src, pick === "__keep__" ? "keep" : pick === "__blank__" ? "blank" : pick);
+            }}>
+              <Plus className="h-4 w-4 mr-1" /> Duplicar
             </Button>
-          </div>
-          {draft.horas.length === 0 ? (
-            <p className="text-xs text-muted-foreground italic py-2">Nenhuma atividade técnica adicionada.</p>
-          ) : (
-            <div className="border border-border rounded-md overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/60 text-xs uppercase tracking-wider text-muted-foreground">
-                  <tr>
-                    <th className="text-left px-3 py-2">Atividade</th>
-                    <th className="text-right px-3 py-2 w-24">Horas</th>
-                    <th className="text-right px-3 py-2 w-28">Valor/h</th>
-                    <th className="text-right px-3 py-2 w-32">Custo</th>
-                    <th className="px-2 py-2 w-10"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {draft.horas.map((row: HoraTecnicaRow) => {
-                    const custoLinha = (Number(row.horas)||0) * (Number(row.valor_hora)||0);
-                    return (
-                      <tr key={row.id} className="border-t border-border">
-                        <td className="px-2 py-1.5">
-                          <Select value={row.atividade || ""} onValueChange={(v)=>updHora(row.id!, { atividade: v })}>
-                            <SelectTrigger className="h-8"><SelectValue placeholder="Selecione…" /></SelectTrigger>
-                            <SelectContent>
-                              {ATIVIDADE_CATEGORIAS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </td>
-                        <td className="px-2 py-1.5">
-                          <Input className="h-8 text-right" type="number" min="0" step="0.5" value={row.horas} onChange={(e)=>updHora(row.id!, { horas: Math.max(0, Number(e.target.value)||0) })} />
-                        </td>
-                        <td className="px-2 py-1.5">
-                          <Input className="h-8 text-right" type="number" min="0" step="0.01" value={row.valor_hora} onChange={(e)=>updHora(row.id!, { valor_hora: Math.max(0, Number(e.target.value)||0) })} />
-                        </td>
-                        <td className="px-3 py-1.5 text-right font-mono">{brl(custoLinha)}</td>
-                        <td className="px-2 py-1.5 text-center">
-                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={()=>delHora(row.id!)}>
-                            <Trash2 className="h-3.5 w-3.5 text-danger" />
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-                <tfoot className="bg-muted/40 font-semibold">
-                  <tr className="border-t border-border">
-                    <td className="px-3 py-2 text-right">Totais</td>
-                    <td className="px-3 py-2 text-right font-mono">{c.horas_total}h</td>
-                    <td></td>
-                    <td className="px-3 py-2 text-right font-mono">{brl(c.custo_horas)}</td>
-                    <td></td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Formação do preço */}
-      <section className="grid md:grid-cols-2 gap-4">
-        <div>
-          <h3 className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Formação do preço</h3>
-          <div className="grid grid-cols-2 gap-2">
-            <MiniPct label="Imposto (%)" v={draft.aliquota_imposto} onChange={v=>setDraft({...draft, aliquota_imposto:Number(v)||0})} />
-            <MiniPct label="Margem desejada (%)" v={draft.margem_desejada} onChange={v=>setDraft({...draft, margem_desejada:Number(v)||0})} />
-            <Mini label="Lucro adicional (R$)" v={draft.lucro_desejado} onChange={v=>setDraft({...draft, lucro_desejado:Number(v)||0})} />
-            <Mini label="Desconto (R$)" v={draft.desconto_comercial} onChange={v=>setDraft({...draft, desconto_comercial:Number(v)||0})} />
-          </div>
-        </div>
-        <Card className="bg-secondary text-secondary-foreground">
-          <CardContent className="p-4 space-y-1.5 text-sm">
-            <Row label="Custo total"><span className="font-mono">{brl(c.custo_total)}</span></Row>
-            <Row label="Preço mínimo"><span className="font-mono">{brl(c.preco_minimo)}</span></Row>
-            <Row label="Preço sugerido"><span className="font-mono">{brl(c.preco_sugerido)}</span></Row>
-            <Row label="Preço comercial"><span className="font-mono text-primary text-lg font-bold">{brl(c.preco_arredondado)}</span></Row>
-            {Number(item?.quantidade||1) > 1 && (
-              <Row label={`Valor unitário (× ${item.quantidade})`}>
-                <span className="font-mono">{brl(c.preco_arredondado / Number(item.quantidade))}</span>
-              </Row>
-            )}
-            <hr className="border-white/20" />
-            <Row label="Imposto"><span className="font-mono">{brl(c.imposto_estimado)}</span></Row>
-            <Row label="Lucro"><span className="font-mono">{brl(c.lucro_estimado)}</span></Row>
-            <Row label="Margem"><span className="font-mono">{pct(c.margem_liquida)}</span></Row>
-            <Row label="Markup"><span className="font-mono">{c.markup.toFixed(2)}x</span></Row>
-            <div className="pt-2"><Badge className={`border ${meta.color}`}>{meta.label}</Badge></div>
-          </CardContent>
-        </Card>
-      </section>
-
-      <div className="flex justify-end">
-        <Button onClick={() => {
-          const custosInvalidos = draft.custos.filter((r: CustoDiretoRow) => !r.categoria || !r.descricao?.trim());
-          if (custosInvalidos.length) { toast.error("Preencha categoria e descrição em todos os custos diretos."); return; }
-          const horasInvalidas = draft.horas.filter((r: HoraTecnicaRow) => !r.atividade);
-          if (horasInvalidas.length) { toast.error("Selecione a atividade em todas as linhas de horas técnicas."); return; }
-          onSave(draft, c);
-        }}><Save className="h-4 w-4 mr-1" /> Aplicar preço ao item</Button>
-      </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
-}
-
-function Mini({ label, v, onChange }: any) {
-  return (
-    <div className="space-y-1">
-      <Label className="text-[11px]">{label}</Label>
-      <Input className="h-8" type="number" step="0.01" value={v ?? 0} onChange={e=>onChange(e.target.value)} />
-    </div>
-  );
-}
-
-function MiniPct({ label, v, onChange }: any) {
-  return (
-    <div className="space-y-1">
-      <Label className="text-[11px]">{label}</Label>
-      <PercentInput className="h-8" value={Number(v ?? 0)} onChange={(n)=>onChange(n)} />
-    </div>
-  );
-}
-
-/* ---------------- Visão do cliente ---------------- */
-function ClientPreview({ proposal, client, items }: any) {
-  const total = items.reduce((a:number,b:any)=>a+Number(b.valor_total||0),0);
-  return (
-    <Card className="shadow-elegant print-page">
-      <CardContent className="p-8 space-y-6">
-        <header className="flex items-start justify-between border-b border-border pb-4">
-          <div className="flex items-center gap-3">
-            <img src={logo} className="h-14 w-14 rounded-md bg-secondary p-1.5" alt="HSE Consulting" />
-            <div>
-              <div className="font-display text-xl font-bold">HSE Consulting</div>
-              <div className="text-xs text-muted-foreground">Saúde, Segurança e Meio Ambiente</div>
-            </div>
-          </div>
-          <div className="text-right text-sm">
-            <div className="font-mono">Proposta {proposal.numero}</div>
-            <div className="text-muted-foreground">{new Date(proposal.created_at).toLocaleDateString("pt-BR")}</div>
-            {proposal.validade && <div className="text-muted-foreground">Válida até {new Date(proposal.validade).toLocaleDateString("pt-BR")}</div>}
-          </div>
-        </header>
-
-        <section>
-          <h2 className="font-display text-sm uppercase tracking-wider text-muted-foreground mb-1">Cliente</h2>
-          <div className="font-semibold">{client?.razao_social}</div>
-          <div className="text-sm text-muted-foreground">
-            {[client?.cnpj_cpf, client?.cidade && `${client.cidade}/${client.uf||""}`, client?.solicitante && `Contato: ${client.solicitante}${client.cargo ? " ("+client.cargo+")" : ""}`].filter(Boolean).join(" · ")}
-          </div>
-        </section>
-
-        {proposal.escopo_geral && (
-          <section>
-            <h2 className="font-display text-sm uppercase tracking-wider text-muted-foreground mb-1">Escopo</h2>
-            <p className="text-sm whitespace-pre-line">{proposal.escopo_geral}</p>
-          </section>
-        )}
-
-        <section>
-          <h2 className="font-display text-sm uppercase tracking-wider text-muted-foreground mb-2">Serviços propostos</h2>
-          <ol className="space-y-3">
-            {items.map((it:any) => (
-              <li key={it.id} className="border border-border rounded-md p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="font-semibold">{it.numero_item}. {it.descricao_comercial}</div>
-                    {it.categoria && <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{it.categoria}</div>}
-                    <div className="text-xs text-muted-foreground">Qtd: {it.quantidade}</div>
-                  </div>
-                  <div className="font-mono text-right">
-                    <div className="text-sm">{brl(it.valor_unitario)}</div>
-                    <div className="font-semibold">{brl(it.valor_total)}</div>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section className="flex justify-end">
-          <div className="bg-secondary text-secondary-foreground rounded-md px-6 py-4 text-right">
-            <div className="text-xs uppercase tracking-wider opacity-80">Investimento total</div>
-            <div className="font-display text-3xl font-bold text-primary">{brl(total)}</div>
-          </div>
-        </section>
-
-        {(proposal.condicoes_pagamento || proposal.outras_condicoes || proposal.observacoes_comerciais) && (
-          <section className="space-y-3 text-sm">
-            {proposal.condicoes_pagamento && <div><div className="font-semibold mb-0.5">Condições de pagamento</div><p className="text-muted-foreground whitespace-pre-line">{proposal.condicoes_pagamento}</p></div>}
-            {proposal.outras_condicoes && <div><div className="font-semibold mb-0.5">Outras condições</div><p className="text-muted-foreground whitespace-pre-line">{proposal.outras_condicoes}</p></div>}
-            {proposal.observacoes_comerciais && <div><div className="font-semibold mb-0.5">Observações</div><p className="text-muted-foreground whitespace-pre-line">{proposal.observacoes_comerciais}</p></div>}
-          </section>
-        )}
-
-        <footer className="text-center text-xs text-muted-foreground border-t border-border pt-4">
-          HSE Consulting — Esta proposta é confidencial e dirigida exclusivamente ao destinatário.
-        </footer>
-      </CardContent>
-    </Card>
   );
 }

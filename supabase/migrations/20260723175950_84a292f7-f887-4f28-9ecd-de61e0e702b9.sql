@@ -1,0 +1,1 @@
+DELETE FROM public.psico_respostas_publicas WHERE id = 'c52dbe30-04e6-4042-b5e0-b2edf6163a8a' AND avaliacao_id = '9c3cf681-730d-432e-ac00-7ad03404c649';

@@ -63,7 +63,7 @@ export default function NotificacoesBell() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative" aria-label="Notificações">
           <Bell className="h-5 w-5" />
           {unread > 0 && (
             <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold">

@@ -1,0 +1,266 @@
+{
+  "empresa": {
+    "razao_social": "EMPRESA MODELO LTDA",
+    "cnpj": "00.000.000/0001-00",
+    "porte": "microempresa",
+    "cnae_principal": "9999-9/99"
+  },
+  "avaliacao": {
+    "codigo": "AFP-PILOTO-0001",
+    "modalidade": "individual_microempresa",
+    "unidade": "Matriz",
+    "data_inicio": "2026-07-01",
+    "data_fim": "2026-07-15"
+  },
+  "revisao": {
+    "parecer": {
+      "sintese_caso": "Caso individual microempresa: um empregado e um empregador. Achados construídos por convergência entre as duas visões e revisão técnica.",
+      "interpretacao_convergencia": "As percepções foram majoritariamente convergentes; divergências pontuais foram tratadas com prevalência da maior exposição.",
+      "prioridades": "Prioridade organizacional conforme achados.",
+      "recomendacoes_organizacionais": "Recomendações agrupadas pelos eixos da NR-01 aplicáveis a microempresa.",
+      "limitacoes": "n=2, autorrelato, ausência de estatística coletiva.",
+      "conclusao": "Fechamento integrando parecer, plano e ciclo PGR/NR-01."
+    },
+    "parecer_versao": 1,
+    "prompt_codigo": "HSE-PSICO-IA-PARECER-INDIVIDUAL-1.0",
+    "responsavel": {
+      "nome": "PROFISSIONAL RESPONSÁVEL",
+      "registro": "CRP 00/00000",
+      "assinatura_hash_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "assinatura_mime_type": "image/png"
+    }
+  },
+  "achados": [
+    {
+      "id": "00000000-0000-0000-0000-0fator_1",
+      "fator_codigo": "fator_1",
+      "estado_final": "requer_intervencao",
+      "condicao_preliminar": "ok",
+      "evidencia": "",
+      "necessita_acao": true
+    },
+    {
+      "id": "00000000-0000-0000-0000-0fator_2",
+      "fator_codigo": "fator_2",
+      "estado_final": "requer_intervencao",
+      "condicao_preliminar": "ok",
+      "evidencia": "",
+      "necessita_acao": true
+    },
+    {
+      "id": "00000000-0000-0000-0000-0fator_3",
+      "fator_codigo": "fator_3",
+      "estado_final": "requer_intervencao",
+      "condicao_preliminar": "ok",
+      "evidencia": "",
+      "necessita_acao": true
+    }
+  ],
+  "plano": [
+    {
+      "id": "11111111-0000-0000-0000-000000000001",
+      "achado_id": "000000000000000000000000-0000-0000-0000- fator_2",
+      "titulo": "Ação 1",
+      "objetivo": "Objetivo organizacional",
+      "acao": "Descrição da ação organizacional a executar.",
+      "responsavel_sugerido": "Empregador / Gestão",
+      "prazo_dias": 60,
+      "evidencia": "Registro documental",
+      "indicador_eficacia": "Verificação em revisão",
+      "justificativa": "Responde diretamente ao achado."
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000002",
+      "achado_id": "000000000000000000000000-0000-0000-0000- fator_3",
+      "titulo": "Ação 2",
+      "objetivo": "Objetivo organizacional",
+      "acao": "Descrição da ação organizacional a executar.",
+      "responsavel_sugerido": "Empregador / Gestão",
+      "prazo_dias": 60,
+      "evidencia": "Registro documental",
+      "indicador_eficacia": "Verificação em revisão",
+      "justificativa": "Responde diretamente ao achado."
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000003",
+      "achado_id": "000000000000000000000000-0000-0000-0000- fator_1",
+      "titulo": "Ação 3",
+      "objetivo": "Objetivo organizacional",
+      "acao": "Descrição da ação organizacional a executar.",
+      "responsavel_sugerido": "Empregador / Gestão",
+      "prazo_dias": 60,
+      "evidencia": "Registro documental",
+      "indicador_eficacia": "Verificação em revisão",
+      "justificativa": "Responde diretamente ao achado."
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000004",
+      "achado_id": "000000000000000000000000-0000-0000-0000- fator_2",
+      "titulo": "Ação 4",
+      "objetivo": "Objetivo organizacional",
+      "acao": "Descrição da ação organizacional a executar.",
+      "responsavel_sugerido": "Empregador / Gestão",
+      "prazo_dias": 15,
+      "evidencia": "Registro documental",
+      "indicador_eficacia": "Verificação em revisão",
+      "justificativa": "Responde diretamente ao achado."
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000005",
+      "achado_id": "000000000000000000000000-0000-0000-0000- fator_3",
+      "titulo": "Ação 5",
+      "objetivo": "Objetivo organizacional",
+      "acao": "Descrição da ação organizacional a executar.",
+      "responsavel_sugerido": "Empregador / Gestão",
+      "prazo_dias": 60,
+      "evidencia": "Registro documental",
+      "indicador_eficacia": "Verificação em revisão",
+      "justificativa": "Responde diretamente ao achado."
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000006",
+      "achado_id": "000000000000000000000000-0000-0000-0000- fator_1",
+      "titulo": "Ação 6",
+      "objetivo": "Objetivo organizacional",
+      "acao": "Descrição da ação organizacional a executar.",
+      "responsavel_sugerido": "Empregador / Gestão",
+      "prazo_dias": 60,
+      "evidencia": "Registro documental",
+      "indicador_eficacia": "Verificação em revisão",
+      "justificativa": "Responde diretamente ao achado."
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000007",
+      "achado_id": "000000000000000000000000-0000-0000-0000- fator_2",
+      "titulo": "Ação 7",
+      "objetivo": "Objetivo organizacional",
+      "acao": "Descrição da ação organizacional a executar.",
+      "responsavel_sugerido": "Empregador / Gestão",
+      "prazo_dias": 60,
+      "evidencia": "Registro documental",
+      "indicador_eficacia": "Verificação em revisão",
+      "justificativa": "Responde diretamente ao achado."
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000008",
+      "achado_id": "000000000000000000000000-0000-0000-0000- fator_3",
+      "titulo": "Ação 8",
+      "objetivo": "Objetivo organizacional",
+      "acao": "Descrição da ação organizacional a executar.",
+      "responsavel_sugerido": "Empregador / Gestão",
+      "prazo_dias": 15,
+      "evidencia": "Registro documental",
+      "indicador_eficacia": "Verificação em revisão",
+      "justificativa": "Responde diretamente ao achado."
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000009",
+      "achado_id": "000000000000000000000000-0000-0000-0000- fator_1",
+      "titulo": "Ação 9",
+      "objetivo": "Objetivo organizacional",
+      "acao": "Descrição da ação organizacional a executar.",
+      "responsavel_sugerido": "Empregador / Gestão",
+      "prazo_dias": 60,
+      "evidencia": "Registro documental",
+      "indicador_eficacia": "Verificação em revisão",
+      "justificativa": "Responde diretamente ao achado."
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000010",
+      "achado_id": "000000000000000000000000-0000-0000-0000- fator_2",
+      "titulo": "Ação 10",
+      "objetivo": "Objetivo organizacional",
+      "acao": "Descrição da ação organizacional a executar.",
+      "responsavel_sugerido": "Empregador / Gestão",
+      "prazo_dias": 60,
+      "evidencia": "Registro documental",
+      "indicador_eficacia": "Verificação em revisão",
+      "justificativa": "Responde diretamente ao achado."
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000011",
+      "achado_id": "000000000000000000000000-0000-0000-0000- fator_3",
+      "titulo": "Ação 11",
+      "objetivo": "Objetivo organizacional",
+      "acao": "Descrição da ação organizacional a executar.",
+      "responsavel_sugerido": "Empregador / Gestão",
+      "prazo_dias": 60,
+      "evidencia": "Registro documental",
+      "indicador_eficacia": "Verificação em revisão",
+      "justificativa": "Responde diretamente ao achado."
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000012",
+      "achado_id": "000000000000000000000000-0000-0000-0000- fator_1",
+      "titulo": "Ação 12",
+      "objetivo": "Objetivo organizacional",
+      "acao": "Descrição da ação organizacional a executar.",
+      "responsavel_sugerido": "Empregador / Gestão",
+      "prazo_dias": 15,
+      "evidencia": "Registro documental",
+      "indicador_eficacia": "Verificação em revisão",
+      "justificativa": "Responde diretamente ao achado."
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000013",
+      "achado_id": "000000000000000000000000-0000-0000-0000- fator_2",
+      "titulo": "Ação 13",
+      "objetivo": "Objetivo organizacional",
+      "acao": "Descrição da ação organizacional a executar.",
+      "responsavel_sugerido": "Empregador / Gestão",
+      "prazo_dias": 60,
+      "evidencia": "Registro documental",
+      "indicador_eficacia": "Verificação em revisão",
+      "justificativa": "Responde diretamente ao achado."
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000014",
+      "achado_id": "000000000000000000000000-0000-0000-0000- fator_3",
+      "titulo": "Ação 14",
+      "objetivo": "Objetivo organizacional",
+      "acao": "Descrição da ação organizacional a executar.",
+      "responsavel_sugerido": "Empregador / Gestão",
+      "prazo_dias": 60,
+      "evidencia": "Registro documental",
+      "indicador_eficacia": "Verificação em revisão",
+      "justificativa": "Responde diretamente ao achado."
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000015",
+      "achado_id": "000000000000000000000000-0000-0000-0000- fator_1",
+      "titulo": "Ação 15",
+      "objetivo": "Objetivo organizacional",
+      "acao": "Descrição da ação organizacional a executar.",
+      "responsavel_sugerido": "Empregador / Gestão",
+      "prazo_dias": 60,
+      "evidencia": "Registro documental",
+      "indicador_eficacia": "Verificação em revisão",
+      "justificativa": "Responde diretamente ao achado."
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000016",
+      "achado_id": "000000000000000000000000-0000-0000-0000- fator_2",
+      "titulo": "Ação 16",
+      "objetivo": "Objetivo organizacional",
+      "acao": "Descrição da ação organizacional a executar.",
+      "responsavel_sugerido": "Empregador / Gestão",
+      "prazo_dias": 15,
+      "evidencia": "Registro documental",
+      "indicador_eficacia": "Verificação em revisão",
+      "justificativa": "Responde diretamente ao achado."
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000017",
+      "achado_id": "000000000000000000000000-0000-0000-0000- fator_3",
+      "titulo": "Ação 17",
+      "objetivo": "Objetivo organizacional",
+      "acao": "Descrição da ação organizacional a executar.",
+      "responsavel_sugerido": "Empregador / Gestão",
+      "prazo_dias": 60,
+      "evidencia": "Registro documental",
+      "indicador_eficacia": "Verificação em revisão",
+      "justificativa": "Responde diretamente ao achado."
+    }
+  ],
+  "codigo_validacao": "PILOTO-PLANO_EXTENSO-VALIDACAO"
+}

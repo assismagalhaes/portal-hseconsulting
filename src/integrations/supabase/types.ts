@@ -770,6 +770,9 @@ export type Database = {
           fonte_consulta_cnpj: string | null
           group_id: string | null
           id: string
+          logo_hash_sha256: string | null
+          logo_mime_type: string | null
+          logo_storage_path: string | null
           natureza_juridica: string | null
           nome_fantasia: string | null
           numero: string | null
@@ -803,6 +806,9 @@ export type Database = {
           fonte_consulta_cnpj?: string | null
           group_id?: string | null
           id?: string
+          logo_hash_sha256?: string | null
+          logo_mime_type?: string | null
+          logo_storage_path?: string | null
           natureza_juridica?: string | null
           nome_fantasia?: string | null
           numero?: string | null
@@ -836,6 +842,9 @@ export type Database = {
           fonte_consulta_cnpj?: string | null
           group_id?: string | null
           id?: string
+          logo_hash_sha256?: string | null
+          logo_mime_type?: string | null
+          logo_storage_path?: string | null
           natureza_juridica?: string | null
           nome_fantasia?: string | null
           numero?: string | null
@@ -2505,6 +2514,14 @@ export type Database = {
       execucao_profissionais: {
         Row: {
           area: string | null
+          assinatura_ativa: boolean
+          assinatura_carregada_em: string | null
+          assinatura_carregada_por: string | null
+          assinatura_hash_sha256: string | null
+          assinatura_mime_type: string | null
+          assinatura_modo: string
+          assinatura_nome_arquivo: string | null
+          assinatura_storage_path: string | null
           auth_user_id: string | null
           cargo: string | null
           created_at: string
@@ -2522,6 +2539,14 @@ export type Database = {
         }
         Insert: {
           area?: string | null
+          assinatura_ativa?: boolean
+          assinatura_carregada_em?: string | null
+          assinatura_carregada_por?: string | null
+          assinatura_hash_sha256?: string | null
+          assinatura_mime_type?: string | null
+          assinatura_modo?: string
+          assinatura_nome_arquivo?: string | null
+          assinatura_storage_path?: string | null
           auth_user_id?: string | null
           cargo?: string | null
           created_at?: string
@@ -2539,6 +2564,14 @@ export type Database = {
         }
         Update: {
           area?: string | null
+          assinatura_ativa?: boolean
+          assinatura_carregada_em?: string | null
+          assinatura_carregada_por?: string | null
+          assinatura_hash_sha256?: string | null
+          assinatura_mime_type?: string | null
+          assinatura_modo?: string
+          assinatura_nome_arquivo?: string | null
+          assinatura_storage_path?: string | null
           auth_user_id?: string | null
           cargo?: string | null
           created_at?: string
@@ -4629,6 +4662,14 @@ export type Database = {
       profiles: {
         Row: {
           area: string | null
+          assinatura_ativa: boolean
+          assinatura_carregada_em: string | null
+          assinatura_carregada_por: string | null
+          assinatura_hash_sha256: string | null
+          assinatura_mime_type: string | null
+          assinatura_modo: string
+          assinatura_nome_arquivo: string | null
+          assinatura_storage_path: string | null
           cargo: string | null
           created_at: string
           email: string | null
@@ -4643,6 +4684,14 @@ export type Database = {
         }
         Insert: {
           area?: string | null
+          assinatura_ativa?: boolean
+          assinatura_carregada_em?: string | null
+          assinatura_carregada_por?: string | null
+          assinatura_hash_sha256?: string | null
+          assinatura_mime_type?: string | null
+          assinatura_modo?: string
+          assinatura_nome_arquivo?: string | null
+          assinatura_storage_path?: string | null
           cargo?: string | null
           created_at?: string
           email?: string | null
@@ -4657,6 +4706,14 @@ export type Database = {
         }
         Update: {
           area?: string | null
+          assinatura_ativa?: boolean
+          assinatura_carregada_em?: string | null
+          assinatura_carregada_por?: string | null
+          assinatura_hash_sha256?: string | null
+          assinatura_mime_type?: string | null
+          assinatura_modo?: string
+          assinatura_nome_arquivo?: string | null
+          assinatura_storage_path?: string | null
           cargo?: string | null
           created_at?: string
           email?: string | null
@@ -5673,6 +5730,7 @@ export type Database = {
           observacoes_tecnicas: string | null
           origem_cadastro: Database["public"]["Enums"]["proposal_origem"]
           outras_condicoes: string | null
+          premissas_ids: string[]
           proximo_followup: string | null
           revisao_atual: number
           status: Database["public"]["Enums"]["proposal_status"]
@@ -5704,6 +5762,7 @@ export type Database = {
           observacoes_tecnicas?: string | null
           origem_cadastro?: Database["public"]["Enums"]["proposal_origem"]
           outras_condicoes?: string | null
+          premissas_ids?: string[]
           proximo_followup?: string | null
           revisao_atual?: number
           status?: Database["public"]["Enums"]["proposal_status"]
@@ -5735,6 +5794,7 @@ export type Database = {
           observacoes_tecnicas?: string | null
           origem_cadastro?: Database["public"]["Enums"]["proposal_origem"]
           outras_condicoes?: string | null
+          premissas_ids?: string[]
           proximo_followup?: string | null
           revisao_atual?: number
           status?: Database["public"]["Enums"]["proposal_status"]
@@ -5752,6 +5812,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      proposta_premissas: {
+        Row: {
+          ativa: boolean
+          categorias: string[]
+          created_at: string
+          id: string
+          ordem: number
+          sempre_aplicavel: boolean
+          texto: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativa?: boolean
+          categorias?: string[]
+          created_at?: string
+          id?: string
+          ordem?: number
+          sempre_aplicavel?: boolean
+          texto: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativa?: boolean
+          categorias?: string[]
+          created_at?: string
+          id?: string
+          ordem?: number
+          sempre_aplicavel?: boolean
+          texto?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       psico_auditoria: {
         Row: {
@@ -5793,6 +5889,7 @@ export type Database = {
         Row: {
           assunto_convite: string | null
           atualizado_por: string | null
+          campos_identificacao: Json
           cancelado_em: string | null
           cancelado_por: string | null
           cliente_id: string
@@ -5812,8 +5909,13 @@ export type Database = {
           importacao_avaliacao_id: string | null
           importado_em: string | null
           importado_por: string | null
+          instrumento_empregado_versao_id: string | null
+          instrumento_empregador_versao_id: string | null
+          link_publico_token: string | null
           mensagem_convite: string | null
           metodologia_versao_id: string | null
+          modalidade: string
+          modo_coleta: Database["public"]["Enums"]["psico_modo_coleta"]
           motivo_cancelamento: string | null
           motivo_encerramento: string | null
           motivo_prorrogacao: string | null
@@ -5828,7 +5930,9 @@ export type Database = {
           quantidade_participantes_abertura: number | null
           quantidade_participantes_prevista: number
           questionario_versao_id: string | null
+          registrar_participacao: boolean
           responsavel_hse_id: string | null
+          responsavel_profissional_id: string | null
           resultado_processado_em: string | null
           resultado_processado_por: string | null
           segmentacao_disponivel: boolean
@@ -5842,6 +5946,7 @@ export type Database = {
         Insert: {
           assunto_convite?: string | null
           atualizado_por?: string | null
+          campos_identificacao?: Json
           cancelado_em?: string | null
           cancelado_por?: string | null
           cliente_id: string
@@ -5861,8 +5966,13 @@ export type Database = {
           importacao_avaliacao_id?: string | null
           importado_em?: string | null
           importado_por?: string | null
+          instrumento_empregado_versao_id?: string | null
+          instrumento_empregador_versao_id?: string | null
+          link_publico_token?: string | null
           mensagem_convite?: string | null
           metodologia_versao_id?: string | null
+          modalidade?: string
+          modo_coleta?: Database["public"]["Enums"]["psico_modo_coleta"]
           motivo_cancelamento?: string | null
           motivo_encerramento?: string | null
           motivo_prorrogacao?: string | null
@@ -5877,7 +5987,9 @@ export type Database = {
           quantidade_participantes_abertura?: number | null
           quantidade_participantes_prevista?: number
           questionario_versao_id?: string | null
+          registrar_participacao?: boolean
           responsavel_hse_id?: string | null
+          responsavel_profissional_id?: string | null
           resultado_processado_em?: string | null
           resultado_processado_por?: string | null
           segmentacao_disponivel?: boolean
@@ -5891,6 +6003,7 @@ export type Database = {
         Update: {
           assunto_convite?: string | null
           atualizado_por?: string | null
+          campos_identificacao?: Json
           cancelado_em?: string | null
           cancelado_por?: string | null
           cliente_id?: string
@@ -5910,8 +6023,13 @@ export type Database = {
           importacao_avaliacao_id?: string | null
           importado_em?: string | null
           importado_por?: string | null
+          instrumento_empregado_versao_id?: string | null
+          instrumento_empregador_versao_id?: string | null
+          link_publico_token?: string | null
           mensagem_convite?: string | null
           metodologia_versao_id?: string | null
+          modalidade?: string
+          modo_coleta?: Database["public"]["Enums"]["psico_modo_coleta"]
           motivo_cancelamento?: string | null
           motivo_encerramento?: string | null
           motivo_prorrogacao?: string | null
@@ -5926,7 +6044,9 @@ export type Database = {
           quantidade_participantes_abertura?: number | null
           quantidade_participantes_prevista?: number
           questionario_versao_id?: string | null
+          registrar_participacao?: boolean
           responsavel_hse_id?: string | null
+          responsavel_profissional_id?: string | null
           resultado_processado_em?: string | null
           resultado_processado_por?: string | null
           segmentacao_disponivel?: boolean
@@ -5953,6 +6073,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "psico_avaliacoes_instrumento_empregado_versao_id_fkey"
+            columns: ["instrumento_empregado_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_instrumentos_versoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_avaliacoes_instrumento_empregador_versao_id_fkey"
+            columns: ["instrumento_empregador_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_instrumentos_versoes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "psico_avaliacoes_metodologia_versao_id_fkey"
             columns: ["metodologia_versao_id"]
             isOneToOne: false
@@ -5964,6 +6098,13 @@ export type Database = {
             columns: ["questionario_versao_id"]
             isOneToOne: false
             referencedRelation: "psico_questionarios_versoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_avaliacoes_responsavel_profissional_id_fkey"
+            columns: ["responsavel_profissional_id"]
+            isOneToOne: false
+            referencedRelation: "execucao_profissionais"
             referencedColumns: ["id"]
           },
           {
@@ -6700,6 +6841,1102 @@ export type Database = {
           },
         ]
       }
+      psico_ind_plano_itens: {
+        Row: {
+          acao_recomendada: string
+          achado_id: string
+          aprovado: boolean
+          aprovado_em: string | null
+          aprovado_por: string | null
+          avaliacao_id: string
+          created_at: string
+          created_by: string | null
+          evidencia_definida: string | null
+          evidencia_recomendada: string | null
+          fator_codigo: string
+          id: string
+          imutavel: boolean
+          indicador_eficacia: string | null
+          justificativa: string | null
+          medida_modelo_id: string | null
+          nivel_recomendacao: string | null
+          objetivo: string
+          ordem: number
+          origem: string
+          perigo_codigo: string | null
+          prazo_definido: string | null
+          prazo_sugerido_dias: number | null
+          responsavel_definido: string | null
+          responsavel_sugerido: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          acao_recomendada: string
+          achado_id: string
+          aprovado?: boolean
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          avaliacao_id: string
+          created_at?: string
+          created_by?: string | null
+          evidencia_definida?: string | null
+          evidencia_recomendada?: string | null
+          fator_codigo: string
+          id?: string
+          imutavel?: boolean
+          indicador_eficacia?: string | null
+          justificativa?: string | null
+          medida_modelo_id?: string | null
+          nivel_recomendacao?: string | null
+          objetivo: string
+          ordem?: number
+          origem?: string
+          perigo_codigo?: string | null
+          prazo_definido?: string | null
+          prazo_sugerido_dias?: number | null
+          responsavel_definido?: string | null
+          responsavel_sugerido?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          acao_recomendada?: string
+          achado_id?: string
+          aprovado?: boolean
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          avaliacao_id?: string
+          created_at?: string
+          created_by?: string | null
+          evidencia_definida?: string | null
+          evidencia_recomendada?: string | null
+          fator_codigo?: string
+          id?: string
+          imutavel?: boolean
+          indicador_eficacia?: string | null
+          justificativa?: string | null
+          medida_modelo_id?: string | null
+          nivel_recomendacao?: string | null
+          objetivo?: string
+          ordem?: number
+          origem?: string
+          perigo_codigo?: string | null
+          prazo_definido?: string | null
+          prazo_sugerido_dias?: number | null
+          responsavel_definido?: string | null
+          responsavel_sugerido?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_ind_plano_itens_achado_id_fkey"
+            columns: ["achado_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_achados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_ind_plano_itens_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_ind_plano_itens_medida_modelo_id_fkey"
+            columns: ["medida_modelo_id"]
+            isOneToOne: false
+            referencedRelation: "psico_medidas_modelos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_ind_relatorios: {
+        Row: {
+          avaliacao_id: string
+          codigo: string
+          codigo_validacao: string
+          created_at: string
+          emitido_em: string | null
+          emitido_por: string | null
+          erro_codigo: string | null
+          id: string
+          modelo_codigo: string
+          modelo_versao: string
+          motivo_revogacao: string | null
+          nome_arquivo: string | null
+          pdf_hash: string | null
+          processamento_id: string | null
+          quantidade_paginas: number | null
+          revisao_id: string
+          revogado_em: string | null
+          revogado_por: string | null
+          snapshot_conteudo: Json
+          status: string
+          storage_path: string | null
+          tamanho_bytes: number | null
+          updated_at: string
+          versao: number
+        }
+        Insert: {
+          avaliacao_id: string
+          codigo: string
+          codigo_validacao: string
+          created_at?: string
+          emitido_em?: string | null
+          emitido_por?: string | null
+          erro_codigo?: string | null
+          id?: string
+          modelo_codigo: string
+          modelo_versao: string
+          motivo_revogacao?: string | null
+          nome_arquivo?: string | null
+          pdf_hash?: string | null
+          processamento_id?: string | null
+          quantidade_paginas?: number | null
+          revisao_id: string
+          revogado_em?: string | null
+          revogado_por?: string | null
+          snapshot_conteudo: Json
+          status?: string
+          storage_path?: string | null
+          tamanho_bytes?: number | null
+          updated_at?: string
+          versao?: number
+        }
+        Update: {
+          avaliacao_id?: string
+          codigo?: string
+          codigo_validacao?: string
+          created_at?: string
+          emitido_em?: string | null
+          emitido_por?: string | null
+          erro_codigo?: string | null
+          id?: string
+          modelo_codigo?: string
+          modelo_versao?: string
+          motivo_revogacao?: string | null
+          nome_arquivo?: string | null
+          pdf_hash?: string | null
+          processamento_id?: string | null
+          quantidade_paginas?: number | null
+          revisao_id?: string
+          revogado_em?: string | null
+          revogado_por?: string | null
+          snapshot_conteudo?: Json
+          status?: string
+          storage_path?: string | null
+          tamanho_bytes?: number | null
+          updated_at?: string
+          versao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_ind_relatorios_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_ind_relatorios_processamento_id_fkey"
+            columns: ["processamento_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_processamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_ind_relatorios_revisao_id_fkey"
+            columns: ["revisao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_revisoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_ind_sugestoes_ia: {
+        Row: {
+          avaliacao_id: string
+          created_at: string
+          criado_por: string | null
+          erro: string | null
+          id: string
+          modelo: string
+          processamento_id: string | null
+          prompt_sistema: string
+          prompt_usuario: string
+          prompt_versao: string
+          rejeitadas: Json
+          resposta_bruta: Json | null
+          status: string
+          sugestoes: Json
+        }
+        Insert: {
+          avaliacao_id: string
+          created_at?: string
+          criado_por?: string | null
+          erro?: string | null
+          id?: string
+          modelo: string
+          processamento_id?: string | null
+          prompt_sistema: string
+          prompt_usuario: string
+          prompt_versao: string
+          rejeitadas?: Json
+          resposta_bruta?: Json | null
+          status: string
+          sugestoes?: Json
+        }
+        Update: {
+          avaliacao_id?: string
+          created_at?: string
+          criado_por?: string | null
+          erro?: string | null
+          id?: string
+          modelo?: string
+          processamento_id?: string | null
+          prompt_sistema?: string
+          prompt_usuario?: string
+          prompt_versao?: string
+          rejeitadas?: Json
+          resposta_bruta?: Json | null
+          status?: string
+          sugestoes?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_ind_sugestoes_ia_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_ind_sugestoes_ia_processamento_id_fkey"
+            columns: ["processamento_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_processamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_achado_historico: {
+        Row: {
+          achado_id: string
+          alterado_por: string | null
+          created_at: string
+          estado_anterior: string | null
+          estado_novo: string
+          id: string
+          justificativa: string
+          regra_codigo: string | null
+        }
+        Insert: {
+          achado_id: string
+          alterado_por?: string | null
+          created_at?: string
+          estado_anterior?: string | null
+          estado_novo: string
+          id?: string
+          justificativa: string
+          regra_codigo?: string | null
+        }
+        Update: {
+          achado_id?: string
+          alterado_por?: string | null
+          created_at?: string
+          estado_anterior?: string | null
+          estado_novo?: string
+          id?: string
+          justificativa?: string
+          regra_codigo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_achado_historico_achado_id_fkey"
+            columns: ["achado_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_achados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_achados: {
+        Row: {
+          avaliacao_id: string
+          condicao_preliminar: string | null
+          controle_existente: string | null
+          created_at: string
+          decisao_tecnica: string | null
+          descricao_organizacional: string | null
+          eficacia_controle: string | null
+          estado_convergencia: string | null
+          estado_final: string | null
+          estado_original: string | null
+          fator_codigo: string
+          frequencia_exposicao: string | null
+          fundamentacao_sanitizada: string | null
+          id: string
+          intensidade_exigencia: string | null
+          justificativa_alteracao: string | null
+          necessita_acao: boolean
+          nivel_evidencia: string | null
+          perigo_codigo: string | null
+          processamento_id: string
+          regra_codigo: string | null
+          regra_versao: string | null
+          revisado_em: string | null
+          revisado_por: string | null
+          updated_at: string
+        }
+        Insert: {
+          avaliacao_id: string
+          condicao_preliminar?: string | null
+          controle_existente?: string | null
+          created_at?: string
+          decisao_tecnica?: string | null
+          descricao_organizacional?: string | null
+          eficacia_controle?: string | null
+          estado_convergencia?: string | null
+          estado_final?: string | null
+          estado_original?: string | null
+          fator_codigo: string
+          frequencia_exposicao?: string | null
+          fundamentacao_sanitizada?: string | null
+          id?: string
+          intensidade_exigencia?: string | null
+          justificativa_alteracao?: string | null
+          necessita_acao?: boolean
+          nivel_evidencia?: string | null
+          perigo_codigo?: string | null
+          processamento_id: string
+          regra_codigo?: string | null
+          regra_versao?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avaliacao_id?: string
+          condicao_preliminar?: string | null
+          controle_existente?: string | null
+          created_at?: string
+          decisao_tecnica?: string | null
+          descricao_organizacional?: string | null
+          eficacia_controle?: string | null
+          estado_convergencia?: string | null
+          estado_final?: string | null
+          estado_original?: string | null
+          fator_codigo?: string
+          frequencia_exposicao?: string | null
+          fundamentacao_sanitizada?: string | null
+          id?: string
+          intensidade_exigencia?: string | null
+          justificativa_alteracao?: string | null
+          necessita_acao?: boolean
+          nivel_evidencia?: string | null
+          perigo_codigo?: string | null
+          processamento_id?: string
+          regra_codigo?: string | null
+          regra_versao?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_achados_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_individual_achados_processamento_id_fkey"
+            columns: ["processamento_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_processamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_convites: {
+        Row: {
+          avaliacao_id: string
+          consumido_em: string | null
+          created_at: string
+          criado_por: string | null
+          expira_em: string | null
+          id: string
+          observacoes: string | null
+          papel: string
+          public_id: string
+          status: string
+          token_hash: string
+          token_prefixo: string | null
+          token_version: number
+          updated_at: string
+        }
+        Insert: {
+          avaliacao_id: string
+          consumido_em?: string | null
+          created_at?: string
+          criado_por?: string | null
+          expira_em?: string | null
+          id?: string
+          observacoes?: string | null
+          papel: string
+          public_id?: string
+          status?: string
+          token_hash: string
+          token_prefixo?: string | null
+          token_version?: number
+          updated_at?: string
+        }
+        Update: {
+          avaliacao_id?: string
+          consumido_em?: string | null
+          created_at?: string
+          criado_por?: string | null
+          expira_em?: string | null
+          id?: string
+          observacoes?: string | null
+          papel?: string
+          public_id?: string
+          status?: string
+          token_hash?: string
+          token_prefixo?: string | null
+          token_version?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_convites_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_esclarecimento_convites: {
+        Row: {
+          created_at: string
+          esclarecimento_id: string
+          expira_em: string
+          id: string
+          papel: string
+          respondido_em: string | null
+          status: string
+          token_hash: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          esclarecimento_id: string
+          expira_em: string
+          id?: string
+          papel: string
+          respondido_em?: string | null
+          status?: string
+          token_hash: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          esclarecimento_id?: string
+          expira_em?: string
+          id?: string
+          papel?: string
+          respondido_em?: string | null
+          status?: string
+          token_hash?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_esclarecimento_convites_esclarecimento_id_fkey"
+            columns: ["esclarecimento_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_esclarecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_esclarecimento_respostas: {
+        Row: {
+          convite_id: string
+          created_at: string
+          esclarecimento_id: string
+          id: string
+          papel: string
+          respondido_em: string
+          respostas: Json
+        }
+        Insert: {
+          convite_id: string
+          created_at?: string
+          esclarecimento_id: string
+          id?: string
+          papel: string
+          respondido_em?: string
+          respostas: Json
+        }
+        Update: {
+          convite_id?: string
+          created_at?: string
+          esclarecimento_id?: string
+          id?: string
+          papel?: string
+          respondido_em?: string
+          respostas?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_esclarecimento_resposta_esclarecimento_id_fkey"
+            columns: ["esclarecimento_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_esclarecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_individual_esclarecimento_respostas_convite_id_fkey"
+            columns: ["convite_id"]
+            isOneToOne: true
+            referencedRelation: "psico_individual_esclarecimento_convites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_esclarecimentos: {
+        Row: {
+          achado_id: string
+          avaliacao_id: string
+          concluido_em: string | null
+          created_at: string
+          fator_codigo: string
+          id: string
+          perigo_codigo: string | null
+          processamento_id: string
+          revogado_em: string | null
+          sintese_sanitizada: Json | null
+          solicitado_em: string
+          solicitado_por: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          achado_id: string
+          avaliacao_id: string
+          concluido_em?: string | null
+          created_at?: string
+          fator_codigo: string
+          id?: string
+          perigo_codigo?: string | null
+          processamento_id: string
+          revogado_em?: string | null
+          sintese_sanitizada?: Json | null
+          solicitado_em?: string
+          solicitado_por: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          achado_id?: string
+          avaliacao_id?: string
+          concluido_em?: string | null
+          created_at?: string
+          fator_codigo?: string
+          id?: string
+          perigo_codigo?: string | null
+          processamento_id?: string
+          revogado_em?: string | null
+          sintese_sanitizada?: Json | null
+          solicitado_em?: string
+          solicitado_por?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_esclarecimentos_achado_id_fkey"
+            columns: ["achado_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_achados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_individual_esclarecimentos_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_individual_esclarecimentos_processamento_id_fkey"
+            columns: ["processamento_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_processamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_formularios: {
+        Row: {
+          avaliacao_id: string
+          concluido_em: string | null
+          convite_id: string
+          created_at: string
+          id: string
+          iniciado_em: string | null
+          instrumento_versao_id: string
+          ip_hash: string | null
+          papel: string
+          status: string
+          updated_at: string
+          user_agent_hash: string | null
+        }
+        Insert: {
+          avaliacao_id: string
+          concluido_em?: string | null
+          convite_id: string
+          created_at?: string
+          id?: string
+          iniciado_em?: string | null
+          instrumento_versao_id: string
+          ip_hash?: string | null
+          papel: string
+          status?: string
+          updated_at?: string
+          user_agent_hash?: string | null
+        }
+        Update: {
+          avaliacao_id?: string
+          concluido_em?: string | null
+          convite_id?: string
+          created_at?: string
+          id?: string
+          iniciado_em?: string | null
+          instrumento_versao_id?: string
+          ip_hash?: string | null
+          papel?: string
+          status?: string
+          updated_at?: string
+          user_agent_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_formularios_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_individual_formularios_convite_id_fkey"
+            columns: ["convite_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_convites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_individual_formularios_instrumento_versao_id_fkey"
+            columns: ["instrumento_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_instrumentos_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_instrumentos_versoes: {
+        Row: {
+          codigo: string
+          created_at: string
+          id: string
+          nome: string
+          observacoes: string | null
+          publicado_em: string | null
+          publicado_por: string | null
+          updated_at: string
+          versao: string
+          vigente: boolean
+        }
+        Insert: {
+          codigo: string
+          created_at?: string
+          id?: string
+          nome: string
+          observacoes?: string | null
+          publicado_em?: string | null
+          publicado_por?: string | null
+          updated_at?: string
+          versao: string
+          vigente?: boolean
+        }
+        Update: {
+          codigo?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          publicado_em?: string | null
+          publicado_por?: string | null
+          updated_at?: string
+          versao?: string
+          vigente?: boolean
+        }
+        Relationships: []
+      }
+      psico_individual_opcoes: {
+        Row: {
+          created_at: string
+          id: string
+          ordem: number
+          pergunta_id: string
+          rotulo: string
+          significa_exposicao: boolean | null
+          updated_at: string
+          valor_numerico: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ordem: number
+          pergunta_id: string
+          rotulo: string
+          significa_exposicao?: boolean | null
+          updated_at?: string
+          valor_numerico?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ordem?: number
+          pergunta_id?: string
+          rotulo?: string
+          significa_exposicao?: boolean | null
+          updated_at?: string
+          valor_numerico?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_opcoes_pergunta_id_fkey"
+            columns: ["pergunta_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_perguntas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_perguntas: {
+        Row: {
+          ativa: boolean
+          chave_pareamento: string | null
+          codigo: string | null
+          created_at: string
+          fator_codigo: string
+          id: string
+          instrumento_versao_id: string
+          limite_texto: number | null
+          numero: string | null
+          obrigatoria: boolean
+          ordem: number
+          papel: string
+          periodo_referencia: string | null
+          regra_condicional: Json | null
+          status: string
+          texto: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          ativa?: boolean
+          chave_pareamento?: string | null
+          codigo?: string | null
+          created_at?: string
+          fator_codigo: string
+          id?: string
+          instrumento_versao_id: string
+          limite_texto?: number | null
+          numero?: string | null
+          obrigatoria?: boolean
+          ordem: number
+          papel: string
+          periodo_referencia?: string | null
+          regra_condicional?: Json | null
+          status?: string
+          texto: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          ativa?: boolean
+          chave_pareamento?: string | null
+          codigo?: string | null
+          created_at?: string
+          fator_codigo?: string
+          id?: string
+          instrumento_versao_id?: string
+          limite_texto?: number | null
+          numero?: string | null
+          obrigatoria?: boolean
+          ordem?: number
+          papel?: string
+          periodo_referencia?: string | null
+          regra_condicional?: Json | null
+          status?: string
+          texto?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_perguntas_instrumento_versao_id_fkey"
+            columns: ["instrumento_versao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_instrumentos_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_processamentos: {
+        Row: {
+          aprovado_em: string | null
+          aprovado_por: string | null
+          avaliacao_id: string
+          concluido_em: string | null
+          created_at: string
+          engine_versao: string | null
+          erro: string | null
+          id: string
+          imutavel: boolean
+          iniciado_em: string
+          instrumento_versao_empregado_id: string | null
+          instrumento_versao_empregador_id: string | null
+          resultado_hash: string | null
+          snapshot_entradas: Json | null
+          status: string
+          updated_at: string
+          versao_regra: string
+        }
+        Insert: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          avaliacao_id: string
+          concluido_em?: string | null
+          created_at?: string
+          engine_versao?: string | null
+          erro?: string | null
+          id?: string
+          imutavel?: boolean
+          iniciado_em?: string
+          instrumento_versao_empregado_id?: string | null
+          instrumento_versao_empregador_id?: string | null
+          resultado_hash?: string | null
+          snapshot_entradas?: Json | null
+          status?: string
+          updated_at?: string
+          versao_regra: string
+        }
+        Update: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          avaliacao_id?: string
+          concluido_em?: string | null
+          created_at?: string
+          engine_versao?: string | null
+          erro?: string | null
+          id?: string
+          imutavel?: boolean
+          iniciado_em?: string
+          instrumento_versao_empregado_id?: string | null
+          instrumento_versao_empregador_id?: string | null
+          resultado_hash?: string | null
+          snapshot_entradas?: Json | null
+          status?: string
+          updated_at?: string
+          versao_regra?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_processamentos_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_respostas: {
+        Row: {
+          created_at: string
+          formulario_id: string
+          id: string
+          opcao_id: string | null
+          pergunta_id: string
+          updated_at: string
+          valor_numerico: number | null
+        }
+        Insert: {
+          created_at?: string
+          formulario_id: string
+          id?: string
+          opcao_id?: string | null
+          pergunta_id: string
+          updated_at?: string
+          valor_numerico?: number | null
+        }
+        Update: {
+          created_at?: string
+          formulario_id?: string
+          id?: string
+          opcao_id?: string | null
+          pergunta_id?: string
+          updated_at?: string
+          valor_numerico?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_respostas_formulario_id_fkey"
+            columns: ["formulario_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_formularios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_individual_respostas_opcao_id_fkey"
+            columns: ["opcao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_opcoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_individual_respostas_pergunta_id_fkey"
+            columns: ["pergunta_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_perguntas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_respostas_livres: {
+        Row: {
+          conteudo: string
+          created_at: string
+          formulario_id: string
+          id: string
+          pergunta_id: string
+          sanitizado_em: string | null
+          updated_at: string
+        }
+        Insert: {
+          conteudo: string
+          created_at?: string
+          formulario_id: string
+          id?: string
+          pergunta_id: string
+          sanitizado_em?: string | null
+          updated_at?: string
+        }
+        Update: {
+          conteudo?: string
+          created_at?: string
+          formulario_id?: string
+          id?: string
+          pergunta_id?: string
+          sanitizado_em?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_respostas_livres_formulario_id_fkey"
+            columns: ["formulario_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_formularios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "psico_individual_respostas_livres_pergunta_id_fkey"
+            columns: ["pergunta_id"]
+            isOneToOne: false
+            referencedRelation: "psico_individual_perguntas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_individual_revisoes: {
+        Row: {
+          aprovado_em: string | null
+          aprovado_por: string | null
+          assinatura_hash_sha256: string | null
+          assinatura_mime_type: string | null
+          assinatura_storage_path: string | null
+          ativa: boolean
+          avaliacao_id: string
+          created_at: string
+          id: string
+          imutavel: boolean
+          modelo_ia: string | null
+          observacoes: string | null
+          parecer: Json | null
+          parecer_versao: number
+          prompt_codigo: string | null
+          responsavel_profissional_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          assinatura_hash_sha256?: string | null
+          assinatura_mime_type?: string | null
+          assinatura_storage_path?: string | null
+          ativa?: boolean
+          avaliacao_id: string
+          created_at?: string
+          id?: string
+          imutavel?: boolean
+          modelo_ia?: string | null
+          observacoes?: string | null
+          parecer?: Json | null
+          parecer_versao?: number
+          prompt_codigo?: string | null
+          responsavel_profissional_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          assinatura_hash_sha256?: string | null
+          assinatura_mime_type?: string | null
+          assinatura_storage_path?: string | null
+          ativa?: boolean
+          avaliacao_id?: string
+          created_at?: string
+          id?: string
+          imutavel?: boolean
+          modelo_ia?: string | null
+          observacoes?: string | null
+          parecer?: Json | null
+          parecer_versao?: number
+          prompt_codigo?: string | null
+          responsavel_profissional_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_individual_revisoes_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psico_medidas_modelos: {
         Row: {
           ativo: boolean
@@ -6929,6 +8166,50 @@ export type Database = {
           },
         ]
       }
+      psico_parecer_versoes: {
+        Row: {
+          conteudo: Json
+          criado_em: string
+          criado_por: string | null
+          id: string
+          modelo_ia: string | null
+          numero: number
+          origem: string
+          prompt_codigo: string | null
+          revisao_id: string
+        }
+        Insert: {
+          conteudo: Json
+          criado_em?: string
+          criado_por?: string | null
+          id?: string
+          modelo_ia?: string | null
+          numero: number
+          origem: string
+          prompt_codigo?: string | null
+          revisao_id: string
+        }
+        Update: {
+          conteudo?: Json
+          criado_em?: string
+          criado_por?: string | null
+          id?: string
+          modelo_ia?: string | null
+          numero?: number
+          origem?: string
+          prompt_codigo?: string | null
+          revisao_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_parecer_versoes_revisao_id_fkey"
+            columns: ["revisao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_revisoes_tecnicas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psico_participantes: {
         Row: {
           ativo: boolean
@@ -7105,6 +8386,7 @@ export type Database = {
           grupo_transversal: string | null
           id: string
           indicador_sugerido: string | null
+          indicadores_sugeridos: string[] | null
           medida_modelo_id: string | null
           nivel_recomendacao: string
           objetivo: string
@@ -7133,6 +8415,7 @@ export type Database = {
           grupo_transversal?: string | null
           id?: string
           indicador_sugerido?: string | null
+          indicadores_sugeridos?: string[] | null
           medida_modelo_id?: string | null
           nivel_recomendacao: string
           objetivo: string
@@ -7161,6 +8444,7 @@ export type Database = {
           grupo_transversal?: string | null
           id?: string
           indicador_sugerido?: string | null
+          indicadores_sugeridos?: string[] | null
           medida_modelo_id?: string | null
           nivel_recomendacao?: string
           objetivo?: string
@@ -7406,6 +8690,38 @@ export type Database = {
           window_start?: string
         }
         Relationships: []
+      }
+      psico_registro_participacao: {
+        Row: {
+          avaliacao_id: string
+          created_at: string
+          id: string
+          nome: string
+          nome_normalizado: string
+        }
+        Insert: {
+          avaliacao_id: string
+          created_at?: string
+          id?: string
+          nome: string
+          nome_normalizado: string
+        }
+        Update: {
+          avaliacao_id?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          nome_normalizado?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_registro_participacao_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       psico_relatorios: {
         Row: {
@@ -7733,6 +9049,62 @@ export type Database = {
             columns: ["resposta_id"]
             isOneToOne: false
             referencedRelation: "psico_respostas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      psico_respostas_publicas: {
+        Row: {
+          avaliacao_id: string
+          created_at: string
+          funcao: string | null
+          funcao_normalizada: string | null
+          hash_nome: string | null
+          id: string
+          origem_ip_hash: string | null
+          respostas: Json
+          setor: string | null
+          setor_normalizada: string | null
+          unidade: string | null
+          unidade_normalizada: string | null
+          user_agent_hash: string | null
+        }
+        Insert: {
+          avaliacao_id: string
+          created_at?: string
+          funcao?: string | null
+          funcao_normalizada?: string | null
+          hash_nome?: string | null
+          id?: string
+          origem_ip_hash?: string | null
+          respostas: Json
+          setor?: string | null
+          setor_normalizada?: string | null
+          unidade?: string | null
+          unidade_normalizada?: string | null
+          user_agent_hash?: string | null
+        }
+        Update: {
+          avaliacao_id?: string
+          created_at?: string
+          funcao?: string | null
+          funcao_normalizada?: string | null
+          hash_nome?: string | null
+          id?: string
+          origem_ip_hash?: string | null
+          respostas?: Json
+          setor?: string | null
+          setor_normalizada?: string | null
+          unidade?: string | null
+          unidade_normalizada?: string | null
+          user_agent_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psico_respostas_publicas_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "psico_avaliacoes"
             referencedColumns: ["id"]
           },
         ]
@@ -8224,6 +9596,12 @@ export type Database = {
           modo: Database["public"]["Enums"]["psico_revisao_modo"]
           motivo_reabertura: string | null
           observacoes_internas: string | null
+          parecer_conclusivo: Json | null
+          parecer_editado_em: string | null
+          parecer_gerado_em: string | null
+          parecer_modelo_ia: string | null
+          parecer_origem: string | null
+          parecer_prompt_codigo: string | null
           processamento_id: string
           reaberta_em: string | null
           reaberta_por: string | null
@@ -8253,6 +9631,12 @@ export type Database = {
           modo?: Database["public"]["Enums"]["psico_revisao_modo"]
           motivo_reabertura?: string | null
           observacoes_internas?: string | null
+          parecer_conclusivo?: Json | null
+          parecer_editado_em?: string | null
+          parecer_gerado_em?: string | null
+          parecer_modelo_ia?: string | null
+          parecer_origem?: string | null
+          parecer_prompt_codigo?: string | null
           processamento_id: string
           reaberta_em?: string | null
           reaberta_por?: string | null
@@ -8282,6 +9666,12 @@ export type Database = {
           modo?: Database["public"]["Enums"]["psico_revisao_modo"]
           motivo_reabertura?: string | null
           observacoes_internas?: string | null
+          parecer_conclusivo?: Json | null
+          parecer_editado_em?: string | null
+          parecer_gerado_em?: string | null
+          parecer_modelo_ia?: string | null
+          parecer_origem?: string | null
+          parecer_prompt_codigo?: string | null
           processamento_id?: string
           reaberta_em?: string | null
           reaberta_por?: string | null
@@ -8947,6 +10337,7 @@ export type Database = {
       can_see_comercial: { Args: never; Returns: boolean }
       can_see_financeiro: { Args: never; Returns: boolean }
       can_see_internal: { Args: { _user_id: string }; Returns: boolean }
+      can_see_psico: { Args: { _user_id: string }; Returns: boolean }
       cliente_log: {
         Args: { _acao: string; _detalhe: string }
         Returns: undefined
@@ -8994,6 +10385,10 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      fechar_revisao_proposta: {
+        Args: { _proposal_id: string }
+        Returns: string
       }
       financeiro_atualizar_vencidas: { Args: never; Returns: number }
       financeiro_gerar_contrato: {
@@ -9083,11 +10478,33 @@ export type Database = {
         Returns: undefined
       }
       projetos_gerar_renovacoes: { Args: never; Returns: number }
+      proposal_revision_snapshot: {
+        Args: { _estado: string; _proposal_id: string }
+        Returns: Json
+      }
       psico_abrir_coleta: {
         Args: { p_avaliacao_id: string; p_confirmacao: string }
         Returns: Json
       }
       psico_admin_correcao_ativa: { Args: never; Returns: boolean }
+      psico_aplicar_plano_ia: {
+        Args: {
+          p_modelo_ia?: string
+          p_prompt_codigo?: string
+          p_revisao_id: string
+          p_selecoes: Json
+        }
+        Returns: Json
+      }
+      psico_aplicar_plano_ia_strict_v1: {
+        Args: {
+          p_modelo_ia?: string
+          p_prompt_codigo?: string
+          p_revisao_id: string
+          p_selecoes: Json
+        }
+        Returns: Json
+      }
       psico_aprovar_revisao_tecnica: {
         Args: { p_confirmacao: string; p_revisao_id: string }
         Returns: Json
@@ -9179,6 +10596,10 @@ export type Database = {
       psico_gerar_codigo_avaliacao: { Args: never; Returns: string }
       psico_gerar_codigo_relatorio: { Args: never; Returns: string }
       psico_gerar_codigo_validacao: { Args: never; Returns: string }
+      psico_gerar_link_publico: {
+        Args: { p_avaliacao_id: string }
+        Returns: string
+      }
       psico_gerar_recomendacoes_internal: {
         Args: { p_revisao_id: string; p_substituir_geradas?: boolean }
         Returns: number
@@ -9249,6 +10670,287 @@ export type Database = {
         Returns: undefined
       }
       psico_importacao_testes_integridade: { Args: never; Returns: Json }
+      psico_ind_alterar_classificacao: {
+        Args: {
+          p_achado: string
+          p_justificativa: string
+          p_novo_estado: string
+        }
+        Returns: undefined
+      }
+      psico_ind_aprovar_processamento: {
+        Args: { p_processamento: string }
+        Returns: undefined
+      }
+      psico_ind_aprovar_revisao: {
+        Args: { p_responsavel_profissional: string; p_revisao: string }
+        Returns: undefined
+      }
+      psico_ind_concluir_relatorio: {
+        Args: {
+          p_emitido_por: string
+          p_id: string
+          p_nome_arquivo: string
+          p_pdf_hash: string
+          p_quantidade_paginas: number
+          p_storage_path: string
+          p_tamanho_bytes: number
+        }
+        Returns: undefined
+      }
+      psico_ind_contexto_para_ia: {
+        Args: { p_avaliacao: string }
+        Returns: Json
+      }
+      psico_ind_falhar_relatorio: {
+        Args: { p_erro: string; p_id: string }
+        Returns: undefined
+      }
+      psico_ind_finalizar_esclarecimento: {
+        Args: { p_convite: string; p_respostas: Json; p_token_hash: string }
+        Returns: Json
+      }
+      psico_ind_finalizar_submissao: {
+        Args: {
+          p_instrumento_versao_id: string
+          p_ip_hash?: string
+          p_livres?: Json
+          p_papel: string
+          p_public_id: string
+          p_respostas: Json
+          p_token_version: number
+          p_ua_hash?: string
+        }
+        Returns: Json
+      }
+      psico_ind_formulario_concluido: {
+        Args: { p_avaliacao: string; p_papel: string }
+        Returns: boolean
+      }
+      psico_ind_gates_emissao: { Args: { p_avaliacao: string }; Returns: Json }
+      psico_ind_ler_entradas_para_motor: {
+        Args: { p_avaliacao: string }
+        Returns: Json
+      }
+      psico_ind_ler_respostas_livres: {
+        Args: { _formulario_id: string }
+        Returns: {
+          conteudo: string
+          created_at: string
+          formulario_id: string
+          id: string
+          pergunta_id: string
+          sanitizado_em: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "psico_individual_respostas_livres"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      psico_ind_listar_achados: {
+        Args: { p_avaliacao: string }
+        Returns: {
+          condicao_preliminar: string
+          controle_existente: string
+          descricao_organizacional: string
+          eficacia_controle: string
+          estado_convergencia: string
+          estado_final: string
+          estado_original: string
+          fator_codigo: string
+          frequencia_exposicao: string
+          fundamentacao_sanitizada: string
+          id: string
+          imutavel: boolean
+          intensidade_exigencia: string
+          justificativa_alteracao: string
+          necessita_acao: boolean
+          nivel_evidencia: string
+          perigo_codigo: string
+          processamento_id: string
+          regra_codigo: string
+          regra_versao: string
+          revisado_em: string
+          revisado_por: string
+        }[]
+      }
+      psico_ind_listar_esclarecimentos: {
+        Args: { p_avaliacao: string }
+        Returns: {
+          achado_id: string
+          concluido_em: string
+          empregado_status: string
+          empregador_status: string
+          expira_em: string
+          fator_codigo: string
+          id: string
+          perigo_codigo: string
+          sintese_sanitizada: Json
+          solicitado_em: string
+          status: string
+        }[]
+      }
+      psico_ind_listar_relatorios: {
+        Args: { p_avaliacao: string }
+        Returns: {
+          avaliacao_id: string
+          codigo: string
+          codigo_validacao: string
+          created_at: string
+          emitido_em: string | null
+          emitido_por: string | null
+          erro_codigo: string | null
+          id: string
+          modelo_codigo: string
+          modelo_versao: string
+          motivo_revogacao: string | null
+          nome_arquivo: string | null
+          pdf_hash: string | null
+          processamento_id: string | null
+          quantidade_paginas: number | null
+          revisao_id: string
+          revogado_em: string | null
+          revogado_por: string | null
+          snapshot_conteudo: Json
+          status: string
+          storage_path: string | null
+          tamanho_bytes: number | null
+          updated_at: string
+          versao: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "psico_ind_relatorios"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      psico_ind_listar_responsaveis: {
+        Args: never
+        Returns: {
+          cargo: string
+          id: string
+          nome: string
+          origem: string
+        }[]
+      }
+      psico_ind_log_sugestao_ia: {
+        Args: {
+          p_avaliacao: string
+          p_erro: string
+          p_modelo: string
+          p_processamento: string
+          p_prompt_sistema: string
+          p_prompt_usuario: string
+          p_prompt_versao: string
+          p_rejeitadas: Json
+          p_resposta: Json
+          p_status: string
+          p_sugestoes: Json
+        }
+        Returns: string
+      }
+      psico_ind_parecer_completo: {
+        Args: { p_parecer: Json }
+        Returns: boolean
+      }
+      psico_ind_persistir_processamento: {
+        Args: {
+          p_achados: Json
+          p_avaliacao: string
+          p_engine_versao: string
+          p_hash: string
+          p_instrumento_emp: string
+          p_instrumento_rep: string
+          p_snapshot: Json
+          p_versao_regra: string
+        }
+        Returns: string
+      }
+      psico_ind_plano_aprovar: {
+        Args: { p_avaliacao: string }
+        Returns: undefined
+      }
+      psico_ind_plano_gates: { Args: { p_avaliacao: string }; Returns: Json }
+      psico_ind_plano_listar: {
+        Args: { p_avaliacao: string }
+        Returns: {
+          acao_recomendada: string
+          achado_estado: string
+          achado_id: string
+          achado_necessita_acao: boolean
+          aprovado: boolean
+          aprovado_em: string
+          aprovado_por: string
+          avaliacao_id: string
+          created_at: string
+          evidencia_definida: string
+          evidencia_recomendada: string
+          fator_codigo: string
+          id: string
+          imutavel: boolean
+          indicador_eficacia: string
+          justificativa: string
+          medida_modelo_id: string
+          nivel_recomendacao: string
+          objetivo: string
+          ordem: number
+          origem: string
+          perigo_codigo: string
+          prazo_definido: string
+          prazo_sugerido_dias: number
+          responsavel_definido: string
+          responsavel_sugerido: string
+          titulo: string
+          updated_at: string
+        }[]
+      }
+      psico_ind_preparar_relatorio: {
+        Args: {
+          p_avaliacao: string
+          p_modelo_codigo: string
+          p_modelo_versao: string
+        }
+        Returns: Json
+      }
+      psico_ind_reabrir_processamento: {
+        Args: { p_motivo: string; p_processamento: string }
+        Returns: undefined
+      }
+      psico_ind_reemitir_esclarecimento: {
+        Args: {
+          p_esclarecimento: string
+          p_expira_em?: string
+          p_token_hash_empregado: string
+          p_token_hash_empregador: string
+        }
+        Returns: undefined
+      }
+      psico_ind_salvar_parecer: {
+        Args: {
+          p_avaliacao: string
+          p_modelo_ia: string
+          p_parecer: Json
+          p_prompt_codigo: string
+        }
+        Returns: Json
+      }
+      psico_ind_snapshot_relatorio: {
+        Args: { p_avaliacao: string }
+        Returns: Json
+      }
+      psico_ind_solicitar_esclarecimento: {
+        Args: {
+          p_achado: string
+          p_expira_em?: string
+          p_token_hash_empregado: string
+          p_token_hash_empregador: string
+        }
+        Returns: string
+      }
       psico_listar_escopos_resultado: {
         Args: { p_avaliacao_id: string }
         Returns: {
@@ -9266,6 +10968,14 @@ export type Database = {
           total_itens: number
         }[]
       }
+      psico_marcar_plano_revisado: {
+        Args: { p_plano_id: string }
+        Returns: Json
+      }
+      psico_materializar_respostas_publicas: {
+        Args: { p_avaliacao_id: string }
+        Returns: number
+      }
       psico_norm_email: { Args: { v: string }; Returns: string }
       psico_norm_fone: { Args: { v: string }; Returns: string }
       psico_norm_texto: { Args: { v: string }; Returns: string }
@@ -9275,6 +10985,34 @@ export type Database = {
       }
       psico_obter_conteudo_aprovado_relatorio: {
         Args: { p_avaliacao_id: string }
+        Returns: Json
+      }
+      psico_obter_conteudo_aprovado_relatorio_sem_branding_v1_6: {
+        Args: { p_avaliacao_id: string }
+        Returns: Json
+      }
+      psico_obter_conteudo_aprovado_relatorio_sem_metodologia: {
+        Args: { p_avaliacao_id: string }
+        Returns: Json
+      }
+      psico_obter_conteudo_aprovado_relatorio_sem_resultado_executivo: {
+        Args: { p_avaliacao_id: string }
+        Returns: Json
+      }
+      psico_obter_conteudo_aprovado_relatorio_sem_v1_4: {
+        Args: { p_avaliacao_id: string }
+        Returns: Json
+      }
+      psico_obter_conteudo_aprovado_relatorio_sem_visual_v1_2: {
+        Args: { p_avaliacao_id: string }
+        Returns: Json
+      }
+      psico_obter_contexto_parecer_ia: {
+        Args: { p_revisao_id: string }
+        Returns: Json
+      }
+      psico_obter_contexto_plano_ia: {
+        Args: { p_revisao_id: string }
         Returns: Json
       }
       psico_obter_dashboard_resultados: {
@@ -9380,6 +11118,7 @@ export type Database = {
         Args: { p_relatorio_versao_id: string }
         Returns: Json
       }
+      psico_parecer_valido: { Args: { p_parecer: Json }; Returns: boolean }
       psico_preparar_emissao_relatorio: {
         Args: {
           p_avaliacao_id: string
@@ -9445,7 +11184,31 @@ export type Database = {
         Args: { p_motivo: string; p_relatorio_versao_id: string }
         Returns: Json
       }
+      psico_salvar_parecer_conclusivo: {
+        Args: {
+          p_modelo_ia?: string
+          p_origem?: string
+          p_parecer: Json
+          p_prompt_codigo?: string
+          p_revisao_id: string
+        }
+        Returns: Json
+      }
       psico_sanitize_snapshot: { Args: { p_data: Json }; Returns: Json }
+      psico_submeter_resposta_publica: {
+        Args: {
+          p_funcao: string
+          p_hash_nome: string
+          p_ip_hash: string
+          p_nome_para_registro: string
+          p_respostas: Json
+          p_setor: string
+          p_token: string
+          p_ua_hash: string
+          p_unidade: string
+        }
+        Returns: Json
+      }
       psico_validar_biblioteca_medidas: {
         Args: { p_biblioteca_versao_id: string }
         Returns: Json
@@ -9470,6 +11233,10 @@ export type Database = {
         Args: { p_revisao_id: string }
         Returns: Json
       }
+      psico_validar_revisao_tecnica_sem_parecer_v1_4: {
+        Args: { p_revisao_id: string }
+        Returns: Json
+      }
       psico_vincular_versao_vigente: {
         Args: { _avaliacao_id: string }
         Returns: Json
@@ -9481,6 +11248,35 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      registrar_aceite_proposta: {
+        Args: {
+          _assinatura_base64: string
+          _cargo: string
+          _cpf: string
+          _email: string
+          _ip: string
+          _nome: string
+          _observacoes: string
+          _token: string
+          _user_agent: string
+        }
+        Returns: Json
+      }
+      registrar_recusa_proposta: {
+        Args: {
+          _email: string
+          _ip: string
+          _motivo: string
+          _nome: string
+          _token: string
+          _user_agent: string
+        }
+        Returns: Json
+      }
+      sincronizar_revisao_proposta: {
+        Args: { _proposal_id: string }
+        Returns: string
       }
       unaccent: { Args: { "": string }; Returns: string }
       user_can_access_execucao: {
@@ -9860,6 +11656,7 @@ export type Database = {
       psico_medida_custo: "baixo" | "medio" | "alto" | "variavel"
       psico_medida_nivel: "essencial" | "complementar" | "estruturante"
       psico_metodologia_status: "em_configuracao" | "ativa" | "arquivada"
+      psico_modo_coleta: "nominal" | "publico_anonimo"
       psico_origem_coleta: "portal" | "importacao_bruta" | "importacao_agregada"
       psico_participante_origem: "manual" | "importacao"
       psico_plano_modo: "enxuto" | "completo" | "personalizado"
@@ -10421,6 +12218,7 @@ export const Constants = {
       psico_medida_custo: ["baixo", "medio", "alto", "variavel"],
       psico_medida_nivel: ["essencial", "complementar", "estruturante"],
       psico_metodologia_status: ["em_configuracao", "ativa", "arquivada"],
+      psico_modo_coleta: ["nominal", "publico_anonimo"],
       psico_origem_coleta: [
         "portal",
         "importacao_bruta",

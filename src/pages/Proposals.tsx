@@ -283,6 +283,7 @@ export default function Proposals() {
                       className="h-8 w-8 text-danger hover:text-danger hover:bg-danger/10"
                       onClick={()=>setToDelete(p)}
                       title="Excluir proposta"
+                      aria-label="Excluir proposta"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

@@ -1,101 +1,100 @@
-# Unificação: Ordens de Serviço dentro do Projeto
 
-## Diagnóstico atual
+# PR 2 — Instrumentos e criação da avaliação individual
 
-Hoje o fluxo operacional está fragmentado:
+## Escopo
+Publicar dois instrumentos versionados (AQI-EMPREGADO-1.0 e AQI-EMPREGADOR-1.0), permitir escolher a modalidade ao criar avaliação, congelar as versões usadas e restringir recursos incompatíveis. Coletiva HSE continua o padrão.
 
+## 1. Migração — enriquecimento do modelo de perguntas
+
+`ALTER TABLE public.psico_individual_perguntas`:
+- `codigo text` (código permanente, único por versão de instrumento)
+- `chave_pareamento text` (usada para cruzar empregador × empregado)
+- `regra_condicional jsonb` (condição para exibição, ex.: `{"depende_de":"AQI-E-12","valor_min":3}`)
+- `limite_texto integer` (para tipo `livre`)
+- `status text CHECK IN ('publicada','arquivada') DEFAULT 'publicada'`
+- `periodo_referencia text` (ex.: "últimos 3 meses")
+- Unicidade `(instrumento_versao_id, codigo)`
+
+`psico_avaliacoes`:
+- `instrumento_empregado_versao_id uuid REFERENCES psico_individual_instrumentos_versoes(id)`
+- `instrumento_empregador_versao_id uuid REFERENCES psico_individual_instrumentos_versoes(id)`
+- CHECK: se `modalidade='individual_microempresa'` então os 2 ids são NOT NULL.
+
+Trigger de imutabilidade: bloquear `UPDATE`/`DELETE` em `psico_individual_perguntas`/`_opcoes`/`_instrumentos_versoes` quando `vigente=true` — apenas troca de `status` para `arquivada` permitida.
+
+## 2. Seed dos 2 instrumentos (migração de dados)
+
+Sete fatores:
 ```text
-Proposta aprovada
-   └─> Projeto (contém serviços contratados)
-         └─> Ordem de Serviço (entidade separada, com nº próprio, editor próprio, listagem própria)
-                └─> Visitas, equipe, checklist, evidências, documentos, timeline
+F1 Demandas de trabalho
+F2 Controle e autonomia
+F3 Apoio social e liderança
+F4 Relações interpessoais
+F5 Reconhecimento e crescimento
+F6 Justiça organizacional
+F7 Interface trabalho-vida
 ```
 
-Isso obriga o técnico a: (1) abrir o projeto, (2) criar uma OS, (3) sair do projeto para trabalhar dentro da OS, (4) voltar para o projeto para ver o todo. Muita navegação e duplicidade de cadastro (cliente, endereço, responsável, prazos já existem no projeto).
+- `AQI-EMPREGADO-1.0`: 32 perguntas (4–5 por fator), tipo `escala` Likert-5, mais 3 campos `livre` condicionais (aparecem se escala ≤ 2 em fatores críticos). Período: últimos 3 meses.
+- `AQI-EMPREGADOR-1.0`: 27 perguntas (3–4 por fator), foco em existência/eficácia de controles, mais 2 campos `livre` condicionais.
 
-## Proposta
+Cada pergunta ganha `codigo` (AQI-E-01…, AQI-R-01…) e `chave_pareamento` compartilhada entre pares (ex.: `PAR-F1-CARGA`), para o PR 4 (convergência).
 
-**Eliminar o conceito de "OS" da interface.** Tudo que hoje é feito dentro de uma OS passa a ser feito **dentro do próprio Projeto**, organizado por **Atividades** (nome interno mais leve — ou "Etapas de campo", a definir).
+Opções Likert-5 padrão com `valor_numerico 1–5` e `significa_exposicao` marcado para pontas críticas.
 
-```text
-Proposta aprovada
-   └─> Projeto
-         ├─ Visão geral / Cliente / Financeiro (como hoje)
-         ├─ Serviços contratados (como hoje)
-         ├─ Atividades  ← NOVO: absorve visitas, equipe, checklist, evidências
-         ├─ Documentos  (como hoje, já é do projeto)
-         └─ Timeline    (unificada: projeto + atividades)
-```
+Ambas as versões marcadas `vigente=true` e `publicado_em=now()`. Trigger de imutabilidade passa a proteger.
 
-Uma **Atividade** pode ser: uma visita técnica, uma inspeção, uma coleta, uma entrega em campo — o que hoje virava uma OS. Ela vive dentro do projeto, herda cliente/endereço/responsável, e tem seu próprio prazo, status, equipe e evidências.
+## 3. Biblioteca — `src/lib/psicoIndividual.ts`
 
-## Escopo funcional
+- `listarInstrumentosVigentes()` → devolve o par (empregado + empregador).
+- `criarAvaliacaoIndividual({...})` — insert em `psico_avaliacoes` com `modalidade='individual_microempresa'`, `quantidade_participantes_prevista=1`, ids dos instrumentos congelados.
+- `descreverImutabilidade(instrumento)` — helper de UI.
+- Constantes: `PSICO_INDIVIDUAL_LABEL_MODALIDADE`, `PSICO_INDIVIDUAL_AVISO_PRIVACIDADE`, `PSICO_INDIVIDUAL_AVISO_METODOLOGICO`.
 
-### O que some da interface
-- Menu lateral **"Ordens de Serviço"** (interno e no portal do cliente vira **"Atividades"** ou é fundido em "Serviços").
-- Página de listagem global `/ordens-servico`.
-- Botão "Nova OS" isolado.
-- Editor `/ordens-servico/:id` como página raiz.
-- Impressão `/ordens-servico/:id/print` → passa a ser `/projetos/:id/atividades/:aid/print`.
+Nenhuma UI aparece se `PSICO_INDIVIDUAL_ENABLED=false`. Para o PR2 a flag continua desligada por padrão; o seletor só é mostrado quando ligada.
 
-### O que passa para dentro do Projeto
-Nova aba **"Atividades"** no `ProjetoEditor` com:
-- Lista de atividades do projeto (nº curto, título, responsável, prazo, status, prioridade).
-- Botão "Nova atividade" (herda cliente/endereço do projeto — 1 clique).
-- Ao abrir uma atividade → drawer/painel lateral (ou sub-rota `/projetos/:id/atividades/:aid`) com as sub-abas que hoje existem na OS: **Detalhes · Equipe · Checklist · Visitas · Evidências · Documentos · Timeline**.
+## 4. `PsicoAvaliacaoNova.tsx`
 
-### Visão global para quem executa
-Para não perder a visão consolidada de "o que preciso fazer hoje", a página **Planejamento** e o **Meu Painel** continuam listando as atividades de todos os projetos filtráveis por responsável / prazo / status — apenas mudam o rótulo de "OS" para "Atividades" e o link passa a abrir o projeto na aba certa.
+- Novo bloco no topo do form: `RadioGroup` "Modalidade" com 2 opções (Coletiva HSE / Assistida Individual). Só renderiza se a flag estiver ligada.
+- Ao escolher **Individual**:
+  - `quantidade_participantes_prevista` = 1 e campo fica `disabled` com nota "Modalidade individual: 1 empregado por avaliação".
+  - Esconde os cards de "importação histórica" (não estão nessa tela; documentar) e desabilita seleção de segmentações (não estão nessa tela).
+  - Carrega o par de instrumentos vigentes e exibe um `Card` "Instrumentos congelados nesta avaliação" com `codigo — versao` e status `Publicada`.
+  - Renderiza `Alert` metodológico + privacidade (2 blocos amarelos com `ShieldAlert`/`Info`) — botão "Salvar" fica `disabled` até checkbox "Li e concordo com o aviso metodológico e de privacidade".
+- Salvamento:
+  - Modalidade coletiva → mantém insert atual (sem regressão).
+  - Modalidade individual → usa `criarAvaliacaoIndividual` (não grava `questionario_versao_id`/`metodologia_versao_id`, grava os dois `instrumento_*_versao_id`).
 
-### Portal do cliente
-- Aba "Ordens de Serviço" do portal é fundida em **"Serviços"** (o cliente vê o serviço contratado e, abaixo, as atividades planejadas/realizadas com datas e status). Menos jargão para o cliente.
+## 5. `PsicoAvaliacaoDetalhes.tsx`
 
-## Estratégia de migração (sem perda de dados)
+- Ler `modalidade`, `instrumento_empregado_versao_id`, `instrumento_empregador_versao_id`.
+- Adicionar `Badge` da modalidade no cabeçalho.
+- Se `individual_microempresa`:
+  - Ocultar/desabilitar as abas de importação histórica, segmentações e link público (mantendo somente Detalhes/Documentos por ora — as abas dedicadas virão no PR 3).
+  - Mostrar `Card` "Instrumentos congelados" com os códigos/versões.
+  - Mostrar `Alert` reforçando que não há anonimato estatístico.
+- Sem alteração para coletiva.
 
-Não vamos deletar a tabela `ordens_servico` nem os dados históricos. A abordagem é **renomear conceito, manter estrutura**:
+## 6. Aceite (verificação após o build)
 
-1. Manter a tabela `ordens_servico` e todas as suas satélites (`os_equipe`, `os_checklist`, `os_visitas`, `os_evidencias`, `os_documentos`, `os_timeline`, `os_recursos`, `os_eventos_agenda`, `os_logistica`, `os_visita_checklist`, `os_checklist_sugestoes`).
-2. Tornar **obrigatório** o vínculo `projeto_id` em novas atividades (hoje é opcional). Atividades antigas sem projeto continuam acessíveis via Planejamento.
-3. Ajustar a numeração/rótulo para "ATV-####" internamente (ou manter "OS-####" no banco e só mudar o rótulo — decisão de UI).
-4. Nenhuma migração destrutiva; apenas ajuste de defaults e, se quiser, um `check` garantindo `projeto_id NOT NULL` para novos registros.
+1. Criar avaliação **coletiva** continua funcionando idêntico ao atual (sem regressão).
+2. Ligando a flag, é possível escolher **Individual**; quantidade trava em 1; instrumentos aparecem congelados.
+3. Publicação bloqueia UPDATE em pergunta de instrumento vigente (validado via query direta na migração de teste).
+4. Registro em `psico_avaliacoes` contém os dois `instrumento_*_versao_id` corretos.
+5. Salvar sem marcar o checkbox de aviso é bloqueado no cliente e o CHECK server-side garante os ids obrigatórios.
 
-## Impacto em código (alto nível, para o time técnico)
+## 7. Rollback
 
-### Rotas / navegação
-- Remover entradas de menu "Ordens de Serviço" em `AppLayout.tsx` e `ClienteLayout.tsx`.
-- Em `App.tsx`: manter as rotas `/ordens-servico/:id` e `/ordens-servico/:id/print` como **redirects** para `/projetos/:projeto_id/atividades/:id` (compatibilidade com links já enviados por e-mail).
-- Remover rota `/ordens-servico` (listagem).
+Desligar `VITE_PSICO_INDIVIDUAL_ENABLED`. O seletor desaparece, novas avaliações voltam a ser sempre coletivas. Registros já criados permanecem como rascunho e continuam listados.
 
-### Páginas
-- **`ProjetoEditor.tsx`**: nova aba "Atividades" com listagem + criação inline; abrir atividade em drawer OU navegar para sub-rota que renderiza o conteúdo hoje em `OrdemServicoEditor.tsx`.
-- **`OrdemServicoEditor.tsx`**: refatorado para ser um componente reutilizável (`AtividadeEditor`) montado dentro do projeto; deixa de ser uma "página cheia" e vira o conteúdo da sub-rota.
-- **`OrdensServico.tsx`**: deletado (a listagem vive em `Planejamento` e dentro do projeto).
-- **`Planejamento.tsx`** e **`MeuPainel.tsx`**: renomear coluna/rótulo "OS" → "Atividade"; link passa a apontar para o projeto.
-- **`ClienteOS.tsx`**: deletado; conteúdo fundido em `ClienteServicos.tsx`.
-- **`OrdemServicoPrint.tsx`**: mantido, apenas retitulado.
+## 8. Fora do escopo (fica para PRs seguintes)
 
-### Textos e rótulos
-- Substituir "Ordem de Serviço" / "OS" por "Atividade" nos rótulos visíveis (páginas, badges, e-mails, alertas do módulo IA, notificações). O nome interno de tabelas/colunas fica igual.
+- PR 3: geração de convites, links dos dois formulários e coleta.
+- PR 4: processamento de convergência, achados e revisão.
+- PR 5: relatório e parecer individual.
 
-### Não muda
-- Documentos técnicos (já pertencem ao projeto).
-- Financeiro, propostas, CRM, IA — nenhum impacto estrutural.
-- Automações que referenciam OS continuam funcionando (mesma tabela).
+## Detalhes técnicos
 
-## Fases de execução sugeridas
-
-1. **Fase 1 – Backend leve**: garantir que toda OS futura tenha `projeto_id` (criar projeto "avulso" automaticamente ao criar uma atividade sem projeto, se for necessário — a definir).
-2. **Fase 2 – Refatorar `OrdemServicoEditor` em componente `AtividadeEditor`** reutilizável.
-3. **Fase 3 – Integrar no `ProjetoEditor`** como aba, com criação inline.
-4. **Fase 4 – Remover menus e listagem global**, adicionar redirects de compatibilidade.
-5. **Fase 5 – Unificar portal do cliente** (Serviços + OS).
-6. **Fase 6 – Renomear textos** ("OS" → "Atividade") e revisar e-mails/notificações/alertas IA.
-
-## Pontos que preciso confirmar antes de codar
-
-1. **Nome do novo conceito**: "Atividade", "Etapa de campo", "Tarefa de campo" ou manter "Ordem de Serviço" só que dentro do projeto? (Você disse para retirar o nome OS — sugiro **"Atividade"**, curto e neutro.)
-2. **Atividades sem projeto**: hoje é possível. Devemos **forçar** vínculo com projeto (recomendo sim) ou permitir avulsas?
-3. **Portal do cliente**: fundir "OS" dentro de "Serviços" numa única aba, ou renomear a aba para "Atividades"?
-4. **Abrir a atividade**: prefere **drawer lateral** dentro do projeto (mais rápido, sem perder contexto) ou **sub-página** dedicada (mais espaço, URL própria)?
-
-Me confirme esses 4 pontos que eu já parto para a execução.
+- Todas as inserções de perguntas/opções são feitas via `supabase--migration` (DDL + INSERTs sementes) em um único arquivo, dentro de bloco `DO $$ ... $$` para garantir atomicidade.
+- Validação server-side via CHECK e trigger; validação cliente com Zod (`z.discriminatedUnion('modalidade', ...)`).
+- Nenhuma alteração no fluxo coletivo (`psico_questionarios_versoes`, `psico_metodologias_versoes` intocados).

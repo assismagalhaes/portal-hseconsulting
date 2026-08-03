@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
 
     const body = (await req.json()) as Body;
     const modulo: Modulo = body.modulo ?? "geral";
-    const model = body.model ?? "google/gemini-3-flash-preview";
+    const model = body.model ?? "google/gemini-3.6-flash";
 
     const [systemPrompt, ctx] = await Promise.all([getPrompt(supabase, modulo), loadContext(supabase, body)]);
 

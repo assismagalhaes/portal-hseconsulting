@@ -18,7 +18,7 @@ import {
 import {
   CLASSIF_LABEL, CLASSIF_SHORT, PRIO_LABEL, PRIO_ORDER, TIPO_ESCOPO_LABEL,
   RISK_COLOR, classifBadgeClass, prioBadgeClass, fmt, fmtPct, fmtDateTime, fmtDate,
-  AVISO_METODOLOGICO,
+  AvisoMetodologico,
 } from "./shared";
 
 type EscopoListItem = { id: string; tipo: "global"|"funcao"|"setor"|"unidade"; rotulo: string; respondentes: number; amostra_reduzida: boolean };
@@ -62,6 +62,24 @@ export default function VisaoExecutiva({
 
   const dash = dashQ.data.data;
   const interp = interpQ.data && interpQ.data.ok ? interpQ.data.data : null;
+
+  // Fase 3 — bloqueio defensivo: recortes com n<2 nunca renderizam resultados.
+  if (dash.escopo.tipo !== "global" && dash.escopo.respondentes < 2) {
+    return (
+      <div className="space-y-4">
+        <HeaderCabecalho dash={dash} escoposDisponiveis={escoposDisponiveis} escopoId={escopoId ?? dash.escopo.id} onChangeEscopo={onChangeEscopo} />
+        <Alert className="border-amber-400 bg-amber-50 dark:bg-amber-900/10">
+          <ShieldAlert className="h-4 w-4 text-amber-600" />
+          <AlertTitle>Resultado suprimido por sigilo (n&lt;2)</AlertTitle>
+          <AlertDescription>
+            Este recorte possui apenas {dash.escopo.respondentes} respondente(s). Para preservar o
+            anonimato exigido pela NR‑01, resultados só são exibidos com pelo menos 2 respondentes.
+            Selecione outro recorte ou consulte o resultado geral.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -315,7 +333,7 @@ function GraficoDistribuicao({ dash }: { dash: PsicoDashboard }) {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={height}>
-          <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 24, left: 8, bottom: 8 }} stackOffset="expand" barCategoryGap={10}>
+          <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 24, left: 8, bottom: 8 }} barCategoryGap={10}>
             <CartesianGrid strokeDasharray="3 3" opacity={0.25} horizontal={false} />
             <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => `${v}%`} ticks={[0,20,40,60,80,100]} />
             <YAxis type="category" dataKey="nome" width={210} tick={{ fontSize: 12 }} interval={0} />
@@ -527,7 +545,6 @@ function InterpretacaoExecutiva({ interp, loading }: { interp: PsicoInterpretaca
             )}
           </>
         )}
-        <p className="text-[11px] text-muted-foreground border-t pt-2">{AVISO_METODOLOGICO}</p>
       </CardContent>
     </Card>
   );

@@ -24,6 +24,7 @@ import {
   CheckCircle2,
   Download,
   FileText,
+  Eye,
   Loader2,
   RefreshCcw,
   ShieldCheck,
@@ -33,6 +34,8 @@ import {
   gerarRelatorio,
   getRelatorio,
   listarVersoes,
+  mensagemFalhaValidacaoEmissao,
+  previewRelatorio,
   REL_STATUS_COLOR,
   REL_STATUS_LABEL,
   RelatorioVersaoStatus,
@@ -57,6 +60,8 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
   const [versoes, setVersoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [gerando, setGerando] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+  const [validacaoErro, setValidacaoErro] = useState<string | null>(null);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmTxt, setConfirmTxt] = useState("");
@@ -67,8 +72,9 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
 
   const carregar = useCallback(async () => {
     setLoading(true);
-    const [{ data: val }, rel] = await Promise.all([validarEmissao(av.id), getRelatorio(av.id)]);
+    const [{ data: val, error: valError }, rel] = await Promise.all([validarEmissao(av.id), getRelatorio(av.id)]);
     setValidacao(val);
+    setValidacaoErro(valError ? mensagemFalhaValidacaoEmissao(valError) : null);
     setRelatorio(rel);
     if (rel?.id) setVersoes(await listarVersoes(rel.id));
     else setVersoes([]);
@@ -88,10 +94,6 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
   const codigoEsperado = `EMITIR ${av.codigo}`;
 
   async function handleEmitir() {
-    if (confirmTxt !== codigoEsperado) {
-      toast.error(`Digite exatamente: ${codigoEsperado}`);
-      return;
-    }
     if (!isPrimeira && descricao.trim().length < 10) {
       toast.error("Descreva o motivo da nova revisão (mín. 10 caracteres).");
       return;
@@ -111,7 +113,6 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
       toast.success(`Relatório emitido: ${(data as any)?.codigo} ${(data as any)?.codigo_revisao}`);
     }
     setConfirmOpen(false);
-    setConfirmTxt("");
     setDescricao("");
     await carregar();
     onReload?.();
@@ -124,6 +125,38 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
       return;
     }
     window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  async function handlePreview() {
+    const previewWindow = window.open("", "_blank");
+    if (!previewWindow) {
+      toast.error("Permita pop-ups para abrir a prévia do relatório.");
+      return;
+    }
+
+    previewWindow.document.title = "Gerando prévia do relatório";
+    previewWindow.document.body.innerHTML =
+      '<p style="font: 16px system-ui; padding: 24px">Gerando prévia do relatório…</p>';
+
+    setPreviewing(true);
+    try {
+      const { blob, error } = await previewRelatorio(av.id);
+      if (error || !blob) {
+        previewWindow.close();
+        toast.error(traduzirErroEmissao(error || "ERRO_RENDERIZACAO"));
+        return;
+      }
+
+      const pdfUrl = URL.createObjectURL(blob);
+      previewWindow.opener = null;
+      previewWindow.location.replace(pdfUrl);
+      window.setTimeout(() => URL.revokeObjectURL(pdfUrl), 5 * 60_000);
+    } catch (error) {
+      previewWindow.close();
+      toast.error(traduzirErroEmissao(error));
+    } finally {
+      setPreviewing(false);
+    }
   }
 
   async function handleRevogar() {
@@ -181,6 +214,14 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
             <ChecklistItem ok={validacao?.responsavel_tecnico_valido} label="Responsável técnico definido" />
           </div>
 
+          {validacaoErro && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Falha na validação da emissão</AlertTitle>
+              <AlertDescription>{validacaoErro}</AlertDescription>
+            </Alert>
+          )}
+
           {!podeEmitir && erros.length > 0 && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
@@ -207,6 +248,15 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
           )}
 
           <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handlePreview}
+              disabled={!podeEmitir || !!emAndamento || gerando || previewing}
+            >
+              {previewing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Eye className="h-4 w-4 mr-2" />}
+              {previewing ? "Gerando prévia…" : "Pré-visualizar"}
+            </Button>
+
             <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
               <AlertDialogTrigger asChild>
                 <Button disabled={!podeEmitir || !!emAndamento || gerando}>
@@ -219,8 +269,7 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
                   <AlertDialogTitle>Confirmar emissão do relatório</AlertDialogTitle>
                   <AlertDialogDescription>
                     Esta ação gera o PDF oficial e o registra imutavelmente como{" "}
-                    <span className="font-mono">{relatorio?.codigo || "novo"} {proximaRev}</span>. Para confirmar,
-                    digite exatamente <span className="font-mono font-bold">{codigoEsperado}</span> abaixo.
+                    <span className="font-mono">{relatorio?.codigo || "novo"} {proximaRev}</span>.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="space-y-3">
@@ -235,15 +284,6 @@ export default function PsicoRelatorioTab({ av, onReload }: { av: any; onReload:
                       />
                     </div>
                   )}
-                  <div>
-                    <Label>Confirmação</Label>
-                    <Input
-                      value={confirmTxt}
-                      onChange={(e) => setConfirmTxt(e.target.value)}
-                      placeholder={codigoEsperado}
-                      autoFocus
-                    />
-                  </div>
                 </div>
                 <AlertDialogFooter>
                   <AlertDialogCancel disabled={gerando}>Cancelar</AlertDialogCancel>

@@ -51,24 +51,29 @@ export async function calcularChecklist(av: any): Promise<ChecklistItem[]> {
     items.push({ chave: "5o", label: "5 opções de resposta ativas", ok: (count ?? 0) === 5, erro: `atual: ${count ?? 0}` });
   }
 
-  const { count: partAtivos } = await sb.from("psico_participantes")
-    .select("id", { count: "exact", head: true })
-    .eq("avaliacao_id", av.id).eq("ativo", true);
-  items.push({ chave: "part2", label: "Pelo menos 2 participantes ativos", ok: (partAtivos ?? 0) >= 2, erro: `atual: ${partAtivos ?? 0}` });
+  const isPublico = av.modo_coleta === "publico_anonimo";
+  if (isPublico) {
+    items.push({ chave: "publico", label: "Coleta pública anônima (link único compartilhado)", ok: true });
+  } else {
+    const { count: partAtivos } = await sb.from("psico_participantes")
+      .select("id", { count: "exact", head: true })
+      .eq("avaliacao_id", av.id).eq("ativo", true);
+    items.push({ chave: "part2", label: "Pelo menos 2 participantes ativos", ok: (partAtivos ?? 0) >= 2, erro: `atual: ${partAtivos ?? 0}` });
 
-  const { data: parts } = await sb.from("psico_participantes")
-    .select("id").eq("avaliacao_id", av.id).eq("ativo", true);
-  const ids = (parts || []).map((p: any) => p.id);
-  if (ids.length > 0) {
-    const { data: conv } = await sb.from("psico_convites")
-      .select("participante_id, status")
-      .in("participante_id", ids);
-    const prep = new Set((conv || []).filter((c: any) => c.status === "preparado").map((c: any) => c.participante_id));
-    const semPrep = ids.filter((i: string) => !prep.has(i));
-    items.push({ chave: "prep", label: "Todos os participantes ativos possuem link preparado",
-      ok: semPrep.length === 0, erro: semPrep.length > 0 ? `${semPrep.length} sem link` : undefined });
-    const resp = (conv || []).filter((c: any) => c.status === "respondido").length;
-    items.push({ chave: "resp0", label: "Nenhum participante já respondeu", ok: resp === 0 });
+    const { data: parts } = await sb.from("psico_participantes")
+      .select("id").eq("avaliacao_id", av.id).eq("ativo", true);
+    const ids = (parts || []).map((p: any) => p.id);
+    if (ids.length > 0) {
+      const { data: conv } = await sb.from("psico_convites")
+        .select("participante_id, status")
+        .in("participante_id", ids);
+      const prep = new Set((conv || []).filter((c: any) => c.status === "preparado").map((c: any) => c.participante_id));
+      const semPrep = ids.filter((i: string) => !prep.has(i));
+      items.push({ chave: "prep", label: "Todos os participantes ativos possuem link preparado",
+        ok: semPrep.length === 0, erro: semPrep.length > 0 ? `${semPrep.length} sem link` : undefined });
+      const resp = (conv || []).filter((c: any) => c.status === "respondido").length;
+      items.push({ chave: "resp0", label: "Nenhum participante já respondeu", ok: resp === 0 });
+    }
   }
   return items;
 }

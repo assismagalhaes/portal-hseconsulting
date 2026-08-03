@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Info, RefreshCcw, Wrench, Plus, Trash2, Undo2, History, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
-import { MARCO_LABEL, MARCOS, buildTextoCondicao, somaPercentuais, validarParcelas, type CondPagMarco, type ParcelaForm } from "@/lib/condicoesPagamento";
+import { MARCO_LABEL, MARCOS, buildTextoCondicao, formatarMarcoParcela, somaPercentuais, validarParcelas, type CondPagMarco, type ParcelaForm } from "@/lib/condicoesPagamento";
 
 type CondRow = {
   id: string; nome: string; descricao: string | null;
@@ -281,7 +281,7 @@ export default function CondicaoPagamentoPicker({
                   <Input type="number" step="0.01" className="h-8" value={p.percentual}
                     onChange={(e) => updateDraft(idx, { percentual: Number(e.target.value) })} />
                 </div>
-                <div className="col-span-3">
+                <div className="col-span-5">
                   <Label className="text-[10px]">Marco</Label>
                   <Select value={p.marco} onValueChange={(v) => updateDraft(idx, { marco: v as CondPagMarco })}>
                     <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
@@ -291,25 +291,26 @@ export default function CondicaoPagamentoPicker({
                   </Select>
                 </div>
                 {p.marco === "mensal_recorrente" ? (
-                  <div className="col-span-2">
+                  <div className="col-span-3">
                     <Label className="text-[10px]">Dia do mês</Label>
-                    <Input type="number" min={1} max={31} className="h-8" value={p.dia_mes ?? ""}
-                      onChange={(e) => updateDraft(idx, { dia_mes: e.target.value ? Number(e.target.value) : null })} />
+                    <Input
+                      type="number" min={1} max={31} className="h-8"
+                      value={p.dia_mes ?? ""}
+                      onChange={(e) => updateDraft(idx, { dia_mes: e.target.value ? Number(e.target.value) : null })}
+                    />
                   </div>
                 ) : (
-                  <div className="col-span-2">
+                  <div className="col-span-3">
                     <Label className="text-[10px]">Dias após marco</Label>
-                    <Input type="number" className="h-8" value={p.dias_apos_marco}
-                      onChange={(e) => updateDraft(idx, { dias_apos_marco: Number(e.target.value) })} />
+                    <Input
+                      type="number" min={0} className="h-8"
+                      value={p.dias_apos_marco}
+                      onChange={(e) => updateDraft(idx, { dias_apos_marco: Number(e.target.value || 0) })}
+                    />
                   </div>
                 )}
-                <div className="col-span-3">
-                  <Label className="text-[10px]">Descrição</Label>
-                  <Input className="h-8" value={p.descricao || ""}
-                    onChange={(e) => updateDraft(idx, { descricao: e.target.value })} />
-                </div>
                 <div className="col-span-1 flex justify-end">
-                  <Button type="button" size="icon" variant="ghost" onClick={() => removeDraft(idx)}>
+                  <Button type="button" size="icon" variant="ghost" aria-label="Remover parcela" onClick={() => removeDraft(idx)}>
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -342,8 +343,6 @@ export default function CondicaoPagamentoPicker({
                 <th className="text-left px-3 py-1.5">%</th>
                 <th className="text-right px-3 py-1.5">Valor</th>
                 <th className="text-left px-3 py-1.5">Marco</th>
-                <th className="text-left px-3 py-1.5">Prazo</th>
-                <th className="text-left px-3 py-1.5">Observação</th>
               </tr>
             </thead>
             <tbody>
@@ -352,13 +351,9 @@ export default function CondicaoPagamentoPicker({
                   <td className="px-3 py-1.5">{p.numero}</td>
                   <td className="px-3 py-1.5">{Number(p.percentual).toFixed(2)}%</td>
                   <td className="px-3 py-1.5 text-right font-mono">{brl(Number(p.valor ?? (p.percentual / 100) * total))}</td>
-                  <td className="px-3 py-1.5">{MARCO_LABEL[p.marco as CondPagMarco]}</td>
-                  <td className="px-3 py-1.5 text-muted-foreground">
-                    {p.marco === "mensal_recorrente"
-                      ? `todo dia ${p.dia_mes ?? "—"}`
-                      : p.dias_apos_marco ? `+${p.dias_apos_marco} dias` : "no ato"}
+                  <td className="px-3 py-1.5">
+                    {formatarMarcoParcela(p)}
                   </td>
-                  <td className="px-3 py-1.5 text-muted-foreground">{p.descricao || "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -369,7 +364,7 @@ export default function CondicaoPagamentoPicker({
       <div className="space-y-1.5">
         <Label className="text-xs">Texto complementar (aparece na proposta abaixo das parcelas)</Label>
         <Textarea rows={2} value={complemento} onChange={(e) => setComplemento(e.target.value)}
-          placeholder="Opcional: observação livre sobre pagamento (juros, multa, dados bancários…)" />
+          placeholder="Opcional: texto livre sobre pagamento (juros, multa, dados bancários…)" />
       </div>
 
       {textoPadrao && (
@@ -428,9 +423,7 @@ export default function CondicaoPagamentoPicker({
                         <div key={p.numero} className="flex gap-2">
                           <span className="font-mono w-6">{p.numero})</span>
                           <span className="font-mono">{Number(p.percentual).toFixed(2)}%</span>
-                          <span>· {MARCO_LABEL[p.marco as CondPagMarco]}</span>
-                          {p.dias_apos_marco ? <span>· +{p.dias_apos_marco}d</span> : null}
-                          {p.marco === "mensal_recorrente" && p.dia_mes ? <span>· dia {p.dia_mes}</span> : null}
+                          <span>· {formatarMarcoParcela(p)}</span>
                           {p.valor ? <span className="ml-auto font-mono">{brl(Number(p.valor))}</span> : null}
                         </div>
                       ))}

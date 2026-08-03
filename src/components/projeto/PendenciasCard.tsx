@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Check, Plus, Trash2, Flame, Undo2, ChevronDown, ChevronRight } from "lucide-react";
 import { formatDate } from "@/lib/format";
+import {
+  Pendencia,
+  PendenciaPatch,
+  alternarUrgencia,
+  atualizarPendencia,
+  criarPendencia,
+  listarPendencias,
+  reabrirPendencia,
+  removerPendencia,
+  resolverPendencia,
+} from "@/lib/projetoPendencias";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,19 +29,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-type Pendencia = {
-  id: string;
-  projeto_id: string;
-  titulo: string;
-  responsavel: string | null;
-  prazo: string | null;
-  prioridade: "normal" | "urgente";
-  status: "aberta" | "resolvida";
-  observacao: string | null;
-  resolvida_em: string | null;
-  created_at: string;
-};
-
 export default function PendenciasCard({ projetoId, onCountChange }: { projetoId: string; onCountChange?: (abertas: number, urgentes: number) => void }) {
   const [items, setItems] = useState<Pendencia[]>([]);
   const [novo, setNovo] = useState("");
@@ -42,19 +39,16 @@ export default function PendenciasCard({ projetoId, onCountChange }: { projetoId
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await (supabase as any)
-      .from("projeto_pendencias")
-      .select("*")
-      .eq("projeto_id", projetoId)
-      .order("status", { ascending: true })
-      .order("prioridade", { ascending: false })
-      .order("created_at", { ascending: false });
-    if (error) toast({ title: "Erro", description: error.message, variant: "destructive" });
-    const list = (data || []) as Pendencia[];
-    setItems(list);
-    setLoading(false);
-    const abertas = list.filter(p => p.status === "aberta");
-    onCountChange?.(abertas.length, abertas.filter(p => p.prioridade === "urgente").length);
+    try {
+      const list = await listarPendencias(projetoId);
+      setItems(list);
+      const abertas = list.filter(p => p.status === "aberta");
+      onCountChange?.(abertas.length, abertas.filter(p => p.prioridade === "urgente").length);
+    } catch (e: any) {
+      toast({ title: "Erro", description: e?.message || "Falha ao carregar", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [projetoId]);
@@ -62,25 +56,28 @@ export default function PendenciasCard({ projetoId, onCountChange }: { projetoId
   const adicionar = async () => {
     const titulo = novo.trim();
     if (!titulo) return;
-    const { error } = await (supabase as any).from("projeto_pendencias").insert({ projeto_id: projetoId, titulo });
-    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
-    setNovo("");
-    load();
+    try {
+      await criarPendencia(projetoId, titulo);
+      setNovo("");
+      load();
+    } catch (e: any) {
+      toast({ title: "Erro", description: e?.message || "Falha ao adicionar", variant: "destructive" });
+    }
   };
 
-  const patch = async (id: string, changes: Partial<Pendencia>) => {
-    const { error } = await (supabase as any).from("projeto_pendencias").update(changes).eq("id", id);
-    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
-    load();
+  const patch = async (id: string, changes: PendenciaPatch) => {
+    try {
+      await atualizarPendencia(id, changes);
+      load();
+    } catch (e: any) {
+      toast({ title: "Erro", description: e?.message || "Falha ao atualizar", variant: "destructive" });
+    }
   };
 
-  const resolver = (p: Pendencia) => patch(p.id, { status: "resolvida", resolvida_em: new Date().toISOString() } as any);
-  const reabrir = (p: Pendencia) => patch(p.id, { status: "aberta", resolvida_em: null } as any);
-  const toggleUrgente = (p: Pendencia) => patch(p.id, { prioridade: p.prioridade === "urgente" ? "normal" : "urgente" } as any);
-  const remover = async (p: Pendencia) => {
-    await (supabase as any).from("projeto_pendencias").delete().eq("id", p.id);
-    load();
-  };
+  const resolver = async (p: Pendencia) => { await resolverPendencia(p.id); load(); };
+  const reabrir = async (p: Pendencia) => { await reabrirPendencia(p.id); load(); };
+  const toggleUrgente = async (p: Pendencia) => { await alternarUrgencia(p.id, p.prioridade); load(); };
+  const remover = async (p: Pendencia) => { await removerPendencia(p.id); load(); };
 
   const abertas = items.filter(p => p.status === "aberta");
   const resolvidas = items.filter(p => p.status === "resolvida");
@@ -140,15 +137,15 @@ export default function PendenciasCard({ projetoId, onCountChange }: { projetoId
                         </div>
                         <div>
                           <label className="text-[11px] uppercase text-muted-foreground">Responsável</label>
-                          <Input defaultValue={p.responsavel || ""} onBlur={(e) => e.target.value !== (p.responsavel || "") && patch(p.id, { responsavel: e.target.value || null } as any)} />
+                          <Input defaultValue={p.responsavel || ""} onBlur={(e) => e.target.value !== (p.responsavel || "") && patch(p.id, { responsavel: e.target.value || null })} />
                         </div>
                         <div>
                           <label className="text-[11px] uppercase text-muted-foreground">Prazo</label>
-                          <Input type="date" defaultValue={p.prazo || ""} onBlur={(e) => e.target.value !== (p.prazo || "") && patch(p.id, { prazo: e.target.value || null } as any)} />
+                          <Input type="date" defaultValue={p.prazo || ""} onBlur={(e) => e.target.value !== (p.prazo || "") && patch(p.id, { prazo: e.target.value || null })} />
                         </div>
                         <div className="sm:col-span-3">
                           <label className="text-[11px] uppercase text-muted-foreground">Observação</label>
-                          <Textarea rows={2} defaultValue={p.observacao || ""} onBlur={(e) => e.target.value !== (p.observacao || "") && patch(p.id, { observacao: e.target.value || null } as any)} />
+                          <Textarea rows={2} defaultValue={p.observacao || ""} onBlur={(e) => e.target.value !== (p.observacao || "") && patch(p.id, { observacao: e.target.value || null })} />
                         </div>
                       </div>
                     )}

@@ -7,7 +7,7 @@
 import {
   authAdminOrTecnico, corsHeaders, detectarLayoutImportacaoPsico, decodificarBytes,
   detectarDelimitador, hmacSha256Hex, json, normalizarChaveClassificacao,
-  normalizarData, normalizarOpcao, normalizarTexto, parseCsv, parseXlsx, svcClient,
+  normalizarData, normalizarOpcao, normalizarTexto, parseCsv, parseXlsx, svcClient, userClient,
 } from '../_shared/psico-importacao.ts'
 
 Deno.serve(async (req) => {
@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   const auth = await authAdminOrTecnico(req)
   if (!auth) return json(401, { error: 'unauthorized' })
 
-  let body: { importacao_id?: string }
+  let body: { importacao_id?: string; mapeamento?: Record<string, unknown> }
   try { body = await req.json() } catch { return json(400, { error: 'json_invalido' }) }
   const importacaoId = String(body.importacao_id || '')
   if (!importacaoId) return json(400, { error: 'parametros_obrigatorios' })
@@ -26,6 +26,7 @@ Deno.serve(async (req) => {
   if (!rowSecret) return json(500, { error: 'row_secret_ausente' })
 
   const svc = svcClient()
+  const userSvc = userClient(auth.jwt)
 
   // Busca info da importação (path + questionário)
   const { data: imp, error: impErr } = await svc
@@ -86,8 +87,18 @@ Deno.serve(async (req) => {
   const idxNome = deteccao.idx_nome
   const idxFuncao = layout === 'id_nome_funcao_respostas' ? deteccao.idx_funcao : -1
 
+  // Persiste o mapeamento e faz a transição arquivo_recebido -> mapeamento
+  // antes da RPC de ingestão, que aceita apenas mapeamento/validando.
+  const salvarMapeamento = await userSvc.rpc('psico_importacao_salvar_mapeamento', {
+    p_importacao_id: importacaoId,
+    p_mapeamento: body.mapeamento ?? {},
+  })
+  if (salvarMapeamento.error) {
+    return json(500, { error: 'salvar_mapeamento_falhou', detalhe: salvarMapeamento.error.message })
+  }
+
   // Registra layout detectado antes de qualquer ingestão
-  const regLayout = await svc.rpc('psico_importacao_registrar_layout', {
+  const regLayout = await userSvc.rpc('psico_importacao_registrar_layout', {
     p_importacao_id: importacaoId,
     p_layout: {
       layout,
@@ -211,7 +222,7 @@ Deno.serve(async (req) => {
   // Ingere em lotes de 500
   for (let i = 0; i < staging.length; i += 500) {
     const lote = staging.slice(i, i + 500)
-    const ing = await svc.rpc('psico_importacao_ingerir_staging_bruta', {
+    const ing = await userSvc.rpc('psico_importacao_ingerir_staging_bruta', {
       p_importacao_id: importacaoId,
       p_linhas: lote,
     })
@@ -222,7 +233,7 @@ Deno.serve(async (req) => {
   if (erros.length > 0) {
     for (let i = 0; i < erros.length; i += 500) {
       const lote = erros.slice(i, i + 500)
-      await svc.rpc('psico_importacao_registrar_erros', {
+      await userSvc.rpc('psico_importacao_registrar_erros', {
         p_importacao_id: importacaoId,
         p_erros: lote,
       })
@@ -246,11 +257,13 @@ Deno.serve(async (req) => {
     linhas_ignoradas: linhasIgnoradas,
     perguntas_mapeadas: idxPerguntas.length,
     perguntas_esperadas: numerosValidos.size,
+    data_resposta_minima: dataMin,
+    data_resposta_maxima: dataMax,
     avisos: erros.filter((e: unknown) => (e as { severidade?: string }).severidade === 'aviso').length,
     previa,
   }
 
-  const fin = await svc.rpc('psico_importacao_finalizar_validacao', {
+  const fin = await userSvc.rpc('psico_importacao_finalizar_validacao', {
     p_importacao_id: importacaoId,
     p_total_linhas: totalLinhas,
     p_linhas_validas: linhasValidas,

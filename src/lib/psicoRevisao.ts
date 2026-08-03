@@ -32,6 +32,7 @@ export const PRIORIDADE_COLOR: Record<string, string> = {
   alta: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200",
   media: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200",
   baixa: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
+  monitoramento: "bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100",
 };
 
 export async function getRevisaoAtiva(avaliacaoId: string) {
@@ -77,11 +78,37 @@ export async function atualizarRevisaoFator(id: string, patch: Record<string, an
   return sb.from("psico_revisoes_fatores").update(patch).eq("id", id);
 }
 
+export async function salvarParecerConclusivo(
+  revisaoId: string,
+  parecer: Record<string, string>,
+  origem: "manual" | "editado_ia" | "restaurado" = "manual",
+) {
+  return sb.rpc("psico_salvar_parecer_conclusivo", {
+    p_revisao_id: revisaoId,
+    p_parecer: parecer,
+    p_origem: origem,
+    p_prompt_codigo: null,
+    p_modelo_ia: null,
+  });
+}
+
+export async function getParecerHistorico(revisaoId: string) {
+  const { data, error } = await sb
+    .from("psico_parecer_versoes")
+    .select("id,numero,conteudo,origem,prompt_codigo,modelo_ia,criado_em,criado_por")
+    .eq("revisao_id", revisaoId)
+    .order("numero", { ascending: false });
+  return { data: data || [], error };
+}
+
 export const ERRO_LABEL: Record<string, string> = {
   RESPONSAVEL_TECNICO_AUSENTE: "Responsável técnico não definido",
   CONCLUSAO_INCOMPLETA: "Conclusão técnica insuficiente (mín. 50 caracteres)",
+  PARECER_CONCLUSIVO_INCOMPLETO: "Parecer técnico conclusivo incompleto; preencha as seis seções antes de aprovar",
   LIMITACOES_INCOMPLETAS: "Limitações não descritas (mín. 10 caracteres)",
-  FATOR_SIGNIFICATIVO_SEM_ACAO: "Fator significativo sem ação selecionada no plano",
+  FATOR_SIGNIFICATIVO_SEM_ACAO: "Fator com tratamento “Ação recomendada” sem medida vinculada no plano",
+  PLANO_SEM_ACOES: "Plano de ação sem itens selecionados",
+  VALIDACAO_INDISPONIVEL: "Não foi possível executar a validação técnica. Atualize a página e tente novamente",
 };
 
 export function traduzirErro(cod: string) {

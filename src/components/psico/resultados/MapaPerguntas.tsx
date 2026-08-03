@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,8 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2, Search } from "lucide-react";
-import { getPsicoDashboardResults, ClassificacaoRisco } from "@/lib/psicoResultados";
-import { CLASSIF_LABEL, CLASSIF_SHORT, RISK_COLOR, classifBadgeClass, fmt, fmtPct, AVISO_METODOLOGICO } from "./shared";
+import { getPsicoDashboardResults, ClassificacaoRisco, normalizarClassificacaoRisco } from "@/lib/psicoResultados";
+import { CLASSIF_LABEL, CLASSIF_SHORT, RISK_COLOR, classifBadgeClass, fmt, fmtPct, AvisoMetodologico } from "./shared";
 
 type SortKey = "numero" | "score" | "desfav" | "ac" | "critico";
 
@@ -56,23 +56,12 @@ export default function MapaPerguntas({ avaliacaoId, escopoId }: { avaliacaoId: 
     staleTime: 10 * 60 * 1000,
   });
 
-  const loading = dashQ.isLoading || perguntasQ.isLoading;
-  if (loading) return <Card><CardContent className="py-10 text-center text-sm text-muted-foreground"><Loader2 className="inline h-4 w-4 animate-spin mr-2" />Carregando perguntas…</CardContent></Card>;
-  if (!dashQ.data || dashQ.data.ok === false) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Mapa de perguntas indisponível</AlertTitle>
-        <AlertDescription>{dashQ.data && dashQ.data.ok === false ? dashQ.data.message : "Não foi possível carregar."}</AlertDescription>
-      </Alert>
-    );
-  }
-
-  const dash = dashQ.data.data;
-  const fatoresMap = new Map(dash.fatores.map((f) => [f.fator_id, f]));
-  const enunciados = enunciadosQ.data || {};
-
-  const rows = (() => {
+  const fatoresMap = useMemo(() => {
+    if (!dashQ.data || dashQ.data.ok === false) return new Map();
+    return new Map(dashQ.data.data.fatores.map((f) => [f.fator_id, f]));
+  }, [dashQ.data]);
+  const rows = useMemo(() => {
+    const enunciados = enunciadosQ.data || {};
     const raw = (perguntasQ.data || []).map((p: any) => {
       const fat = p.fator_id ? fatoresMap.get(p.fator_id) : null;
       const enun = enunciados[p.pergunta_id];
@@ -82,7 +71,7 @@ export default function MapaPerguntas({ avaliacaoId, escopoId }: { avaliacaoId: 
         fator_id: p.fator_id,
         fator_codigo: fat?.fator_codigo ?? "—",
         fator_nome: fat?.fator_nome ?? "—",
-        classificacao: p.classificacao_media as ClassificacaoRisco,
+        classificacao: normalizarClassificacaoRisco(p.classificacao_media),
         score: Number(p.score_medio),
         desfav: Number(p.percentual_desfavoravel),
         ac: Number(p.percentual_alto_critico),
@@ -109,7 +98,21 @@ export default function MapaPerguntas({ avaliacaoId, escopoId }: { avaliacaoId: 
       return v * dir;
     });
     return filtered;
-  })();
+  }, [perguntasQ.data, enunciadosQ.data, fatoresMap, filtroFator, filtroClass, busca, sort, asc]);
+
+  const loading = dashQ.isLoading || perguntasQ.isLoading;
+  if (loading) return <Card><CardContent className="py-10 text-center text-sm text-muted-foreground"><Loader2 className="inline h-4 w-4 animate-spin mr-2" />Carregando perguntas…</CardContent></Card>;
+  if (!dashQ.data || dashQ.data.ok === false) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Mapa de perguntas indisponível</AlertTitle>
+        <AlertDescription>{dashQ.data && dashQ.data.ok === false ? dashQ.data.message : "Não foi possível carregar."}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  const dash = dashQ.data.data;
 
   const cellBg = (r: typeof rows[number]): string => {
     if (colorMode === "classificacao") return RISK_COLOR[r.classificacao];
@@ -228,7 +231,7 @@ export default function MapaPerguntas({ avaliacaoId, escopoId }: { avaliacaoId: 
               </tbody>
             </table>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-3">{AVISO_METODOLOGICO}</p>
+          <AvisoMetodologico className="text-[11px] text-muted-foreground mt-3" />
         </CardContent>
       </Card>
     </div>

@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, Eraser, FileSignature, ShieldCheck, Loader2 } from "lucide-react";
 import logoNavy from "@/assets/hse-logo-navy.png";
-import { brl } from "@/lib/format";
+import { brlRaw } from "@/lib/format";
 
 type Aceite = {
   id: string;
@@ -69,16 +69,8 @@ export default function PropostaAceitePublica() {
     setProposta(d.proposta);
     setCliente(d.cliente);
     setItens(d.itens || []);
-    // Coligadas (multi-CNPJ) — leitura pública autorizada pela policy do proposal_clients
-    if (d.proposta?.id) {
-      const { data: pcs } = await supabase
-        .from("proposal_clients")
-        .select("id, papel, ordem, observacao, clients(razao_social, nome_fantasia, cnpj_cpf, cidade, uf)")
-        .eq("proposal_id", d.proposta.id)
-        .eq("papel", "coligada")
-        .order("ordem", { ascending: true });
-      setColigadas(pcs || []);
-    }
+    // Coligadas (multi-CNPJ) — devolvidas pela própria RPC pública (valida token)
+    setColigadas(d.coligadas || []);
     setNome(d.aceite?.aceito_por_nome || d.cliente?.solicitante || "");
     setEmail(d.aceite?.aceito_por_email || d.cliente?.email || "");
     setCpf(d.aceite?.aceito_por_cpf || "");
@@ -172,20 +164,20 @@ export default function PropostaAceitePublica() {
     const meta = await coletarMetadados();
 
     setSaving(true);
-    const { error } = await supabase.rpc("registrar_proposta_aceite", {
-      p_token: aceite.token,
-      p_status: "aceito",
-      p_nome: nome.trim(),
-      p_email: email.trim(),
-      p_cpf: cpf.trim() || null,
-      p_cargo: cargo.trim() || null,
-      p_assinatura_base64: assinaturaBase64,
-      p_observacoes: obs.trim() || null,
-      p_ip: meta.ip,
-      p_user_agent: meta.user_agent,
+    const { data, error } = await supabase.rpc("registrar_aceite_proposta", {
+      _token: aceite.token,
+      _nome: nome.trim(),
+      _email: email.trim(),
+      _cpf: cpf.trim() || null,
+      _cargo: cargo.trim() || null,
+      _observacoes: obs.trim() || null,
+      _assinatura_base64: assinaturaBase64,
+      _ip: meta.ip,
+      _user_agent: meta.user_agent,
     });
     setSaving(false);
     if (error) return toast.error("Erro ao registrar aceite: " + error.message);
+    if ((data as any)?.error) return toast.error("Não foi possível registrar o aceite (" + (data as any).error + ").");
     toast.success("Aceite registrado com sucesso!");
     carregar();
   }
@@ -196,29 +188,29 @@ export default function PropostaAceitePublica() {
     if (!motivoRecusa.trim()) return toast.error("Informe o motivo da recusa.");
     const meta = await coletarMetadados();
     setSaving(true);
-    const { error } = await supabase.rpc("registrar_proposta_aceite", {
-      p_token: aceite.token,
-      p_status: "recusado",
-      p_nome: nome.trim(),
-      p_email: email.trim() || null,
-      p_motivo_recusa: motivoRecusa.trim(),
-      p_ip: meta.ip,
-      p_user_agent: meta.user_agent,
+    const { data, error } = await supabase.rpc("registrar_recusa_proposta", {
+      _token: aceite.token,
+      _nome: nome.trim(),
+      _email: email.trim() || null,
+      _motivo: motivoRecusa.trim(),
+      _ip: meta.ip,
+      _user_agent: meta.user_agent,
     });
     setSaving(false);
     if (error) return toast.error("Erro ao registrar recusa: " + error.message);
+    if ((data as any)?.error) return toast.error("Não foi possível registrar a recusa (" + (data as any).error + ").");
     toast.success("Recusa registrada.");
     carregar();
   }
 
   if (loading) return (
-    <div className="min-h-screen grid place-items-center bg-slate-50">
+    <div className="min-h-dvh grid place-items-center bg-slate-50">
       <div className="flex items-center gap-2 text-slate-600"><Loader2 className="h-4 w-4 animate-spin" /> Carregando…</div>
     </div>
   );
 
   if (!aceite || !proposta) return (
-    <div className="min-h-screen grid place-items-center bg-slate-50 p-6">
+    <div className="min-h-dvh grid place-items-center bg-slate-50 p-6">
       <Card className="max-w-md w-full"><CardContent className="p-6 text-center">
         <XCircle className="h-10 w-10 text-destructive mx-auto mb-2" />
         <div className="font-semibold">Link inválido ou expirado</div>
@@ -232,7 +224,7 @@ export default function PropostaAceitePublica() {
   const cancelado = aceite.status === "cancelado";
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-dvh bg-slate-50">
       {/* Header */}
       <div className="bg-white border-b">
         <div className="max-w-4xl mx-auto p-4 flex items-center justify-between gap-4">
@@ -242,6 +234,7 @@ export default function PropostaAceitePublica() {
       </div>
 
       <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
+        <h1 className="sr-only">Aceite de Proposta Comercial — HSE Consulting</h1>
         {/* Resumo da proposta */}
         <Card>
           <CardHeader>
@@ -255,7 +248,7 @@ export default function PropostaAceitePublica() {
               </div>
               <div className="text-right">
                 <div className="text-xs text-muted-foreground">Valor total</div>
-                <div className="text-2xl font-bold">{brl(proposta.valor_total || 0)}</div>
+                <div className="text-2xl font-bold">{brlRaw(proposta.valor_total || 0)}</div>
                 {proposta.revisao_atual ? <div className="text-xs text-muted-foreground">Revisão {String(proposta.revisao_atual).padStart(2, "0")}</div> : null}
               </div>
             </CardTitle>
@@ -267,7 +260,7 @@ export default function PropostaAceitePublica() {
               <InfoRow label="Emissão" value={proposta.data_emissao ? new Date(proposta.data_emissao).toLocaleDateString("pt-BR") : "—"} />
               <InfoRow label="Validade" value={proposta.validade ? new Date(proposta.validade).toLocaleDateString("pt-BR") : "—"} />
               <InfoRow label="Condições de pagamento" value={proposta.condicoes_pagamento} full />
-              {proposta.outras_condicoes && <InfoRow label="Outras condições" value={proposta.outras_condicoes} full />}
+              {proposta.outras_condicoes && <InfoRow label="Premissas e Condições do Serviço" value={proposta.outras_condicoes} full />}
             </div>
 
             {coligadas.length > 0 && (
@@ -314,7 +307,7 @@ export default function PropostaAceitePublica() {
                         <td className="p-2">{it.numero_item ?? i + 1}</td>
                         <td className="p-2">{it.nome}</td>
                         <td className="p-2 text-right">{it.quantidade} {it.unidade || ""}</td>
-                        <td className="p-2 text-right font-medium">{brl(it.valor_total || 0)}</td>
+                        <td className="p-2 text-right font-medium">{brlRaw(it.valor_total || 0)}</td>
                       </tr>
                     ))}
                   </tbody>

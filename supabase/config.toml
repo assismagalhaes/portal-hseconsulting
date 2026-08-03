@@ -29,3 +29,36 @@ verify_jwt = true
 
 [functions.psico-enviar-respostas]
 verify_jwt = false
+
+[functions.psico-gerar-parecer]
+verify_jwt = true
+
+[functions.psico-assinatura-upload]
+verify_jwt = true
+
+[functions.psico-individual-invite-token]
+verify_jwt = true
+
+[functions.psico-individual-validar-convite]
+verify_jwt = false
+
+[functions.psico-individual-enviar-respostas]
+verify_jwt = false
+
+[functions.psico-individual-esclarecimento-validar]
+verify_jwt = false
+
+[functions.psico-individual-esclarecimento-enviar]
+verify_jwt = false
+
+[functions.psico-individual-processar]
+verify_jwt = true
+
+[functions.psico-individual-sugerir-plano]
+verify_jwt = true
+
+[functions.psico-gerar-parecer-individual]
+verify_jwt = true
+
+[functions.psico-gerar-relatorio-individual]
+verify_jwt = true

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Copy, Link2, Plus, ShieldCheck, XCircle, Trash2, Eye, Mail, Loader2 } from "lucide-react";
-import { brl } from "@/lib/format";
+import { brlRaw } from "@/lib/format";
 
 type Aceite = {
   id: string;
@@ -171,7 +171,7 @@ export default function AceiteLinkCard({
           destinatarioNome: emailNome.trim() || "",
           propostaNumero: proposalNumero || "",
           propostaTitulo: proposalTitulo || "",
-          valorTotal: valorTotal != null ? brl(valorTotal) : "",
+          valorTotal: valorTotal != null ? brlRaw(valorTotal) : "",
           validade: validade ? new Date(validade).toLocaleDateString("pt-BR") : "",
           linkAceite: link,
           remetenteNome: "Equipe HSE Consulting",
