@@ -36,5 +36,7 @@ export function validadeDocumento(dataVenc?: string | null): { cor: string; labe
 }
 
 export async function registrarLogCliente(acao: string, detalhe?: string) {
-  try { await supabase.rpc("cliente_log", { _acao: acao, _detalhe: detalhe ?? "" }); } catch {}
+  try { await supabase.rpc("cliente_log", { _acao: acao, _detalhe: detalhe ?? "" }); } catch {
+    // Client activity logging is best-effort and must not block the caller.
+  }
 }

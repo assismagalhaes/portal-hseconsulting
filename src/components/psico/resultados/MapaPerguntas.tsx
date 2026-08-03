@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -72,7 +72,7 @@ export default function MapaPerguntas({ avaliacaoId, escopoId }: { avaliacaoId: 
   const fatoresMap = new Map(dash.fatores.map((f) => [f.fator_id, f]));
   const enunciados = enunciadosQ.data || {};
 
-  const rows = useMemo(() => {
+  const rows = (() => {
     const raw = (perguntasQ.data || []).map((p: any) => {
       const fat = p.fator_id ? fatoresMap.get(p.fator_id) : null;
       const enun = enunciados[p.pergunta_id];
@@ -109,7 +109,7 @@ export default function MapaPerguntas({ avaliacaoId, escopoId }: { avaliacaoId: 
       return v * dir;
     });
     return filtered;
-  }, [perguntasQ.data, enunciados, fatoresMap, filtroFator, filtroClass, busca, sort, asc]);
+  })();
 
   const cellBg = (r: typeof rows[number]): string => {
     if (colorMode === "classificacao") return RISK_COLOR[r.classificacao];

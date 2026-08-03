@@ -59,7 +59,7 @@ export default function DocumentosRecebidos() {
   const baixar = async (a: any) => {
     if (!a.arquivo_path) return;
     const { data } = await supabase.storage.from("documentos-tecnicos").createSignedUrl(a.arquivo_path, 60);
-    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+    if (data?.signedUrl) window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   };
 
   const remover = async (a: any) => {

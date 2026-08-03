@@ -172,20 +172,18 @@ export default function PropostaAceitePublica() {
     const meta = await coletarMetadados();
 
     setSaving(true);
-    const { error } = await supabase
-      .from("proposal_aceites")
-      .update({
-        status: "aceito",
-        aceito_por_nome: nome.trim(),
-        aceito_por_email: email.trim(),
-        aceito_por_cpf: cpf.trim() || null,
-        aceito_por_cargo: cargo.trim() || null,
-        observacoes: obs.trim() || null,
-        assinatura_base64: assinaturaBase64,
-        ip: meta.ip,
-        user_agent: meta.user_agent,
-      })
-      .eq("token", aceite.token);
+    const { error } = await supabase.rpc("registrar_proposta_aceite", {
+      p_token: aceite.token,
+      p_status: "aceito",
+      p_nome: nome.trim(),
+      p_email: email.trim(),
+      p_cpf: cpf.trim() || null,
+      p_cargo: cargo.trim() || null,
+      p_assinatura_base64: assinaturaBase64,
+      p_observacoes: obs.trim() || null,
+      p_ip: meta.ip,
+      p_user_agent: meta.user_agent,
+    });
     setSaving(false);
     if (error) return toast.error("Erro ao registrar aceite: " + error.message);
     toast.success("Aceite registrado com sucesso!");
@@ -198,17 +196,15 @@ export default function PropostaAceitePublica() {
     if (!motivoRecusa.trim()) return toast.error("Informe o motivo da recusa.");
     const meta = await coletarMetadados();
     setSaving(true);
-    const { error } = await supabase
-      .from("proposal_aceites")
-      .update({
-        status: "recusado",
-        aceito_por_nome: nome.trim(),
-        aceito_por_email: email.trim() || null,
-        motivo_recusa: motivoRecusa.trim(),
-        ip: meta.ip,
-        user_agent: meta.user_agent,
-      })
-      .eq("token", aceite.token);
+    const { error } = await supabase.rpc("registrar_proposta_aceite", {
+      p_token: aceite.token,
+      p_status: "recusado",
+      p_nome: nome.trim(),
+      p_email: email.trim() || null,
+      p_motivo_recusa: motivoRecusa.trim(),
+      p_ip: meta.ip,
+      p_user_agent: meta.user_agent,
+    });
     setSaving(false);
     if (error) return toast.error("Erro ao registrar recusa: " + error.message);
     toast.success("Recusa registrada.");

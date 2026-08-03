@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import logoNavy from "@/assets/hse-logo-navy.png";
-import { tipoLabel, statusLabel, resolverVariaveis, montarContexto } from "@/lib/documentos";
+import { tipoLabel, statusLabel, resolverVariaveis, montarContexto, sanitizarHtmlDocumento } from "@/lib/documentos";
 
 export default function DocumentoPDF() {
   const { id } = useParams();
@@ -47,7 +47,7 @@ export default function DocumentoPDF() {
 
   const ctx = montarContexto({ documento: doc, cliente, proposta, execucao, os, profissional: prof });
   const htmlSrc: string = (doc.conteudo_json as any)?.html || "";
-  const htmlResolvido = resolverVariaveis(htmlSrc, ctx);
+  const htmlResolvido = sanitizarHtmlDocumento(resolverVariaveis(htmlSrc, ctx));
 
   return (
     <div className="doc-pdf">

@@ -630,7 +630,7 @@ function DocumentosCard({ osId, documentos, onChange }: any) {
   const download = async (d: any) => {
     if (!d.anexo_path) return;
     const { data } = await supabase.storage.from("os-documentos").createSignedUrl(d.anexo_path, 300);
-    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+    if (data?.signedUrl) window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   };
   const del = async (d: any) => {
     if (d.anexo_path) await supabase.storage.from("os-documentos").remove([d.anexo_path]);
