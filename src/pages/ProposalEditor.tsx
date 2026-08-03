@@ -134,6 +134,7 @@ export default function ProposalEditor() {
   /* ---------------- Cliente (auto-cadastro / upsert) ---------------- */
   async function persistClient(c: any) {
     if (!c) return;
+    if (saving) return;
     setSaving(true);
     let saved = c;
     if (c.id) {
@@ -149,7 +150,9 @@ export default function ProposalEditor() {
       // Tentar localizar pelo CNPJ — reutilizar / atualizar campos vazios
       let existing: any = null;
       if (c.cnpj_cpf) {
-        const { data } = await supabase.from("clients").select("*").eq("cnpj_cpf", c.cnpj_cpf).maybeSingle();
+        const clean = String(c.cnpj_cpf).replace(/\D/g, "");
+        const variants = Array.from(new Set([String(c.cnpj_cpf).trim(), clean]));
+        const { data } = await supabase.from("clients").select("*").in("cnpj_cpf", variants).order("created_at", { ascending: true }).limit(1);
         existing = data;
       }
       if (existing) {
@@ -550,7 +553,7 @@ export default function ProposalEditor() {
               </TabsList>
 
               <TabsContent value="cliente" className="mt-4">
-                <ClientCard client={client} setClient={setClient} onSave={persistClient} />
+                <ClientCard client={client} setClient={setClient} onSave={persistClient} saving={saving} />
               </TabsContent>
 
               <TabsContent value="empresas" className="mt-4">
@@ -838,7 +841,7 @@ function ResumoValor({ total, revisions }: { total: number; revisions: any[] }) 
 }
 
 /* ---------------- Cliente Card ---------------- */
-function ClientCard({ client, setClient, onSave }: any) {
+function ClientCard({ client, setClient, onSave, saving }: any) {
   const c = client || {};
   const set = (patch:any) => setClient({ ...c, ...patch });
   return (
@@ -877,7 +880,7 @@ function ClientCard({ client, setClient, onSave }: any) {
         <p className="text-xs text-muted-foreground">
           {c.id ? "Atualiza o cadastro existente." : "Será cadastrado automaticamente ao salvar (identificador: CNPJ/CPF)."}
         </p>
-        <Button onClick={()=>onSave(c)}><Save className="h-4 w-4 mr-1" /> Salvar cliente</Button>
+        <Button onClick={()=>onSave(c)} disabled={saving}><Save className="h-4 w-4 mr-1" /> {saving ? "Salvando…" : "Salvar cliente"}</Button>
       </div>
     </CardContent></Card>
   );

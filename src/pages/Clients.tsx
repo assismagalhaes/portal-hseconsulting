@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { formatCnpjCpf } from "@/lib/format";
 import { toast } from "sonner";
 import CnpjLookupField from "@/components/CnpjLookupField";
@@ -25,6 +25,7 @@ export default function Clients() {
   const [groupOpen, setGroupOpen] = useState(false);
   const [groupNome, setGroupNome] = useState("");
   const [creatingGroup, setCreatingGroup] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => { document.title = "Clientes | Portal HSE Consulting"; load(); }, []);
   async function load() {
@@ -56,15 +57,35 @@ export default function Clients() {
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (saving) return;
+    setSaving(true);
     const payload = { ...form, qtd_funcionarios: Number(form.qtd_funcionarios) || 0 };
     // remover campo virtual injetado pelo select embed
     delete (payload as any).client_groups;
-    const { error } = editing
+    if (!editing && form.cnpj_cpf?.trim()) {
+      const digits = form.cnpj_cpf.replace(/\D/g, "");
+      const { data: existing } = await supabase.from("clients").select("id,razao_social,nome_fantasia").in("cnpj_cpf", Array.from(new Set([form.cnpj_cpf.trim(), digits]))).limit(1);
+      if (existing?.[0]) {
+        setSaving(false);
+        toast.error(`Já existe um cliente cadastrado com este CNPJ/CPF: ${existing[0].razao_social || existing[0].nome_fantasia}.`);
+        return;
+      }
+    }
+    const result = editing
       ? await supabase.from("clients").update(payload).eq("id", editing.id)
       : await supabase.from("clients").insert(payload);
-    if (error) return toast.error(error.message);
+    setSaving(false);
+    if (result.error) return toast.error(result.error.code === "23505" ? "Já existe um cliente com este CNPJ/CPF." : result.error.message);
     toast.success(editing ? "Cliente atualizado" : "Cliente criado");
     setOpen(false); load();
+  }
+
+  async function excluirCliente(c: any) {
+    if (!window.confirm(`Excluir o cadastro de “${c.razao_social || c.nome_fantasia}”? Esta ação não pode ser desfeita.`)) return;
+    const { error } = await supabase.from("clients").delete().eq("id", c.id);
+    if (error) return toast.error("Não foi possível excluir: o cliente possui registros vinculados. Desvincule-os primeiro.");
+    toast.success("Cadastro excluído.");
+    load();
   }
 
   const filtered = list.filter(c => {
@@ -128,7 +149,7 @@ export default function Clients() {
                 </div>
                 <div className="sm:col-span-2 flex justify-end gap-2 pt-2">
                   <Button type="button" variant="outline" onClick={()=>setOpen(false)}>Cancelar</Button>
-                  <Button type="submit">Salvar</Button>
+                  <Button type="submit" disabled={saving}>{saving ? "Salvando…" : "Salvar"}</Button>
                 </div>
               </form>
             </DialogContent>
@@ -176,7 +197,10 @@ export default function Clients() {
                   <td className="px-4 py-3">{[c.cidade, c.uf].filter(Boolean).join(" / ") || "—"}</td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">{c.client_groups?.nome || "—"}</td>
                   <td className="px-4 py-3">{c.qtd_funcionarios || 0}</td>
-                  <td className="px-4 py-3 text-right"><Button variant="ghost" size="sm" onClick={()=>openEdit(c)}>Editar</Button></td>
+                  <td className="px-4 py-3 text-right">
+                    <Button variant="ghost" size="sm" onClick={()=>openEdit(c)}>Editar</Button>
+                    <Button variant="ghost" size="sm" className="text-danger" onClick={()=>excluirCliente(c)} aria-label={`Excluir ${c.razao_social}`}><Trash2 className="h-4 w-4" /></Button>
+                  </td>
                 </tr>
               ))}
               {filtered.length === 0 && <tr><td colSpan={6} className="text-center py-10 text-muted-foreground">Nenhum cliente.</td></tr>}
