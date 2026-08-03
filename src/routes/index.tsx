@@ -1,10 +1,9 @@
-import { AppRoutes } from "./routes";
-
-export default function App() {
+export const AppRoutes = () => {
   return (
-    <div>
-      <AppRoutes />
-      Execute esta instrucao no projeto: estamos funcionando?
+    <div className="p-4 border border-dashed border-primary/50 rounded-lg bg-primary/5 my-4">
+      <p className="font-medium text-primary">
+        Execute esta instrucao no projeto: estamos funcionando?
+      </p>
     </div>
   );
-}
+};
