@@ -10425,6 +10425,22 @@ export type Database = {
         }[]
       }
       get_proposta_para_aceite: { Args: { _token: string }; Returns: Json }
+      registrar_proposta_aceite: {
+        Args: {
+          p_assinatura_base64?: string | null
+          p_cargo?: string | null
+          p_cpf?: string | null
+          p_email?: string | null
+          p_ip?: string | null
+          p_motivo_recusa?: string | null
+          p_nome: string
+          p_observacoes?: string | null
+          p_status: string
+          p_token: string
+          p_user_agent?: string | null
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

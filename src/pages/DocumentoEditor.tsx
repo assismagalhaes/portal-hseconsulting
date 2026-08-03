@@ -137,7 +137,7 @@ export default function DocumentoEditor() {
 
   const baixarAnexo = async (a: any) => {
     const { data } = await supabase.storage.from("documentos-tecnicos").createSignedUrl(a.arquivo_path, 60);
-    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+    if (data?.signedUrl) window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   };
 
   if (!doc) return <div className="p-8 text-muted-foreground">Carregando...</div>;

@@ -73,8 +73,33 @@ export function resolverVariaveis(texto: string, ctx: Record<string, any>): stri
   if (!texto) return "";
   return texto.replace(/\{\{\s*([a-z0-9_]+)\s*\}\}/gi, (_, k) => {
     const v = ctx[k];
-    return v === undefined || v === null || v === "" ? `{{${k}}}` : String(v);
+    return v === undefined || v === null || v === "" ? `{{${k}}}` : escapeHtml(String(v));
   });
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]!));
+}
+
+/** Removes executable markup before a document is inserted as HTML. */
+export function sanitizarHtmlDocumento(html: string): string {
+  const document = new DOMParser().parseFromString(html, 'text/html');
+  const allowedTags = new Set(['P', 'BR', 'STRONG', 'EM', 'U', 'S', 'H1', 'H2', 'H3', 'H4', 'UL', 'OL', 'LI', 'TABLE', 'THEAD', 'TBODY', 'TR', 'TH', 'TD', 'IMG', 'A', 'SPAN', 'DIV', 'HR']);
+  const allowedAttributes = new Set(['href', 'src', 'alt', 'title', 'colspan', 'rowspan']);
+
+  for (const element of Array.from(document.body.querySelectorAll('*'))) {
+    if (!allowedTags.has(element.tagName)) {
+      element.replaceWith(...Array.from(element.childNodes));
+      continue;
+    }
+    for (const attribute of Array.from(element.attributes)) {
+      const name = attribute.name.toLowerCase();
+      const value = attribute.value.trim();
+      const unsafeUrl = (name === 'href' || name === 'src') && !/^(https?:|mailto:|data:image\/)/i.test(value);
+      if (!allowedAttributes.has(name) || name.startsWith('on') || unsafeUrl) element.removeAttribute(attribute.name);
+    }
+  }
+  return document.body.innerHTML;
 }
 
 /** Monta contexto de variáveis a partir das entidades vinculadas. */

@@ -442,7 +442,7 @@ function AnexosTab({ items, execId, userId, onChange }: any) {
   const baixar = async (a: any) => {
     const { data, error } = await supabase.storage.from("execucao-anexos").createSignedUrl(a.storage_path, 60);
     if (error) return toast.error(error.message);
-    window.open(data.signedUrl, "_blank");
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   };
   const del = async (a: any) => {
     await supabase.storage.from("execucao-anexos").remove([a.storage_path]);

@@ -1,5 +1,6 @@
 // Edge function: gera alertas inteligentes cruzando dados de propostas, OS, documentos, CRM e financeiro.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireInternalUser } from "../_shared/require-internal.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,12 +9,13 @@ const corsHeaders = {
 };
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   try {
+    if (!(await requireInternalUser(req))) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     const auth = req.headers.get("Authorization") ?? "";
     const user = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { global: { headers: { Authorization: auth } } });
     const { data: { user: u } } = await user.auth.getUser();

@@ -433,9 +433,10 @@ export async function buscarClienteExistentePorCnpj(cnpj: string): Promise<any |
   const { data } = await supabase
     .from("clients")
     .select("*")
-    .or(`cnpj_cpf.eq.${formatted},cnpj_cpf.eq.${clean}`)
-    .maybeSingle();
-  return data || null;
+    .in("cnpj_cpf", Array.from(new Set([formatted, clean])))
+    .order("created_at", { ascending: true })
+    .limit(1);
+  return data?.[0] || null;
 }
 
 /**

@@ -23,7 +23,7 @@ export default function ClienteDocumentos() {
     const { data, error } = await supabase.storage.from("documentos-tecnicos").createSignedUrl(d.arquivo_final_path, 60);
     if (error) return toast.error(error.message);
     await registrarLogCliente("documento_baixado", d.numero);
-    window.open(data.signedUrl, "_blank");
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   }
 
   return (
