@@ -1,6 +1,6 @@
 # Auditoria de permissões do módulo psicossocial
 
-Data: 05/08/2026  
+Data: 05/08/2026
 Escopo: fluxo operacional das avaliações psicossociais coletivas e integrações compartilhadas com a modalidade individual.
 
 ## Modelo de acesso esperado
