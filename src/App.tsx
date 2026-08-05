@@ -88,6 +88,7 @@ import ClientePendencias from "./pages/cliente/ClientePendencias";
 import ClienteComunicacoes from "./pages/cliente/ClienteComunicacoes";
 import ClientePerfil from "./pages/cliente/ClientePerfil";
 import RelatorioConsumo from "./pages/RelatorioConsumo";
+import AppRoutes from "./routes/index";
 import NotFound from "./pages/NotFound.tsx";
 import RequireRole from "./components/layout/RequireRole";
 import { useAuth } from "@/lib/auth";
@@ -129,7 +130,7 @@ const App = () => (
               <Route path="/cliente/perfil" element={<ClientePerfil />} />
             </Route>
             <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
-              <Route path="/" element={<DashboardSwitch />} />
+              <Route path="/" element={<AppRoutes />} />
               <Route path="/meu-perfil" element={<MeuPerfil />} />
               <Route path="/usuarios" element={<RequireRole allow="admin"><Usuarios /></RequireRole>} />
               <Route path="/usuarios/logs" element={<RequireRole allow="admin"><UsuariosLogs /></RequireRole>} />
