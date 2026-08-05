@@ -70,6 +70,7 @@ export function ValidacaoResumo({
               <div><span className="text-muted-foreground">Segmentação por função:</span> {validarResp.resumo.segmentacao_funcao_disponivel ? "Disponível (≥3)" : "Indisponível"}</div>
               <div><span className="text-muted-foreground">Delimitador:</span> {validarResp.resumo.delimitador || "—"}</div>
               <div><span className="text-muted-foreground">Codificação:</span> {validarResp.resumo.codificacao}{validarResp.resumo.codificacao_corrigida ? " (corrigida)" : ""}</div>
+              <div><span className="text-muted-foreground">CSV encapsulado:</span> {validarResp.resumo.encapsulamento_recuperado ? "Recuperado automaticamente" : "Não"}</div>
             </div>
             {validarResp.resumo.nome_presente && (
               <label className="flex items-start gap-2 text-xs mt-2">

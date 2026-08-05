@@ -4,7 +4,7 @@
 // Nenhum dado pessoal é persistido nesta etapa — o arquivo bruto vive apenas
 // no bucket privado até o commit ou cancelamento.
 import {
-  authAdminOrTecnico, corsHeaders, json, parseCsv, parseXlsx, sha256Hex, svcClient, userClient,
+  authAdminOrTecnico, corsHeaders, json, parseCsvComRecuperacao, parseXlsx, sha256Hex, svcClient, userClient,
 } from '../_shared/psico-importacao.ts'
 
 const MAX_BYTES = 25 * 1024 * 1024
@@ -82,10 +82,13 @@ Deno.serve(async (req) => {
   // Extrai apenas cabeçalhos + amostra (10 primeiras linhas) — sem persistir dados
   let cabecalhos: string[] = []
   let amostra: string[][] = []
+  let encapsulamentoRecuperado = false
   try {
     if (formato === 'csv') {
       const text = new TextDecoder('utf-8').decode(bytes)
-      const rows = parseCsv(text)
+      const parsed = parseCsvComRecuperacao(text)
+      const rows = parsed.rows
+      encapsulamentoRecuperado = parsed.encapsulamento_recuperado
       cabecalhos = (rows[0] || []).map(h => h.trim())
       amostra = rows.slice(1, 11)
     } else {
@@ -104,5 +107,6 @@ Deno.serve(async (req) => {
     tamanho_bytes: bytes.length,
     cabecalhos,
     amostra,
+    encapsulamento_recuperado: encapsulamentoRecuperado,
   })
 })

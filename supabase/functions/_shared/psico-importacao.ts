@@ -5,7 +5,9 @@
 // - Parser CSV simples + wrapper XLSX
 // - Normalização de opções de resposta (nunca/raramente/às vezes/frequentemente/sempre)
 import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2'
+import { detectarDelimitador as detectarDelimitadorCsv, parseCsv as parseCsvBase } from './psico-importacao-csv.ts'
 export { normalizarData } from './psico-importacao-dates.ts'
+export { parseCsvComRecuperacao } from './psico-importacao-csv.ts'
 
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -249,44 +251,12 @@ export function mascararNome(nome: string | null | undefined): string {
 
 // ---------- Detecção de delimitador (para CSV) ----------
 export function detectarDelimitador(text: string): ',' | ';' | '\t' {
-  const linha = text.split(/\r?\n/).find(l => l.trim().length > 0) || ''
-  const v = (linha.match(/,/g) || []).length
-  const p = (linha.match(/;/g) || []).length
-  const t = (linha.match(/\t/g) || []).length
-  if (t > v && t > p) return '\t'
-  if (p > v) return ';'
-  return ','
+  return detectarDelimitadorCsv(text)
 }
 
 // ---------- CSV parser (RFC 4180 simplificado, aceita ; ou ,) ----------
 export function parseCsv(text: string, delimitador?: string): string[][] {
-  // Detecta separador na 1ª linha não vazia se não fornecido
-  const sep = delimitador ?? detectarDelimitador(text)
-
-  const rows: string[][] = []
-  let field = ''
-  let row: string[] = []
-  let inQuotes = false
-  const n = text.length
-  for (let i = 0; i < n; i++) {
-    const c = text[i]
-    if (inQuotes) {
-      if (c === '"') {
-        if (text[i + 1] === '"') { field += '"'; i++ }
-        else inQuotes = false
-      } else field += c
-    } else {
-      if (c === '"') inQuotes = true
-      else if (c === sep) { row.push(field); field = '' }
-      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = '' }
-      else if (c === '\r') { /* ignora */ }
-      else field += c
-    }
-  }
-  if (field.length || row.length) { row.push(field); rows.push(row) }
-  // remove linhas 100% vazias no final
-  while (rows.length && rows[rows.length - 1].every(x => x.trim() === '')) rows.pop()
-  return rows
+  return parseCsvBase(text, delimitador)
 }
 
 // ---------- XLSX (lazy import) ----------

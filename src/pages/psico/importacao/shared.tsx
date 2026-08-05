@@ -13,6 +13,7 @@ export type UploadResp = {
   importacao_id: string; formato: "csv" | "xlsx";
   hash_sha256: string; tamanho_bytes: number;
   cabecalhos: string[]; amostra: string[][];
+  encapsulamento_recuperado?: boolean;
 };
 export type ValidarResp = { ok: true; resumo: any; erros_registrados: number };
 

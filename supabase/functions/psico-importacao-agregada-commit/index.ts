@@ -3,7 +3,7 @@
 // cria/atualiza a avaliação histórica e grava psico_dados_agregados_perguntas
 // via RPC transacional. Nenhuma resposta artificial é criada.
 import {
-  authAdminOrTecnico, corsHeaders, json, parseCsv, parseXlsx, svcClient, userClient,
+  authAdminOrTecnico, corsHeaders, json, parseCsvComRecuperacao, parseXlsx, svcClient, userClient,
 } from '../_shared/psico-importacao.ts'
 
 const CANON: Record<string, string> = {
@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
   let rows: string[][]
   try {
     rows = imp.formato === 'csv'
-      ? parseCsv(new TextDecoder('utf-8').decode(bytes))
+      ? parseCsvComRecuperacao(new TextDecoder('utf-8').decode(bytes)).rows
       : await parseXlsx(bytes)
   } catch (e) { return json(400, { error: 'parse_falhou', detalhe: (e as Error).message }) }
   if (rows.length < 2) return json(400, { error: 'arquivo_sem_dados' })

@@ -7,7 +7,7 @@
 import {
   authAdminOrTecnico, corsHeaders, detectarLayoutImportacaoPsico, decodificarBytes,
   detectarDelimitador, hmacSha256Hex, json, normalizarChaveClassificacao,
-  normalizarData, normalizarOpcao, normalizarTexto, parseCsv, parseXlsx, svcClient, userClient,
+  normalizarData, normalizarOpcao, normalizarTexto, parseCsvComRecuperacao, parseXlsx, svcClient, userClient,
 } from '../_shared/psico-importacao.ts'
 
 Deno.serve(async (req) => {
@@ -52,13 +52,17 @@ Deno.serve(async (req) => {
   let codificacao = 'utf-8'
   let codCorrigida = false
   let delimitador: string | null = null
+  let encapsulamentoRecuperado = false
   try {
     if (imp.formato === 'csv') {
       const dec = decodificarBytes(bytes)
       codificacao = dec.codificacao
       codCorrigida = dec.corrigida
       delimitador = detectarDelimitador(dec.texto)
-      rows = parseCsv(dec.texto, delimitador)
+      const parsed = parseCsvComRecuperacao(dec.texto, delimitador)
+      rows = parsed.rows
+      delimitador = parsed.delimitador
+      encapsulamentoRecuperado = parsed.encapsulamento_recuperado
     } else {
       rows = await parseXlsx(bytes)
     }
@@ -251,6 +255,7 @@ Deno.serve(async (req) => {
     delimitador,
     codificacao,
     codificacao_corrigida: codCorrigida,
+    encapsulamento_recuperado: encapsulamentoRecuperado,
     total_linhas: totalLinhas,
     linhas_validas: linhasValidas,
     linhas_invalidas: linhasInvalidas,
