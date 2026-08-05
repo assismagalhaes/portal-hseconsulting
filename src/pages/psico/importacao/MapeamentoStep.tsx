@@ -34,7 +34,11 @@ export function MapeamentoStep(props: {
   ignoradas: Set<string>; setIgnoradas: (v: Set<string>) => void;
   onBack: () => void; onNext: () => void;
 }) {
-  const { headers, amostra, perguntasNumeros } = props;
+  const headers = Array.isArray(props.headers)
+    ? props.headers.filter((header): header is string => typeof header === "string" && header.trim().length > 0)
+    : [];
+  const amostra = Array.isArray(props.amostra) ? props.amostra : [];
+  const perguntasNumeros = Array.isArray(props.perguntasNumeros) ? props.perguntasNumeros : [];
 
   // Sugestão automática: colunas cujo header contenha "?" ou termine em número → mapeadas em ordem
   useEffect(() => {

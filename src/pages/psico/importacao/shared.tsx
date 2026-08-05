@@ -15,6 +15,31 @@ export type UploadResp = {
   cabecalhos: string[]; amostra: string[][];
   encapsulamento_recuperado?: boolean;
 };
+
+export function sanitizeUploadResponse(payload: unknown): UploadResp {
+  if (!payload || typeof payload !== "object") {
+    throw new Error("Resposta inválida ao detectar as colunas do arquivo");
+  }
+
+  const data = payload as Partial<UploadResp>;
+  const rawHeaders = Array.isArray(data.cabecalhos) ? data.cabecalhos : [];
+  const validIndexes = rawHeaders
+    .map((header, index) => ({ header: typeof header === "string" ? header.trim() : "", index }))
+    .filter(({ header }) => header.length > 0);
+
+  if (validIndexes.length === 0) {
+    throw new Error("Nenhuma coluna válida foi detectada no arquivo");
+  }
+
+  const rawSample = Array.isArray(data.amostra) ? data.amostra : [];
+  return {
+    ...(data as UploadResp),
+    cabecalhos: validIndexes.map(({ header }) => header),
+    amostra: rawSample.map((row) =>
+      validIndexes.map(({ index }) => String(Array.isArray(row) ? (row[index] ?? "") : "")),
+    ),
+  };
+}
 export type ValidarResp = { ok: true; resumo: any; erros_registrados: number };
 
 // Chamada às Edge Functions usando o cliente Supabase (sem URL hardcoded).

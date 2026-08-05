@@ -21,7 +21,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import SearchableSelect from "@/components/SearchableSelect";
 import {
   BASE, callFn, PrivacyAlert, StepIndicator,
-  type Cliente, type Questionario, type UploadResp, type ValidarResp,
+  sanitizeUploadResponse, type Cliente, type Questionario, type UploadResp, type ValidarResp,
 } from "./importacao/shared";
 import { MapeamentoStep } from "./importacao/MapeamentoStep";
 import { ValidacaoResumo } from "./importacao/ValidacaoResumo";
@@ -136,7 +136,14 @@ export default function PsicoImportacaoHistorica() {
       const r = await call("psico-importacao-upload", { method: "POST", body: fd });
       const j = await r.json();
       if (!r.ok) throw new Error(j.detalhe || j.error || "Falha no upload");
-      setUploadResp(j as UploadResp);
+      const sanitized = sanitizeUploadResponse(j);
+      const ignoredEmptyColumns = Array.isArray(j?.cabecalhos)
+        ? j.cabecalhos.length - sanitized.cabecalhos.length
+        : 0;
+      setUploadResp(sanitized);
+      if (ignoredEmptyColumns > 0) {
+        toast.info(`${ignoredEmptyColumns} coluna(s) sem cabeçalho foram ignoradas automaticamente.`);
+      }
       // Modo agregado: pula mapear/validar (colunas fixas) e vai para confirmação (step 5)
       setStep(tipo === "agregada_perguntas" ? 5 : 3);
     } catch (e: any) { toast.error(e.message || "Falha no upload"); }
