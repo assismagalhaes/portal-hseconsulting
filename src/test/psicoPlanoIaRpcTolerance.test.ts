@@ -53,7 +53,7 @@ describe("tolerância transacional do plano por IA", () => {
     expect(sql).not.toContain("CREATE OR REPLACE FUNCTION public.psico_aplicar_plano_ia_strict_v1");
   });
 
-  it("mantém o provedor do portal isolado da configuração do ASP Insights", () => {
+  it("usa a API oficial do Gemini sem depender do gateway do Lovable", () => {
     const edgeFunction = fs.readFileSync(
       path.resolve(
         process.cwd(),
@@ -62,9 +62,10 @@ describe("tolerância transacional do plano por IA", () => {
       "utf8",
     );
 
-    expect(edgeFunction).toContain('const DEFAULT_MODEL = "google/gemini-3.6-flash"');
-    expect(edgeFunction).toContain('Deno.env.get("LOVABLE_API_KEY")');
-    expect(edgeFunction).toContain("https://ai.gateway.lovable.dev/v1/chat/completions");
-    expect(edgeFunction).not.toContain("GEMINI_API_KEY");
+    expect(edgeFunction).toContain("DEFAULT_GEMINI_MODEL");
+    expect(edgeFunction).toContain('Deno.env.get("GEMINI_API_KEY")');
+    expect(edgeFunction).toContain("callGemini({");
+    expect(edgeFunction).not.toContain("ai.gateway.lovable.dev");
+    expect(edgeFunction).not.toContain('Deno.env.get("LOVABLE_API_KEY")');
   });
 });

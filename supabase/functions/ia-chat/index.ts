@@ -1,8 +1,9 @@
 // Edge function: IA chat - copiloto interno HSE
 // Recebe { modulo, pergunta, entidade_tipo?, entidade_id?, history? }
-// Carrega contexto autorizado do banco, chama Lovable AI Gateway, registra interacao.
+// Carrega contexto autorizado do banco, chama a API oficial do Gemini, registra interacao.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { callGemini, DEFAULT_GEMINI_MODEL } from "../_shared/gemini.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,7 +11,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!;
 
@@ -122,7 +123,7 @@ Deno.serve(async (req) => {
 
     const body = (await req.json()) as Body;
     const modulo: Modulo = body.modulo ?? "geral";
-    const model = body.model ?? "google/gemini-3.6-flash";
+    const model = body.model ?? DEFAULT_GEMINI_MODEL;
 
     const [systemPrompt, ctx] = await Promise.all([getPrompt(supabase, modulo), loadContext(supabase, body)]);
 
@@ -138,19 +139,13 @@ Use apenas os tipos listados. Não invente outros. Não inclua o bloco se nenhum
       { role: "user", content: body.pergunta },
     ];
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-      },
-      body: JSON.stringify({ model, messages, stream: false }),
-    });
+    if (!GEMINI_API_KEY) return new Response(JSON.stringify({ error: "IA não configurada." }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const aiRes = await callGemini({ apiKey: GEMINI_API_KEY, model, messages });
 
     if (!aiRes.ok) {
       const txt = await aiRes.text();
       if (aiRes.status === 429) return new Response(JSON.stringify({ error: "Limite de requisições atingido. Tente novamente em instantes." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      if (aiRes.status === 402) return new Response(JSON.stringify({ error: "Créditos de IA esgotados. Adicione créditos no workspace." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (aiRes.status === 403) return new Response(JSON.stringify({ error: "A chave do Gemini não possui acesso ao modelo solicitado." }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       return new Response(JSON.stringify({ error: "Falha na IA", detalhe: txt }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 

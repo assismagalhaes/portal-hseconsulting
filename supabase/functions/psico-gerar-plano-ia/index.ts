@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.108.2";
+import { callGemini, DEFAULT_GEMINI_MODEL } from "../_shared/gemini.ts";
 import {
   garantirLimiteFinalMonitoramento,
   normalizarSelecoesPlanoIA,
@@ -13,7 +14,7 @@ const corsHeaders = {
 };
 
 const PROMPT_CODE = "HSE-PSICO-IA-PLANO-1.3";
-const DEFAULT_MODEL = "google/gemini-3.6-flash";
+const DEFAULT_MODEL = DEFAULT_GEMINI_MODEL;
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -115,8 +116,8 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!;
-    const gatewayKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!gatewayKey) return json({ error: "IA_NAO_CONFIGURADA" }, 503);
+    const geminiKey = Deno.env.get("GEMINI_API_KEY");
+    if (!geminiKey) return json({ error: "IA_NAO_CONFIGURADA" }, 503);
 
     const authorization = req.headers.get("Authorization") ?? "";
     const token = authorization.replace(/^Bearer\s+/i, "");
@@ -143,18 +144,15 @@ Deno.serve(async (req) => {
     const acaoObrigatoria = possuiAcaoObrigatoria(contexto);
     let aiResponse: Response | null = null;
     try {
-      aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${gatewayKey}` },
-        body: JSON.stringify({
-          model,
-          stream: false,
-          temperature: 0.2,
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: `CONTEXTO COLETIVO E CATÁLOGO:\n${JSON.stringify(contexto)}` },
-          ],
-        }),
+      aiResponse = await callGemini({
+        apiKey: geminiKey,
+        model,
+        temperature: 0.2,
+        jsonMode: true,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `CONTEXTO COLETIVO E CATÁLOGO:\n${JSON.stringify(contexto)}` },
+        ],
       });
     } catch (error) {
       if (acaoObrigatoria) throw error;

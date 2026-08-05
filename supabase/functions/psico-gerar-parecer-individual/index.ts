@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any no-import-prefix
 import { createClient } from "npm:@supabase/supabase-js@2.108.2";
+import { callGemini, DEFAULT_GEMINI_MODEL } from "../_shared/gemini.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("PSICO_PUBLIC_ALLOWED_ORIGINS") ??
   "https://portal.hseconsulting.com.br,https://portal-hseconsulting.lovable.app")
@@ -16,7 +17,7 @@ function corsHeaders(origin: string | null): Record<string, string> {
 }
 
 const PROMPT_CODE = "HSE-PSICO-IA-PARECER-INDIVIDUAL-1.0";
-const DEFAULT_MODEL = "google/gemini-3.6-flash";
+const DEFAULT_MODEL = DEFAULT_GEMINI_MODEL;
 
 const REQUIRED_KEYS = [
   "sintese_caso",
@@ -84,8 +85,8 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!;
-    const gatewayKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!gatewayKey) return respond({ error: "IA_NAO_CONFIGURADA" }, 503);
+    const geminiKey = Deno.env.get("GEMINI_API_KEY");
+    if (!geminiKey) return respond({ error: "IA_NAO_CONFIGURADA" }, 503);
 
     const authorization = req.headers.get("Authorization") ?? "";
     const token = authorization.replace(/^Bearer\s+/i, "");
@@ -123,16 +124,15 @@ Deno.serve(async (req) => {
     if (ctxErr || !contexto) return respond({ error: "CONTEXTO_INDISPONIVEL", detalhe: ctxErr?.message }, 400);
 
     const model = typeof body?.model === "string" && body.model.length < 100 ? body.model : DEFAULT_MODEL;
-    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${gatewayKey}` },
-      body: JSON.stringify({
-        model, stream: false, temperature: 0.2,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `CONTEXTO INDIVIDUAL SANITIZADO:\n${JSON.stringify(contexto)}` },
-        ],
-      }),
+    const aiResp = await callGemini({
+      apiKey: geminiKey,
+      model,
+      temperature: 0.2,
+      jsonMode: true,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `CONTEXTO INDIVIDUAL SANITIZADO:\n${JSON.stringify(contexto)}` },
+      ],
     });
     if (!aiResp.ok) {
       const s = aiResp.status === 429 ? 429 : aiResp.status === 402 ? 402 : 502;

@@ -1,5 +1,5 @@
 // psico-individual-sugerir-plano
-// Gera sugestões de plano de ação individual usando IA (Lovable AI Gateway).
+// Gera sugestões de plano de ação individual usando a API oficial do Gemini.
 // Retorna sugestões validadas para o técnico revisar; NÃO persiste itens no plano.
 // Toda execução (com prompt e resposta) é auditada via psico_ind_log_sugestao_ia.
 //
@@ -8,10 +8,10 @@
 //
 // verify_jwt = true (ver supabase/config.toml).
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { callGemini, DEFAULT_GEMINI_MODEL } from "../_shared/gemini.ts";
 
 const PROMPT_VERSAO = "HSE-PSICO-IND-PLANO-1.0";
-const MODELO = "google/gemini-3.6-flash"; // custo-benefício alto para JSON estruturado
-const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const MODELO = DEFAULT_GEMINI_MODEL; // custo-benefício alto para JSON estruturado
 
 const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
   const url = Deno.env.get("SUPABASE_URL")!;
   const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
-  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+  const geminiKey = Deno.env.get("GEMINI_API_KEY");
   const authHeader = req.headers.get("authorization") || "";
 
   const asUser = createClient(url, anon, { global: { headers: { Authorization: authHeader } } });
@@ -193,9 +193,9 @@ Deno.serve(async (req) => {
     return json(200, { sugestoes: [], nota: "Nenhum achado exige ação." });
   }
 
-  if (!lovableKey) {
+  if (!geminiKey) {
     // IA indisponível: criação manual continua funcionando (aceite documentado)
-    return json(503, { error: "ia_indisponivel", detail: "LOVABLE_API_KEY ausente." });
+    return json(503, { error: "ia_indisponivel", detail: "GEMINI_API_KEY ausente." });
   }
 
   // Feature-flag de liberação (PR7 — ordem: coleta → plano manual → IA de plano → parecer).
@@ -216,20 +216,14 @@ Deno.serve(async (req) => {
   let respostaBruta: any = null;
   let iaTexto = "";
   try {
-    const resp = await fetch(GATEWAY_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${lovableKey}`,
-      },
-      body: JSON.stringify({
-        model: MODELO,
-        messages: [
-          { role: "system", content: prompt_sistema },
-          { role: "user", content: prompt_usuario },
-        ],
-        response_format: { type: "json_object" },
-      }),
+    const resp = await callGemini({
+      apiKey: geminiKey,
+      model: MODELO,
+      jsonMode: true,
+      messages: [
+        { role: "system", content: prompt_sistema },
+        { role: "user", content: prompt_usuario },
+      ],
     });
     if (!resp.ok) {
       const txt = await resp.text();

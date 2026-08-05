@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.108.2";
+import { callGemini, DEFAULT_GEMINI_MODEL } from "../_shared/gemini.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,7 +8,7 @@ const corsHeaders = {
 };
 
 const PROMPT_CODE = "HSE-PSICO-IA-PARECER-1.3";
-const DEFAULT_MODEL = "google/gemini-3.6-flash";
+const DEFAULT_MODEL = DEFAULT_GEMINI_MODEL;
 const REQUIRED_KEYS = [
   "sintese_resultados",
   "interpretacao_integrada",
@@ -86,8 +87,8 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!;
-    const gatewayKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!gatewayKey) return json({ error: "IA_NAO_CONFIGURADA" }, 503);
+    const geminiKey = Deno.env.get("GEMINI_API_KEY");
+    if (!geminiKey) return json({ error: "IA_NAO_CONFIGURADA" }, 503);
 
     const authorization = req.headers.get("Authorization") ?? "";
     const token = authorization.replace(/^Bearer\s+/i, "");
@@ -117,18 +118,15 @@ Deno.serve(async (req) => {
     if (contextoError || !contexto) return json({ error: "CONTEXTO_INDISPONIVEL", detalhe: contextoError?.message }, 400);
 
     const model = typeof body?.model === "string" && body.model.length < 100 ? body.model : DEFAULT_MODEL;
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${gatewayKey}` },
-      body: JSON.stringify({
-        model,
-        stream: false,
-        temperature: 0.2,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `CONTEXTO COLETIVO E ESTRUTURADO:\n${JSON.stringify(contexto)}` },
-        ],
-      }),
+    const aiResponse = await callGemini({
+      apiKey: geminiKey,
+      model,
+      temperature: 0.2,
+      jsonMode: true,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `CONTEXTO COLETIVO E ESTRUTURADO:\n${JSON.stringify(contexto)}` },
+      ],
     });
     if (!aiResponse.ok) {
       const status = aiResponse.status === 429 ? 429 : aiResponse.status === 402 ? 402 : 502;
