@@ -8,13 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ArrowLeft, AlertTriangle, CheckCircle2, ShieldAlert, Info, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import SearchableSelect from "@/components/SearchableSelect";
 import {
   PSICO_INDIVIDUAL_ENABLED,
   PSICO_MODALIDADE_LABEL,
@@ -282,14 +282,17 @@ export default function PsicoAvaliacaoNova() {
             <form onSubmit={salvar} className="space-y-5">
               <div>
                 <Label>Cliente *</Label>
-                <Select value={form.cliente_id} onValueChange={(v) => setForm((f) => ({ ...f, cliente_id: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Selecione o cliente" /></SelectTrigger>
-                  <SelectContent>
-                    {clientes.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.nome_fantasia || c.razao_social}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  value={form.cliente_id}
+                  onValueChange={(v) => setForm((f) => ({ ...f, cliente_id: v }))}
+                  options={clientes.map((c) => ({
+                    value: c.id,
+                    label: c.nome_fantasia || c.razao_social,
+                    keywords: `${c.razao_social || ""} ${c.nome_fantasia || ""}`,
+                  }))}
+                  placeholder="Selecione o cliente"
+                  searchPlaceholder="Buscar cliente por qualquer parte do nome..."
+                />
                 <div className="text-xs text-muted-foreground mt-1">
                   Precisa cadastrar um novo cliente? <Link to="/clientes" target="_blank" rel="noopener noreferrer" className="underline">Abrir cadastro de clientes</Link>
                 </div>
@@ -336,14 +339,13 @@ export default function PsicoAvaliacaoNova() {
 
               <div>
                 <Label>Responsável HSE *</Label>
-                <Select value={form.responsavel_ref} onValueChange={(v) => setForm((f) => ({ ...f, responsavel_ref: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Selecione o responsável" /></SelectTrigger>
-                  <SelectContent>
-                    {resps.map((p) => (
-                      <SelectItem key={`${p.source}:${p.id}`} value={`${p.source}:${p.id}`}>{p.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  value={form.responsavel_ref}
+                  onValueChange={(v) => setForm((f) => ({ ...f, responsavel_ref: v }))}
+                  options={resps.map((p) => ({ value: `${p.source}:${p.id}`, label: p.nome }))}
+                  placeholder="Selecione o responsável"
+                  searchPlaceholder="Buscar responsável..."
+                />
               </div>
 
               <div>

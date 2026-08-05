@@ -11,6 +11,7 @@ import { formatDateTime } from "@/lib/format";
 import { REL_STATUS_COLOR, REL_STATUS_LABEL, RelatorioVersaoStatus, baixarVersao } from "@/lib/psicoRelatorio";
 import { toast } from "sonner";
 import { BASE, EmptyState, ModuloHeader } from "./_ModuloShared";
+import SearchableSelect from "@/components/SearchableSelect";
 
 export function PsicoRelatorios() {
   const nav = useNavigate();
@@ -97,13 +98,17 @@ export function PsicoRelatorios() {
                 <SelectItem value="revogado">Revogado</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={clienteFiltro} onValueChange={setClienteFiltro}>
-              <SelectTrigger className="w-[220px]"><SelectValue placeholder="Cliente" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os clientes</SelectItem>
-                {clientes.map(([id, nome]) => <SelectItem key={id} value={id}>{nome}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={clienteFiltro}
+              onValueChange={setClienteFiltro}
+              options={[
+                { value: "all", label: "Todos os clientes" },
+                ...clientes.map(([id, nome]) => ({ value: id, label: nome })),
+              ]}
+              placeholder="Cliente"
+              searchPlaceholder="Buscar cliente..."
+              className="w-[220px]"
+            />
             <Button variant="ghost" onClick={() => { setQ(""); setStatusFiltro("all"); setClienteFiltro("all"); }}>Limpar filtros</Button>
             <Button variant="outline" asChild>
               <Link to="/validar/relatorio-psicossocial" target="_blank" rel="noopener">

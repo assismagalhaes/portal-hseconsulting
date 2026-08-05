@@ -5,11 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart3, Eye, Search } from "lucide-react";
 import { formatDateTime } from "@/lib/format";
 import { PSICO_STATUS_COLOR, PSICO_STATUS_LABEL, PsicoAvaliacaoStatus } from "@/lib/psico";
 import { BASE, EmptyState, ModuloHeader } from "./_ModuloShared";
+import SearchableSelect from "@/components/SearchableSelect";
 
 export function PsicoResultados() {
   const nav = useNavigate();
@@ -73,13 +73,17 @@ export function PsicoResultados() {
               <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por código, título ou cliente" className="pl-9" />
             </div>
-            <Select value={clienteFiltro} onValueChange={setClienteFiltro}>
-              <SelectTrigger className="w-[220px]"><SelectValue placeholder="Cliente" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os clientes</SelectItem>
-                {clientes.map(([id, nome]) => <SelectItem key={id} value={id}>{nome}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={clienteFiltro}
+              onValueChange={setClienteFiltro}
+              options={[
+                { value: "all", label: "Todos os clientes" },
+                ...clientes.map(([id, nome]) => ({ value: id, label: nome })),
+              ]}
+              placeholder="Cliente"
+              searchPlaceholder="Buscar cliente..."
+              className="w-[220px]"
+            />
             <Button variant="ghost" onClick={() => { setQ(""); setClienteFiltro("all"); }}>Limpar filtros</Button>
           </CardContent>
         </Card>

@@ -17,8 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import SearchableSelect from "@/components/SearchableSelect";
 import {
   BASE, callFn, PrivacyAlert, StepIndicator,
   type Cliente, type Questionario, type UploadResp, type ValidarResp,
@@ -288,27 +288,30 @@ export default function PsicoImportacaoHistorica() {
               </div>
               <div>
                 <Label>Cliente *</Label>
-                <Select value={clienteId} onValueChange={setClienteId}>
-                  <SelectTrigger><SelectValue placeholder="Selecione o cliente" /></SelectTrigger>
-                  <SelectContent>
-                    {clientes.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.nome_fantasia || c.razao_social}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  value={clienteId}
+                  onValueChange={setClienteId}
+                  options={clientes.map((c) => ({
+                    value: c.id,
+                    label: c.nome_fantasia || c.razao_social,
+                    keywords: `${c.razao_social || ""} ${c.nome_fantasia || ""}`,
+                  }))}
+                  placeholder="Selecione o cliente"
+                  searchPlaceholder="Buscar cliente por qualquer parte do nome..."
+                />
               </div>
               <div>
                 <Label>Questionário *</Label>
-                <Select value={questId} onValueChange={setQuestId}>
-                  <SelectTrigger><SelectValue placeholder="Selecione a versão" /></SelectTrigger>
-                  <SelectContent>
-                    {questionarios.map(q => (
-                      <SelectItem key={q.id} value={q.id}>
-                        {q.codigo} — {q.nome} (v{q.versao}) {q.vigente ? "· vigente" : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  value={questId}
+                  onValueChange={setQuestId}
+                  options={questionarios.map((q) => ({
+                    value: q.id,
+                    label: `${q.codigo} — ${q.nome} (v${q.versao}) ${q.vigente ? "· vigente" : ""}`,
+                  }))}
+                  placeholder="Selecione a versão"
+                  searchPlaceholder="Buscar questionário..."
+                />
                 {questSelecionado?.codigo?.startsWith("QPPOT-1.0-LEGADO") && (
                   <p className="text-xs text-muted-foreground mt-1">
                     QPPOT-1.0-LEGADO — questionário histórico (35 perguntas). Não vigente para novas coletas.

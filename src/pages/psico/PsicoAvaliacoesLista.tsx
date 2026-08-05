@@ -17,6 +17,7 @@ import {
 } from "@/lib/psico";
 import { formatDate } from "@/lib/format";
 import { BASE, EmptyState, ModuloHeader } from "./_ModuloShared";
+import SearchableSelect from "@/components/SearchableSelect";
 
 export function PsicoAvaliacoesLista() {
   const nav = useNavigate();
@@ -107,20 +108,28 @@ export function PsicoAvaliacoesLista() {
                 {PSICO_STATUS_ORDER.map((s) => <SelectItem key={s} value={s}>{PSICO_STATUS_LABEL[s]}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={clienteFiltro} onValueChange={setClienteFiltro}>
-              <SelectTrigger className="w-[220px]"><SelectValue placeholder="Cliente" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os clientes</SelectItem>
-                {clientes.map(([id, nome]) => <SelectItem key={id} value={id}>{nome}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={respFiltro} onValueChange={setRespFiltro}>
-              <SelectTrigger className="w-[220px]"><SelectValue placeholder="Responsável HSE" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os responsáveis</SelectItem>
-                {resps.map((p) => <SelectItem key={p.id} value={p.id}>{p.nome || p.email}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={clienteFiltro}
+              onValueChange={setClienteFiltro}
+              options={[
+                { value: "all", label: "Todos os clientes" },
+                ...clientes.map(([id, nome]) => ({ value: id, label: nome })),
+              ]}
+              placeholder="Cliente"
+              searchPlaceholder="Buscar cliente..."
+              className="w-[220px]"
+            />
+            <SearchableSelect
+              value={respFiltro}
+              onValueChange={setRespFiltro}
+              options={[
+                { value: "all", label: "Todos os responsáveis" },
+                ...resps.map((p) => ({ value: p.id, label: p.nome || p.email })),
+              ]}
+              placeholder="Responsável HSE"
+              searchPlaceholder="Buscar responsável..."
+              className="w-[220px]"
+            />
             <Button variant="ghost" onClick={() => { setQ(""); setStatusFiltro("all"); setClienteFiltro("all"); setRespFiltro("all"); }}>Limpar filtros</Button>
           </CardContent>
         </Card>
