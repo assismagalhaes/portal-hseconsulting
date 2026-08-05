@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Card } from "@/components/ui/card";
-import { ImageIcon, Plus, Upload, X } from "lucide-react";
+import { ImageIcon, Plus, Trash2, Upload, X } from "lucide-react";
 import { formatCnpjCpf } from "@/lib/format";
 import { toast } from "sonner";
 import CnpjLookupField from "@/components/CnpjLookupField";
@@ -36,6 +37,8 @@ export default function Clients() {
   const [logoPrepared, setLogoPrepared] = useState<ValidatedClientLogo | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [removeLogo, setRemoveLogo] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => { document.title = "Clientes | Portal HSE Consulting"; load(); }, []);
   async function load() {
@@ -180,6 +183,40 @@ export default function Clients() {
     load();
   }
 
+  async function deleteClient() {
+    if (!deleteTarget?.id) return;
+    setDeleting(true);
+    const logoPath = deleteTarget.logo_storage_path as string | null | undefined;
+    const { data: deletedClient, error } = await supabase
+      .from("clients")
+      .delete()
+      .eq("id", deleteTarget.id)
+      .select("id")
+      .maybeSingle();
+    if (error) {
+      setDeleting(false);
+      if (error.code === "23503") {
+        return toast.error("Este cliente possui propostas, avaliações, projetos ou documentos vinculados e não pode ser excluído.");
+      }
+      return toast.error(error.message || "Não foi possível excluir o cliente.");
+    }
+    if (!deletedClient?.id) {
+      setDeleting(false);
+      return toast.error("O cliente não foi excluído. Verifique sua permissão e tente novamente.");
+    }
+    if (logoPath) {
+      const removed = await supabase.storage.from(CLIENT_LOGO_BUCKET).remove([logoPath]);
+      if (removed.error) toast.warning("Cliente excluído, mas a limpeza da logomarca deverá ser concluída posteriormente.");
+    }
+    setDeleting(false);
+    setDeleteTarget(null);
+    setOpen(false);
+    setEditing(null);
+    resetLogoState();
+    toast.success("Cliente excluído com sucesso.");
+    load();
+  }
+
   const filtered = list.filter(c => {
     const s = q.toLowerCase();
     return !s || [c.razao_social, c.nome_fantasia, c.cnpj_cpf, c.cidade].some(v => (v||"").toLowerCase().includes(s));
@@ -283,14 +320,39 @@ export default function Clients() {
                   <Label>Observações</Label>
                   <Textarea rows={3} value={form.observacoes||""} onChange={e=>setForm({...form,observacoes:e.target.value})} />
                 </div>
-                <div className="sm:col-span-2 flex justify-end gap-2 pt-2">
-                  <Button type="button" variant="outline" onClick={()=>setOpen(false)} disabled={saving}>Cancelar</Button>
-                  <Button type="submit" disabled={saving}>{saving ? "Salvando…" : "Salvar"}</Button>
+                <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-2 pt-2">
+                  <div>
+                    {editing && (
+                      <Button type="button" variant="destructive" onClick={()=>setDeleteTarget(editing)} disabled={saving || deleting}>
+                        <Trash2 className="mr-2 h-4 w-4" /> Excluir cliente
+                      </Button>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="button" variant="outline" onClick={()=>setOpen(false)} disabled={saving}>Cancelar</Button>
+                    <Button type="submit" disabled={saving}>{saving ? "Salvando…" : "Salvar"}</Button>
+                  </div>
                 </div>
               </form>
             </DialogContent>
           </Dialog>
         } />
+      <AlertDialog open={!!deleteTarget} onOpenChange={(nextOpen)=>{ if (!nextOpen && !deleting) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir cliente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O cadastro de <strong>{deleteTarget?.razao_social}</strong> e sua logomarca serão removidos permanentemente. Clientes com histórico vinculado não serão excluídos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={(event)=>{ event.preventDefault(); void deleteClient(); }} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deleting ? "Excluindo…" : "Excluir definitivamente"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <Dialog open={groupOpen} onOpenChange={setGroupOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
