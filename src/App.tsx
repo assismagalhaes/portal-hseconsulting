@@ -87,6 +87,7 @@ import ClienteDocumentos from "./pages/cliente/ClienteDocumentos";
 import ClientePendencias from "./pages/cliente/ClientePendencias";
 import ClienteComunicacoes from "./pages/cliente/ClienteComunicacoes";
 import ClientePerfil from "./pages/cliente/ClientePerfil";
+import RelatorioConsumo from "./pages/RelatorioConsumo";
 import NotFound from "./pages/NotFound.tsx";
 import RequireRole from "./components/layout/RequireRole";
 import { useAuth } from "@/lib/auth";
@@ -194,6 +195,7 @@ const App = () => (
              <Route path="/operacoes/avaliacao-fatores-psicossociais/biblioteca-medidas/:id" element={<RequireRole allow="operacional_tecnico"><PsicoBibliotecaDetalhe /></RequireRole>} />
               <Route path="/configuracoes" element={<RequireRole allow="admin"><Settings /></RequireRole>} />
               <Route path="/configuracoes/premissas" element={<RequireRole allow="admin"><PremissasProposta /></RequireRole>} />
+              <Route path="/auditoria-consumo" element={<RequireRole allow="admin"><RelatorioConsumo /></RequireRole>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
