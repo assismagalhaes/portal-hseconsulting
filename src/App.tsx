@@ -91,16 +91,9 @@ import NotFound from "./pages/NotFound.tsx";
 import RequireRole from "./components/layout/RequireRole";
 import { useAuth } from "@/lib/auth";
 
-import { AppRoutes } from "./routes";
-
 function DashboardSwitch() {
   const { isTecnico } = useAuth();
-  return (
-    <>
-      <AppRoutes />
-      {isTecnico ? <DashboardTecnico /> : <Dashboard />}
-    </>
-  );
+  return isTecnico ? <DashboardTecnico /> : <Dashboard />;
 }
 
 const queryClient = new QueryClient();
