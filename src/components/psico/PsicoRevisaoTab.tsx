@@ -128,22 +128,10 @@ Modalidade: ${modoColeta}.`;
           (o || []).forEach((x: any) => { map[x.fator_codigo] = x; });
           setOrient(map);
         }
-        const [{ data: responsaveis }, { data: perfis }, { data: profissionais }] = await Promise.all([
-          (supabase as any).rpc("psico_ind_listar_responsaveis"),
-          (supabase as any).from("profiles")
-            .select("id, nome, email, cargo, registro_profissional, assinatura_modo, assinatura_ativa, assinatura_nome_arquivo, assinatura_mime_type")
-            .order("nome"),
-          (supabase as any).from("execucao_profissionais")
-            .select("id, assinatura_modo, assinatura_ativa, assinatura_nome_arquivo, assinatura_mime_type")
-            .eq("situacao", "ativo"),
-        ]);
-        const perfilPorId = new Map((perfis || []).map((perfil: any) => [perfil.id, perfil]));
-        const profissionalPorId = new Map((profissionais || []).map((profissional: any) => [profissional.id, profissional]));
-        const listaResponsaveis = (responsaveis || []).map((responsavel: any) => (
-          responsavel.origem === "perfil"
-            ? { ...responsavel, ...(perfilPorId.get(responsavel.id) as object || {}) }
-            : { ...responsavel, ...(profissionalPorId.get(responsavel.id) as object || {}) }
-        ));
+        const { data: responsaveis, error: responsaveisError } = await (supabase as any)
+          .rpc("psico_listar_responsaveis_assinatura");
+        if (responsaveisError) throw responsaveisError;
+        const listaResponsaveis = responsaveis || [];
         setProfiles(listaResponsaveis);
         const history = await getParecerHistorico(r.id);
         setParecerHistory(history.data || []);
@@ -522,24 +510,29 @@ Modalidade: ${modoColeta}.`;
           {!readOnly && form.responsavel_tecnico_id && (() => {
             const selected = profiles.find((profile) => profile.id === form.responsavel_tecnico_id);
             if (!selected) return null;
+            const assinaturaDisponivel = Boolean(selected.assinatura_disponivel);
+            const podeGerenciarAssinatura = isAdmin
+              || (selected.origem === "perfil" && selected.id === user?.id);
             return (
             <div className="rounded-md border p-3 space-y-2">
               <div className="flex items-center gap-2 text-sm font-medium"><FileSignature className="h-4 w-4" /> Assinatura no relatório</div>
               <p className="text-xs text-muted-foreground">
-                A imagem é opcional, privada e será congelada como referência quando a revisão for aprovada.
-                {selected.origem === "profissional" ? " O envio deve ser realizado por um administrador autorizado." : ""}
+                {assinaturaDisponivel
+                  ? "A assinatura já cadastrada para este responsável será aplicada automaticamente e congelada quando a revisão for aprovada."
+                  : "Não há assinatura cadastrada para este responsável; o relatório reservará o espaço em branco."}
+                {!podeGerenciarAssinatura ? " O cadastro ou a substituição da imagem deve ser realizado por um administrador autorizado." : ""}
               </p>
-              <div className="flex flex-wrap gap-2">
+              {podeGerenciarAssinatura && <div className="flex flex-wrap gap-2">
                 <Button type="button" size="sm" variant="outline" disabled={uploadingSignature} onClick={() => configurarAssinatura("em_branco")}>Deixar espaço em branco</Button>
                 <Label className="inline-flex h-9 cursor-pointer items-center rounded-md border border-input bg-background px-3 text-sm hover:bg-accent">
                   <Upload className="mr-2 h-4 w-4" /> Enviar PNG/JPG
                   <Input className="sr-only" type="file" accept="image/png,image/jpeg" disabled={uploadingSignature}
                     onChange={(event) => { const file = event.target.files?.[0]; if (file) configurarAssinatura("imagem", file); event.target.value = ""; }} />
                 </Label>
-              </div>
-              {(() => {
-                return selected ? <p className="text-xs text-muted-foreground">Modo atual: <b>{selected.assinatura_modo === "imagem" && selected.assinatura_ativa ? `imagem (${selected.assinatura_nome_arquivo || "arquivo protegido"})` : "em branco"}</b></p> : null;
-              })()}
+              </div>}
+              <p className="text-xs text-muted-foreground">
+                Modo atual: <b>{assinaturaDisponivel ? "assinatura cadastrada (aplicação automática)" : "em branco"}</b>
+              </p>
             </div>
             );
           })()}
