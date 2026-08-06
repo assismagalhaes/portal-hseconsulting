@@ -16,7 +16,7 @@ describe("responsáveis técnicos da revisão coletiva", () => {
       "utf8",
     );
 
-    expect(component).toContain('rpc("psico_ind_listar_responsaveis")');
+    expect(component).toContain('rpc("psico_listar_responsaveis_assinatura")');
     expect(component).toContain("Profissionais cadastrados");
     expect(component).toContain("Usuários do sistema");
     expect(migration).toContain("FROM public.execucao_profissionais");
