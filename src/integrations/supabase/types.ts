@@ -10952,6 +10952,16 @@ export type Database = {
           total_itens: number
         }[]
       }
+      psico_listar_responsaveis_assinatura: {
+        Args: never
+        Returns: {
+          assinatura_disponivel: boolean
+          cargo: string
+          id: string
+          nome: string
+          origem: string
+        }[]
+      }
       psico_marcar_plano_revisado: {
         Args: { p_plano_id: string }
         Returns: Json
