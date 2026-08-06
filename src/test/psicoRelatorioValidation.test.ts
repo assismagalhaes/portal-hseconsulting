@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { FunctionsHttpError } from "@supabase/supabase-js";
+import { normalizarErroFuncao, traduzirErroEmissao } from "@/lib/psicoRelatorio";
 
 const migration = readFileSync(
   resolve("supabase/migrations/20260718180000_fix_psico_report_validation_status.sql"),
@@ -72,6 +74,10 @@ const reportBrandingFooterMigration = readFileSync(
 );
 const reportReissueAfterRevocationMigration = readFileSync(
   resolve("supabase/migrations/20260729141339_fix_psico_report_reissue_after_revocation.sql"),
+  "utf8",
+);
+const reportTechnicianEmissionMigration = readFileSync(
+  resolve("supabase/migrations/20260806120344_allow_tecnico_emit_psico_report.sql"),
   "utf8",
 );
 const opinionFunction = readFileSync(
@@ -427,5 +433,42 @@ describe("metadados seguros do PDF psicossocial", () => {
     expect(reportReissueAfterRevocationMigration).toContain(
       "Regra base inesperada em psico_preparar_emissao_relatorio",
     );
+  });
+});
+
+describe("emissão do relatório pelo profissional técnico", () => {
+  it("corrige toda a cadeia interna e falha se algum wrapper estiver ausente", () => {
+    expect(reportTechnicianEmissionMigration).toContain(
+      "psico_obter_conteudo_aprovado_relatorio_sem_branding_v1_6(uuid)",
+    );
+    expect(reportTechnicianEmissionMigration).toContain(
+      "psico_obter_conteudo_aprovado_relatorio_sem_metodologia(uuid)",
+    );
+    expect(reportTechnicianEmissionMigration).toContain(
+      "Funcao obrigatoria da cadeia de emissao nao encontrada",
+    );
+    expect(reportTechnicianEmissionMigration).toContain("public.can_see_psico(");
+    expect(reportTechnicianEmissionMigration).toContain("ainda usam can_see_internal");
+  });
+
+  it("mantém os wrappers históricos privados para authenticated", () => {
+    expect(reportTechnicianEmissionMigration).toMatch(
+      /REVOKE ALL ON FUNCTION public\.psico_obter_conteudo_aprovado_relatorio_sem_branding_v1_6\(uuid\) FROM PUBLIC, anon, authenticated/,
+    );
+    expect(reportTechnicianEmissionMigration).toMatch(
+      /GRANT EXECUTE ON FUNCTION public\.psico_obter_conteudo_aprovado_relatorio\(uuid\) TO authenticated, service_role/,
+    );
+  });
+
+  it("extrai o código JSON devolvido por uma Edge Function com HTTP não-2xx", async () => {
+    const response = new Response(
+      JSON.stringify({ error: "ACESSO_NEGADO", detalhe: "perfil tecnico" }),
+      { status: 400, headers: { "content-type": "application/json" } },
+    );
+    const error = await normalizarErroFuncao(new FunctionsHttpError(response));
+
+    expect(error?.message).toBe("ACESSO_NEGADO");
+    expect((error as Error & { detalhe?: string }).detalhe).toBe("perfil tecnico");
+    expect(traduzirErroEmissao(error?.message || "")).toContain("permissão");
   });
 });
