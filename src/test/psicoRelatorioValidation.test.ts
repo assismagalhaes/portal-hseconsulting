@@ -80,6 +80,10 @@ const reportTechnicianEmissionMigration = readFileSync(
   resolve("supabase/migrations/20260806120344_allow_tecnico_emit_psico_report.sql"),
   "utf8",
 );
+const reportTechnicianDownloadMigration = readFileSync(
+  resolve("supabase/migrations/20260806122025_allow_tecnico_download_psico_report.sql"),
+  "utf8",
+);
 const opinionFunction = readFileSync(
   resolve("supabase/functions/psico-gerar-parecer/index.ts"),
   "utf8",
@@ -449,6 +453,20 @@ describe("emissão do relatório pelo profissional técnico", () => {
     );
     expect(reportTechnicianEmissionMigration).toContain("public.can_see_psico(");
     expect(reportTechnicianEmissionMigration).toContain("ainda usam can_see_internal");
+  });
+
+  it("permite ao técnico ler o PDF no bucket privado sem ampliar escrita", () => {
+    expect(reportTechnicianDownloadMigration).toContain(
+      'DROP POLICY IF EXISTS "psico_rel_bucket_select_interno"',
+    );
+    expect(reportTechnicianDownloadMigration).toContain("FOR SELECT");
+    expect(reportTechnicianDownloadMigration).toContain("TO authenticated");
+    expect(reportTechnicianDownloadMigration).toContain("bucket_id = 'psico-relatorios'");
+    expect(reportTechnicianDownloadMigration).toContain("public.can_see_psico(auth.uid())");
+    expect(reportTechnicianDownloadMigration).not.toMatch(/FOR (?:ALL|INSERT|UPDATE|DELETE)/);
+    expect(reportTechnicianDownloadMigration).toContain(
+      "Policy de leitura do bucket psico-relatorios nao foi atualizada com seguranca",
+    );
   });
 
   it("mantém os wrappers históricos privados para authenticated", () => {
