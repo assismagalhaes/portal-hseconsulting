@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { FunctionsHttpError } from "@supabase/supabase-js";
 const sb: any = supabase;
 
 export type RelatorioVersaoStatus =
@@ -50,6 +51,10 @@ export const ERRO_EMISSAO_LABEL: Record<string, string> = {
   ERRO_INTEGRACAO_DOCUMENTOS: "Falha ao integrar com Documentos Técnicos.",
   TEMPO_LIMITE: "A geração ultrapassou o tempo limite.",
   ERRO_INTERNO: "Erro interno na geração.",
+  ACESSO_NEGADO: "Seu perfil não possui permissão para emitir este relatório.",
+  ASSINATURA_INDISPONIVEL: "A assinatura do responsável técnico não está disponível.",
+  ASSINATURA_INVALIDA: "O arquivo de assinatura do responsável técnico é inválido.",
+  ASSINATURA_INTEGRIDADE_INVALIDA: "A assinatura do responsável técnico falhou na verificação de integridade.",
 };
 
 export function traduzirErroEmissao(cod: string) {
@@ -101,7 +106,29 @@ export async function gerarRelatorio(
       descricao_revisao: descricaoRevisao ?? null,
     },
   });
-  return { data, error };
+  return { data, error: await normalizarErroFuncao(error) };
+}
+
+export async function normalizarErroFuncao(error: unknown): Promise<Error | null> {
+  if (!error) return null;
+
+  if (error instanceof FunctionsHttpError) {
+    try {
+      const payload = await error.context.json();
+      const codigo = String(payload?.error || "").trim();
+      const detalhe = String(payload?.detalhe || "").trim();
+      if (codigo || detalhe) {
+        const normalized = new Error(codigo || detalhe);
+        if (detalhe && detalhe !== codigo) Object.assign(normalized, { detalhe });
+        return normalized;
+      }
+    } catch {
+      // Preserva a mensagem original quando a resposta não contém JSON válido.
+    }
+  }
+
+  if (error instanceof Error) return error;
+  return new Error(String(error));
 }
 
 export async function previewRelatorio(avaliacaoId: string) {
